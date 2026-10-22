@@ -33,14 +33,34 @@ mod experiment_comparison;
 mod guards;
 #[path = "ids.rs"]
 mod ids;
+#[path = "runtime/language_diagnostics.rs"]
+mod language_diagnostics;
 #[path = "paths.rs"]
 mod paths;
 #[path = "persistence.rs"]
 mod persistence;
+#[path = "research_json.rs"]
+mod research_json;
+#[path = "research_routes.rs"]
+mod research_routes;
+#[path = "research_transactions.rs"]
+mod research_transactions;
+pub(crate) use research_routes::{ResearchWebRequest, research_url_arg, research_web_request};
+pub(crate) use research_transactions::research_owner_transaction;
+pub(crate) use research_transactions::strict_rows as read_native_authority_records;
+pub use research_transactions::{
+    RESEARCH_TRANSACTION_VERSION, ResearchReservation, append_native_authority_record,
+    research_binding_requires_budget, research_transaction_compatibility,
+};
+#[cfg(test)]
+#[path = "research_transaction_tests.rs"]
+mod research_transaction_tests;
 #[path = "runtime/retained_inspection.rs"]
 mod retained_inspection;
 #[path = "runtime/return_support.rs"]
 mod return_support;
+#[path = "runtime/save_receipts.rs"]
+mod save_receipts;
 pub use guards::{CharterReason, CharterRequiredGuardAssessment, ResearchBudgetGuardAssessment};
 
 include!("runtime/core.rs");
@@ -86,3 +106,15 @@ mod self_study_contract_tests;
 #[cfg(test)]
 #[path = "return_support_tests.rs"]
 mod return_support_tests;
+
+#[cfg(test)]
+#[path = "consumer_failure_tests.rs"]
+mod consumer_failure_tests;
+
+#[cfg(test)]
+#[path = "exploration_scope_tests.rs"]
+mod exploration_scope_tests;
+
+#[cfg(test)]
+#[path = "language_diagnostic_tests.rs"]
+mod language_diagnostic_tests;

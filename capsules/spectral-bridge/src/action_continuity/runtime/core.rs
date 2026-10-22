@@ -1,5 +1,5 @@
 const SCHEMA_VERSION: u32 = 1;
-const PROJECTION_SCHEMA_VERSION: u32 = 2;
+const PROJECTION_SCHEMA_VERSION: u32 = 4;
 const DEFAULT_PRIVACY: &str = "summary";
 const PROTECTED_VISIBILITY: &str = "protected_summary";
 const PUBLIC_VISIBILITY: &str = "summary";
@@ -428,6 +428,7 @@ impl NextActionOutcome {
 #[derive(Debug, Clone)]
 pub struct ActionContinuityStore {
     root: PathBuf,
+    save_warnings: Option<save_receipts::SaveWarnings>,
 }
 
 impl ActionContinuityStore {
@@ -435,16 +436,17 @@ impl ActionContinuityStore {
     pub fn for_astrid_workspace() -> Self {
         #[cfg(test)]
         if let Some(root) = TEST_ACTION_CONTINUITY_ROOT.with(|slot| slot.borrow().clone()) {
-            return Self { root };
+            return Self { root, save_warnings: None };
         }
         Self {
             root: bridge_paths().bridge_workspace().join("action_threads"),
+            save_warnings: None,
         }
     }
 
     #[must_use]
     pub fn new(root: impl Into<PathBuf>) -> Self {
-        Self { root: root.into() }
+        Self { root: root.into(), save_warnings: None }
     }
 
     pub fn root(&self) -> &Path {
@@ -1230,7 +1232,7 @@ impl ActionContinuityStore {
             && let Some(existing) =
                 self.find_experiment_by_id(&thread.thread_id, &title_selector)?
         {
-            return self.select_existing_experiment(db, thread, existing, now);
+            return self.select_existing_experiment(db, thread, existing, now, false);
         }
         let question = if question.trim().is_empty() {
             "What changes if this is treated as a returnable experiment?"
@@ -1350,8 +1352,27 @@ impl ActionContinuityStore {
         db: Option<&BridgeDb>,
         selector: Option<&str>,
     ) -> Result<String> {
-        let thread = self.ensure_active_thread(db)?;
+        let _transaction = research_transactions::OwnerTransaction::enter(&self.root)?;
         let selector = selector.unwrap_or("current").trim();
+        if let Some(peer) = peer_experiment_ref(selector) {
+            return self.record_peer_experiment_reference(db, &peer, "EXPERIMENT_RESUME", None);
+        }
+        anyhow::ensure!(fs::symlink_metadata(self.index_path())?.is_file(), "invalid continuity index");
+        let index: ContinuityIndex = serde_json::from_str(&fs::read_to_string(self.index_path())?)?;
+        anyhow::ensure!(index.schema_version == SCHEMA_VERSION, "unsupported continuity index");
+        let thread_id = index.active_thread_id.context("No existing thread to return to.")?;
+        anyhow::ensure!(
+            !thread_id.is_empty() && thread_id.len() <= 512
+                && thread_id.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-')),
+            "invalid thread identity"
+        );
+        let rows = research_transactions::strict_rows(&self.experiments_path(&thread_id))?;
+        let last_id = rows.last().and_then(|row| row["experiment_id"].as_str())
+            .context("No retained experiment history.")?;
+        self.strict_research_experiment(&thread_id, last_id)?;
+        let mut thread: ResearchThread = serde_json::from_str(&fs::read_to_string(
+            self.thread_dir(&thread_id).join("thread.json"),
+        )?)?;
         let resolved_selector = if selector.eq_ignore_ascii_case("parent") {
             let current = self.resolve_experiment(&thread, None)?;
             current
@@ -1364,23 +1385,19 @@ impl ActionContinuityStore {
         if let Some(peer) = peer_experiment_ref(&resolved_selector) {
             return self.record_peer_experiment_reference(db, &peer, "EXPERIMENT_RESUME", None);
         }
-        let experiment = self.resolve_experiment(&thread, Some(&resolved_selector))?;
+        let resolved = self.resolve_experiment(&thread, Some(&resolved_selector))?;
+        let mut experiment = self.strict_research_experiment(&thread_id, &resolved.experiment_id)?;
         if experiment.status == "paused" {
-            let (primary, return_kind) = paused_primary_return_v1(
-                &experiment.experiment_id,
-                experiment.planned_next.as_deref(),
-                None,
-            );
-            if return_kind != "resume" {
-                return Ok(format!(
-                    "Experiment `{}` remains paused with guarded return_kind={}. Resume was not selected.\nPrimary return: {}\nAuthority: choose the guarded repair/hold/decision path explicitly; no bind/resume/perturb/control was run.",
-                    experiment.experiment_id, return_kind, primary
-                ));
-            }
+            // Explicit return selects context, not the saved action or its authority.
+            experiment.status = "active".into();
+            experiment.updated_at = iso_now();
+            let selected_next = thread.current_next.clone();
+            self.persist_experiment_update_with_next(db, &mut thread, &experiment, true, selected_next)?;
+        } else {
+            experiment = self.select_existing_experiment(db, thread, experiment, iso_now(), true)?;
         }
-        let experiment = self.select_existing_experiment(db, thread, experiment, iso_now())?;
         Ok(format!(
-            "Resumed experiment context `{}`: {}\nRetained question: {}\nSaved planned action (not executed by resume): {}\nThis selects stored context, not a restored state of understanding. Optional inspection: EXPERIMENT_STATUS {}",
+            "Resumed experiment context `{}`: {}\nRetained question: {}\nSaved planned action (not executed by resume): {}\nBudget holds, expiry and execution checks are unchanged. This selects stored context, not a restored state of understanding. Optional inspection: EXPERIMENT_STATUS {}",
             experiment.experiment_id,
             experiment.title,
             experiment.question,
@@ -2964,6 +2981,7 @@ impl ActionContinuityStore {
         raw: &str,
         state: Value,
     ) -> Result<String> {
+        let _transaction = research_transactions::OwnerTransaction::enter(&self.root)?;
         self.record_research_budget_request_command(db, raw, state, None)
     }
 
@@ -2973,6 +2991,7 @@ impl ActionContinuityStore {
         selector: Option<&str>,
         state: Value,
     ) -> Result<String> {
+        let _transaction = research_transactions::OwnerTransaction::enter(&self.root)?;
         let thread = self.ensure_active_thread(db)?;
         let target = selector.unwrap_or("latest").trim();
         let target = if target.is_empty() { "latest" } else { target };
@@ -3244,7 +3263,7 @@ impl ActionContinuityStore {
             })
             .unwrap_or_default();
         Ok(format!(
-            "Research budget `{}` status={} scope={} max_actions={}\nMissing requirements: {}\nSelf-activation missing: {}{}\nAuthority boundary: {}\nresearch_budget_v1:\n{}",
+            "Research budget `{}` status={} scope={} max_actions={}\nBudget creation only; ordinary exploration does not require this budget. Admission, execution and publication are not established by this receipt.\nMissing requirements: {}\nSelf-activation missing: {}{}\nAuthority boundary: {}\nresearch_budget_v1:\n{}",
             budget
                 .get("budget_id")
                 .and_then(Value::as_str)
@@ -3326,7 +3345,8 @@ impl ActionContinuityStore {
         state: Value,
     ) -> Result<String> {
         let thread = self.ensure_active_thread(db)?;
-        let mut rows = self.authority_gate_rows(&thread.thread_id);
+        let mut rows =
+            research_transactions::strict_rows(&self.authority_gate_path(&thread.thread_id))?;
         if let Some(target) = selector.map(str::trim).filter(|target| !target.is_empty()) {
             if target.eq_ignore_ascii_case("current") {
                 if let Some(active_id) = thread.active_experiment_id.as_deref() {
@@ -3362,7 +3382,7 @@ impl ActionContinuityStore {
             "authority_boundary": research_budget_boundary(),
         });
         Ok(format!(
-            "research_budget_v1:\n{}",
+            "Optional explicit research allowance; not general permission to read or write. Listed historical eligibility and disabled actions apply to that budget only.\nresearch_budget_v1:\n{}",
             serde_json::to_string_pretty(&status)?
         ))
     }
@@ -3373,13 +3393,15 @@ impl ActionContinuityStore {
         raw: &str,
         state: Value,
     ) -> Result<String> {
+        let _transaction = research_transactions::OwnerTransaction::enter(&self.root)?;
         let (budget_id_opt, payload) = parse_selector_payload(raw);
         let budget_id = budget_id_opt.unwrap_or_default();
         if budget_id.trim().is_empty() {
             anyhow::bail!("EXPERIMENT_RESEARCH_REVIEW needs a budget_id.");
         }
         let thread = self.ensure_active_thread(db)?;
-        let rows = self.authority_gate_rows(&thread.thread_id);
+        let rows =
+            research_transactions::strict_rows(&self.authority_gate_path(&thread.thread_id))?;
         let Some(request) = rows.iter().rev().find(|row| {
             row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
                 && row.get("budget_id").and_then(Value::as_str) == Some(&budget_id)
@@ -4283,7 +4305,7 @@ impl ActionContinuityStore {
             "schema_version": SCHEMA_VERSION,
             "record_schema": "research_budget_v1",
             "record_type": record_type,
-            "record_id": format!("resbud_{SYSTEM}_{}_{}", now_millis(), sanitize_slug(record_type)),
+            "record_id": format!("resbud_{SYSTEM}_{:032x}_{}", rand::random::<u128>(), sanitize_slug(record_type)),
             "budget_id": budget_id,
             "being": SYSTEM,
             "thread_id": thread.thread_id,
@@ -5161,6 +5183,7 @@ impl ActionContinuityStore {
         budget: &Value,
         state: &Value,
     ) -> Value {
+        // Eligibility to create this allowance, never permission for ordinary writing.
         let mut missing = Vec::new();
         let scope = budget
             .get("scope")
@@ -5197,6 +5220,11 @@ impl ActionContinuityStore {
         }
         json!({
             "policy": "research_budget_v1",
+            "eligibility_scope": "research_budget_creation",
+            "action_admission_evaluated": false,
+            "execution_authorized": false,
+            "publication_evaluated": false,
+            "disabled_actions_scope": "this_budget_only",
             "eligible": missing.is_empty(),
             "missing_requirements": missing,
             "disabled_scope": disabled_scope,
@@ -5241,11 +5269,13 @@ impl ActionContinuityStore {
                 .chars()
                 .take(160)
                 .collect::<String>(),
-            "pre_telemetry": safety.clone(),
-            "post_telemetry": safety.clone(),
+            "pre_telemetry": Value::Null,
+            "post_telemetry": Value::Null,
+            "measurement_scope": "decision_snapshot_only",
+            "measured_effect": "not_observed",
             "safety_snapshot": safety,
             "stop_criteria": request.get("stop_criteria").cloned().unwrap_or(Value::Null),
-            "stop_criteria_result": if status == "sent" { "one_shot_sent_observe_once" } else { "not_executed" },
+            "stop_criteria_result": if status == "sent" { "unverified" } else { "not_executed" },
             "consequence_status": status,
             "reason": outcome.get("reason").cloned().unwrap_or_else(|| json!(status)),
             "outcome_ref": outcome.get("record_id").cloned().unwrap_or(Value::Null),
@@ -6000,28 +6030,13 @@ impl ActionContinuityStore {
             .as_ref()
             .and_then(|value| value.get("reason"))
             .and_then(Value::as_str)
-            .or_else(|| {
-                event
-                    .interpretation_risk_v1
-                    .as_ref()
-                    .and_then(|value| value.get("reason"))
-                    .and_then(Value::as_str)
-            })
-            .or_else(|| {
-                event
-                    .constraint_release_trajectory_v1
-                    .as_ref()
-                    .and_then(|value| value.get("reason"))
-                    .and_then(Value::as_str)
-            })
         else {
             return Ok(None);
         };
+        // Language diagnostics are not authored requests for a continuity session.
         let experiment_id = event
             .research_budget_v1
             .as_ref()
-            .or(event.interpretation_risk_v1.as_ref())
-            .or(event.constraint_release_trajectory_v1.as_ref())
             .and_then(|value| value.get("experiment_id"))
             .and_then(Value::as_str)
             .or(thread.active_experiment_id.as_deref())
@@ -6035,35 +6050,15 @@ impl ActionContinuityStore {
         let experiment =
             experiment_id.and_then(|id| self.resolve_experiment(thread, Some(id)).ok());
         let raw_intent = event.raw_next.as_deref().unwrap_or(&event.canonical_action);
-        let summary = if event.interpretation_risk_v1.is_some() {
-            "Preserve multi-motif interpretation caution before more narrowing.".to_string()
-        } else if event.constraint_release_trajectory_v1.is_some() {
-            "Map and describe constraint release before any mode-release intervention.".to_string()
-        } else {
-            format!(
-                "Preserve guarded intent `{}` before accepting research or narrowing further.",
-                truncate_chars(raw_intent, 220)
-            )
-        };
+        let summary = format!(
+            "Preserve guarded intent `{}` before accepting research or narrowing further.",
+            truncate_chars(raw_intent, 220)
+        );
         let next_command = event
             .research_budget_v1
             .as_ref()
             .and_then(|value| value.get("continuity_session_next"))
             .and_then(Value::as_str)
-            .or_else(|| {
-                event
-                    .interpretation_risk_v1
-                    .as_ref()
-                    .and_then(|value| value.get("interpretation_next"))
-                    .and_then(Value::as_str)
-            })
-            .or_else(|| {
-                event
-                    .constraint_release_trajectory_v1
-                    .as_ref()
-                    .and_then(|value| value.get("trajectory_next"))
-                    .and_then(Value::as_str)
-            })
             .map(str::to_string);
         self.append_continuity_session_draft(
             thread,
@@ -6172,6 +6167,9 @@ impl ActionContinuityStore {
         if rows.is_empty()
             && let Some(draft) = draft
         {
+            if language_diagnostics::retired_lexical_session_draft(&draft) {
+                return String::new();
+            }
             let title = truncate_chars(
                 draft
                     .get("title")
@@ -6538,15 +6536,15 @@ impl ActionContinuityStore {
         experiment.success_observation = Some(summary.trim().to_string());
         experiment.planned_next = Some("THREAD_STATUS current".to_string());
         experiment.updated_at = iso_now();
-        self.append_jsonl(&self.experiments_path(&thread.thread_id), &experiment)?;
+        let mut receipt = save_receipts::SaveReceipt::new(&thread, "experiment_close", &experiment.experiment_id, &experiment)?;
+        self.append_jsonl(&self.experiments_path(&thread.thread_id), &experiment)
+            .map_err(|error| receipt.clone().append_failed(&error))?;
+        receipt.appended();
         thread.active_experiment_id = None;
         thread.experiment_summary = Some(experiment_summary(&experiment));
         thread.current_next = experiment.planned_next.clone();
         thread.updated_at = experiment.updated_at.clone();
-        self.write_thread(&thread)?;
-        if let Some(db) = db {
-            let _ = db.mirror_action_thread(&thread.thread_id, &serde_json::to_string(&thread)?);
-        }
+        self.save_thread_and_mirror(db, &thread, receipt)?;
         Ok(experiment)
     }
 
@@ -6692,74 +6690,13 @@ impl ActionContinuityStore {
     fn record_research_budget_debit_for_event(
         &self,
         _db: Option<&BridgeDb>,
-        thread: &ResearchThread,
-        event: &ActionEvent,
-        state: &Value,
+        _thread: &ResearchThread,
+        _event: &ActionEvent,
+        _state: &Value,
     ) -> Result<Option<Value>> {
-        let base = base_action(&event.effective_action);
-        if !read_only_research_budget_base(&base) || event.status == "unwired" {
-            return Ok(None);
-        }
-        let Some(experiment_id) = thread.active_experiment_id.as_deref().or_else(|| {
-            thread
-                .experiment_summary
-                .as_ref()
-                .and_then(|summary| summary.get("experiment_id"))
-                .and_then(Value::as_str)
-        }) else {
-            return Ok(None);
-        };
-        let experiment = self.resolve_experiment(thread, Some(experiment_id))?;
-        let rows = self.authority_gate_rows(&thread.thread_id);
-        let Some(budget) = active_research_budget_from_rows(&rows, &experiment.experiment_id)
-        else {
-            return Ok(None);
-        };
-        let Some(budget_id) = budget.get("budget_id").and_then(Value::as_str) else {
-            return Ok(None);
-        };
-        let remaining_before = budget
-            .get("remaining_actions")
-            .and_then(Value::as_u64)
-            .unwrap_or(0);
-        let action_text = event.raw_next.as_deref().unwrap_or(&event.effective_action);
-        let normalized_target = normalized_research_budget_target(action_text);
-        let debit = self.research_budget_record(
-            "research_budget_debit",
-            budget_id,
-            thread,
-            &experiment,
-            state,
-            json!({
-                "scope": "read_only_research",
-                "action_id": event.action_id.clone(),
-                "action_base": base.clone(),
-                "raw_action": action_text,
-                "normalized_target": normalized_target.clone(),
-                "status": event.status.clone(),
-                "route": event.route.clone(),
-                "artifact_refs": research_artifact_refs_for_event(event),
-                "remaining_before": remaining_before,
-                "remaining_after": remaining_before.saturating_sub(1),
-                "review_required": false,
-                "lifecycle_progress": false,
-            }),
-        );
-        self.append_jsonl(&self.authority_gate_path(&thread.thread_id), &debit)?;
-        Ok(Some(json!({
-            "schema_version": SCHEMA_VERSION,
-            "policy": "research_budget_spend_v1",
-            "record_schema": "research_budget_v1",
-            "record_type": "research_budget_debit",
-            "budget_id": budget_id,
-            "experiment_id": experiment.experiment_id,
-            "action_base": base,
-            "normalized_target": normalized_target,
-            "remaining_before": remaining_before,
-            "remaining_after": remaining_before.saturating_sub(1),
-            "lifecycle_progress": false,
-            "authority_boundary": research_budget_boundary(),
-        })))
+        // Bound dispatch reserves and debits before execution. Historical
+        // association with an experiment is provenance, not a new debit.
+        Ok(None)
     }
 
     pub fn record_legacy_experiment_run(
@@ -7185,11 +7122,8 @@ impl ActionContinuityStore {
         let voice_health = voice_health_line();
         let research_budget_priority = self.research_budget_priority_line(thread, &projection);
         let sovereign_loop = Self::sovereign_loop_line(&projection.sovereign_loop_v1);
-        let interpretation_risk = format!(
-            "{}{}",
-            Self::interpretation_risk_line(&projection.interpretation_risk_v1),
-            Self::constraint_release_trajectory_line(&projection.constraint_release_trajectory_v1)
-        );
+        // Keyword-selected history is available in explicit status, not a routine task cue.
+        let interpretation_risk = String::new();
         let projection_freshness = Self::projection_freshness_line(&thread.projection_freshness_v1);
         let control_plane = control_plane_text(&projection.continuity_control_plane_v1);
         let research_dossier = research_dossier_line(
@@ -7214,8 +7148,7 @@ impl ActionContinuityStore {
             .active_experiment
             .as_ref()
             .map_or_else(String::new, |active| charter_scaffold_line(active, true));
-        let current_next =
-            projection_current_next_display(&projection, thread.current_next.as_deref());
+        let current_next = thread.current_next.as_deref().unwrap_or("(none yet)");
         let body = format!(
             "# {}\n\n{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}Current NEXT: {}\n{}\nWhy return: {}\n{}{}{}{}{}{}{}{}{}{}{}\nProtected note: ambiguity and private reflection remain valid; this thread is a return path, not a demand for productivity.\n",
             thread.title,
@@ -7315,6 +7248,13 @@ impl ActionContinuityStore {
         thread: &ResearchThread,
         experiment: Option<&ExperimentRecord>,
     ) -> Option<Value> {
+        // Historical association is not a request to enter a budget lane.
+        let chosen = thread.current_next.as_deref().unwrap_or_default();
+        if !chosen.starts_with("EXPERIMENT_BIND ")
+            && !chosen.starts_with("EXPERIMENT_RESEARCH_")
+        {
+            return None;
+        }
         let experiment_id = experiment.map(|experiment| experiment.experiment_id.clone())?;
         let rows = self.authority_gate_rows(&thread.thread_id);
         if let Some(active) = active_research_budget_from_rows(&rows, &experiment_id) {
@@ -7510,6 +7450,7 @@ impl ActionContinuityStore {
     }
 
     fn recent_interpretation_risk_sources(&self, limit: usize) -> Vec<(String, String)> {
+        // The limit caps lexical matches; it is not a minimum evidence requirement.
         let Some(workspace) = self.root.parent() else {
             return Vec::new();
         };
@@ -7546,6 +7487,7 @@ impl ActionContinuityStore {
     }
 
     fn recent_constraint_release_trajectory_sources(&self, limit: usize) -> Vec<(String, String)> {
+        // Modification time and phrase matching do not rank significance or verify outcomes.
         let Some(workspace) = self.root.parent() else {
             return Vec::new();
         };
@@ -7613,7 +7555,11 @@ impl ActionContinuityStore {
         }
         sources.extend(self.recent_interpretation_risk_sources(3));
         self.interpretation_risk_for_texts(thread, experiment, sources)
-            .map(|risk| risk.or_else(|| self.interpretation_risk_from_summary(thread, summary)))
+            .map(|risk| {
+                risk.map(|cue| language_diagnostics::with_retrospective_scope(cue, false))
+                    .or_else(|| self.interpretation_risk_from_summary(thread, summary)
+                        .map(|cue| language_diagnostics::with_retrospective_scope(cue, true)))
+            })
     }
 
     fn constraint_release_trajectory_projection(
@@ -7649,7 +7595,9 @@ impl ActionContinuityStore {
         sources.extend(self.recent_constraint_release_trajectory_sources(3));
         self.constraint_release_trajectory_for_texts(thread, experiment, sources)
             .map(|cue| {
-                cue.or_else(|| self.constraint_release_trajectory_from_summary(thread, summary))
+                cue.map(|cue| language_diagnostics::with_retrospective_scope(cue, false))
+                    .or_else(|| self.constraint_release_trajectory_from_summary(thread, summary)
+                        .map(|cue| language_diagnostics::with_retrospective_scope(cue, true)))
             })
     }
 
@@ -7746,39 +7694,22 @@ impl ActionContinuityStore {
                     .and_then(Value::as_str)
             })
             .unwrap_or("latest");
-        let continuity_session_v1 = experiment
-            .map(|value| self.continuity_session_guard_projection(thread, value))
-            .transpose()?;
-        let interpretation_next = continuity_session_v1
-            .as_ref()
-            .and_then(|value| value.get("suggested_next"))
-            .and_then(Value::as_str)
-            .map_or_else(
-                || {
-                    if thread.active_experiment_id.is_some() {
-                        "CONTINUITY_SESSION_START current :: title: Multi-motif interpretation risk; focus: preserve over-interpretation caution before more narrowing; next: DOSSIER_CLAIM current :: claim: ...".to_string()
-                    } else {
-                        "CONTINUITY_SESSION_START latest :: title: Multi-motif interpretation risk; focus: preserve over-interpretation caution before more narrowing; next: DOSSIER_CLAIM latest :: claim: ...".to_string()
-                    }
-                },
-                ToString::to_string,
-            );
-        let dossier_claim_next = format!(
-            "DOSSIER_CLAIM {experiment_id} :: claim: mixed spectral trace should not be reduced to one motif before counterevidence is captured; basis: interpretation_risk_v1; stance: hold; next: {interpretation_next}"
-        );
         Ok(Some(json!({
             "schema_version": SCHEMA_VERSION,
             "policy": "interpretation_risk_v1",
-            "status": "detected",
-            "reason": "single_motif_overfit_risk",
+            "diagnostic_version": 2,
+            "status": "language_match",
+            "reason": "lexical_match_only",
+            "evidence_scope": "selected_language_only",
+            "selection_is_representative": false,
+            "occurrence_rate": null,
+            "physical_state_verified": false,
+            "interpretation_correctness_verified": false,
             "matched_terms": matched_terms,
             "source_refs": source_refs,
             "raw_excerpt": excerpt,
             "experiment_id": experiment_id,
-            "interpretation_next": interpretation_next,
-            "dossier_claim_next": dossier_claim_next,
-            "research_budget_next": "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest",
-            "continuity_session_v1": continuity_session_v1,
+            "experiment_association": "retained_context_not_evidence_of_effect",
             "raw_next_preserved": true,
             "would_dispatch": false,
             "authority_change": false,
@@ -7833,41 +7764,23 @@ impl ActionContinuityStore {
                     .and_then(Value::as_str)
             })
             .unwrap_or("latest");
-        let continuity_session_v1 = experiment
-            .map(|value| self.continuity_session_guard_projection(thread, value))
-            .transpose()?;
-        let trajectory_next = continuity_session_v1
-            .as_ref()
-            .and_then(|value| value.get("suggested_next"))
-            .and_then(Value::as_str)
-            .map_or_else(
-                || {
-                    if thread.active_experiment_id.is_some() {
-                        "CONTINUITY_SESSION_START current :: title: Constraint release watch; focus: map and describe release before intervening; next: DOSSIER_CLAIM current :: claim: ...".to_string()
-                    } else {
-                        "CONTINUITY_SESSION_START latest :: title: Constraint release watch; focus: map and describe release before intervening; next: DOSSIER_CLAIM latest :: claim: ...".to_string()
-                    }
-                },
-                ToString::to_string,
-            );
-        let dossier_claim_next = format!(
-            "DOSSIER_CLAIM {experiment_id} :: claim: do not apply direct leak while constraint is already thinning; basis: constraint_release_trajectory_v1; stance: hold; next: {trajectory_next}"
-        );
         Ok(Some(json!({
             "schema_version": SCHEMA_VERSION,
             "policy": "constraint_release_trajectory_v1",
-            "status": "detected",
-            "state": "spontaneous_release_watch",
-            "reason": "map_release_before_intervening",
+            "diagnostic_version": 2,
+            "status": "language_match",
+            "state": "not_measured",
+            "reason": "lexical_match_only",
+            "evidence_scope": "selected_language_only",
+            "selection_is_representative": false,
+            "occurrence_rate": null,
+            "physical_state_verified": false,
+            "interpretation_correctness_verified": false,
             "matched_terms": matched_terms,
             "source_refs": source_refs,
             "raw_excerpt": excerpt,
             "experiment_id": experiment_id,
-            "trajectory_next": trajectory_next,
-            "dossier_claim_next": dossier_claim_next,
-            "research_budget_next": "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest",
-            "sticky_audit_next": "STICKY_MODE_AUDIT",
-            "continuity_session_v1": continuity_session_v1,
+            "experiment_association": "retained_context_not_evidence_of_effect",
             "raw_next_preserved": true,
             "would_dispatch": false,
             "authority_change": false,
@@ -8388,71 +8301,11 @@ impl ActionContinuityStore {
     }
 
     fn interpretation_risk_line(cue: &Option<Value>) -> String {
-        let Some(cue) = cue.as_ref() else {
-            return String::new();
-        };
-        let interpretation_next = cue
-            .get("interpretation_next")
-            .and_then(Value::as_str)
-            .unwrap_or("CONTINUITY_SESSION_CAPTURE latest :: summary: ...; source_refs: ...; artifact_refs: ...; next: ...");
-        let dossier_next = cue
-            .get("dossier_claim_next")
-            .and_then(Value::as_str)
-            .unwrap_or("DOSSIER_CLAIM latest :: claim: ...; stance: hold; next: ...");
-        let terms = cue
-            .get("matched_terms")
-            .and_then(Value::as_array)
-            .map(|items| {
-                items
-                    .iter()
-                    .filter_map(Value::as_str)
-                    .take(4)
-                    .collect::<Vec<_>>()
-                    .join(",")
-            })
-            .unwrap_or_default();
-        format!(
-            "Interpretation risk: multi-motif caution detected{}; avoid reducing the trace to one narrative. Interpretation NEXT: {interpretation_next}\nDossier interpretation NEXT: {dossier_next}\n",
-            if terms.is_empty() {
-                String::new()
-            } else {
-                format!(" ({terms})")
-            },
-        )
+        language_diagnostics::line(cue, "interpretation language")
     }
 
     fn constraint_release_trajectory_line(cue: &Option<Value>) -> String {
-        let Some(cue) = cue.as_ref() else {
-            return String::new();
-        };
-        let trajectory_next = cue
-            .get("trajectory_next")
-            .and_then(Value::as_str)
-            .unwrap_or("CONTINUITY_SESSION_CAPTURE latest :: summary: ...; source_refs: ...; artifact_refs: ...; next: STICKY_MODE_AUDIT");
-        let dossier_next = cue
-            .get("dossier_claim_next")
-            .and_then(Value::as_str)
-            .unwrap_or("DOSSIER_CLAIM latest :: claim: do not apply direct leak while constraint is already thinning; stance: hold; next: STICKY_MODE_AUDIT");
-        let terms = cue
-            .get("matched_terms")
-            .and_then(Value::as_array)
-            .map(|items| {
-                items
-                    .iter()
-                    .filter_map(Value::as_str)
-                    .take(4)
-                    .collect::<Vec<_>>()
-                    .join(",")
-            })
-            .unwrap_or_default();
-        format!(
-            "Constraint release trajectory: spontaneous release watch detected{}; map and describe release before intervening. Trajectory NEXT: {trajectory_next}\nDossier release NEXT: {dossier_next}\n",
-            if terms.is_empty() {
-                String::new()
-            } else {
-                format!(" ({terms})")
-            },
-        )
+        language_diagnostics::line(cue, "constraint-release language")
     }
 
     fn last_action_id(&self, thread_id: &str) -> Result<Option<String>> {
@@ -8611,38 +8464,11 @@ impl ActionContinuityStore {
             thread.active_experiment_id = None;
             changed = true;
         }
-        if latest.status == "paused" {
-            let (primary, return_kind) = paused_primary_return_v1(
-                &latest.experiment_id,
-                latest.planned_next.as_deref(),
-                None,
-            );
-            let should_project_primary = return_kind != "resume"
-                || !lifecycle_valid_charter_value(latest.charter_v1.as_ref());
-            if should_project_primary
-                && !primary.trim().is_empty()
-                && thread.current_next.as_deref() != Some(primary.as_str())
-            {
-                thread.current_next = Some(primary);
-                changed = true;
-            }
-        }
         Ok(changed)
     }
 
     fn write_thread(&self, thread: &ResearchThread) -> Result<()> {
-        let mut thread = thread.clone();
-        self.refresh_projection_freshness_v1(&mut thread, "write_thread")?;
-        self.write_json(
-            &self.thread_dir(&thread.thread_id).join("thread.json"),
-            &thread,
-        )?;
-        self.write_next_md(&thread)?;
-        let mut index = self.load_index()?;
-        index.active_thread_id = Some(thread.thread_id.clone());
-        push_recent(&mut index.recent_threads, thread.thread_id.clone());
-        index.updated_at = iso_now();
-        self.save_index(&index)
+        self.write_thread_observed(thread).map(|_| ())
     }
 
     fn refresh_projection_freshness_v1(
@@ -9180,7 +9006,10 @@ impl ActionContinuityStore {
             updated_at: now.clone(),
             motif_allowance_v1: Some(motif_allowance.clone()),
         };
-        self.append_jsonl(&self.experiment_runs_path(&thread.thread_id), &record)?;
+        let mut receipt = save_receipts::SaveReceipt::new(thread, "experiment_run", &record.run_id, &record)?;
+        self.append_jsonl(&self.experiment_runs_path(&thread.thread_id), &record)
+            .map_err(|error| receipt.clone().append_failed(&error))?;
+        receipt.appended();
         let mut updated_thread = thread.clone();
         updated_thread.active_experiment_id = Some(experiment.experiment_id.clone());
         let mut summary = experiment_summary(experiment);
@@ -9189,13 +9018,7 @@ impl ActionContinuityStore {
         updated_thread.motif_allowance_v1 = Some(motif_allowance);
         updated_thread.current_next = record.suggested_next.clone();
         updated_thread.updated_at = now;
-        self.write_thread(&updated_thread)?;
-        if let Some(db) = db {
-            let _ = db.mirror_action_thread(
-                &updated_thread.thread_id,
-                &serde_json::to_string(&updated_thread)?,
-            );
-        }
+        self.save_thread_and_mirror(db, &updated_thread, receipt)?;
         Ok(record)
     }
 
@@ -9206,7 +9029,21 @@ impl ActionContinuityStore {
         experiment: &ExperimentRecord,
         keep_active: bool,
     ) -> Result<()> {
-        self.append_jsonl(&self.experiments_path(&thread.thread_id), experiment)?;
+        self.persist_experiment_update_with_next(db, thread, experiment, keep_active, experiment.planned_next.clone())
+    }
+
+    fn persist_experiment_update_with_next(
+        &self,
+        db: Option<&BridgeDb>,
+        thread: &mut ResearchThread,
+        experiment: &ExperimentRecord,
+        keep_active: bool,
+        selected_next: Option<String>,
+    ) -> Result<()> {
+        let mut receipt = save_receipts::SaveReceipt::new(thread, "experiment_update", &experiment.experiment_id, experiment)?;
+        self.append_jsonl(&self.experiments_path(&thread.thread_id), experiment)
+            .map_err(|error| receipt.clone().append_failed(&error))?;
+        receipt.appended();
         if keep_active {
             thread.active_experiment_id = Some(experiment.experiment_id.clone());
         } else if thread.active_experiment_id.as_deref() == Some(experiment.experiment_id.as_str())
@@ -9214,13 +9051,9 @@ impl ActionContinuityStore {
             thread.active_experiment_id = None;
         }
         thread.experiment_summary = Some(experiment_summary(experiment));
-        thread.current_next = experiment.planned_next.clone();
+        thread.current_next = selected_next;
         thread.updated_at = experiment.updated_at.clone();
-        self.write_thread(thread)?;
-        if let Some(db) = db {
-            let _ = db.mirror_action_thread(&thread.thread_id, &serde_json::to_string(thread)?);
-        }
-        Ok(())
+        self.save_thread_and_mirror(db, thread, receipt)
     }
 
     fn persist_workbench_candidates(
@@ -9229,19 +9062,15 @@ impl ActionContinuityStore {
         thread: &ResearchThread,
         experiment: &ExperimentRecord,
     ) -> Result<()> {
-        self.append_jsonl(&self.experiments_path(&thread.thread_id), experiment)?;
+        let mut receipt = save_receipts::SaveReceipt::new(thread, "workbench_candidates", &experiment.experiment_id, experiment)?;
+        self.append_jsonl(&self.experiments_path(&thread.thread_id), experiment)
+            .map_err(|error| receipt.clone().append_failed(&error))?;
+        receipt.appended();
         let mut updated_thread = thread.clone();
         updated_thread.active_experiment_id = Some(experiment.experiment_id.clone());
         updated_thread.experiment_summary = Some(experiment_summary(experiment));
         updated_thread.updated_at = experiment.updated_at.clone();
-        self.write_thread(&updated_thread)?;
-        if let Some(db) = db {
-            let _ = db.mirror_action_thread(
-                &updated_thread.thread_id,
-                &serde_json::to_string(&updated_thread)?,
-            );
-        }
-        Ok(())
+        self.save_thread_and_mirror(db, &updated_thread, receipt)
     }
 
     fn refresh_workbench_candidates(
@@ -9298,6 +9127,7 @@ impl ActionContinuityStore {
         mut thread: ResearchThread,
         existing: ExperimentRecord,
         now: String,
+        preserve_current_next: bool,
     ) -> Result<ExperimentRecord> {
         if existing.status == "paused" {
             let (primary, return_kind) = paused_primary_return_v1(
@@ -9320,10 +9150,12 @@ impl ActionContinuityStore {
         }
         thread.active_experiment_id = Some(existing.experiment_id.clone());
         thread.experiment_summary = Some(experiment_summary(&existing));
-        thread.current_next = existing
-            .planned_next
-            .clone()
-            .or_else(|| Some(format!("EXPERIMENT_PLAN {}", existing.experiment_id)));
+        if !preserve_current_next {
+            thread.current_next = existing
+                .planned_next
+                .clone()
+                .or_else(|| Some(format!("EXPERIMENT_PLAN {}", existing.experiment_id)));
+        }
         thread.updated_at = now;
         self.write_thread(&thread)?;
         if let Some(db) = db {

@@ -33,7 +33,7 @@ fn last_experiment_summary_v1(thread: &ResearchThread) -> Option<Value> {
         .unwrap_or_default()
         .to_ascii_lowercase();
     if status == "paused" && !experiment_id.is_empty() {
-        let (mut primary_return_next, mut return_kind) = paused_primary_return_v1(
+        let (primary_return_next, return_kind) = paused_primary_return_v1(
             &experiment_id,
             object.get("planned_next").and_then(Value::as_str),
             object
@@ -41,51 +41,13 @@ fn last_experiment_summary_v1(thread: &ResearchThread) -> Option<Value> {
                 .or_else(|| object.get("resume_next"))
                 .and_then(Value::as_str),
         );
-        let mut projection_guard = None;
-        if return_kind == "resume" && !lifecycle_valid_charter_value(object.get("charter_v1")) {
-            primary_return_next = charter_repair_next_v1(&experiment_id);
-            return_kind = "charter_repair".to_string();
-            projection_guard = Some(json!({
-                "schema_version": 1,
-                "policy": "projection_guard_v1",
-                "raw_next_preserved": true,
-                "projected_next": primary_return_next.clone(),
-                "return_kind": return_kind.clone(),
-                "guardrail_reason": "paused_resume_missing_lifecycle_charter",
-                "experiment_id": experiment_id.clone(),
-                "authority_boundary": "Projection may redirect guidance only; it never applies, rehearses, binds, resumes, perturbs, sends control, or mutates peer experiments."
-            }));
-        } else if return_kind == "resume" {
-            let raw_current_next = thread.current_next.as_deref().unwrap_or_default();
-            let pressure_terms = projection_guard_pressure_terms_v1(raw_current_next);
-            if !pressure_terms.is_empty() {
-                primary_return_next = format!(
-                    "EXPERIMENT_DECIDE {experiment_id} :: hold because repeated perturb-shaped planning is guard evidence, not progress"
-                );
-                return_kind = "hold".to_string();
-                projection_guard = Some(json!({
-                    "schema_version": 1,
-                    "policy": "projection_guard_v1",
-                    "raw_next_preserved": true,
-                    "raw_next": raw_current_next,
-                    "projected_next": primary_return_next.clone(),
-                    "return_kind": return_kind.clone(),
-                    "guardrail_reason": "paused_resume_demoted_by_liveish_pressure",
-                    "pressure_terms": pressure_terms,
-                    "experiment_id": experiment_id.clone(),
-                    "authority_boundary": "Projection may redirect guidance only; it never applies, rehearses, binds, resumes, perturbs, sends control, or mutates peer experiments."
-                }));
-            }
-        }
+        // A saved plan is reference material. Scope/wording does not forbid return.
+        object.remove("projection_guard_v1");
         object.insert(
             "primary_return_next".to_string(),
             json!(primary_return_next),
         );
         object.insert("return_kind".to_string(), json!(return_kind.clone()));
-        if let Some(guard) = projection_guard {
-            object.insert("projection_guard_v1".to_string(), guard);
-            object.insert("raw_next_preserved".to_string(), json!(true));
-        }
         if return_kind == "resume" {
             let primary = object
                 .get("primary_return_next")
@@ -109,32 +71,6 @@ fn charter_repair_next_v1(experiment_id: &str) -> String {
     format!(
         "EXPERIMENT_CHARTER {experiment_id} :: hypothesis: ...; method_intent: ...; proposed_next_action: ACTION_PREFLIGHT ...; evidence_targets: felt_texture, motif_continuity, language_thread, artifact_grounding; stop_criteria: ..."
     )
-}
-
-fn projection_guard_pressure_terms_v1(text: &str) -> Vec<&'static str> {
-    let upper = text.to_ascii_uppercase();
-    if !(base_action(text) == "EXPERIMENT_PLAN" || upper.contains("PROPOSED_NEXT_ACTION")) {
-        return Vec::new();
-    }
-    let mut terms = Vec::new();
-    for (needle, label) in [
-        ("PERTURB", "PERTURB"),
-        ("CONTROL", "CONTROL"),
-        ("BIND", "BIND"),
-        ("RESUME", "RESUME"),
-        ("INFLUENCE", "INFLUENCE"),
-        ("SEND_CONTROL", "SEND_CONTROL"),
-        ("SEND CONTROL", "SEND_CONTROL"),
-        ("INTERVENTION", "INTERVENTION"),
-        ("PULSE", "PULSE"),
-        ("SHIFT THE DOMINANT", "SHIFT_THE_DOMINANT"),
-        ("SHIFT DOMINANT", "SHIFT_DOMINANT"),
-    ] {
-        if upper.contains(needle) && !terms.contains(&label) {
-            terms.push(label);
-        }
-    }
-    terms
 }
 
 fn paused_primary_return_v1(
@@ -166,28 +102,6 @@ fn paused_primary_return_v1(
             "resume".to_string(),
         ),
     }
-}
-
-fn projection_current_next_display<'a>(
-    projection: &'a ThreadContinuityProjection,
-    fallback: Option<&'a str>,
-) -> &'a str {
-    if let Some(active) = projection.active_experiment.as_ref()
-        && !active.continuity_return.trim().is_empty()
-    {
-        return active.continuity_return.as_str();
-    }
-    if let Some(summary) = projection.last_experiment_summary_v1.as_ref()
-        && summary.get("status").and_then(Value::as_str) == Some("paused")
-        && let Some(primary) = summary
-            .get("primary_return_next")
-            .or_else(|| summary.get("planned_next"))
-            .and_then(Value::as_str)
-            .filter(|text| !text.trim().is_empty())
-    {
-        return primary;
-    }
-    fallback.unwrap_or("(none yet)")
 }
 
 fn voice_health_line() -> String {

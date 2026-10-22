@@ -8,6 +8,7 @@ mod inquiry;
 mod inquiry_v2;
 mod owner_research;
 mod policy;
+pub mod public_web;
 mod queue;
 mod types;
 

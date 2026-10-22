@@ -38,6 +38,13 @@ if [ -f "$PROVIDER_OBSERVATION_CONFIG" ]; then
     . "$PROVIDER_OBSERVATION_CONFIG"
 fi
 
+# Operator-approved public-web selection persists independently of reservoir dials.
+PUBLIC_WEB_LAUNCH_CONFIG="$DEPLOYMENT_CONTROL/../public-web/astrid/launch.env"
+if [ -f "$PUBLIC_WEB_LAUNCH_CONFIG" ]; then
+    # shellcheck source=/dev/null
+    . "$PUBLIC_WEB_LAUNCH_CONFIG"
+fi
+
 for key in \
     ASTRID_BRIDGE_MLX_URL \
     ASTRID_BRIDGE_MLX_PROFILE \
@@ -53,6 +60,7 @@ for key in \
     ASTRID_GENERATION_RECORD_DIR \
     ASTRID_PROVIDER_OBSERVATION \
     ASTRID_PROVIDER_OBSERVATION_DIR \
+    ASTRID_PUBLIC_WEB_CONFIG \
     RUST_LOG
 do
     launchctl_env "$key"

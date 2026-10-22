@@ -73,6 +73,22 @@ class ReleaseLaunchTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "selected manifest changed"):
             self.command()
 
+    def test_new_web_helper_is_verified_when_present_without_breaking_old_releases(self):
+        self.command()
+        helper = self.stage / "helpers/astrid-public-web"
+        helper.write_bytes(b"synthetic shared web helper")
+        manifest = json.loads(self.manifest.read_bytes())
+        manifest["artifacts"]["public-web-helper"] = {"path": str(helper), "sha256": launch.digest(helper)}
+        self.manifest.write_text(json.dumps(manifest))
+        selected = self.control / "active.json"
+        value = json.loads(selected.read_bytes())
+        value["manifest_sha256"] = launch.digest(self.manifest)
+        selected.write_text(json.dumps(value))
+        self.command()
+        helper.write_bytes(b"different implementation")
+        with self.assertRaisesRegex(ValueError, "selected artifact changed: public-web-helper"):
+            self.command()
+
     def test_missing_source_is_refused(self):
         (self.source / "capsules/spectral-bridge/src").rmdir()
         with self.assertRaisesRegex(ValueError, "source tree is unavailable"):

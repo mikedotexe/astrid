@@ -28,8 +28,8 @@ impl Fixture {
         queue(&store, &mut conv, &mut target, "synthetic-choice", false).unwrap();
         let id = target.as_ref().unwrap().operation_id.clone().unwrap();
         conv.introspect_target = target.clone();
-        let output = prepare(&store, &mut conv, &id, || {
-            super::super::super::prepare_shared_study_target(&reader, target)
+        let output = prepare(&store, &mut conv, &id, |target| {
+            super::super::super::prepare_shared_study_target(&reader, Some(target))
         })
         .unwrap();
         claim(&store, &mut conv, &id).unwrap();

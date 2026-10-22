@@ -262,18 +262,6 @@ pub fn build_control_plane_v1(input: &Value) -> Value {
         ));
     }
 
-    if input.get("interpretation_risk_v1").is_some()
-        || input.get("constraint_release_trajectory_v1").is_some()
-    {
-        routes.push(route(
-            "Continuity Session",
-            "CONTINUITY_SESSION_CAPTURE latest".to_string(),
-            "interpretation or release cue needs capture",
-            10,
-            "self_study_cue",
-        ));
-    }
-
     routes.sort_by(|left, right| {
         let left_priority = left
             .get("priority")

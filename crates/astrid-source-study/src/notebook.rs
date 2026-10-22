@@ -3,6 +3,8 @@ use crate::question_sources::source_reference;
 use crate::{Catalog, Page, digest};
 use serde::{Deserialize, Serialize};
 use std::fmt::Write as _;
+#[path = "notebook_accounts.rs"]
+mod accounts;
 #[path = "notebook_revisions.rs"]
 mod revisions;
 

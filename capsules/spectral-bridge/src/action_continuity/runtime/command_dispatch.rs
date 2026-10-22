@@ -6,7 +6,20 @@ pub fn handle_thread_next_action(
     telemetry: &SpectralTelemetry,
     fill_pct: f32,
 ) -> Option<Result<String>> {
-    let store = ActionContinuityStore::for_astrid_workspace();
+    let store = ActionContinuityStore::for_astrid_workspace().with_save_warnings();
+    thread_next_action_with_store(&store, db, base_action, original, response_text, telemetry, fill_pct)
+        .map(|result| store.finish_save_warnings(result))
+}
+
+fn thread_next_action_with_store(
+    store: &ActionContinuityStore,
+    db: &BridgeDb,
+    base_action: &str,
+    original: &str,
+    response_text: &str,
+    telemetry: &SpectralTelemetry,
+    fill_pct: f32,
+) -> Option<Result<String>> {
     match crate::action_self_knowledge::handle_action(store.root(), base_action, original) {
         Ok(Some(message)) => return Some(Ok(message)),
         Ok(None) => {},
@@ -142,7 +155,7 @@ pub fn handle_thread_next_action(
             let selector = strip_action_arg(original, base_action);
             Some(
                 repair_experiment_command_arg(
-                    &store,
+                    store,
                     Some(db),
                     base_action,
                     original,
@@ -292,7 +305,7 @@ pub fn handle_thread_next_action(
             let raw = strip_action_arg(original, base_action);
             Some(
                 repair_experiment_command_arg(
-                    &store,
+                    store,
                     Some(db),
                     base_action,
                     original,
@@ -329,7 +342,7 @@ pub fn handle_thread_next_action(
             let selector = strip_action_arg(original, base_action);
             Some(
                 repair_experiment_command_arg(
-                    &store,
+                    store,
                     Some(db),
                     base_action,
                     original,
@@ -388,7 +401,7 @@ pub fn handle_thread_next_action(
             let raw = strip_action_arg(original, base_action);
             Some(
                 repair_experiment_command_arg(
-                    &store,
+                    store,
                     Some(db),
                     base_action,
                     original,
@@ -420,7 +433,7 @@ pub fn handle_thread_next_action(
             let raw = strip_action_arg(original, base_action);
             Some(
                 repair_experiment_command_arg(
-                    &store,
+                    store,
                     Some(db),
                     base_action,
                     original,
@@ -526,6 +539,76 @@ pub fn parse_experiment_bind(original: &str) -> Result<(Option<String>, String)>
         anyhow::bail!("EXPERIMENT_BIND needs an inner NEXT action after `::`.");
     }
     Ok((selector, action))
+}
+
+impl ActionContinuityStore {
+    /// Resolve an explicit local target before any inner action can execute.
+    /// This is target validation, not a budget reservation or live authority.
+    pub fn resolve_experiment_bind_target(&self, selector: Option<&str>) -> Result<String> {
+        // Ordinary projection readers repair cached state; admission must only read.
+        let index: ContinuityIndex = serde_json::from_str(&fs::read_to_string(self.index_path())?)?;
+        anyhow::ensure!(
+            index.schema_version == SCHEMA_VERSION,
+            "unsupported continuity index"
+        );
+        let thread_id = index.active_thread_id
+            .context("EXPERIMENT_BIND requires an existing thread")?;
+        anyhow::ensure!(
+            !thread_id.is_empty()
+                && thread_id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-'),
+            "invalid thread identity"
+        );
+        let thread: ResearchThread = serde_json::from_str(&fs::read_to_string(
+            self.thread_dir(&thread_id).join("thread.json"),
+        )?)?;
+        anyhow::ensure!(
+            thread.thread_id == thread_id && thread.schema_version == SCHEMA_VERSION,
+            "thread identity or schema mismatch"
+        );
+        anyhow::ensure!(
+            thread.system_origin == SYSTEM,
+            "experiment thread owner mismatch"
+        );
+        let selector = selector.unwrap_or("current").trim();
+        anyhow::ensure!(!is_peer_experiment_selector(selector), "cannot bind a peer experiment");
+        let raw = fs::read_to_string(self.experiments_path(&thread.thread_id))?;
+        anyhow::ensure!(raw.ends_with('\n'), "incomplete experiment history; preserved");
+        let mut latest = std::collections::BTreeMap::new();
+        for line in raw.lines() {
+            let record: ExperimentRecord = serde_json::from_value(research_json::parse(line)?)?;
+            anyhow::ensure!(
+                record.schema_version == SCHEMA_VERSION && record.thread_id == thread_id
+                    && record.experiment_id.starts_with(LOCAL_EXPERIMENT_PREFIX),
+                "experiment history identity or schema mismatch"
+            );
+            latest.insert(record.experiment_id.clone(), record);
+        }
+        let experiments: Vec<_> = latest.into_values().collect();
+        let target = if selector.is_empty() || selector.eq_ignore_ascii_case("current") {
+            thread.active_experiment_id.as_deref().context(
+                "EXPERIMENT_BIND current requires an explicitly selected experiment",
+            )?
+        } else {
+            selector
+        };
+        let exact = experiments.iter().find(|record| record.experiment_id == target);
+        let record = if let Some(record) = exact {
+            record
+        } else {
+            anyhow::ensure!(!target.starts_with("exp_"), "unknown experiment identity");
+            let mut matches = experiments.iter().filter(|record| {
+                record.title.to_lowercase().contains(&target.to_lowercase())
+            });
+            let record = matches.next().context("no matching local experiment")?;
+            anyhow::ensure!(matches.next().is_none(), "ambiguous experiment; use its exact ID");
+            record
+        };
+        Ok(record.experiment_id.clone())
+    }
+}
+
+pub fn resolve_experiment_bind_target(selector: Option<&str>) -> Result<String> {
+    ActionContinuityStore::for_astrid_workspace().resolve_experiment_bind_target(selector)
 }
 
 pub fn is_peer_experiment_selector(selector: &str) -> bool {

@@ -1,0 +1,358 @@
+{
+  "schema": "synthetic-history-scan-measurements-v1",
+  "python": "3.14.3",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "production_sources": {
+    "/Users/v/.codex/worktrees/provenance-history-20261020/minime/minime_autonomy/continuity_history.py": "d7e906ef549d1b01ea4dac154e32dca383b047f985adfee8f1ff6083146f3491",
+    "/Users/v/.codex/worktrees/provenance-history-20261020/minime/minime_autonomy/runtime.py": "638ad58fca7d3b355757d7931b00979afa297b44eddd42acb99e27bf082fd4ff"
+  },
+  "limit": 200,
+  "repeats": 3,
+  "scope": "actual recent event readers; synthetic data; no projection/model/live timing claims",
+  "timing": "warm local reads with instrumentation; descriptive only, not a release performance threshold",
+  "missing_file": "both readers return empty without opening history",
+  "measurements": [
+    {
+      "fixture": "empty",
+      "method": "_recent_events",
+      "input_bytes": 0,
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "returned_records": 0,
+      "output_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 0,
+      "read_calls": 0,
+      "lines_examined": 0,
+      "elapsed_ns": [
+        99291,
+        44375,
+        38708
+      ],
+      "median_elapsed_ns": 44375
+    },
+    {
+      "fixture": "empty",
+      "method": "_recent_display_events",
+      "input_bytes": 0,
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "returned_records": 0,
+      "output_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 0,
+      "read_calls": 0,
+      "lines_examined": 0,
+      "elapsed_ns": [
+        44625,
+        35083,
+        34000
+      ],
+      "median_elapsed_ns": 35083
+    },
+    {
+      "fixture": "unique-1000",
+      "method": "_recent_events",
+      "input_bytes": 423890,
+      "input_sha256": "501704144d4fdcaf6537630e53b4790e031786d07a558a94ce46d51d2244f4bf",
+      "returned_records": 200,
+      "output_sha256": "12b99f4196c2d614d4d438395d1e2795843a0e6c445e6ccf24dab806ab6a0cb9",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 131072,
+      "read_calls": 2,
+      "lines_examined": 200,
+      "elapsed_ns": [
+        551333,
+        550125,
+        497459
+      ],
+      "median_elapsed_ns": 550125
+    },
+    {
+      "fixture": "unique-1000",
+      "method": "_recent_display_events",
+      "input_bytes": 423890,
+      "input_sha256": "501704144d4fdcaf6537630e53b4790e031786d07a558a94ce46d51d2244f4bf",
+      "returned_records": 200,
+      "output_sha256": "12b99f4196c2d614d4d438395d1e2795843a0e6c445e6ccf24dab806ab6a0cb9",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 131072,
+      "read_calls": 2,
+      "lines_examined": 200,
+      "elapsed_ns": [
+        537833,
+        526583,
+        472208
+      ],
+      "median_elapsed_ns": 526583
+    },
+    {
+      "fixture": "duplicate-tail-1000",
+      "method": "_recent_events",
+      "input_bytes": 502890,
+      "input_sha256": "5ecac8e5ec93be96c06b4ed16bbfcd31264c0465dfdf8f14e896654c6399368d",
+      "returned_records": 200,
+      "output_sha256": "f180c5b06e858e042e0056f3d19ed83e857b57a0d61271eae259574b922bd02e",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 131072,
+      "read_calls": 2,
+      "lines_examined": 200,
+      "elapsed_ns": [
+        509583,
+        450333,
+        439959
+      ],
+      "median_elapsed_ns": 450333
+    },
+    {
+      "fixture": "duplicate-tail-1000",
+      "method": "_recent_display_events",
+      "input_bytes": 502890,
+      "input_sha256": "5ecac8e5ec93be96c06b4ed16bbfcd31264c0465dfdf8f14e896654c6399368d",
+      "returned_records": 200,
+      "output_sha256": "acc77d65a208daca57e398ec522d8d5396b9115c2c9258b1a5df4b6282184350",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 502890,
+      "read_calls": 8,
+      "lines_examined": 1190,
+      "elapsed_ns": [
+        2338084,
+        2362125,
+        2332708
+      ],
+      "median_elapsed_ns": 2338084
+    },
+    {
+      "fixture": "malformed-tail-1000",
+      "method": "_recent_events",
+      "input_bytes": 351690,
+      "input_sha256": "85b5e5272ee0754901c01c44abc96c6d4f490c5c85f692e44548788f23562bdb",
+      "returned_records": 200,
+      "output_sha256": "771f965b2a3bf5beafed0c5274064aa52cd64c8c3804f150df302868115f9cc1",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 351690,
+      "read_calls": 6,
+      "lines_examined": 1200,
+      "elapsed_ns": [
+        2108708,
+        2041083,
+        2122750
+      ],
+      "median_elapsed_ns": 2108708
+    },
+    {
+      "fixture": "malformed-tail-1000",
+      "method": "_recent_display_events",
+      "input_bytes": 351690,
+      "input_sha256": "85b5e5272ee0754901c01c44abc96c6d4f490c5c85f692e44548788f23562bdb",
+      "returned_records": 200,
+      "output_sha256": "771f965b2a3bf5beafed0c5274064aa52cd64c8c3804f150df302868115f9cc1",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 351690,
+      "read_calls": 6,
+      "lines_examined": 1200,
+      "elapsed_ns": [
+        2130791,
+        2316167,
+        2057542
+      ],
+      "median_elapsed_ns": 2130791
+    },
+    {
+      "fixture": "unique-10000",
+      "method": "_recent_events",
+      "input_bytes": 4248890,
+      "input_sha256": "cde050e4af7113bb7e65f5514a64f7ec0b01b4a7018748b9b856d322cccb2560",
+      "returned_records": 200,
+      "output_sha256": "d9d14d73897e56c1d7d35e3ca630257b032e346c690f48588a42ea3613bfa3d8",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 131072,
+      "read_calls": 2,
+      "lines_examined": 200,
+      "elapsed_ns": [
+        709917,
+        465000,
+        443250
+      ],
+      "median_elapsed_ns": 465000
+    },
+    {
+      "fixture": "unique-10000",
+      "method": "_recent_display_events",
+      "input_bytes": 4248890,
+      "input_sha256": "cde050e4af7113bb7e65f5514a64f7ec0b01b4a7018748b9b856d322cccb2560",
+      "returned_records": 200,
+      "output_sha256": "d9d14d73897e56c1d7d35e3ca630257b032e346c690f48588a42ea3613bfa3d8",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 131072,
+      "read_calls": 2,
+      "lines_examined": 200,
+      "elapsed_ns": [
+        559375,
+        478291,
+        459958
+      ],
+      "median_elapsed_ns": 478291
+    },
+    {
+      "fixture": "duplicate-tail-10000",
+      "method": "_recent_events",
+      "input_bytes": 4274090,
+      "input_sha256": "8d261d10008e1d6ff78bcd10847cdfd0a711d356897364d4af745c913df62a0e",
+      "returned_records": 200,
+      "output_sha256": "c08d9b65439d0fbc4ce63b124c2c50d591dc4afedb62c6284e825b50832c2beb",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 131072,
+      "read_calls": 2,
+      "lines_examined": 200,
+      "elapsed_ns": [
+        737917,
+        466542,
+        437625
+      ],
+      "median_elapsed_ns": 466542
+    },
+    {
+      "fixture": "duplicate-tail-10000",
+      "method": "_recent_display_events",
+      "input_bytes": 4274090,
+      "input_sha256": "8d261d10008e1d6ff78bcd10847cdfd0a711d356897364d4af745c913df62a0e",
+      "returned_records": 200,
+      "output_sha256": "ed94f1d593bb4d1ff783916c9de5216a97f3b34b61769505e3894bf8064e8dc0",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 4274090,
+      "read_calls": 66,
+      "lines_examined": 10190,
+      "elapsed_ns": [
+        19615083,
+        18916375,
+        18877125
+      ],
+      "median_elapsed_ns": 18916375
+    },
+    {
+      "fixture": "malformed-tail-10000",
+      "method": "_recent_events",
+      "input_bytes": 2754690,
+      "input_sha256": "7a42bec25c962803338d7028846240763e7cc37ccfe121b0c587c7ff2bfd5abb",
+      "returned_records": 200,
+      "output_sha256": "771f965b2a3bf5beafed0c5274064aa52cd64c8c3804f150df302868115f9cc1",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 2754690,
+      "read_calls": 43,
+      "lines_examined": 10200,
+      "elapsed_ns": [
+        16706083,
+        16595208,
+        16552833
+      ],
+      "median_elapsed_ns": 16595208
+    },
+    {
+      "fixture": "malformed-tail-10000",
+      "method": "_recent_display_events",
+      "input_bytes": 2754690,
+      "input_sha256": "7a42bec25c962803338d7028846240763e7cc37ccfe121b0c587c7ff2bfd5abb",
+      "returned_records": 200,
+      "output_sha256": "771f965b2a3bf5beafed0c5274064aa52cd64c8c3804f150df302868115f9cc1",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 2754690,
+      "read_calls": 43,
+      "lines_examined": 10200,
+      "elapsed_ns": [
+        16210625,
+        16378917,
+        16179542
+      ],
+      "median_elapsed_ns": 16210625
+    },
+    {
+      "fixture": "long-utf8-record",
+      "method": "_recent_events",
+      "input_bytes": 609146,
+      "input_sha256": "8aeb735392f81adc94f3163f8739831b68e1a551fd738464fe071d019375b3f8",
+      "returned_records": 200,
+      "output_sha256": "02418e0e7aa1da868a23091dd9d6c2d30db3d3169803455e7414b82fc962d263",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 609146,
+      "read_calls": 10,
+      "lines_examined": 200,
+      "elapsed_ns": [
+        1311333,
+        1283625,
+        1233166
+      ],
+      "median_elapsed_ns": 1283625
+    },
+    {
+      "fixture": "long-utf8-record",
+      "method": "_recent_display_events",
+      "input_bytes": 609146,
+      "input_sha256": "8aeb735392f81adc94f3163f8739831b68e1a551fd738464fe071d019375b3f8",
+      "returned_records": 200,
+      "output_sha256": "02418e0e7aa1da868a23091dd9d6c2d30db3d3169803455e7414b82fc962d263",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 609146,
+      "read_calls": 10,
+      "lines_examined": 200,
+      "elapsed_ns": [
+        1326208,
+        1197542,
+        1200333
+      ],
+      "median_elapsed_ns": 1200333
+    },
+    {
+      "fixture": "fewer-than-limit-distinct",
+      "method": "_recent_events",
+      "input_bytes": 4198890,
+      "input_sha256": "70ea34264326344262e7dd833f4cdc5eb5fec852f7473c8c760401af9a216b01",
+      "returned_records": 200,
+      "output_sha256": "1d3b427353babee2af7749cad4b257bbb6abec4fa9d5bc7c3d946c2a58b0982b",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 131072,
+      "read_calls": 2,
+      "lines_examined": 200,
+      "elapsed_ns": [
+        760750,
+        512208,
+        474334
+      ],
+      "median_elapsed_ns": 512208
+    },
+    {
+      "fixture": "fewer-than-limit-distinct",
+      "method": "_recent_display_events",
+      "input_bytes": 4198890,
+      "input_sha256": "70ea34264326344262e7dd833f4cdc5eb5fec852f7473c8c760401af9a216b01",
+      "returned_records": 1,
+      "output_sha256": "807bd796ed9553670eaab1c23c0b7819d210e8d986d621d3c480f46cdc38ed84",
+      "parity": true,
+      "input_unchanged": true,
+      "bytes_read": 4198890,
+      "read_calls": 65,
+      "lines_examined": 10000,
+      "elapsed_ns": [
+        18972084,
+        18951917,
+        18563583
+      ],
+      "median_elapsed_ns": 18951917
+    }
+  ]
+}

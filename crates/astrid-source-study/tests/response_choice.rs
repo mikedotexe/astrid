@@ -11,6 +11,30 @@ use std::{
     process::{Command, Stdio},
 };
 
+#[test]
+fn routine_web_diagnostics_withhold_nested_targets_without_changing_choices() {
+    for command in [
+        "SEARCH confidential query",
+        "browse https://user:secret@example.org/",
+        "EXPERIMENT_BIND e1 :: SEARCH private query",
+        "EXAMINE https://user:secret@example.org/",
+    ] {
+        assert_eq!(
+            astrid_source_study::response_choice::diagnostic_action(command),
+            "WEB [request arguments withheld]"
+        );
+        let response = format!("NEXT: {command}");
+        assert_eq!(
+            inspect_response(&response, false).selected_next.as_deref(),
+            Some(command)
+        );
+    }
+    assert_eq!(
+        astrid_source_study::response_choice::diagnostic_action("REST"),
+        "REST"
+    );
+}
+
 fn wire(output: &StudyOutput, text: &str) -> (String, String) {
     (
         json!({"messages":[{"role":"user","content":output.text}]}).to_string(),

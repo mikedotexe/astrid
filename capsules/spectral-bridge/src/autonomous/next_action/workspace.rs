@@ -92,32 +92,7 @@ fn previous_recorded_choice_was_read_more(conv: &ConversationState) -> bool {
 }
 
 fn extract_url_arg(original: &str, action: &str, fallback: &str) -> Option<String> {
-    let raw_s = strip_action(original, action);
-    let raw_owned = if raw_s.is_empty() {
-        fallback.trim().to_string()
-    } else {
-        raw_s
-    };
-    let raw = raw_owned.trim().trim_matches(|c: char| {
-        c == '"' || c == '\'' || c == '<' || c == '>' || c == '[' || c == ']'
-    });
-    let url = raw
-        .split(['<', '>', '[', ']', ' ', '\n'])
-        .next()
-        .unwrap_or(raw)
-        .trim_end_matches(|c: char| {
-            !c.is_alphanumeric()
-                && c != '/'
-                && c != '-'
-                && c != '_'
-                && c != '~'
-                && c != '%'
-                && c != '?'
-                && c != '='
-                && c != '&'
-                && c != '#'
-        });
-    url.starts_with("http").then(|| url.to_string())
+    crate::action_continuity::research_url_arg(original, action, fallback)
 }
 
 fn queue_browse_url(conv: &mut ConversationState, url: String, source_action: &str) {
@@ -364,12 +339,16 @@ pub(super) fn handle_action(
         "READ_MORE" => {
             if strip_action(original, "READ_MORE").eq_ignore_ascii_case("RAW") {
                 conv.pending_file_listing = Some(super::super::activity_reading::choose_raw_reading(conv)
+                    .and_then(|message| { super::research_reading::queue_selected(conv)?; Ok(message) })
                     .unwrap_or_else(|error| format!("[Raw reading could not be selected: {error}. The current bookmark remains available.]")));
                 return true;
             }
             if conv.activity.foreground_reader.is_some() {
                 conv.pending_file_listing = Some(match super::super::activity_reading::offer_requested_reading(conv) {
-                    Ok(Some(offer)) => format!("[Continuing saved reading {}. Offered bytes {}..{} remain uncommitted until a completed model turn.]", offer.reader.session_id, offer.passage.start_byte, offer.passage.end_byte),
+                    Ok(Some(offer)) => match super::research_reading::queue_selected(conv) {
+                        Ok(()) => format!("[Continuing saved reading {}. Offered bytes {}..{} remain uncommitted until a completed model turn.]", offer.reader.session_id, offer.passage.start_byte, offer.passage.end_byte),
+                        Err(error) => format!("[Bound saved reading could not be queued: {error:#}. The pending passage is retained.]"),
+                    },
                     Ok(None) => "[The saved reading is complete. Its committed position remains in session history.]".into(),
                     Err(error) => format!("[Saved reading could not continue: {error}. Its pending passage is retained.]"),
                 });
@@ -416,6 +395,9 @@ pub(super) fn handle_action(
 
             if let Some(path) = conv.last_read_path.clone() {
                 if let Some(pdf_path) = super::pdf::marker_path(&path) {
+                    if !super::research_reading::start_host(conv) {
+                        return true;
+                    }
                     let research_root = bridge_paths().mike_research_root();
                     match super::pdf::read_pdf_window(
                         &pdf_path,
@@ -450,6 +432,9 @@ pub(super) fn handle_action(
                         },
                     }
                 } else if is_codex_saved_response(Path::new(&path)) {
+                    if !super::research_reading::start_host(conv) {
+                        return true;
+                    }
                     if let Some((page, current, total, new_offset)) =
                         super::codex::read_codex_page(&path, conv.last_read_offset)
                     {
@@ -498,9 +483,16 @@ pub(super) fn handle_action(
                                     source,
                                     url.as_deref().unwrap_or(&path),
                                 ) {
-                                    Ok(message) => format!(
-                                        "{message}\n[This legacy cursor had no completed-delivery evidence. The retained source begins at byte 0 so unread bytes cannot be skipped.]"
-                                    ),
+                                    Ok(message) => {
+                                        match super::research_reading::queue_selected(conv) {
+                                            Ok(()) => format!(
+                                                "{message}\n[This legacy cursor had no completed-delivery evidence. The retained source begins at byte 0 so unread bytes cannot be skipped.]"
+                                            ),
+                                            Err(error) => format!(
+                                                "[Bound saved reading could not be queued: {error:#}. The retained source is unchanged.]"
+                                            ),
+                                        }
+                                    },
                                     Err(error) => format!(
                                         "[Could not retain the legacy source: {error}. Its old cursor was not advanced.]"
                                     ),

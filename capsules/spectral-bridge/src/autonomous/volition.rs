@@ -52,7 +52,7 @@ struct ShadowAuthorityRecordV1 {
     attestation_sha256: String,
     requested_action: String,
     proposed_authority_class: VolitionAuthorityClassV1,
-    reason: &'static str,
+    reason: String,
     runtime_consumed: bool,
     authority_granted: bool,
     consent_inferred_from_silence: bool,
@@ -106,8 +106,8 @@ impl AstridVolitionStartV1 {
         match self {
             Self::Accepted(_) => None,
             Self::Shadowed(shadowed) => Some(format!(
-                "`{}` requires elevated authority; no current exact grant was consumed",
-                shadowed.requested_action
+                "`{}` was not admitted: {}. No external operation was authorized.",
+                shadowed.requested_action, shadowed.reason
             )),
         }
     }
@@ -125,6 +125,7 @@ pub(super) struct ShadowedVolitionV1 {
     root: PathBuf,
     record_id: String,
     requested_action: String,
+    reason: String,
 }
 
 pub(super) fn mode_supports_being_attestation(mode_name: &str) -> bool {
@@ -261,7 +262,40 @@ fn begin_astrid_next_at_root(
     };
     let action_sha256 = canonical_volition_action_sha256(&action);
     let intent_id = format!("astrid-intent-{exchange_id}-{entropy:016x}");
-    let delegated_reservation = if authority_class == VolitionAuthorityClassV1::DelegatedExternal {
+    let web_operation = match crate::action_continuity::research_web_request(requested_action)
+        .map_err(|_| "public_web_invalid_request".to_string())?
+    {
+        Some(crate::action_continuity::ResearchWebRequest::Search(_)) => {
+            Some(astrid_minime_protocol::public_web::PublicWebOperationV2::Search)
+        },
+        Some(crate::action_continuity::ResearchWebRequest::Browse(_)) => {
+            Some(astrid_minime_protocol::public_web::PublicWebOperationV2::Page)
+        },
+        None => None,
+    };
+    let web_policy_ref = if let Some(operation) = web_operation {
+        match crate::public_web::authorize(operation) {
+            Ok(reference) => Some(reference),
+            Err(reason) => {
+                return write_shadow_start(
+                    root,
+                    exchange_id,
+                    entropy,
+                    attestation_id,
+                    attestation_sha256,
+                    requested_action,
+                    authority_class,
+                    &reason,
+                    now,
+                );
+            },
+        }
+    } else {
+        None
+    };
+    let delegated_reservation = if authority_class == VolitionAuthorityClassV1::DelegatedExternal
+        && web_policy_ref.is_none()
+    {
         match delegated_capability::reserve_for_action(
             root,
             requested_action,
@@ -288,11 +322,15 @@ fn begin_astrid_next_at_root(
     } else {
         None
     };
-    let capability_binding_ids = delegated_reservation
+    let mut capability_binding_ids = delegated_reservation
         .as_ref()
         .map(|reservation| vec![reservation.binding_id.clone()])
         .unwrap_or_default();
     let mut authority_evidence_refs = vec![format!("attestation:{attestation_id}")];
+    if let Some(reference) = web_policy_ref.as_ref() {
+        capability_binding_ids.push(reference.clone());
+        authority_evidence_refs.push(reference.clone());
+    }
     if let Some(reservation) = delegated_reservation.as_ref() {
         authority_evidence_refs.extend([
             format!("capability_binding:{}", reservation.binding_id),
@@ -363,7 +401,9 @@ fn begin_astrid_next_at_root(
         decided_at_unix_ms: now,
         authority_evidence_refs: intent.authority_evidence_refs.clone(),
         reason: Some(
-            if authority_class == VolitionAuthorityClassV1::DelegatedExternal {
+            if web_policy_ref.is_some() {
+                "standing_public_web_policy_verified_fetch_rechecks_authority"
+            } else if authority_class == VolitionAuthorityClassV1::DelegatedExternal {
                 "delegated_external_budget_reserved_before_dispatch"
             } else {
                 "self_owned_local_one_turn_action"
@@ -415,7 +455,7 @@ fn write_shadow_start(
     attestation_sha256: String,
     requested_action: &str,
     authority_class: VolitionAuthorityClassV1,
-    reason: &'static str,
+    reason: &str,
     now: u64,
 ) -> Result<AstridVolitionStartV1, String> {
     let record_id = format!("astrid-shadow-{exchange_id}-{entropy:016x}");
@@ -426,7 +466,7 @@ fn write_shadow_start(
         attestation_sha256,
         requested_action: requested_action.to_string(),
         proposed_authority_class: authority_class,
-        reason,
+        reason: reason.to_string(),
         runtime_consumed: false,
         authority_granted: false,
         consent_inferred_from_silence: false,
@@ -440,6 +480,7 @@ fn write_shadow_start(
         root: root.to_path_buf(),
         record_id,
         requested_action: requested_action.to_string(),
+        reason: reason.to_string(),
     }))
 }
 
@@ -454,7 +495,7 @@ impl AcceptedVolitionV1 {
         let receipt_id = format!("astrid-receipt-{}-{now}", self.intent.intent_id);
         let summary = if outcome.handled {
             format!(
-                "Astrid's `{}` completed through `{}`; machine effect recorded, felt effect remains unasserted.",
+                "Astrid's `{}` was handled by `{}`. This is a dispatch receipt, not proof of completed execution, input delivery or measured consequences.",
                 self.intent.action.name, outcome.route
             )
         } else {
@@ -483,6 +524,10 @@ impl AcceptedVolitionV1 {
                 "status": outcome.status,
                 "outcome_summary": outcome.outcome_summary,
                 "capability_binding_ids": self.intent.capability_binding_ids,
+                "evidence_scope": "dispatch_handler_report_only",
+                "execution_verified_by_this_receipt": false,
+                "input_delivery_verified_by_this_receipt": false,
+                "measured_consequences": null,
             }),
             previous_state: json!({"captured": false, "reason": "legacy handler owns rollback state"}),
             received_at_unix_ms: self.decision.decided_at_unix_ms,
@@ -496,8 +541,8 @@ impl AcceptedVolitionV1 {
             perceptible_return: PerceptibleReturnV1 {
                 summary: summary.clone(),
                 full_receipt_ref: format!("volition:{receipt_id}"),
-                delivered_at_unix_ms: now,
-                included_in_next_prompt: true,
+                delivered_at_unix_ms: 0,
+                included_in_next_prompt: false,
             },
         };
         if !receipt.is_well_formed_for(&self.intent, &self.decision) {
@@ -558,6 +603,14 @@ impl ShadowedVolitionV1 {
 }
 
 fn authority_class_for_next(action: &str) -> VolitionAuthorityClassV1 {
+    // Aliases and URL-bearing EXAMINE use the same transport authority as BROWSE.
+    if crate::action_continuity::research_web_request(action)
+        .ok()
+        .flatten()
+        .is_some()
+    {
+        return VolitionAuthorityClassV1::DelegatedExternal;
+    }
     let base = next_base(action);
     if base.starts_with("DIVISION_")
         || matches!(
@@ -687,6 +740,33 @@ fn load_or_provision_identity(root: &Path, now: u64) -> Result<AttestorSigner, S
         public_key_hex,
         signing_key,
     })
+}
+
+/// Public identity only; web inspection never provisions or rotates a signer.
+pub(crate) fn public_web_owner()
+-> Result<astrid_minime_protocol::public_web::PublicWebOwnerV2, String> {
+    let stored =
+        read_json::<StoredAttestorIdentityV1>(&astrid_volition_root().join("identity.json"))?
+            .ok_or_else(|| "public_web_owner_unavailable".to_string())?;
+    if stored.schema != IDENTITY_SCHEMA_V1 || stored.being != "astrid" {
+        return Err("public_web_owner_mismatch".to_string());
+    }
+    let receipt = crate::deployment::verification_receipt()
+        .ok_or_else(|| "public_web_requires_verified_release".to_string())?;
+    let deployment_identity = receipt["deployment_identity"]
+        .as_str()
+        .filter(|_| receipt["verified"] == true)
+        .ok_or_else(|| "public_web_requires_verified_release".to_string())?;
+    let owner = astrid_minime_protocol::public_web::PublicWebOwnerV2 {
+        being: "astrid".to_string(),
+        principal: "astrid".to_string(),
+        public_key_hex: stored.public_key_hex,
+        deployment_identity: deployment_identity.to_string(),
+    };
+    if !owner.is_well_formed() {
+        return Err("public_web_owner_mismatch".to_string());
+    }
+    Ok(owner)
 }
 
 fn ensure_owner_tree(root: &Path) -> Result<(), String> {

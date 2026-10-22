@@ -78,6 +78,8 @@ struct SavedState {
     #[serde(default)]
     recent_browse_urls: Vec<String>,
     #[serde(default)]
+    pending_bound_research: Option<next_action::research_jobs::BoundResearchJob>,
+    #[serde(default)]
     recent_research_progress: std::collections::VecDeque<state::ResearchProgressReceipt>,
     #[serde(default)]
     last_research_anchor: Option<String>,
@@ -305,6 +307,7 @@ fn prepare_state(conv: &mut ConversationState) -> anyhow::Result<Vec<u8>> {
         last_remote_memory_role: conv.last_remote_memory_role.clone(),
         remote_memory_bank: conv.remote_memory_bank.clone(),
         recent_browse_urls: conv.recent_browse_urls.iter().cloned().collect(),
+        pending_bound_research: conv.pending_bound_research.clone(),
         recent_research_progress: conv.recent_research_progress.clone(),
         last_research_anchor: conv.last_research_anchor.clone(),
         last_read_meaning_summary: conv.last_read_meaning_summary.clone(),
@@ -420,6 +423,10 @@ fn restore_state_from_paths(
     conv.last_remote_memory_role = state.last_remote_memory_role;
     conv.remote_memory_bank = state.remote_memory_bank;
     conv.recent_browse_urls = state.recent_browse_urls.into_iter().collect();
+    if let Some(job) = state.pending_bound_research {
+        job.install(conv);
+        conv.pending_bound_research = Some(job);
+    }
     conv.recent_research_progress = state.recent_research_progress;
     conv.repair_research_progress_receipts();
     conv.last_research_anchor = state.last_research_anchor;

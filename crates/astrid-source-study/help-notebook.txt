@@ -7,7 +7,9 @@ SELF_STUDY QUESTION PARK qN parks it quietly; SELF_STUDY QUESTION HOME leaves na
 SELF_STUDY QUESTION RESOLVE qN closes without a finding. Optionally append your own finding (up to 700 bytes); do not copy syntax placeholders. Closure records your choice, not proof of an answer. Uncertainty is allowed; no conclusion is required to keep reading, park or stop.
 SELF_STUDY QUESTION NOTEBOOK inspects the old unthreaded question without reselecting it; QUESTION PARK NOTEBOOK keeps it quiet and QUESTION RETURN NOTEBOOK explicitly restores it (each needs the SELF_STUDY prefix).
 
-SELF_STUDY NOTE [--page N] opens the saved note and retained revisions. Prior accounts remain available, not automatically repeated on every page. Notes belong to the delivered input's inquiry, including late deliveries, not an unrelated newer selection.
+SELF_STUDY NOTE [--page N] opens the saved note and retained revisions. Notes belong to the delivered input's inquiry, including late deliveries, not an unrelated newer selection.
+SELF_STUDY QUESTION ACCOUNTS qN lists metadata for the bounded retained study-account window, without selecting or unparking it. Use NOTEBOOK instead of qN for unthreaded accounts.
+SELF_STUDY QUESTION ACCOUNT qN <account_sha256> [--page N] opens an exact retained account in bounded UTF-8 pages; use the account identity from ACCOUNTS, not its original response hash. It does not search private drafts or reconstruct evicted history. The latest account and at most three older accounts are retained; an incomplete recorded excerpt remains labelled incomplete. Historical source links are not newly delivered source or commands to execute. Inspection cannot revise the notebook.
 
 Notebook directives go on separate top-level response lines WITHOUT NEXT:, never in an AND chain. No update is inferred from ordinary prose. Omission preserves a field; - clears STUDY_NOTE or STUDY_QUESTION. Clearing a field does not leave a named inquiry. Invalid updates receive feedback.
 STUDY_NOTE: <your words, up to 1600 bytes>

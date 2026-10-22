@@ -1,17 +1,16 @@
 //! Artifact-grounded authority gate visibility, approval, and V1 execution.
 
-use std::fs::{self, OpenOptions};
-use std::io::Write as _;
-#[cfg(unix)]
-use std::os::unix::fs::PermissionsExt as _;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, anyhow};
-use fs2::FileExt as _;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest as _, Sha256};
 use tokio::sync::mpsc;
+
+mod persistence;
+use persistence::{append_jsonl, authority_owner_root};
 
 use crate::authority_temporal::{
     self, AuthorityTemporalContextV1, DispatchOutcomeKindV1, VerifiedAuthorityContextV1,
@@ -577,11 +576,23 @@ pub fn approve_research_budget_from_paths(
             "approve_experiment_research_budget needs budget_id"
         ));
     }
-    let location =
+    let mut location =
         find_research_budget_request_in_paths(budget_id, minime_workspace, bridge_workspace)?
             .ok_or_else(|| {
                 anyhow!("research budget `{budget_id}` was not found in Astrid or Minime ledgers")
             })?;
+    let root = authority_owner_root(&location.gate_path)?;
+    let _transaction = crate::action_continuity::research_owner_transaction(root)?;
+    location.rows = crate::action_continuity::read_native_authority_records(&location.gate_path)?;
+    location.request = location
+        .rows
+        .iter()
+        .rev()
+        .find(|row| {
+            row["record_type"] == "research_budget_request" && row["budget_id"] == budget_id
+        })
+        .context("research request changed before approval")?
+        .clone();
     let eligibility = location
         .request
         .get("eligibility_v1")
@@ -1635,61 +1646,6 @@ fn read_jsonl(path: &Path) -> Vec<Value> {
                 })
         })
         .collect()
-}
-
-fn append_jsonl(path: &Path, value: &Value) -> Result<()> {
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)?;
-    }
-    let lock_path = path.with_extension("jsonl.lock");
-    let lock = OpenOptions::new()
-        .create(true)
-        .truncate(false)
-        .read(true)
-        .write(true)
-        .open(&lock_path)?;
-    #[cfg(unix)]
-    {
-        fs::set_permissions(&lock_path, fs::Permissions::from_mode(0o600))?;
-    }
-    lock.lock_exclusive()?;
-
-    let previous_line = fs::read_to_string(path)
-        .unwrap_or_default()
-        .lines()
-        .rev()
-        .find(|line| !line.trim().is_empty())
-        .unwrap_or_default()
-        .to_string();
-    let previous_record_sha256 = if previous_line.is_empty() {
-        "0".repeat(64)
-    } else {
-        format!("{:x}", Sha256::digest(previous_line.as_bytes()))
-    };
-    let mut record = value.clone();
-    if let Some(object) = record.as_object_mut() {
-        object.insert(
-            "previous_record_sha256".to_string(),
-            json!(previous_record_sha256),
-        );
-    }
-    let hash_input = serde_json::to_vec(&record)?;
-    if let Some(object) = record.as_object_mut() {
-        object.insert(
-            "record_sha256".to_string(),
-            json!(format!("{:x}", Sha256::digest(hash_input))),
-        );
-    }
-    let mut file = OpenOptions::new().create(true).append(true).open(path)?;
-    #[cfg(unix)]
-    {
-        fs::set_permissions(path, fs::Permissions::from_mode(0o600))?;
-    }
-    writeln!(file, "{}", serde_json::to_string(&record)?)?;
-    file.flush()?;
-    file.sync_all()?;
-    fs2::FileExt::unlock(&lock)?;
-    Ok(())
 }
 
 fn append_serialized(path: &Path, value: &impl Serialize) -> Result<()> {

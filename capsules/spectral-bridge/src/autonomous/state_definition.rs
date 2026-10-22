@@ -55,6 +55,7 @@ pub(in crate::autonomous) struct ConversationState {
     pub search_topic: Option<String>,
     /// Astrid chose NEXT: BROWSE <url> — fetch and read a full web page.
     pub browse_url: Option<String>,
+    pub pending_bound_research: Option<super::next_action::research_jobs::BoundResearchJob>,
     /// Most recent research thread anchor — used to interpret follow-up browsing.
     pub last_research_anchor: Option<String>,
     /// Path to the last browsed/read file, for READ_MORE continuation.

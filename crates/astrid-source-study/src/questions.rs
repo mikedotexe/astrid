@@ -9,8 +9,21 @@ mod observations;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum QuestionCommand {
-    List { page: usize },
-    Review { id: String, page: usize },
+    List {
+        page: usize,
+    },
+    Review {
+        id: String,
+        page: usize,
+    },
+    Accounts {
+        target: String,
+    },
+    Account {
+        target: String,
+        account: String,
+        page: usize,
+    },
     New(String),
     Focus(String),
     Home,
@@ -18,7 +31,10 @@ pub enum QuestionCommand {
     ParkNotebook,
     ReturnNotebook,
     Park(String),
-    Resolve { id: String, finding: String },
+    Resolve {
+        id: String,
+        finding: String,
+    },
 }
 impl QuestionCommand {
     pub(crate) fn parse(input: &str) -> Result<Self> {
@@ -32,6 +48,7 @@ impl QuestionCommand {
         }
         Ok(match verb {
             "" => Self::List { page: 1 },
+            "ACCOUNTS" | "ACCOUNT" => parse_account_command(verb, rest)?,
             "REVIEW" => {
                 let mut parts = rest.split_whitespace();
                 let id = parts.next().unwrap_or_default();
@@ -69,6 +86,45 @@ impl QuestionCommand {
             ),
         })
     }
+}
+fn parse_account_command(verb: &str, rest: &str) -> Result<QuestionCommand> {
+    let mut parts = rest.split_whitespace();
+    let target = parts.next().unwrap_or_default();
+    anyhow::ensure!(
+        target == "NOTEBOOK" || valid_id(target),
+        "use an exact qN or NOTEBOOK account target"
+    );
+    if verb == "ACCOUNTS" {
+        anyhow::ensure!(
+            parts.next().is_none(),
+            "use SELF_STUDY QUESTION ACCOUNTS qN or NOTEBOOK"
+        );
+        return Ok(QuestionCommand::Accounts {
+            target: target.into(),
+        });
+    }
+    let account = parts.next().unwrap_or_default();
+    anyhow::ensure!(
+        account.len() == 64 && account.bytes().all(|c| c.is_ascii_hexdigit()),
+        "use the exact account_sha256 from SELF_STUDY QUESTION ACCOUNTS {target}"
+    );
+    let page = match parts.next() {
+        None => 1,
+        Some("--page") => parts
+            .next()
+            .context("account page required")?
+            .parse::<usize>()?,
+        _ => bail!("use SELF_STUDY QUESTION ACCOUNT {target} {account} [--page N]"),
+    };
+    anyhow::ensure!(
+        page > 0 && parts.next().is_none(),
+        "account pages start at 1; no extra arguments"
+    );
+    Ok(QuestionCommand::Account {
+        target: target.into(),
+        account: account.into(),
+        page,
+    })
 }
 fn valid_id(s: &str) -> bool {
     s.strip_prefix('q')
@@ -153,6 +209,7 @@ impl Questions {
             "quiet": self.unthreaded_quiet,
             "return_command": "SELF_STUDY QUESTION RETURN NOTEBOOK",
             "park_command": "SELF_STUDY QUESTION PARK NOTEBOOK",
+            "accounts_command": "SELF_STUDY QUESTION ACCOUNTS NOTEBOOK",
             "position": "Return selects the retained unthreaded reading position, including any deliberate browsing since parking. It does not rewind or open a source automatically. Changed source bytes still require explicit reselection."
         }))?)
     }
@@ -174,8 +231,51 @@ impl Questions {
             "note_history": note,
             "historical_source_references": inquiry.sources,
             "select_command": format!("SELF_STUDY QUESTION {id}"),
+            "accounts_command": format!("SELF_STUDY QUESTION ACCOUNTS {id}"),
             "experimental_records": "Geometry and confirmed observations remain separately inspectable; this view does not export them."
         }))?)
+    }
+    pub(crate) fn inspect_accounts(
+        &self,
+        command: &QuestionCommand,
+        global: &Notebook,
+    ) -> Result<Option<String>> {
+        let (target, account, page) = match command {
+            QuestionCommand::Accounts { target } => (target, None, 1),
+            QuestionCommand::Account {
+                target,
+                account,
+                page,
+            } => (target, Some(account.as_str()), *page),
+            _ => return Ok(None),
+        };
+        // Typed callers must not bypass the same explicit target and identity checks.
+        anyhow::ensure!(
+            target == "NOTEBOOK" || valid_id(target),
+            "invalid account target"
+        );
+        if let Some(account) = account {
+            anyhow::ensure!(
+                account.len() == 64 && account.bytes().all(|c| c.is_ascii_hexdigit()),
+                "invalid account identity"
+            );
+        }
+        let notebook = if target == "NOTEBOOK" {
+            if self.active.is_some() {
+                self.unthreaded
+                    .as_ref()
+                    .context("unthreaded account store unavailable")?
+            } else {
+                global
+            }
+        } else {
+            &self
+                .entries
+                .get(target)
+                .context("question not found; no other inquiry inspected")?
+                .notebook
+        };
+        Ok(Some(notebook.accounts_view(target, account, page)?))
     }
     pub(crate) fn geometry(&mut self, id: &str) -> Result<(&str, &mut crate::geometry::History)> {
         let inquiry = self
@@ -258,6 +358,11 @@ impl Questions {
             QuestionCommand::List { page } => return self.render_list(page),
             QuestionCommand::Review { id, page } => return self.review(&id, page),
             QuestionCommand::Notebook => return self.notebook_view(notebook),
+            command @ (QuestionCommand::Accounts { .. } | QuestionCommand::Account { .. }) => {
+                return self
+                    .inspect_accounts(&command, notebook)?
+                    .context("account inspection unavailable");
+            },
             QuestionCommand::ParkNotebook => {
                 self.unthreaded_quiet = true;
                 transition = "Unthreaded notebook parked quietly. Exact words and reading positions are retained; no numbered inquiry was changed. Explicit inspection: NEXT: SELF_STUDY QUESTION NOTEBOOK. Explicit return: NEXT: SELF_STUDY QUESTION RETURN NOTEBOOK.\n".into();

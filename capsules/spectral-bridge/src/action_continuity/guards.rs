@@ -259,6 +259,9 @@ impl ActionContinuityStore {
         &self,
         raw_next: &str,
     ) -> Result<Option<CharterRequiredGuardAssessment>> {
+        if ordinary_exploration(raw_next) {
+            return Ok(None);
+        }
         let Some(thread) = self.current_thread()? else {
             return Ok(None);
         };
@@ -328,6 +331,11 @@ impl ActionContinuityStore {
         fill_pct: f32,
         telemetry: &SpectralTelemetry,
     ) -> Result<Option<ResearchBudgetGuardAssessment>> {
+        // This is a quota gate, not an authority grant. Executable operations
+        // still pass the independent capability and consequential-action gates.
+        if ordinary_exploration(raw_next) {
+            return Ok(None);
+        }
         let Some(thread) = self.current_thread()? else {
             return Ok(None);
         };

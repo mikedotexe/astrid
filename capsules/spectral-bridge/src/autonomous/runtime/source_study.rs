@@ -134,7 +134,7 @@ async fn run_shared_source_study(
         )
         .with_runtime_workspace(paths.bridge_workspace().to_path_buf(), "astrid");
         let output = if let Some(id) = job.as_deref() {
-            study_handoff::prepare(&store, conv, id, || prepare_shared_study_target(&reader, requested))?
+            study_handoff::prepare(&store, conv, id, |target| prepare_shared_study_target(&reader, Some(target)))?
         } else { prepare_shared_study_target(&reader, requested)? };
         study_handoff::validate_sources(&output, &catalog)?;
         Ok((reader, output, catalog))
@@ -479,25 +479,22 @@ pub(super) fn source_study_completion_mode(
 }
 
 /// A source invitation is attended only for the exact canonical source identity.
-/// This clears the invitation, not a claim that a code change or diagnosis is done.
+/// Retain its metadata; attendance does not establish a completed diagnosis.
 fn finish_source_study_invitation(catalog: &astrid_source_study::Catalog, source: &str) {
     let path = bridge_paths().open_steward_query_path();
-    let slot = std::fs::read(&path)
-        .ok()
-        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok());
-    let matches = slot
-        .as_ref()
-        .and_then(|slot| slot.get("review_target"))
-        .and_then(Value::as_str)
-        .and_then(|target| catalog.resolve(review_target_match_basis(target)).ok())
-        .is_some_and(|target| target.id == source);
-    if matches && let Err(error) = std::fs::remove_file(path) {
-        warn!(%error, "source-study invitation could not be cleared after delivery");
+    let result = next_action::steward_invitation::Store::new(&path)
+        .and_then(|store| store.attend_if(|target| {
+            catalog.resolve(review_target_match_basis(target)).ok()
+                .is_some_and(|target| target.id == source)
+        }));
+    if let Err(reason) = result {
+        warn!(reason, "source-study invitation attendance not recorded; source retained");
     }
 }
 
 #[cfg(test)]
 mod source_study_tests {
+    include!("retained_accounts_tests.rs");
     use super::*;
     #[test]
     fn literal_finding_reaches_bridge_recovery_without_closing_or_inventing_words() {

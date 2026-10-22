@@ -833,6 +833,7 @@ pub fn spawn_autonomous_loop(
                             })
                     };
                     let mut reading_offer = None;
+                    let mut bound_reading_research = None;
                     let mut accepted_delivery = None;
                     let mut mirror_excerpt = None;
                     let mut selected_journal_measurements = None;
@@ -1435,6 +1436,10 @@ pub fn spawn_autonomous_loop(
                             // BROWSE: Astrid chose to read a full web page.
                             // This takes priority over search — she's going deep.
                             // READ_MORE: continue from where the last BROWSE left off.
+                            let bound_research_job = if inbox_reservation.is_none() {
+                                next_action::research_jobs::begin(&mut conv)
+                            } else { None };
+                            let mut research_source_succeeded = false;
                             let browse_url = if inbox_reservation.is_none() {
                                 conv.browse_url.take()
                             } else {
@@ -1451,7 +1456,8 @@ pub fn spawn_autonomous_loop(
                                 let ctx = crate::llm::fetch_url(url, &browse_anchor).await;
                                 match ctx {
                                     Some(page) if page.succeeded() => {
-                                        info!(url = %url, chars = page.raw_text.len(), "dialogue: BROWSE fetched page");
+                                        research_source_succeeded = true;
+                                        info!(target_hash = %crate::public_web::target_fingerprint(url), chars = page.raw_text.len(), "dialogue: BROWSE fetched page");
                                         conv.last_research_anchor = Some(page.anchor.clone());
                                         conv.note_new_page_context(
                                             "BROWSE",
@@ -1502,20 +1508,14 @@ pub fn spawn_autonomous_loop(
                                         })
                                     },
                                     Some(page) => {
-                                        conv.last_read_path = None;
-                                        conv.last_read_offset = 0;
-                                        conv.last_read_meaning_summary = None;
                                         let reason = page.soft_failure_reason.unwrap_or_else(|| {
                                             "the source returned an error page".to_string()
                                         });
-                                        warn!(url = %url, reason = %reason, "dialogue: BROWSE soft failure");
+                                        warn!(target_hash = %crate::public_web::target_fingerprint(url), reason_code = "source_soft_failure", "dialogue: BROWSE soft failure");
                                         Some(crate::llm::format_browse_failure_context(url, &reason))
                                     },
                                     None => {
-                                        conv.last_read_path = None;
-                                        conv.last_read_offset = 0;
-                                        conv.last_read_meaning_summary = None;
-                                        warn!(url = %url, "dialogue: BROWSE fetch failed");
+                                        warn!(target_hash = %crate::public_web::target_fingerprint(url), reason_code = "fetch_failed", "dialogue: BROWSE fetch failed");
                                         Some(crate::llm::format_browse_failure_context(
                                             url,
                                             "the source could not be reached",
@@ -1559,9 +1559,10 @@ pub fn spawn_autonomous_loop(
                                     } else {
                                         let anchor =
                                             search_topic.clone().unwrap_or_else(|| query.clone());
-                                        let ctx = crate::llm::web_search(&query, &anchor).await;
-                                        if let Some(ref results) = ctx {
-                                            info!(query = %query, "dialogue: web search enriched response");
+                                        let ctx = crate::llm::web_search_checked(&query, &anchor).await;
+                                        if let Ok(ref results) = ctx {
+                                            research_source_succeeded = true;
+                                            info!(target_hash = %crate::public_web::target_fingerprint(&query), "dialogue: web search enriched response");
                                             conv.last_research_anchor =
                                                 Some(results.anchor.clone());
                                             if let Some(top_hit) = results.hits.first() {
@@ -1587,7 +1588,10 @@ pub fn spawn_autonomous_loop(
                                                 fill_pct,
                                             );
                                         }
-                                        ctx.map(|result| result.prompt_body())
+                                        Some(match ctx {
+                                            Ok(result) => result.prompt_body(),
+                                            Err(reason) => format!("Requested web search incomplete: {reason}. No readable source was delivered and no replacement source was selected. Search, local reading and REST remain optional choices."),
+                                        })
                                     }
                                 } else {
                                     None
@@ -1808,12 +1812,16 @@ pub fn spawn_autonomous_loop(
 
                             let mut activity_recovery_ready = true;
                             if inbox_reservation.is_none() {
+                                activity_recovery_ready = next_action::research_reading::ready(&mut conv)
+                                    .unwrap_or_else(|error| { warn!(%error, "research reading recovery unavailable"); false });
+                                if activity_recovery_ready {
                                 reading_offer = prepare_activity_reading(&mut conv, &activity_inbox)
                                     .unwrap_or_else(|error| {
                                         activity_recovery_ready = false;
                                         warn!(%error, "chosen reading remains uncommitted");
                                         None
                                     });
+                                }
                             }
                             let mut protected_input = if let Some(letter) = inbox_reservation.as_ref() {
                                 Some(protected_letter_input(letter))
@@ -1824,6 +1832,16 @@ pub fn spawn_autonomous_loop(
                                     }).ok()
                                 })
                             };
+                            if inbox_reservation.is_none() && activity_recovery_ready {
+                                if reading_offer.is_some() && protected_input.is_none() {
+                                    activity_recovery_ready = false;
+                                } else {
+                                    match next_action::research_reading::begin(&mut conv, reading_offer.as_ref()) {
+                                        Ok(job) => { bound_reading_research = job; },
+                                        Err(error) => { activity_recovery_ready = false; warn!(%error, "bound reading did not start"); },
+                                    }
+                                }
+                            }
                             if protected_input.is_none() && activity_recovery_ready
                                 && conv.activity.foreground_reader.is_none()
                                 && conv.activity.return_reader.is_none()
@@ -2034,6 +2052,8 @@ pub fn spawn_autonomous_loop(
                                 None
                             };
                             // One-shot — clear after use.
+                            next_action::research_jobs::finish(&mut conv, bound_research_job,
+                                research_source_succeeded && llm_response.is_some());
                             conv.emphasis = None;
                             conv.form_constraint = None;
 
@@ -3468,6 +3488,9 @@ pub fn spawn_autonomous_loop(
                         (mode_name == "dialogue_live").then_some(response_text.as_str()),
                     );
                     // Receipt validation uses the untouched retained completion.
+                    if let Err(error) = next_action::research_reading::finish(&mut conv, bound_reading_research) {
+                        warn!(%error, "research reading terminal receipt remains unresolved; do not replay");
+                    }
                     // Every ordinary signal, journal and action sink below sees
                     // only the projection outside human correspondence blocks.
                     let (ordinary_response, has_shared_response) = project_study_response(&mut conv, mode_name, &response_text, &bridge_paths().bridge_workspace().join("diagnostics/source_study/notices"));

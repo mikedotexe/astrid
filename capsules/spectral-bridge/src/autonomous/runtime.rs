@@ -81,6 +81,7 @@ pub(crate) mod self_control_v2;
 pub(crate) mod state;
 #[path = "volition.rs"]
 mod volition;
+pub(crate) use volition::public_web_owner;
 
 #[cfg(test)]
 static TEST_SUPPRESS_ASTRID_JOURNAL_SAVES: std::sync::atomic::AtomicBool =

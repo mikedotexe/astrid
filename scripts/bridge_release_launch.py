@@ -55,10 +55,15 @@ def selected_command(root: Path, *, verify_native: bool = True) -> list[str]:
     if not source.is_absolute() or not (source / "capsules/spectral-bridge/src").is_dir():
         raise ValueError("staged source tree is unavailable")
     artifacts = value["artifacts"]
-    for name, relative in {"spectral-bridge":"spectral-bridge-server",
+    expected_artifacts = {"spectral-bridge":"spectral-bridge-server",
                            "substrate-probe-v2":"helpers/substrate_probe_v2.py",
                            "release-launcher":"helpers/launchd_spectral_bridge.sh",
-                           "release-selection":"helpers/bridge_release_launch.py"}.items():
+                           "release-selection":"helpers/bridge_release_launch.py"}
+    for name, relative in {"source-study-reader": "helpers/astrid-source-study",
+                           "public-web-helper": "helpers/astrid-public-web"}.items():
+        if name in artifacts:
+            expected_artifacts[name] = relative
+    for name, relative in expected_artifacts.items():
         path = stage / relative
         if path.resolve() != path or artifacts[name]["path"] != str(path) or digest(path) != artifacts[name]["sha256"]:
             raise ValueError(f"selected artifact changed: {name}")

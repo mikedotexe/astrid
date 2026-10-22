@@ -1,35 +1,15 @@
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpListener;
-
 use crate::autonomous::next_action::protected_diagnostics;
 use crate::llm::{self, ResearchHit, ResearchSourceKind, WebSearchResult};
 
-async fn serve_once(status: &str, body: &str, content_type: &str) -> String {
-    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let addr = listener.local_addr().unwrap();
-    let body = body.to_string();
-    let content_type = content_type.to_string();
-    let status = status.to_string();
-    tokio::spawn(async move {
-        let (mut stream, _) = listener.accept().await.unwrap();
-        let mut buf = vec![0_u8; 2048];
-        let _ = stream.read(&mut buf).await.unwrap();
-        let response = format!(
-            "HTTP/1.1 {status}\r\nContent-Length: {}\r\nContent-Type: {content_type}\r\nConnection: close\r\n\r\n{body}",
-            body.len(),
-        );
-        stream.write_all(response.as_bytes()).await.unwrap();
-    });
-    format!("http://{addr}/page")
-}
-
-#[tokio::test]
-async fn fetch_url_returns_success_for_meaningful_page() {
+#[test]
+fn fetched_page_parser_returns_success_for_meaningful_page() {
     let body = "<html><title>Reservoir Notes</title><body>This page describes eigenvalue topology, manipulable relationships, and how spectral modes relate to perception in a readable way that matters for the current question.</body></html>";
-    let url = serve_once("200 OK", body, "text/html").await;
-    let result = llm::fetch_url(&url, "manipulable relationships")
-        .await
-        .unwrap();
+    let result = llm::page_from_frozen_html(
+        "https://example.test/page",
+        "manipulable relationships",
+        reqwest::StatusCode::OK,
+        body.into(),
+    );
 
     assert!(result.succeeded());
     assert_eq!(result.source_kind, ResearchSourceKind::Browse);
@@ -38,11 +18,15 @@ async fn fetch_url_returns_success_for_meaningful_page() {
     assert!(result.raw_text.contains("manipulable relationships"));
 }
 
-#[tokio::test]
-async fn fetch_url_marks_http_404_as_failure() {
+#[test]
+fn fetched_page_parser_marks_http_404_as_failure() {
     let body = "<html><title>404</title><body>Nothing here.</body></html>";
-    let url = serve_once("404 Not Found", body, "text/html").await;
-    let result = llm::fetch_url(&url, "broken link").await.unwrap();
+    let result = llm::page_from_frozen_html(
+        "https://example.test/page",
+        "broken link",
+        reqwest::StatusCode::NOT_FOUND,
+        body.into(),
+    );
 
     assert!(!result.succeeded());
     assert_eq!(
@@ -51,11 +35,15 @@ async fn fetch_url_marks_http_404_as_failure() {
     );
 }
 
-#[tokio::test]
-async fn fetch_url_marks_soft_404_body_as_failure() {
+#[test]
+fn fetched_page_parser_marks_soft_404_body_as_failure() {
     let body = "<html><title>Page Not Found</title><body>Page Not Found. The page you are trying to reach cannot be found. Error.</body></html>";
-    let url = serve_once("200 OK", body, "text/html").await;
-    let result = llm::fetch_url(&url, "paper").await.unwrap();
+    let result = llm::page_from_frozen_html(
+        "https://example.test/page",
+        "paper",
+        reqwest::StatusCode::OK,
+        body.into(),
+    );
 
     assert!(!result.succeeded());
     assert!(
@@ -67,11 +55,15 @@ async fn fetch_url_marks_soft_404_body_as_failure() {
     );
 }
 
-#[tokio::test]
-async fn fetch_url_marks_js_gate_as_failure() {
+#[test]
+fn fetched_page_parser_marks_js_gate_as_failure() {
     let body = "<html><title>Access Denied</title><body>Access denied. Enable JavaScript to continue.</body></html>";
-    let url = serve_once("200 OK", body, "text/html").await;
-    let result = llm::fetch_url(&url, "paper").await.unwrap();
+    let result = llm::page_from_frozen_html(
+        "https://example.test/page",
+        "paper",
+        reqwest::StatusCode::OK,
+        body.into(),
+    );
 
     assert!(!result.succeeded());
     assert!(
@@ -87,9 +79,10 @@ async fn fetch_url_marks_js_gate_as_failure() {
 fn browse_failure_context_marks_access_as_operational_not_topology() {
     let context = llm::format_browse_failure_context("https://example.test/gated", "HTTP 403");
 
-    assert!(context.contains("ordinary source/site availability"));
-    assert!(context.contains("not evidence of a perceptual gate"));
-    assert!(context.contains("internal topology boundary"));
+    assert!(context.contains("No complete source was delivered"));
+    assert!(context.contains("does not measure reservoir effects"));
+    assert!(!context.contains("perceptual gate"));
+    assert!(!context.contains("internal topology boundary"));
     assert!(context.contains("NEXT: SEARCH"));
     assert!(context.contains("NEXT: BROWSE"));
 }

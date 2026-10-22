@@ -59,6 +59,7 @@ BRIDGE_BUILD_PATHS = (
     "capsules/spectral-bridge/Cargo.lock",
     "crates/astrid-minime-protocol",
     "crates/astrid-source-study",
+    "crates/astrid-public-web",
     "Cargo.toml",
     "Cargo.lock",
 )
@@ -309,6 +310,22 @@ class DeployPreflightTests(unittest.TestCase):
             r = preflight(repo, ack="folding codex llm.rs, verified green",
                           codex_state_dir=Path(tmp) / "no_codex", external_roots=())
             self.assertEqual((r["ok"], r["exit_code"], r["reason"]), (True, 0, "dirty_acked"))
+
+    def test_dirty_shared_web_transport_requires_ack(self):
+        import os
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = self._repo(tmp)
+            path = repo / "crates/astrid-public-web/src/lib.rs"
+            path.parent.mkdir(parents=True)
+            path.write_text("// synthetic transport baseline\n")
+            self._git(repo, "add", "crates/astrid-public-web/src/lib.rs")
+            self._git(repo, "commit", "-qm", "transport baseline")
+            path.write_text("// synthetic transport change\n")
+            os.utime(path, (time.time() - 9999, time.time() - 9999))
+            result = preflight(repo, codex_state_dir=Path(tmp) / "no_codex", external_roots=())
+            self.assertEqual(result["reason"], "dirty_no_ack")
+            self.assertTrue(any(p.startswith("crates/astrid-public-web") for p in result["dirty_files"]))
 
     def test_fresh_edit_is_foreign_abort_even_with_ack(self):
         import tempfile

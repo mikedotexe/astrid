@@ -7,6 +7,7 @@
 #[path = "autonomous/runtime.rs"]
 mod runtime;
 
+pub(crate) use runtime::public_web_owner;
 pub use runtime::*;
 #[allow(unused_imports)] // Stable internal paths used by nested domain tests and tools.
 pub(crate) use runtime::{btsp, human_reply_quality_views, next_action, reservoir, state};

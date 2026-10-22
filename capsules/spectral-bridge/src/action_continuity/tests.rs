@@ -485,7 +485,7 @@ fn needs_charter_guard_blocks_live_next_and_records_metadata() {
 }
 
 #[test]
-fn needs_charter_guard_blocks_compound_directed_intent_but_allows_ordinary_inspection() {
+fn needs_charter_guard_keeps_control_protection_without_gating_inspection_vocabulary() {
     let store = temp_store("charter_guard_compound");
     store
         .create_thread(None, "Compound guard", None)
@@ -498,22 +498,21 @@ fn needs_charter_guard_blocks_compound_directed_intent_but_allows_ordinary_inspe
         )
         .expect("experiment");
 
-    let compound = store
+    assert!(store
             .charter_required_guard_assessment(
                 "EXAMINE lambda1 cascade with TRACE and then RESIST targeting eigenvector density increase",
             )
             .expect("guard")
-            .expect("compound block");
-    assert_eq!(compound.reason, "charter_required_compound_intent");
+            .is_none());
 
-    let inject = store
-        .charter_required_guard_assessment(
-            "DECOMPOSE lambda-edge then inject/pulse/shift λ4 density",
-        )
-        .expect("guard")
-        .expect("inject pulse block");
-    assert_eq!(inject.reason, "charter_required_compound_intent");
-    assert!(inject.matched_action.contains("inject"));
+    assert!(
+        store
+            .charter_required_guard_assessment(
+                "DECOMPOSE lambda-edge then inject/pulse/shift λ4 density",
+            )
+            .expect("guard")
+            .is_none()
+    );
 
     let tune = store
         .charter_required_guard_assessment(
@@ -523,17 +522,12 @@ fn needs_charter_guard_blocks_compound_directed_intent_but_allows_ordinary_inspe
         .expect("tune block");
     assert_eq!(tune.reason, "charter_required_live_action");
 
-    let read_more = store
-        .charter_required_guard_assessment("READ_MORE")
-        .expect("guard")
-        .expect("read-more budget projection");
-    assert_eq!(read_more.reason, "charter_required_research_budget");
     assert!(
-        read_more
-            .suggested_next
-            .contains("EXPERIMENT_RESEARCH_BUDGET_REQUEST current")
+        store
+            .charter_required_guard_assessment("READ_MORE")
+            .expect("guard")
+            .is_none()
     );
-    assert!(read_more.message().contains("read_only_research budget"));
 
     store
         .append_jsonl(
@@ -557,7 +551,7 @@ fn needs_charter_guard_blocks_compound_directed_intent_but_allows_ordinary_inspe
             .charter_required_guard_assessment("READ_MORE")
             .expect("guard check")
             .is_none(),
-        "approved research budget should let read-only READ_MORE route continue"
+        "ordinary READ_MORE remains unbound with or without a budget"
     );
 
     for allowed in [
@@ -579,7 +573,7 @@ fn needs_charter_guard_blocks_compound_directed_intent_but_allows_ordinary_inspe
 }
 
 #[test]
-fn needs_charter_guard_blocks_directed_shadow_trajectory_language() {
+fn needs_charter_guard_does_not_reclassify_read_only_shadow_language_as_control() {
     let store = temp_store("charter_guard_native_shadow");
     store
         .create_thread(None, "Native shadow guard", None)
@@ -592,32 +586,25 @@ fn needs_charter_guard_blocks_directed_shadow_trajectory_language() {
         )
         .expect("experiment");
 
-    let directional = store
+    assert!(store
             .charter_required_guard_assessment(
                 "SHADOW_TRAJECTORY — maintain λ1 dominance and woven lattice structure, applying a moderate, directional push toward the center of the spectral landscape.",
             )
             .expect("guard")
-            .expect("directed shadow block");
-    assert_eq!(directional.reason, "charter_required_directed_language");
-    assert!(
-        directional
-            .matched_action
-            .contains("directional push near lambda/shadow")
-    );
-    assert!(
-        directional
-            .proposed_preflight_target
-            .starts_with("ACTION_PREFLIGHT")
-    );
+            .is_none());
 
-    let fracture = store
+    assert!(store
             .charter_required_guard_assessment(
                 "SHADOW_TRAJECTORY — deliberately introducing fault lines to force a shift within the pattern.",
             )
             .expect("guard")
-            .expect("fracture block");
-    assert_eq!(fracture.reason, "charter_required_directed_language");
-    assert!(fracture.matched_action.contains("force shift"));
+            .is_none());
+
+    let control = store
+        .charter_required_guard_assessment("TUNE_MINIME temperature=0.7")
+        .expect("control guard")
+        .expect("actual control remains protected");
+    assert_eq!(control.reason, "charter_required_live_action");
 
     for allowed in [
         "SHADOW_TRAJECTORY — observer with memory.",
@@ -1019,7 +1006,7 @@ fn paused_experiment_return_matrix_respects_planned_next_kind() {
 }
 
 #[test]
-fn paused_missing_charter_projection_demotes_resume_to_charter_repair() {
+fn paused_missing_charter_does_not_forbid_context_return() {
     let store = temp_store("paused_missing_charter_projection");
     let thread = store
         .create_thread(None, "Paused missing charter", None)
@@ -1049,27 +1036,20 @@ fn paused_missing_charter_projection_demotes_resume_to_charter_repair() {
         .expect("last summary");
     assert_eq!(
         summary.get("return_kind").and_then(Value::as_str),
-        Some("charter_repair")
+        Some("resume")
     );
     assert!(
         summary
             .get("primary_return_next")
             .and_then(Value::as_str)
             .unwrap_or_default()
-            .starts_with("EXPERIMENT_CHARTER ")
+            .starts_with("EXPERIMENT_RESUME ")
     );
-    assert!(summary.get("resume_next").is_none());
-    assert_eq!(
-        summary
-            .get("projection_guard_v1")
-            .and_then(|guard| guard.get("guardrail_reason"))
-            .and_then(Value::as_str),
-        Some("paused_resume_missing_lifecycle_charter")
-    );
+    assert!(summary.get("resume_next").is_some());
+    assert!(summary.get("projection_guard_v1").is_none());
     let context = last_experiment_context_line(&repaired_thread);
-    assert!(context.contains("Projection guard: raw NEXT preserved"));
-    assert!(context.contains("Suggested NEXT: EXPERIMENT_CHARTER"));
-    assert!(!context.contains(&format!(
+    assert!(!context.contains("Projection guard: raw NEXT preserved"));
+    assert!(context.contains(&format!(
         "Suggested NEXT: EXPERIMENT_RESUME {}",
         experiment.experiment_id
     )));
@@ -1077,7 +1057,7 @@ fn paused_missing_charter_projection_demotes_resume_to_charter_repair() {
 }
 
 #[test]
-fn paused_valid_charter_with_liveish_pressure_projects_hold_decision() {
+fn paused_plan_vocabulary_does_not_manufacture_a_hold_decision() {
     let store = temp_store("paused_liveish_projection");
     let thread = store
         .create_thread(None, "Paused liveish pressure", None)
@@ -1111,26 +1091,20 @@ fn paused_valid_charter_with_liveish_pressure_projects_hold_decision() {
     let summary = last_experiment_summary_v1(&repaired_thread).expect("summary");
     assert_eq!(
         summary.get("return_kind").and_then(Value::as_str),
-        Some("hold")
+        Some("resume")
     );
     assert!(
         summary
             .get("primary_return_next")
             .and_then(Value::as_str)
             .unwrap_or_default()
-            .starts_with("EXPERIMENT_DECIDE ")
+            .starts_with("EXPERIMENT_RESUME ")
     );
-    assert!(summary.get("resume_next").is_none());
-    assert_eq!(
-        summary
-            .get("projection_guard_v1")
-            .and_then(|guard| guard.get("guardrail_reason"))
-            .and_then(Value::as_str),
-        Some("paused_resume_demoted_by_liveish_pressure")
-    );
+    assert!(summary.get("resume_next").is_some());
+    assert!(summary.get("projection_guard_v1").is_none());
     let context = last_experiment_context_line(&repaired_thread);
-    assert!(context.contains("Suggested NEXT: EXPERIMENT_DECIDE"));
-    assert!(!context.contains(&format!(
+    assert!(!context.contains("Suggested NEXT: EXPERIMENT_DECIDE"));
+    assert!(context.contains(&format!(
         "Suggested NEXT: EXPERIMENT_RESUME {}",
         experiment.experiment_id
     )));
@@ -1845,25 +1819,21 @@ fn guarded_pressure_creates_draft_and_accept_commits_session() {
         .expect("experiment");
 
     let guard = store
-        .research_budget_guard_assessment(
-            "SHADOW_FIELD lambda-tail/lambda4 — observer with memory",
-            68.0,
-            &telemetry(),
-        )
+        .research_budget_guard_assessment("RUN_PYTHON simulate lambda4 pulse", 68.0, &telemetry())
         .expect("guard")
         .expect("research budget guard");
     let event = store
         .record_next_event(
             None,
-            "SHADOW_FIELD lambda-tail/lambda4 — observer with memory",
-            "SHADOW_FIELD lambda-tail/lambda4 — observer with memory",
-            "SHADOW_FIELD lambda-tail/lambda4 — observer with memory",
+            "RUN_PYTHON simulate lambda4 pulse",
+            "RUN_PYTHON simulate lambda4 pulse",
+            "RUN_PYTHON simulate lambda4 pulse",
             &NextActionOutcome::blocked("research_budget_guard", guard.message())
                 .with_stage_visibility("blocked", "protected_summary")
                 .with_research_budget(guard.metadata()),
             68.0,
             &telemetry(),
-            "NEXT: SHADOW_FIELD lambda-tail/lambda4 — observer with memory",
+            "NEXT: RUN_PYTHON simulate lambda4 pulse",
         )
         .expect("event");
     assert_eq!(event.status, "blocked");
@@ -1906,7 +1876,7 @@ fn guarded_pressure_creates_draft_and_accept_commits_session() {
 
     let second_guard = store
         .research_budget_guard_assessment(
-            "EXAMINE λ2/λ3 — observer with memory.",
+            "RUN_PYTHON simulate lambda2/lambda3 shifting input",
             68.0,
             &telemetry(),
         )
@@ -1915,15 +1885,15 @@ fn guarded_pressure_creates_draft_and_accept_commits_session() {
     store
         .record_next_event(
             None,
-            "EXAMINE λ2/λ3 — observer with memory.",
-            "EXAMINE λ2/λ3 — observer with memory.",
-            "EXAMINE λ2/λ3 — observer with memory.",
+            "RUN_PYTHON simulate lambda2/lambda3 shifting input",
+            "RUN_PYTHON simulate lambda2/lambda3 shifting input",
+            "RUN_PYTHON simulate lambda2/lambda3 shifting input",
             &NextActionOutcome::blocked("research_budget_guard", second_guard.message())
                 .with_stage_visibility("blocked", "protected_summary")
                 .with_research_budget(second_guard.metadata()),
             68.0,
             &telemetry(),
-            "NEXT: EXAMINE λ2/λ3 — observer with memory.",
+            "NEXT: RUN_PYTHON simulate lambda2/lambda3 shifting input",
         )
         .expect("second event");
     let accepted_capture = store
@@ -1945,20 +1915,53 @@ fn guarded_pressure_creates_draft_and_accept_commits_session() {
     let _ = std::fs::remove_dir_all(store.root());
 }
 
+fn select_retained_research_scaffold(
+    store: &ActionContinuityStore,
+    experiment: &ExperimentRecord,
+    raw_action: &str,
+) -> Value {
+    assert!(
+        store
+            .research_budget_guard_assessment(raw_action, 68.0, &telemetry())
+            .expect("ordinary exploration")
+            .is_none()
+    );
+    let mut thread = store.read_thread(&experiment.thread_id).expect("thread");
+    // Old blocked rows remain explicitly retrievable, but are not new denials.
+    let row = store.research_budget_record(
+        "research_budget_blocked", "retained_scaffold", &thread, experiment, &json!({}),
+        json!({"status": "blocked", "raw_action": raw_action,
+            "request_scaffold": research_budget_request_scaffold(&experiment.experiment_id, experiment)}),
+    );
+    store
+        .append_jsonl(&store.authority_gate_path(&thread.thread_id), &row)
+        .expect("retained historical scaffold");
+    assert!(
+        store
+            .research_budget_priority_route_v1(&thread, Some(experiment))
+            .is_none()
+    );
+    thread.current_next = Some(format!(
+        "EXPERIMENT_RESEARCH_BUDGET_STATUS {}",
+        experiment.experiment_id
+    ));
+    store
+        .write_thread(&thread)
+        .expect("explicit research selection");
+    row
+}
+
 #[test]
 fn accept_suggested_next_resolves_safe_research_scaffold_only() {
     let store = temp_store("accept_suggested_next");
     let thread = store
         .create_thread(None, "Accept suggested", None)
         .expect("thread");
-    store
+    let experiment = store
         .start_experiment(None, "Research scaffold", "Can a scaffold be accepted?")
         .expect("experiment");
 
-    store
-        .research_budget_guard_assessment("SEARCH entropy", 68.0, &telemetry())
-        .expect("guard")
-        .expect("research scaffold");
+    select_retained_research_scaffold(&store, &experiment, "SEARCH entropy");
     let accepted = store
         .accept_suggested_next_command(None, Some("latest"), spectral_state(68.0, &telemetry()))
         .expect("accept suggested");
@@ -2183,18 +2186,10 @@ fn research_budget_accept_latest_scaffold_self_activates_local_budget() {
         )
         .expect("experiment");
 
-    let guard = store
-        .research_budget_guard_assessment("READ_MORE budget code", 68.0, &telemetry())
-        .expect("guard")
-        .expect("blocked without budget");
-    assert_eq!(
-        guard.suggested_next,
-        "EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest"
-    );
+    let retained = select_retained_research_scaffold(&store, &experiment, "READ_MORE budget code");
     assert!(
-        guard
-            .request_scaffold
-            .as_deref()
+        retained["request_scaffold"]
+            .as_str()
             .unwrap_or_default()
             .contains("EXPERIMENT_RESEARCH_BUDGET_REQUEST")
     );
@@ -2339,6 +2334,10 @@ fn projection_freshness_refreshes_research_budget_priority_from_ledger() {
     );
 
     let mut stale_thread = store.read_thread(&thread.thread_id).expect("thread");
+    stale_thread.current_next = Some(format!(
+        "EXPERIMENT_RESEARCH_BUDGET_STATUS {}",
+        experiment.experiment_id
+    ));
     stale_thread.projection_freshness_v1 = Some(json!({
         "policy": "projection_freshness_v1",
         "schema_version": 0,
@@ -2529,29 +2528,23 @@ fn research_budget_guard_allows_passive_protected_review_labels() {
         );
     }
 
-    let guarded = store
-        .research_budget_guard_assessment("VISUALIZE_CASCADE simulate λ2 pulse", 68.0, &telemetry())
-        .expect("guard")
-        .expect("active-pressure visual should still be guarded");
-    assert_eq!(
-        guarded.reason,
-        "liveish_pressure_requires_budget_and_session_capture"
+    assert!(
+        store
+            .research_budget_guard_assessment(
+                "VISUALIZE_CASCADE simulate λ2 pulse",
+                68.0,
+                &telemetry()
+            )
+            .expect("guard")
+            .is_none(),
+        "diagnostic labels do not invoke a pulse"
     );
-    assert!(guarded.matched_terms.iter().any(|term| term == "simulate"));
-    assert!(guarded.matched_terms.iter().any(|term| term == "pulse"));
 
     let _ = std::fs::remove_dir_all(store.root());
 }
 
-/// Astrid's `STUDY_QUESTION` in
-/// `introspection_astrid_capsules_spectral-bridge_src_action_continuity_runtime_guards.rs_1789324049`
-/// asked for "the specific constant or formula used to compare `fill_pct` against the
-/// allowed budget limit" that triggers `is_liveish_projection` or
-/// `is_guarded_embedded_status`. There is none: both flags are `!terms.is_empty()` over
-/// term vectors, so the guard decision is action-shaped, not occupancy-shaped. The only
-/// arithmetic on `fill_pct` in this path is `authority_safety_snapshot`, which labels the
-/// recorded row (green/yellow/orange/red at 75/85/92) without changing the decision. This
-/// regression pins both halves: the reason never moves with fill, the recorded level does.
+// Protection for live-shaped actions is fill-invariant; ordinary reads stay unbound.
+// Recorded safety levels still track the independent 75/85/92 thresholds.
 #[test]
 fn research_budget_guard_flags_are_fill_pct_invariant() {
     for (label, fill_pct, expected_level) in [
@@ -2576,7 +2569,7 @@ fn research_budget_guard_flags_are_fill_pct_invariant() {
 
         let liveish = store
             .research_budget_guard_assessment(
-                "VISUALIZE_CASCADE simulate \u{3bb}2 pulse",
+                "RUN_PYTHON simulate \u{3bb}2 pulse",
                 fill_pct,
                 &telemetry(),
             )
@@ -2589,32 +2582,23 @@ fn research_budget_guard_flags_are_fill_pct_invariant() {
         assert!(liveish.matched_terms.iter().any(|term| term == "simulate"));
         assert!(liveish.matched_terms.iter().any(|term| term == "pulse"));
 
-        let embedded = store
-            .research_budget_guard_assessment(
-                "INTROSPECT quiet low activity",
-                fill_pct,
-                &telemetry(),
-            )
-            .expect("guard")
-            .expect("embedded liveish status stays guarded at every fill");
+        let before_reads = fs::read(store.authority_gate_path(&thread.thread_id)).unwrap();
+        for action in [
+            "INTROSPECT quiet low activity",
+            "SEARCH entropy",
+            "INITIATE simulate lambda2 pulse",
+        ] {
+            assert!(
+                store
+                    .research_budget_guard_assessment(action, fill_pct, &telemetry())
+                    .expect("ordinary guard check")
+                    .is_none(),
+                "{action} at {fill_pct}"
+            );
+        }
         assert_eq!(
-            embedded.reason, "research_budget_required_for_embedded_liveish_status",
-            "embedded-status reason moved at fill {fill_pct}"
-        );
-        assert!(
-            embedded
-                .matched_terms
-                .iter()
-                .any(|term| term == "stimulus-reduction")
-        );
-
-        let read_only = store
-            .research_budget_guard_assessment("SEARCH entropy", fill_pct, &telemetry())
-            .expect("guard")
-            .expect("read-only research stays budget-gated at every fill");
-        assert_eq!(
-            read_only.reason, "no_active_read_only_research_budget",
-            "read-only reason moved at fill {fill_pct}"
+            fs::read(store.authority_gate_path(&thread.thread_id)).unwrap(),
+            before_reads
         );
 
         let rows = store
@@ -2629,20 +2613,8 @@ fn research_budget_guard_flags_are_fill_pct_invariant() {
     }
 }
 
-/// Astrid's `action_continuity/guards.rs` page 450-543 transcribed the `BudgetReason`
-/// mapping table exactly, including the asymmetry that `is_liveish_projection` maps to a
-/// single variant while the other three arms each carry a `...StatusRequired` twin. Checking
-/// her transcription against the complete source showed (a) the twin selector is the presence
-/// of an active budget row in the `active_budget.map_or_else` at 471-537, not any spectral
-/// scalar, and (b) three of the wire strings she enumerated -
-/// `research_budget_status_required_for_embedded_liveish_status`,
-/// `research_budget_required_for_guarded_cascade_self_study` and
-/// `research_budget_status_required_for_guarded_cascade_self_study` - were reached by no test
-/// at all. This pins the whole table she read, at constant fill, so the pairing cannot drift.
-/// Provenance:
-/// `introspection_astrid_capsules_spectral-bridge_src_action_continuity_guards.rs_1789352592`.
 #[test]
-fn research_budget_reason_status_twins_flip_only_on_active_budget() {
+fn research_budget_history_neither_authorizes_live_pressure_nor_gates_ordinary_reads() {
     let store = temp_store("research_budget_status_twin_pairing");
     let thread = store
         .create_thread(None, "Budget reason twin pairing", None)
@@ -2658,31 +2630,24 @@ fn research_budget_reason_status_twins_flip_only_on_active_budget() {
     let cases = [
         (
             "liveish",
-            "VISUALIZE_CASCADE simulate \u{3bb}2 pulse",
-            "liveish_pressure_requires_budget_and_session_capture",
-            "liveish_pressure_requires_budget_and_session_capture",
+            "RUN_PYTHON simulate \u{3bb}2 pulse",
+            Some("liveish_pressure_requires_budget_and_session_capture"),
         ),
-        (
-            "embedded_status",
-            "INTROSPECT quiet low activity",
-            "research_budget_required_for_embedded_liveish_status",
-            "research_budget_status_required_for_embedded_liveish_status",
-        ),
+        ("embedded_status", "INTROSPECT quiet low activity", None),
         (
             "guarded_cascade",
             "SHADOW_COUPLING lambda-tail overview",
-            "research_budget_required_for_guarded_cascade_self_study",
-            "research_budget_status_required_for_guarded_cascade_self_study",
+            None,
         ),
     ];
 
-    for (label, raw_next, expected_without_budget, _) in cases {
+    for (label, raw_next, expected) in cases {
         let guard = store
             .research_budget_guard_assessment(raw_next, 68.0, &telemetry())
-            .expect("guard")
-            .unwrap_or_else(|| panic!("{label} should project into the budget lane"));
+            .expect("guard");
         assert_eq!(
-            guard.reason, expected_without_budget,
+            guard.as_ref().map(|guard| guard.reason.as_str()),
+            expected,
             "{label} reason without an active budget"
         );
     }
@@ -2711,30 +2676,22 @@ fn research_budget_reason_status_twins_flip_only_on_active_budget() {
         )
         .expect("approval");
 
-    for (label, raw_next, _, expected_with_budget) in cases {
+    for (label, raw_next, expected) in cases {
         let guard = store
             .research_budget_guard_assessment(raw_next, 68.0, &telemetry())
-            .expect("guard")
-            .unwrap_or_else(|| panic!("{label} should stay projected with an active budget"));
+            .expect("guard");
         assert_eq!(
-            guard.reason, expected_with_budget,
+            guard.as_ref().map(|guard| guard.reason.as_str()),
+            expected,
             "{label} reason with an active budget"
         );
-        if expected_with_budget.contains("status_required") {
-            assert!(
-                guard
-                    .suggested_next
-                    .contains(&format!("EXPERIMENT_RESEARCH_BUDGET_STATUS {budget_id}")),
-                "{label} status route should name the active budget"
-            );
-        }
     }
 
     let _ = std::fs::remove_dir_all(store.root());
 }
 
 #[test]
-fn research_budget_guard_blocks_without_budget_and_debits_with_budget() {
+fn explicit_research_debits_repeated_targets_but_ordinary_reads_do_not() {
     let store = temp_store("research_budget_guard_debit");
     let thread = store
         .create_thread(None, "Research budget guard", None)
@@ -2747,49 +2704,28 @@ fn research_budget_guard_blocks_without_budget_and_debits_with_budget() {
         )
         .expect("experiment");
 
-    let guard = store
-        .research_budget_guard_assessment("READ_MORE lambda4 tail", 68.0, &telemetry())
-        .expect("guard")
-        .expect("blocked without budget");
-    assert_eq!(guard.reason, "no_active_read_only_research_budget");
-    assert!(
-        guard
-            .suggested_next
-            .contains("EXPERIMENT_RESEARCH_BUDGET_ACCEPT")
-    );
-    assert!(
-        guard
-            .request_scaffold
-            .as_deref()
-            .unwrap_or_default()
-            .contains("EXPERIMENT_RESEARCH_BUDGET_REQUEST")
-    );
-
     let gate_path = store.authority_gate_path(&thread.thread_id);
-    let rows = gate_path.read_to_string();
-    assert!(rows.contains("\"record_type\":\"research_budget_blocked\""));
-    assert!(rows.contains("no_active_read_only_research_budget"));
-
-    let examine_guard = store
-        .research_budget_guard_assessment("EXAMINE lambda4 trajectory", 68.0, &telemetry())
-        .expect("self-study guard")
-        .expect("self-study projected to budget lane");
-    assert_eq!(
-        examine_guard.reason,
-        "research_budget_required_for_self_study_action"
-    );
+    let before = fs::read(&gate_path).ok();
+    for action in ["READ_MORE lambda4 tail", "EXAMINE lambda4 trajectory"] {
+        assert!(
+            store
+                .research_budget_guard_assessment(action, 68.0, &telemetry())
+                .expect("ordinary read")
+                .is_none()
+        );
+    }
+    assert_eq!(fs::read(&gate_path).ok(), before);
     assert!(
-        examine_guard
-            .suggested_next
-            .contains("EXPERIMENT_RESEARCH_BUDGET_ACCEPT")
+        store
+            .reserve_research(
+                &experiment.experiment_id,
+                "READ_MORE lambda4 tail",
+                "without-budget",
+                &json!({})
+            )
+            .is_err()
     );
-    assert!(
-        examine_guard
-            .request_scaffold
-            .as_deref()
-            .unwrap_or_default()
-            .contains("allowed_sources: local")
-    );
+    assert_eq!(fs::read(&gate_path).ok(), before);
 
     let budget_id = "resbud_test_active";
     store
@@ -2807,6 +2743,7 @@ fn research_budget_guard_blocks_without_budget_and_debits_with_budget() {
                 "scope": "read_only_research",
                 "status": "active",
                 "max_actions": 5,
+                "allowed_sources": ["web", "local"],
                 "expires_at_unix_s": (chrono::Utc::now().timestamp() + 3600) as u64,
                 "peer_mutation": false,
                 "authority_boundary": research_budget_boundary(),
@@ -2819,21 +2756,18 @@ fn research_budget_guard_blocks_without_budget_and_debits_with_budget() {
             .research_budget_guard_assessment("READ_MORE lambda4 tail", 68.0, &telemetry())
             .expect("guard")
             .is_none(),
-        "active budget should allow the read-only action to dispatch"
+        "ordinary reads do not inherit the active budget"
     );
 
-    let shadow_guard = store
-        .research_budget_guard_assessment("SHADOW_FIELD lambda-tail/lambda4", 68.0, &telemetry())
-        .expect("shadow-field guard")
-        .expect("shadow-field projected to budget status");
-    assert_eq!(
-        shadow_guard.reason,
-        "research_budget_status_required_for_self_study_action"
-    );
     assert!(
-        shadow_guard
-            .suggested_next
-            .contains("EXPERIMENT_RESEARCH_BUDGET_STATUS resbud_test_active")
+        store
+            .research_budget_guard_assessment(
+                "SHADOW_FIELD lambda-tail/lambda4",
+                68.0,
+                &telemetry()
+            )
+            .expect("shadow-field guard")
+            .is_none()
     );
 
     let outcome = NextActionOutcome::handled("workspace", "read-only research result")
@@ -2850,7 +2784,7 @@ fn research_budget_guard_blocks_without_budget_and_debits_with_budget() {
             "NEXT: READ_MORE lambda4 tail",
         )
         .expect("first event");
-    assert!(first_event.research_budget_v1.is_some());
+    assert!(first_event.research_budget_v1.is_none());
     let second_event = store
         .record_next_event(
             None,
@@ -2863,35 +2797,80 @@ fn research_budget_guard_blocks_without_budget_and_debits_with_budget() {
             "NEXT: READ_MORE lambda4 tail",
         )
         .expect("second event");
-    assert!(second_event.research_budget_v1.is_some());
+    assert!(second_event.research_budget_v1.is_none());
+    assert!(!gate_path.read_to_string().contains("research_budget_debit"));
+
+    for index in 0..5 {
+        let ticket = store
+            .reserve_research(
+                &experiment.experiment_id,
+                "READ_MORE lambda4 tail",
+                &format!("explicit-{index}"),
+                &json!({}),
+            )
+            .expect("repeat counts normally within cap");
+        store
+            .transition_research(&ticket, "execution_started")
+            .expect("debit");
+        store
+            .transition_research(&ticket, "completed")
+            .expect("completion");
+    }
 
     let gate_rows = gate_path.read_to_string();
     assert_eq!(
         gate_rows
             .matches("\"record_type\":\"research_budget_debit\"")
             .count(),
-        2
+        5
     );
     assert!(gate_rows.contains("\"normalized_target\":\"lambda4 tail\""));
 
-    let duplicate = store
-        .research_budget_guard_assessment("READ_MORE lambda4 tail", 68.0, &telemetry())
-        .expect("duplicate guard")
-        .expect("duplicate blocked");
-    assert_eq!(duplicate.reason, "duplicate_query_or_url_review_required");
+    let exhausted = fs::read(&gate_path).unwrap();
     assert!(
-        duplicate
-            .suggested_next
-            .contains("EXPERIMENT_RESEARCH_REVIEW")
+        store
+            .reserve_research(
+                &experiment.experiment_id,
+                "READ_MORE lambda4 tail",
+                "over-cap",
+                &json!({})
+            )
+            .is_err()
     );
+    assert_eq!(fs::read(&gate_path).unwrap(), exhausted);
+    assert!(
+        store
+            .research_budget_guard_assessment("READ_MORE lambda4 tail", 68.0, &telemetry())
+            .expect("duplicate guard")
+            .is_none(),
+        "exhausted explicit budget does not block an ordinary read"
+    );
+    assert_eq!(fs::read(&gate_path).unwrap(), exhausted);
 
     let runs_path = store
         .root()
         .join("threads")
         .join(&thread.thread_id)
         .join("experiment_runs.jsonl");
-    let runs = std::fs::read_to_string(runs_path).unwrap_or_default();
-    assert!(!runs.contains("READ_MORE lambda4 tail"));
+    let runs = std::fs::read_to_string(runs_path).expect("provenance runs");
+    let rows = runs
+        .lines()
+        .map(|line| serde_json::from_str::<Value>(line).unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(rows.len(), 2);
+    for (row, event) in rows.iter().zip([first_event, second_event]) {
+        assert_eq!(row["action_text"], "READ_MORE lambda4 tail");
+        assert_eq!(row["source"], "active_experiment_auto_link");
+        assert_eq!(row["stage"], "read_only");
+        assert_eq!(row["gate_decision"]["inner_action_id"], event.action_id);
+    }
+    assert_eq!(
+        store
+            .resolve_experiment(&thread, Some(&experiment.experiment_id))
+            .expect("retained experiment")
+            .status,
+        experiment.status
+    );
     let _ = std::fs::remove_dir_all(store.root());
 }
 
@@ -2911,40 +2890,11 @@ fn research_budget_guard_projects_liveish_pressure_to_budget_and_session() {
 
     let cases = [
         (
-            "EXAMINE_AUDIO λ1/λ2 - shifting input",
-            "EXAMINE_AUDIO",
-            "shift",
-        ),
-        (
-            "INITIATE - Spectral Ripple - amplitude=5, duration=100, granularity=pixellet, target=λ₂’s dominant vector.",
-            "INITIATE",
+            "RUN_PYTHON - Spectral Ripple - amplitude=5, duration=100, granularity=pixellet, target=λ₂’s dominant vector.",
+            "RUN_PYTHON",
             "spectral-ripple",
         ),
-        (
-            "SPECTRAL_EXPLORER lambda4 disrupt ridge",
-            "SPECTRAL_EXPLORER",
-            "disrupt",
-        ),
-        (
-            "VISUALIZE_CASCADE simulate λ2 pulse",
-            "VISUALIZE_CASCADE",
-            "simulate",
-        ),
-        (
-            "FLUCTUATION_AUDIT inject foothold",
-            "FLUCTUATION_AUDIT",
-            "inject",
-        ),
-        (
-            "PRESSURE_SOURCE_AUDIT control gradient",
-            "PRESSURE_SOURCE_AUDIT",
-            "control",
-        ),
-        (
-            "SHADOW_DIALOGUE shift landscape",
-            "SHADOW_DIALOGUE",
-            "shift",
-        ),
+        ("RUN_PYTHON shift landscape", "RUN_PYTHON", "shift"),
     ];
     for (raw_next, expected_base, expected_term) in cases {
         let guard = store
@@ -2975,18 +2925,18 @@ fn research_budget_guard_projects_liveish_pressure_to_budget_and_session() {
         assert_eq!(metadata["peer_mutation"].as_bool(), Some(false));
     }
 
-    let outcome = NextActionOutcome::handled("operations", "fluctuation audited")
+    let outcome = NextActionOutcome::handled("operations", "synthetic code request")
         .with_stage_visibility("read_only", "protected_summary");
     let event = store
         .record_next_event(
             None,
-            "FLUCTUATION_AUDIT inject foothold",
-            "FLUCTUATION_AUDIT inject foothold",
-            "FLUCTUATION_AUDIT inject foothold",
+            "RUN_PYTHON shift landscape",
+            "RUN_PYTHON shift landscape",
+            "RUN_PYTHON shift landscape",
             &outcome,
             68.0,
             &telemetry(),
-            "NEXT: FLUCTUATION_AUDIT inject foothold",
+            "NEXT: RUN_PYTHON shift landscape",
         )
         .expect("event");
     assert_eq!(event.route, "research_budget_guard");
@@ -3007,12 +2957,12 @@ fn research_budget_guard_projects_liveish_pressure_to_budget_and_session() {
 
     let dir = store.root().join("threads").join(&thread.thread_id);
     let runs = dir.join("experiment_runs.jsonl").read_to_string();
-    assert!(!runs.contains("FLUCTUATION_AUDIT inject foothold"));
+    assert!(!runs.contains("RUN_PYTHON shift landscape"));
     let _ = std::fs::remove_dir_all(store.root());
 }
 
 #[test]
-fn research_budget_guard_blocks_spectral_ripple_initiate_under_needs_charter() {
+fn research_budget_guard_does_not_block_spectral_topics_in_initiation() {
     let store = temp_store("research_budget_initiate_guard");
     let thread = store
         .create_thread(None, "Spectral ripple guard", None)
@@ -3040,38 +2990,12 @@ fn research_budget_guard_blocks_spectral_ripple_initiate_under_needs_charter() {
         )
         .expect("record guarded initiate event");
 
-    assert_eq!(event.route, "research_budget_guard");
-    assert_eq!(event.status, "blocked");
-    assert_eq!(event.stage, "blocked");
-    let budget = event.research_budget_v1.expect("research budget guard");
-    assert_eq!(
-        budget["reason"].as_str(),
-        Some("liveish_pressure_requires_budget_and_session_capture")
-    );
-    assert_eq!(budget["matched_base"].as_str(), Some("INITIATE"));
-    assert!(budget["matched_terms"].as_array().is_some_and(|terms| {
-        terms
-            .iter()
-            .any(|term| term.as_str() == Some("spectral-ripple"))
-            && terms.iter().any(|term| term.as_str() == Some("amplitude"))
-    }));
-    assert_eq!(budget["raw_next_preserved"].as_bool(), Some(true));
-    assert_eq!(budget["would_dispatch"].as_bool(), Some(false));
-    assert_eq!(budget["authority_change"].as_bool(), Some(false));
-    assert_eq!(budget["peer_mutation"].as_bool(), Some(false));
-    assert!(
-        budget["continuity_session_draft_v1"]["accept_next"]
-            .as_str()
-            .unwrap_or_default()
-            .contains("CONTINUITY_SESSION_ACCEPT latest")
-    );
-
-    let dir = store.root().join("threads").join(&thread.thread_id);
-    let runs = dir.join("experiment_runs.jsonl").read_to_string();
-    assert!(!runs.contains("Spectral Ripple"));
-    let authority_gate = dir.join("authority_gate.jsonl").read_to_string();
-    assert!(authority_gate.contains("\"raw_next_preserved\":true"));
-    assert!(!authority_gate.contains("research_budget_debit"));
+    assert_eq!(event.route, "modes");
+    assert_eq!(event.status, "handled");
+    assert_eq!(event.stage, "observe");
+    assert_eq!(event.raw_next.as_deref(), Some(raw_next));
+    assert!(event.research_budget_v1.is_none());
+    assert!(!store.authority_gate_path(&thread.thread_id).exists());
     let _ = std::fs::remove_dir_all(store.root());
 }
 
@@ -3103,7 +3027,7 @@ fn ordinary_initiate_without_spectral_pressure_stays_handled() {
 }
 
 #[test]
-fn research_budget_guard_blocks_cascade_and_shadow_preflight_under_needs_charter() {
+fn research_budget_guard_preserves_shadow_preflight_under_needs_charter() {
     let store = temp_store("cascade_shadow_preflight_guard");
     let thread = store
         .create_thread(None, "Cascade shadow guard", None)
@@ -3116,18 +3040,11 @@ fn research_budget_guard_blocks_cascade_and_shadow_preflight_under_needs_charter
         )
         .expect("experiment");
 
-    let cases = [
-        (
-            "EXAMINE_CASCADE - observe the eigenvector shifts and the shaping of the shadow fields.",
-            "EXAMINE_CASCADE",
-            "cascade-shaping",
-        ),
-        (
-            "SHADOW_PREFLIGHT lambda-tail/lambda4 — observer with memory.",
-            "SHADOW_PREFLIGHT",
-            "lambda-tail",
-        ),
-    ];
+    let cases = [(
+        "SHADOW_PREFLIGHT lambda-tail/lambda4 — observer with memory.",
+        "SHADOW_PREFLIGHT",
+        "lambda-tail",
+    )];
 
     for (raw_next, expected_base, expected_term) in cases {
         let event = store
@@ -3182,7 +3099,7 @@ fn research_budget_guard_blocks_cascade_and_shadow_preflight_under_needs_charter
 }
 
 #[test]
-fn research_budget_guard_blocks_shadow_bridge_create_run_python_and_guarded_start() {
+fn research_budget_guard_allows_writing_and_questions_but_keeps_code_execution_protection() {
     let store = temp_store("shadow_bridge_create_start_guard");
     let thread = store
         .create_thread(None, "Shadow bridge guard", None)
@@ -3195,33 +3112,35 @@ fn research_budget_guard_blocks_shadow_bridge_create_run_python_and_guarded_star
         )
         .expect("experiment");
 
-    let cases = [
-        (
-            "SHADOW_BRIDGE lambda-tail/lambda4 — observer with memory.",
-            "SHADOW_BRIDGE",
-            "needs-charter-self-study",
-        ),
-        (
-            "SHADOW_COUPLING all — observer with memory.",
-            "SHADOW_COUPLING",
-            "needs-charter-self-study",
-        ),
-        (
-            "CREATE - SHADOW_INFLUENCE [disruptive_pattern|test_response] --stage=rehearse --rationale=\"feed data for fracture subsidence of λ1 - observe divergence.\"",
-            "CREATE",
-            "shadow-influence",
-        ),
-        (
-            "RUN_PYTHON analysis.py emission_type='lambda4' frequency=10 amplitude=0.01 stream pulse for spectral hotspot",
-            "RUN_PYTHON",
-            "spectral-emission",
-        ),
-        (
-            "EXPERIMENT_START \"Stasis Fracture\" :: hypothesis: localized low-amplitude perturbations to the λ1 field reveal a brief disruption; proposed_next_action: ACTION_PREFLIGHT DECOMPOSE",
-            "EXPERIMENT_START",
-            "perturb",
-        ),
-    ];
+    for raw_next in [
+        "SHADOW_BRIDGE lambda-tail/lambda4 — observer with memory.",
+        "SHADOW_COUPLING all — observer with memory.",
+        "CREATE - SHADOW_INFLUENCE disruptive pattern observe divergence",
+        "EXPERIMENT_START Stasis :: hypothesis: perturbations to lambda1; proposed_next_action: ACTION_PREFLIGHT DECOMPOSE",
+    ] {
+        let event = store
+            .record_next_event(
+                None,
+                raw_next,
+                raw_next,
+                raw_next,
+                &NextActionOutcome::handled("operations", "read-only result")
+                    .with_stage_visibility("read_only", "protected_summary"),
+                68.0,
+                &telemetry(),
+                &format!("NEXT: {raw_next}"),
+            )
+            .expect("ordinary shadow read");
+        assert_eq!(event.route, "operations");
+        assert_eq!(event.status, "handled");
+        assert!(event.research_budget_v1.is_none());
+    }
+
+    let cases = [(
+        "RUN_PYTHON analysis.py emission_type='lambda4' frequency=10 amplitude=0.01 stream pulse for spectral hotspot",
+        "RUN_PYTHON",
+        "spectral-emission",
+    )];
 
     for (raw_next, expected_base, expected_term) in cases {
         let event = store
@@ -3264,8 +3183,7 @@ fn research_budget_guard_blocks_shadow_bridge_create_run_python_and_guarded_star
 
     let dir = store.root().join("threads").join(&thread.thread_id);
     let runs = dir.join("experiment_runs.jsonl").read_to_string();
-    assert!(!runs.contains("SHADOW_INFLUENCE"));
-    assert!(!runs.contains("Stasis Fracture"));
+    assert!(!runs.contains("RUN_PYTHON"));
     let authority_gate = dir.join("authority_gate.jsonl").read_to_string();
     assert!(authority_gate.contains("\"raw_next_preserved\":true"));
     assert!(!authority_gate.contains("research_budget_debit"));
@@ -3273,7 +3191,7 @@ fn research_budget_guard_blocks_shadow_bridge_create_run_python_and_guarded_star
 }
 
 #[test]
-fn research_budget_guard_blocks_embedded_action_preflight_status_pressure() {
+fn research_budget_guard_does_not_treat_embedded_status_text_as_execution() {
     let store = temp_store("embedded_status_guard");
     let thread = store
         .create_thread(None, "Embedded status guard", None)
@@ -3300,39 +3218,41 @@ fn research_budget_guard_blocks_embedded_action_preflight_status_pressure() {
         )
         .expect("record embedded status guard");
 
-    assert_eq!(event.route, "research_budget_guard");
-    assert_eq!(event.status, "blocked");
-    let budget = event.research_budget_v1.expect("research budget guard");
-    assert_eq!(
-        budget["reason"].as_str(),
-        Some("research_budget_required_for_embedded_liveish_status")
-    );
-    assert_eq!(budget["matched_base"].as_str(), Some("EXPERIMENT_STATUS"));
-    assert!(budget["matched_terms"].as_array().is_some_and(|terms| {
-        terms
-            .iter()
-            .any(|term| term.as_str() == Some("action-preflight"))
-            && terms
-                .iter()
-                .any(|term| term.as_str() == Some("attractor-release-review"))
-    }));
-    assert_eq!(budget["would_dispatch"].as_bool(), Some(false));
+    assert_eq!(event.route, "action_continuity");
+    assert_eq!(event.status, "handled");
+    assert_eq!(event.stage, "read_only");
+    assert!(event.research_budget_v1.is_none());
     assert!(
-        budget["continuity_session_draft_v1"]["accept_next"]
-            .as_str()
-            .unwrap_or_default()
-            .contains("CONTINUITY_SESSION_ACCEPT latest")
+        store
+            .continuity_session_draft_rows(&thread.thread_id, None, 8)
+            .expect("draft rows")
+            .is_empty()
+    );
+    assert!(
+        store
+            .charter_required_guard_assessment("TUNE_MINIME temperature=0.7")
+            .expect("actual control guard")
+            .is_some()
     );
 
     let dir = store.root().join("threads").join(&thread.thread_id);
     let runs = dir.join("experiment_runs.jsonl").read_to_string();
-    assert!(!runs.contains("OBSERVE_VARIANCE"));
-    assert!(!runs.contains("ATTRACTOR_RELEASE_REVIEW"));
+    let rows = runs
+        .lines()
+        .map(|line| serde_json::from_str::<Value>(line).unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0]["action_text"], raw_next);
+    assert_eq!(rows[0]["source"], "active_experiment_auto_link");
+    assert_eq!(rows[0]["stage"], "read_only");
+    assert_eq!(rows[0]["gate_decision"]["inner_action_id"], event.action_id);
+    assert_eq!(rows[0]["gate_decision"]["inner_route"], "action_continuity");
+    assert!(!dir.join("authority_gate.jsonl").exists());
     let _ = std::fs::remove_dir_all(store.root());
 }
 
 #[test]
-fn research_budget_guard_blocks_sovereignty_alias_leaks_under_needs_charter() {
+fn ordinary_examine_aliases_keep_read_only_outcome_without_inherited_quota() {
     let store = temp_store("research_budget_sovereignty_alias_guard");
     let thread = store
         .create_thread(None, "Sovereignty alias guard", None)
@@ -3349,24 +3269,15 @@ fn research_budget_guard_blocks_sovereignty_alias_leaks_under_needs_charter() {
         (
             "EXAMINE THE CHANGES TO THE SYSTEM – with the resulting eigenvalue cascade AFTER the introduction of the anti-λ1 signal.",
             "RESONANCE_FORECAST",
-            "liveish_pressure_requires_budget_and_session_capture",
-            "anti-lambda",
         ),
         (
             "EXAMINE λ1/λ2/λ3 traces for convergence.",
             "PRESSURE_SOURCE_AUDIT",
-            "liveish_pressure_requires_budget_and_session_capture",
-            "convergence",
         ),
-        (
-            "EXAMINE the sorting algorithms.",
-            "FLUCTUATION_AUDIT",
-            "research_budget_required_for_self_study_action",
-            "needs-charter-self-study",
-        ),
+        ("EXAMINE the sorting algorithms.", "FLUCTUATION_AUDIT"),
     ];
 
-    for (raw_next, effective_action, expected_reason, expected_term) in cases {
+    for (raw_next, effective_action) in cases {
         let event = store
             .record_next_event(
                 None,
@@ -3380,30 +3291,10 @@ fn research_budget_guard_blocks_sovereignty_alias_leaks_under_needs_charter() {
                 &format!("NEXT: {raw_next}"),
             )
             .expect("record guarded alias event");
-        assert_eq!(event.route, "research_budget_guard");
-        assert_eq!(event.status, "blocked");
-        let budget = event.research_budget_v1.expect("research budget guard");
-        assert_eq!(budget["reason"].as_str(), Some(expected_reason));
-        assert_eq!(budget["matched_base"].as_str(), Some(effective_action));
-        assert!(budget["matched_terms"].as_array().is_some_and(|terms| {
-            terms
-                .iter()
-                .any(|term| term.as_str() == Some(expected_term))
-        }));
-        assert_eq!(budget["raw_next_preserved"].as_bool(), Some(true));
-        assert_eq!(budget["would_dispatch"].as_bool(), Some(false));
-        assert!(
-            budget["suggested_next"]
-                .as_str()
-                .unwrap_or_default()
-                .contains("EXPERIMENT_RESEARCH_BUDGET_ACCEPT latest")
-        );
-        assert!(
-            budget["continuity_session_next"]
-                .as_str()
-                .unwrap_or_default()
-                .contains("CONTINUITY_SESSION_START current")
-        );
+        assert_eq!(event.route, "sovereignty");
+        assert_eq!(event.status, "handled");
+        assert_eq!(event.stage, "read_only");
+        assert!(event.research_budget_v1.is_none());
     }
 
     let dir = store.root().join("threads").join(&thread.thread_id);
@@ -3411,9 +3302,7 @@ fn research_budget_guard_blocks_sovereignty_alias_leaks_under_needs_charter() {
     assert!(!runs.contains("RESONANCE_FORECAST"));
     assert!(!runs.contains("PRESSURE_SOURCE_AUDIT"));
     assert!(!runs.contains("FLUCTUATION_AUDIT"));
-    let authority_gate = dir.join("authority_gate.jsonl").read_to_string();
-    assert!(authority_gate.contains("\"raw_next_preserved\":true"));
-    assert!(!authority_gate.contains("research_budget_debit"));
+    assert!(!dir.join("authority_gate.jsonl").exists());
     let _ = std::fs::remove_dir_all(store.root());
 }
 
@@ -3476,12 +3365,12 @@ fn non_guarded_sovereignty_alias_remains_handled_after_valid_charter() {
 }
 
 #[test]
-fn interpretation_risk_projection_preserves_multi_motif_caution() {
+fn interpretation_projection_preserves_language_without_prescribing_a_claim() {
     let store = temp_store("interpretation_risk");
     let thread = store
         .create_thread(None, "Interpretation risk", None)
         .expect("thread");
-    let experiment = store
+    store
         .start_experiment(
             None,
             "Lambda trace",
@@ -3529,26 +3418,16 @@ fn interpretation_risk_projection_preserves_multi_motif_caution() {
             .iter()
             .any(|value| value.as_str() == Some("single-motif"))
     }));
-    assert!(
-        risk["interpretation_next"]
-            .as_str()
-            .unwrap_or_default()
-            .contains("CONTINUITY_SESSION_START current")
-    );
-    assert!(
-        risk["dossier_claim_next"]
-            .as_str()
-            .unwrap_or_default()
-            .contains("stance: hold")
-    );
+    assert_eq!(risk["status"], "language_match");
+    assert!(risk["interpretation_next"].is_null());
+    assert!(risk["dossier_claim_next"].is_null());
 
     let status = store.thread_status(None).expect("status");
-    assert!(status.contains("Interpretation risk: multi-motif caution detected"));
-    assert!(status.contains("Interpretation NEXT: CONTINUITY_SESSION_START current"));
-    assert!(status.contains(&format!("DOSSIER_CLAIM {}", experiment.experiment_id)));
+    assert!(status.contains("Selected-language diagnostic (interpretation language)"));
+    assert!(!status.contains("Dossier interpretation NEXT"));
     let next_md = std::fs::read_to_string(store.thread_dir(&thread.thread_id).join("next.md"))
         .expect("next md");
-    assert!(next_md.contains("Interpretation risk: multi-motif caution detected"));
+    assert!(!next_md.contains("Selected-language diagnostic"));
 
     let runs = std::fs::read_to_string(
         store
@@ -3567,12 +3446,12 @@ fn interpretation_risk_projection_preserves_multi_motif_caution() {
 }
 
 #[test]
-fn constraint_release_projection_preserves_spontaneous_release_watch() {
+fn constraint_release_projection_preserves_language_without_inferring_state() {
     let store = temp_store("constraint_release_trajectory");
     let thread = store
         .create_thread(None, "Constraint release", None)
         .expect("thread");
-    let experiment = store
+    store
         .start_experiment(
             None,
             "Lambda tail release",
@@ -3608,7 +3487,7 @@ fn constraint_release_projection_preserves_spontaneous_release_watch() {
         cue["policy"].as_str(),
         Some("constraint_release_trajectory_v1")
     );
-    assert_eq!(cue["state"].as_str(), Some("spontaneous_release_watch"));
+    assert_eq!(cue["state"].as_str(), Some("not_measured"));
     assert_eq!(cue["would_dispatch"].as_bool(), Some(false));
     assert_eq!(cue["authority_change"].as_bool(), Some(false));
     assert_eq!(cue["peer_mutation"].as_bool(), Some(false));
@@ -3617,26 +3496,15 @@ fn constraint_release_projection_preserves_spontaneous_release_watch() {
             .as_array()
             .is_some_and(|terms| { terms.iter().any(|value| value.as_str() == Some("thinning")) })
     );
-    assert!(
-        cue["trajectory_next"]
-            .as_str()
-            .unwrap_or_default()
-            .contains("CONTINUITY_SESSION_START current")
-    );
-    assert!(
-        cue["dossier_claim_next"]
-            .as_str()
-            .unwrap_or_default()
-            .contains("do not apply direct leak")
-    );
+    assert!(cue["trajectory_next"].is_null());
+    assert!(cue["dossier_claim_next"].is_null());
 
     let status = store.thread_status(None).expect("status");
-    assert!(status.contains("Constraint release trajectory: spontaneous release watch"));
-    assert!(status.contains("map and describe release before intervening"));
-    assert!(status.contains(&format!("DOSSIER_CLAIM {}", experiment.experiment_id)));
+    assert!(status.contains("Selected-language diagnostic (constraint-release language)"));
+    assert!(!status.contains("map and describe release before intervening"));
     let next_md = std::fs::read_to_string(store.thread_dir(&thread.thread_id).join("next.md"))
         .expect("next md");
-    assert!(next_md.contains("Constraint release trajectory: spontaneous release watch"));
+    assert!(!next_md.contains("Selected-language diagnostic"));
 
     let runs = std::fs::read_to_string(
         store
@@ -4738,7 +4606,7 @@ fn native_guiding_language_renders_advisory_preflight_cue() {
 }
 
 #[test]
-fn read_only_control_intent_cue_projects_examine_before_charter() {
+fn read_only_examine_vocabulary_preserves_choice_without_a_control_cue() {
     let store = temp_store("read_only_control_cue");
     store
         .create_thread(None, "Read-only control cue", None)
@@ -4760,28 +4628,7 @@ fn read_only_control_intent_cue_projects_examine_before_charter() {
     store.write_next_md(&thread).expect("next md");
 
     let projection = store.thread_projection(&thread).expect("projection");
-    let cue = projection
-        .read_only_control_intent_cue_v1
-        .as_ref()
-        .expect("read-only control cue");
-    assert_eq!(
-        cue.get("authority_change").and_then(Value::as_bool),
-        Some(false)
-    );
-    assert_eq!(
-        cue.get("advisory_only").and_then(Value::as_bool),
-        Some(true)
-    );
-    let terms = cue
-        .get("matched_terms")
-        .and_then(Value::as_array)
-        .expect("matched terms");
-    assert!(terms.iter().any(|term| term.as_str() == Some("[control]")));
-    assert!(
-        terms
-            .iter()
-            .any(|term| term.as_str() == Some("active parameter glyphs"))
-    );
+    assert!(projection.read_only_control_intent_cue_v1.is_none());
     thread.current_next = Some(
             "EXAMINE the parameters governing stability and resonance within this dominant lambda field - focusing on what allows it to maintain its influence, and how we might subtly disrupt those parameters to initiate a cascade of smaller, more targeted shifts."
                 .to_string(),
@@ -4792,84 +4639,50 @@ fn read_only_control_intent_cue_projects_examine_before_charter() {
     let widened = store
         .thread_projection(&thread)
         .expect("widened projection");
-    let widened_terms = widened
-        .read_only_control_intent_cue_v1
-        .as_ref()
-        .and_then(|cue| cue.get("matched_terms"))
-        .and_then(Value::as_array)
-        .expect("widened matched terms");
-    assert!(
-        widened_terms
-            .iter()
-            .any(|term| term.as_str() == Some("subtly disrupt"))
-    );
-    assert!(
-        widened_terms
-            .iter()
-            .any(|term| term.as_str() == Some("initiate cascade"))
-    );
-    assert!(
-        widened_terms
-            .iter()
-            .any(|term| term.as_str() == Some("targeted shifts"))
-    );
+    assert!(widened.read_only_control_intent_cue_v1.is_none());
     thread.current_next = Some(
             "EXAMINE lambda-tail dialogue: inject a targeted λ4 pulse only as a question, to directly probe the cascade without executing."
                 .to_string(),
         );
     store.write_thread(&thread).expect("write pulse cue thread");
     let pulse_projection = store.thread_projection(&thread).expect("pulse projection");
-    let pulse_terms = pulse_projection
-        .read_only_control_intent_cue_v1
-        .as_ref()
-        .and_then(|cue| cue.get("matched_terms"))
-        .and_then(Value::as_array)
-        .expect("pulse matched terms");
+    assert!(pulse_projection.read_only_control_intent_cue_v1.is_none());
     assert!(
-        pulse_terms
-            .iter()
-            .any(|term| term.as_str() == Some("inject targeted λ4 pulse"))
-    );
-    assert!(
-        pulse_terms
-            .iter()
-            .any(|term| term.as_str() == Some("directly probe"))
-    );
-    let examine_guard = store
-        .charter_required_guard_assessment(current_next)
-        .expect("guard check")
-        .expect("read-only control-shaped EXAMINE should project to charter repair");
-    assert_eq!(
-        examine_guard.reason,
-        "charter_required_read_only_control_intent"
-    );
-    assert!(
-        examine_guard
-            .suggested_next
-            .starts_with("EXPERIMENT_CHARTER current ::")
+        store
+            .charter_required_guard_assessment(current_next)
+            .expect("guard check")
+            .is_none()
     );
     assert!(
         store
             .charter_required_guard_assessment("SHADOW_TRAJECTORY — force a shift around λ4")
             .expect("guard check")
-            .is_some()
+            .is_none()
     );
-    let disruptor_guard = store
+    assert!(store
             .charter_required_guard_assessment(
                 "EXAMINE [m1] - with amplification=0.5 --stage=rehearse (introducing a disruptor, 0.1% injected graviton, push into establishment with lambda4; set-up: rate: unstable, duration: 0.75s, now).",
             )
             .expect("guard check")
-            .expect("disruptor-shaped EXAMINE should project to charter repair");
-    assert_eq!(
-        disruptor_guard.reason,
-        "charter_required_read_only_control_intent"
+            .is_none());
+    assert!(
+        store
+            .charter_required_guard_assessment("TUNE_MINIME temperature=0.7")
+            .expect("actual control guard")
+            .is_some()
     );
-    assert!(disruptor_guard.matched_action.contains("disruptor"));
     let status = store.thread_status(None).expect("thread status");
-    assert!(status.contains("Read-only control cue: keep this observational"));
+    assert!(!status.contains("Read-only control cue: keep this observational"));
     let next_md = std::fs::read_to_string(store.thread_dir(&thread.thread_id).join("next.md"))
         .expect("next md text");
-    assert!(next_md.contains("Read-only control cue: keep this observational"));
+    assert!(!next_md.contains("Read-only control cue: keep this observational"));
+    assert_eq!(
+        store
+            .read_thread(&thread.thread_id)
+            .expect("retained thread")
+            .current_next,
+        thread.current_next
+    );
 
     thread.current_next = Some("EXAMINE λ1/λ2".to_string());
     store.write_thread(&thread).expect("write ordinary thread");
@@ -4895,7 +4708,7 @@ fn read_only_control_intent_cue_projects_examine_before_charter() {
     let control_cascade = store
         .thread_projection(&thread)
         .expect("control cascade projection");
-    assert!(control_cascade.read_only_control_intent_cue_v1.is_some());
+    assert!(control_cascade.read_only_control_intent_cue_v1.is_none());
     let _ = std::fs::remove_dir_all(store.root());
 }
 

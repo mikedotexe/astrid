@@ -3,25 +3,18 @@
 /// Used to supplement introspection with external knowledge — if Astrid
 /// reads ESN code, it can also read about ESN theory from the web.
 pub(crate) async fn web_search(query: &str, anchor: &str) -> Option<WebSearchResult> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .ok()?;
+    web_search_checked(query, anchor).await.ok()
+}
 
-    let url = format!("https://html.duckduckgo.com/html/?q={}", urlencoded(query));
-
-    let response = client
-        .get(&url)
-        .header("User-Agent", "Mozilla/5.0")
-        .send()
-        .await
-        .ok()?;
-
-    let html = response.text().await.ok()?;
+pub(crate) async fn web_search_checked(query: &str, anchor: &str) -> Result<WebSearchResult, String> {
+    let response = crate::public_web::fetch(
+        astrid_minime_protocol::public_web::PublicWebOperationV2::Search, query,
+    ).await?;
+    let html = String::from_utf8(response.body).map_err(|_| "public_web_text_decoding_unavailable".to_string())?;
 
     let hits = extract_duckduckgo_hits(&html);
     if hits.is_empty() {
-        return None;
+        return Err("public_web_no_readable_search_results".to_string());
     }
 
     let raw_text = render_hits_plain(&hits);
@@ -33,7 +26,7 @@ pub(crate) async fn web_search(query: &str, anchor: &str) -> Option<WebSearchRes
                 fallback_meaning_summary(ResearchSourceKind::Search, anchor, query, &excerpt)
             });
 
-    Some(WebSearchResult {
+    Ok(WebSearchResult {
         source_kind: ResearchSourceKind::Search,
         raw_text,
         hits,
@@ -65,10 +58,8 @@ pub(crate) fn derive_browse_anchor(
 pub(crate) fn format_browse_failure_context(url: &str, reason: &str) -> String {
     format!(
         "[Web access status: the page at {url} could not be meaningfully read: {reason}]\n\
-         [This is ordinary source/site availability, not evidence of a perceptual gate, \
-         internal topology boundary, or spectral event.]\n\
-         [Keep the concrete topic from the URL if useful, but do not build an experience \
-         around the access failure.]\n\n\
+         [No complete source was delivered by this request. This receipt describes \
+         delivery only; it does not measure reservoir effects.]\n\n\
          [Try NEXT: SEARCH with a narrower question, NEXT: BROWSE a different reliable source, \
          or NEXT: REST.]"
     )
@@ -525,21 +516,36 @@ fn journal_continuity_anchors_v1(own_journal: Option<&str>) -> String {
 ///
 /// Used by Astrid to follow links from search results and read full pages.
 pub(crate) async fn fetch_url(url: &str, anchor: &str) -> Option<FetchedPage> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
-        .redirect(reqwest::redirect::Policy::limited(5))
-        .build()
-        .ok()?;
+    let response = match crate::public_web::fetch(
+        astrid_minime_protocol::public_web::PublicWebOperationV2::Page, url,
+    ).await {
+        Ok(response) => response,
+        Err(reason) => return Some(FetchedPage {
+            source_kind: ResearchSourceKind::Browse, raw_text:String::new(), url:url.to_string(),
+            anchor:anchor.to_string(), meaning_summary:String::new(), soft_failure_reason:Some(reason),
+        }),
+    };
+    let status = reqwest::StatusCode::from_u16(response.receipt.http_status).ok()?;
+    let html = match String::from_utf8(response.body) {
+        Ok(text) => text,
+        Err(_) => return Some(FetchedPage {
+            source_kind: ResearchSourceKind::Browse, raw_text:String::new(), url:url.to_string(),
+            anchor:anchor.to_string(), meaning_summary:String::new(),
+            soft_failure_reason:Some("Source text decoding unavailable; no complete readable source delivered".into()),
+        }),
+    };
+    let mut page = page_from_frozen_html(url, anchor, status, html);
+    if page.succeeded() {
+        let excerpt = trim_chars(&page.raw_text, 2000);
+        if let Some(summary) = summarize_research_meaning(ResearchSourceKind::Browse, anchor, url, &excerpt).await {
+            page.meaning_summary = summary;
+        }
+    }
+    Some(page)
+}
 
-    let response = client
-        .get(url)
-        .header("User-Agent", "Mozilla/5.0")
-        .send()
-        .await
-        .ok()?;
-    let status = response.status();
-
-    let html = response.text().await.ok()?;
+/// Parsing frozen supplied text makes no network or model call.
+pub(crate) fn page_from_frozen_html(url: &str, anchor: &str, status: reqwest::StatusCode, html: String) -> FetchedPage {
     let title = extract_html_title(&html);
 
     // Remove script, style, nav, footer, header blocks.
@@ -570,21 +576,17 @@ pub(crate) async fn fetch_url(url: &str, anchor: &str) -> Option<FetchedPage> {
 
     let meaning_summary = if soft_failure_reason.is_none() {
         let excerpt = trim_chars(&collapsed, 2000);
-        summarize_research_meaning(ResearchSourceKind::Browse, anchor, url, &excerpt)
-            .await
-            .unwrap_or_else(|| {
-                fallback_meaning_summary(ResearchSourceKind::Browse, anchor, url, &excerpt)
-            })
+        fallback_meaning_summary(ResearchSourceKind::Browse, anchor, url, &excerpt)
     } else {
         String::new()
     };
 
-    Some(FetchedPage {
+    FetchedPage {
         source_kind: ResearchSourceKind::Browse,
         raw_text: collapsed,
         url: url.to_string(),
         anchor: anchor.to_string(),
         meaning_summary,
         soft_failure_reason,
-    })
+    }
 }

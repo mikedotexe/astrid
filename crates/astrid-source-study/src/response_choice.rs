@@ -11,11 +11,18 @@ pub fn prose_reference(text: &str) -> String {
     crate::writing::visible_prose(text)
 }
 
-/// Withhold private observation payloads from general diagnostics, without changing execution bytes.
+/// Withhold private observation and web request payloads without changing execution bytes.
 #[must_use]
 pub fn diagnostic_action(text: &str) -> &str {
     if text.trim_start().starts_with("WRITE OBSERVE ") {
         "WRITE OBSERVE [private payload withheld]"
+    } else if text.split_whitespace().any(|word| {
+        matches!(
+            word.trim_end_matches(':').to_ascii_uppercase().as_str(),
+            "SEARCH" | "RESEARCH" | "BROWSE"
+        ) || word.contains("://")
+    }) {
+        "WEB [request arguments withheld]"
     } else {
         text
     }

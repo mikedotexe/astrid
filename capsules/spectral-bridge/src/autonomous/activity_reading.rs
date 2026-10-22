@@ -15,7 +15,7 @@ use crate::action_continuity::{
 
 #[path = "activity_reading/persistence.rs"]
 mod persistence;
-pub(crate) use persistence::{load_activity, persist_activity};
+pub(crate) use persistence::{inspect_activity, load_activity, persist_activity};
 
 const PASSAGE_BYTES: usize = 4_000;
 

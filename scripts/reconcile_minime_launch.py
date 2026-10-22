@@ -15,12 +15,15 @@ import shutil
 from qualify_geometry_release import inventory, require, sha, write_json
 
 OVERLAY = (
+    "continuity_control_plane.py",
+    "launchd/autonomous-agent.env",
     "minime_autonomy/action_scheduling.py",
     "minime_autonomy/action_vocabulary.py",
     "minime_autonomy/activity_focus.py",
     "minime_autonomy/afterimage_prompts.py",
     "minime_autonomy/afterimages.py",
     "minime_autonomy/authority.py",
+    "minime_autonomy/choice_presentation.py",
     "minime_autonomy/continuity_snapshot.py",
     "minime_autonomy/deliberate_comparison.py",
     "minime_autonomy/expressive_journal.py",
@@ -36,7 +39,10 @@ OVERLAY = (
     "minime_autonomy/maintenance_next.py",
     "minime_autonomy/moment_context.py",
     "minime_autonomy/parsing.py",
+    "minime_autonomy/projection_snapshot.py",
+    "minime_autonomy/public_web.py",
     "minime_autonomy/research.py",
+    "minime_autonomy/research_transactions.py",
     "minime_autonomy/return_support.py",
     "minime_autonomy/runtime.py",
     "minime_autonomy/source_status.py",

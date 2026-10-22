@@ -32,7 +32,7 @@ fn local_action_produces_exact_intent_decision_and_receipt_chain() {
         },
         AstridVolitionStartV1::Shadowed(_) => unreachable!(),
     };
-    assert!(summary.contains("felt effect remains unasserted"));
+    assert!(summary.contains("not proof of completed execution"));
     assert_eq!(
         fs::read_dir(root.path().join("attestations"))
             .unwrap()
@@ -101,11 +101,11 @@ fn shared_coupling_stays_shadow_only_without_mutual_authority() {
 }
 
 #[test]
-fn delegated_search_executes_only_after_audited_budget_reservation() {
+fn old_counted_search_grant_does_not_become_standing_web_authority() {
     let root = tempdir().unwrap();
     let signer = load_or_provision_identity(root.path(), 24_000).unwrap();
     let deployment = crate::signal_spine::signal_deployment_identity_v1();
-    let binding_id = delegated_capability::install_test_search_grant(
+    let _binding_id = delegated_capability::install_test_search_grant(
         root.path(),
         &signer.public_key_hex,
         &deployment,
@@ -120,17 +120,46 @@ fn delegated_search_executes_only_after_audited_budget_reservation() {
         24_001,
     )
     .unwrap();
-    let AstridVolitionStartV1::Accepted(accepted) = start else {
-        panic!("audited delegated action should be accepted");
-    };
-    assert_eq!(accepted.intent.capability_binding_ids, vec![binding_id]);
-    assert_eq!(
-        accepted.intent.authority_class,
-        VolitionAuthorityClassV1::DelegatedExternal
-    );
-    assert_eq!(accepted.intent.budget.action_count, Some(1));
-    let summary = accepted.complete(&handled_outcome(), 24_002).unwrap();
-    assert!(summary.contains("felt effect remains unasserted"));
+    assert!(matches!(start, AstridVolitionStartV1::Shadowed(_)));
+}
+
+#[test]
+fn standing_web_preview_accepts_repeated_choices_without_a_lifetime_count() {
+    let web = crate::public_web::fixture::Fixture::new();
+    let root = tempdir().unwrap();
+    for index in 0..3 {
+        let start = begin_astrid_next_at_root(
+            root.path(),
+            "NEXT: SEARCH CONTROL",
+            &format!("web-{index}"),
+            "dialogue_live",
+            "SEARCH CONTROL",
+            24_001,
+        )
+        .unwrap();
+        let AstridVolitionStartV1::Accepted(accepted) = start else {
+            panic!("signed standing policy should permit dispatch")
+        };
+        assert!(accepted.intent.capability_binding_ids[0].starts_with("public_web_policy_v2:"));
+        assert_eq!(
+            accepted.intent.authority_class,
+            VolitionAuthorityClassV1::DelegatedExternal
+        );
+        assert_eq!(accepted.intent.budget.action_count, None);
+        let summary = accepted.complete(&handled_outcome(), 24_002).unwrap();
+        assert!(summary.contains("not proof of completed execution"));
+    }
+    std::fs::write(&web.config.state_path, b"corrupt").unwrap();
+    let start = begin_astrid_next_at_root(
+        root.path(),
+        "NEXT: SEARCH CONTROL",
+        "web-after-corruption",
+        "dialogue_live",
+        "SEARCH CONTROL",
+        24_003,
+    )
+    .unwrap();
+    assert!(matches!(start, AstridVolitionStartV1::Shadowed(_)));
 }
 
 #[test]

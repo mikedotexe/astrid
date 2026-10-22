@@ -34,7 +34,7 @@ fn authority_gate_boundary() -> &'static str {
 }
 
 fn research_budget_boundary() -> &'static str {
-    "Being-authored local-only requests may self-activate a bounded read_only_research budget; larger or web-enabled budgets still require steward approval. V1 cannot mutate autoresearch, bind, resume, perturb, send control, execute semantic authority, advance lifecycle, or mutate peers."
+    "This optional allowance applies only to explicitly bound research; ordinary reading, writing and context return do not require it. Local-only requests may self-activate; larger or web-enabled allowances still require steward approval. An allowance grants no network, control, semantic or peer-mutation authority. Independent resource, privacy and consequential-action checks remain."
 }
 
 fn sovereign_loop_boundary() -> &'static str {
@@ -99,30 +99,8 @@ fn research_budget_self_activation_v1(budget: &Value, eligibility: &Value, state
     ) {
         missing.push("green_or_yellow_safety".to_string());
     }
-    let purpose_upper = budget
-        .get("purpose")
-        .and_then(Value::as_str)
-        .unwrap_or_default()
-        .to_ascii_uppercase();
-    if [
-        "EXPERIMENT_BIND",
-        "EXPERIMENT_RESUME",
-        "PERTURB",
-        "CONTROL",
-        "SEND_CONTROL",
-        "ATTRACTOR_PULSE",
-        "SEMANTIC_MICRODOSE",
-        "MIKE_RUN",
-        "AR_START",
-        "AR_NOTE",
-        "AR_BLOCK",
-        "AR_COMPLETE",
-    ]
-    .iter()
-    .any(|needle| purpose_upper.contains(needle))
-    {
-        missing.push("no_live_or_mutating_research_intent".to_string());
-    }
+    // Authored purpose is data. The effective operation, not its vocabulary,
+    // determines whether consequential-action authorization is needed.
     missing.sort();
     missing.dedup();
     let eligible = missing.is_empty();
@@ -638,25 +616,41 @@ fn active_sovereign_loop_from_rows(rows: &[Value], experiment_id: &str) -> Optio
     })
 }
 
-fn active_research_budget_from_rows(rows: &[Value], experiment_id: &str) -> Option<Value> {
+pub(crate) fn active_research_budget_from_rows(
+    rows: &[Value],
+    experiment_id: &str,
+) -> Option<Value> {
     let closed = rows
         .iter()
         .filter(|row| {
             row.get("record_schema").and_then(Value::as_str) == Some("research_budget_v1")
-                && row.get("record_type").and_then(Value::as_str) == Some("research_budget_closed")
+                && (row.get("record_type").and_then(Value::as_str)
+                    == Some("research_budget_closed")
+                    || (row["record_type"] == "research_budget_review"
+                        && row["outcome"] == "close"))
         })
         .filter_map(|row| row.get("budget_id").and_then(Value::as_str))
         .collect::<HashSet<_>>();
     let now = chrono::Utc::now().timestamp().try_into().unwrap_or(0);
+    let mut seen = HashSet::new();
     rows.iter().rev().find_map(|row| {
         if row.get("record_schema").and_then(Value::as_str) != Some("research_budget_v1")
             || row.get("record_type").and_then(Value::as_str) != Some("research_budget_approval")
-            || row.get("experiment_id").and_then(Value::as_str) != Some(experiment_id)
-            || row
-                .get("scope")
-                .and_then(Value::as_str)
-                .unwrap_or("read_only_research")
-                != "read_only_research"
+        {
+            return None;
+        }
+        let budget_id = row.get("budget_id").and_then(Value::as_str)?;
+        if !seen.insert(budget_id) {
+            return None;
+        }
+        if row.get("experiment_id").and_then(Value::as_str) != Some(experiment_id) {
+            return None;
+        }
+        if row
+            .get("scope")
+            .and_then(Value::as_str)
+            .unwrap_or("read_only_research")
+            != "read_only_research"
             || row
                 .get("status")
                 .and_then(Value::as_str)
@@ -665,19 +659,16 @@ fn active_research_budget_from_rows(rows: &[Value], experiment_id: &str) -> Opti
         {
             return None;
         }
-        let budget_id = row.get("budget_id").and_then(Value::as_str)?;
         if closed.contains(budget_id)
+            || research_transactions::held(rows, budget_id)
             || row
                 .get("expires_at_unix_s")
                 .and_then(Value::as_u64)
-                .is_some_and(|expires| expires <= now)
+                .is_none_or(|expires| expires <= now)
         {
             return None;
         }
-        let max_actions = row
-            .get("max_actions")
-            .and_then(Value::as_u64)
-            .unwrap_or(LOCAL_RESEARCH_MAX_ACTIONS);
+        let max_actions = row.get("max_actions").and_then(Value::as_u64)?;
         let spent = rows
             .iter()
             .filter(|item| {
@@ -688,13 +679,18 @@ fn active_research_budget_from_rows(rows: &[Value], experiment_id: &str) -> Opti
             })
             .count();
         let spent_u64 = u64::try_from(spent).unwrap_or(u64::MAX);
-        let remaining = max_actions.saturating_sub(spent_u64);
+        let reserved =
+            u64::try_from(research_transactions::reservations(rows, budget_id)).unwrap_or(u64::MAX);
+        let remaining = max_actions
+            .saturating_sub(spent_u64)
+            .saturating_sub(reserved);
         if remaining == 0 {
             return None;
         }
         let mut active = row.clone();
         if let Some(object) = active.as_object_mut() {
             object.insert("spent_actions".to_string(), json!(spent_u64));
+            object.insert("reserved_actions".to_string(), json!(reserved));
             object.insert("remaining_actions".to_string(), json!(remaining));
         }
         Some(active)
@@ -788,13 +784,7 @@ fn research_budget_status_from_rows(rows: &[Value]) -> Value {
     let active = (!experiment_id.is_empty())
         .then(|| active_research_budget_from_rows(rows, experiment_id))
         .flatten();
-    let duplicate_blocked = latest_blocked
-        .and_then(|row| row.get("reason"))
-        .and_then(Value::as_str)
-        == Some("duplicate_query_or_url_review_required");
-    let stage = if active.is_some() && duplicate_blocked {
-        "review_required_duplicate_loop"
-    } else if active.is_some() {
+    let stage = if active.is_some() {
         "active_budget_available"
     } else if latest_closed.is_some() {
         "budget_closed"
@@ -817,6 +807,12 @@ fn research_budget_status_from_rows(rows: &[Value]) -> Value {
         "stage": stage,
         "active_budget_id": active.as_ref().and_then(|row| row.get("budget_id")).cloned().unwrap_or(Value::Null),
         "remaining_actions": active.as_ref().and_then(|row| row.get("remaining_actions")).cloned().unwrap_or(json!(0)),
+        "reserved_actions": latest_approval.and_then(|row| row["budget_id"].as_str()).map(|id| research_transactions::reservations(rows, id)).unwrap_or(0),
+        "binding_required": "explicit_EXPERIMENT_BIND_only",
+        "repeat_policy": "counts_normally",
+        "latest_historical_block_id": latest_blocked.and_then(|row| row.get("record_id")),
+        "execution_scope": "host_action_dispatch",
+        "input_delivered": "unknown",
         "activation_mode": active
             .as_ref()
             .or(latest_approval)
@@ -833,7 +829,7 @@ fn research_budget_status_from_rows(rows: &[Value]) -> Value {
             .and_then(|row| row.get("steward_approval_required"))
             .cloned()
             .unwrap_or(Value::Null),
-        "review_required": stage == "review_required_duplicate_loop",
+        "review_required": false,
         "latest_budget_request_id": latest_request.and_then(|row| row.get("budget_id")).cloned().unwrap_or(Value::Null),
         "allowed_actions": ["SEARCH", "BROWSE", "READ_MORE", "MIKE_BROWSE", "MIKE_READ", "MIKE_SEARCH", "AR_LIST", "AR_LOOK", "AR_SHOW", "AR_READ", "AR_DEEP_READ", "AR_VALIDATE"],
         "authority_boundary": research_budget_boundary(),

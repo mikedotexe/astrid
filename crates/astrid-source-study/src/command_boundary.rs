@@ -1,5 +1,24 @@
 //! Notebook text is data even when placed in an action slot by mistake.
 
+/// These handlers consume text, not embedded NEXT commands or template slots.
+#[must_use]
+pub fn literal_arguments(action: &str) -> bool {
+    let mut words = action.split_whitespace();
+    let base = words
+        .next()
+        .unwrap_or_default()
+        .trim_end_matches(':')
+        .to_ascii_uppercase();
+    matches!(base.as_str(), "SEARCH" | "RESEARCH" | "MIKE_SEARCH")
+        || (base == "SELF_STUDY"
+            && words.next().is_some_and(|word| {
+                matches!(
+                    word.to_ascii_uppercase().as_str(),
+                    "FIND" | "RELATE" | "QUESTION" | "NEW" | "HELP"
+                )
+            }))
+}
+
 /// Identify a notebook directive mistakenly offered as a NEXT action.
 #[must_use]
 pub fn notebook_directive(action: &str) -> Option<&str> {

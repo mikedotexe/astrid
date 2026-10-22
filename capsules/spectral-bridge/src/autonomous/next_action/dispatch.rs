@@ -1,5 +1,10 @@
 // Authorized NEXT dispatch, kept separate from parsing and test registry.
 fn record_activity_choice(conv: &mut ConversationState, base: &str) -> Option<NextActionOutcome> {
+    let base = if base == "EXAMINE" && conv.browse_url.is_some() {
+        "BROWSE"
+    } else {
+        base
+    };
     if base == "BROWSE" && conv.browse_url.is_none() && !conv.wants_search {
         return None;
     }
@@ -30,7 +35,10 @@ fn handle_next_action_with_author(
     // segments are detected, dispatch each in order with the same shared
     // NextActionContext (each segment sees state from the previous one).
     let unwrapped = unwrap_outer_action_wrappers(next_action);
-    let segments = if leading_action_token(&unwrapped) == "AFTERIMAGE_KEEP" {
+    let segments = if matches!(
+        leading_action_token(&unwrapped).as_str(),
+        "AFTERIMAGE_KEEP" | "EXPERIMENT_BIND"
+    ) {
         vec![unwrapped.clone()]
     } else {
         split_multi_action(&unwrapped)
@@ -47,6 +55,16 @@ fn handle_next_action_with_author(
     let stage = action_continuity_stage_for_base(base_action.as_str());
     let visibility = action_continuity_visibility_for_base(base_action.as_str());
 
+    if conv.pending_bound_research.is_some()
+        && action_continuity::research_web_request(&original).is_ok_and(|request| request.is_some())
+    {
+        return NextActionOutcome::blocked(
+            "research_queue",
+            "A bound web action is already queued. The new request was not substituted for it.",
+        )
+        .with_stage_visibility("blocked", "protected_summary");
+    }
+
     if let Some(outcome) = study_navigation::reject_notebook_action(conv, &original) {
         return outcome;
     }
@@ -61,8 +79,15 @@ fn handle_next_action_with_author(
             .with_preflight_report(report_value);
     }
 
+    if let Err(reason) = crate::public_web::authorize_action(&original) {
+        let message = format!("Public-web admission unavailable: {reason}. No fetch was queued. Local reading, inspection, writing and REST remain separate choices.");
+        conv.emphasis = Some(message.clone());
+        return NextActionOutcome::blocked("public_web_authorization", message)
+            .with_stage_visibility("blocked", "protected_summary");
+    }
+
     if let Some(token) = unresolved_angle_placeholder(&original)
-        && base_action != "AFTERIMAGE_KEEP"
+        && !matches!(base_action.as_str(), "AFTERIMAGE_KEEP" | "EXPERIMENT_BIND")
         && !astrid_source_study::response_choice::is_geometry_action(&original)
         && !action_continuity::can_repair_experiment_intent_placeholder(
             base_action.as_str(),
@@ -124,7 +149,9 @@ fn handle_next_action_with_author(
         },
         Ok(None) => {},
         Err(err) => {
-            info!("Astrid research-budget guard skipped after read error: {err:#}");
+            return NextActionOutcome::blocked("research_integrity", format!(
+                "Research admission evidence is unavailable: {err:#}. Nothing was executed; retained work is unchanged."
+            )).with_stage_visibility("blocked", "protected_summary");
         },
     }
 
@@ -147,7 +174,9 @@ fn handle_next_action_with_author(
         },
         Ok(None) => {},
         Err(err) => {
-            info!("Astrid charter-required guard skipped after read error: {err:#}");
+            return NextActionOutcome::blocked("authority_integrity", format!(
+                "Authority evidence is unavailable: {err:#}. Nothing was executed; retained work is unchanged."
+            )).with_stage_visibility("blocked", "protected_summary");
         },
     }
 
@@ -186,6 +215,12 @@ fn handle_next_action_with_author(
         }
     }
 
+    if base_action == "STEWARD_INVITATION" {
+        // Return metadata without entering activity selection, reader delivery,
+        // outgoing correspondence, or any model-producing handler.
+        return steward_invitation::handle(&original, &bridge_paths().open_steward_query_path());
+    }
+
     if base_action == "EXPERIMENT_BIND" {
         let parsed = action_continuity::parse_experiment_bind(&original);
         let (selector, inner_action) = match parsed {
@@ -216,7 +251,116 @@ fn handle_next_action_with_author(
             return NextActionOutcome::blocked("experiment_continuity", message)
                 .with_stage_visibility("blocked", visibility);
         }
-        let inner_outcome = handle_next_action_with_author(
+        if split_multi_action(&inner_action).len() > 1 {
+            return NextActionOutcome::blocked(
+                "research_admission",
+                "A bound operation must name one exact inner action. Bind each action separately."
+                    .to_string(),
+            )
+            .with_stage_visibility("blocked", "protected_summary");
+        }
+        let experiment_id =
+            match action_continuity::resolve_experiment_bind_target(selector.as_deref()) {
+                Ok(id) => id,
+                Err(err) => {
+                    let message =
+                        format!("Experiment bind target rejected before execution: {err:#}");
+                    conv.emphasis = Some(message.clone());
+                    return NextActionOutcome::blocked("experiment_continuity", message)
+                        .with_stage_visibility("blocked", visibility);
+                },
+            };
+        let store = action_continuity::ActionContinuityStore::for_astrid_workspace();
+        if conv.pending_bound_research.is_some() || research_reading::pending().unwrap_or(true) {
+            return NextActionOutcome::blocked("research_admission", "A bound action is pending or its handoff is unavailable; inspect its status before replacing it.")
+                .with_stage_visibility("blocked", "protected_summary");
+        }
+        let state = serde_json::json!({"fill_pct": ctx.fill_pct});
+        let admission = action_continuity::research_binding_requires_budget(&inner_action)
+            .and_then(|metered| {
+                if !metered {
+                    return Ok(None);
+                }
+                ctx.operation_id
+                    .ok_or_else(|| {
+                        anyhow::anyhow!("bound research requires a durable operation identity")
+                    })
+                    .and_then(|id| {
+                        store.reserve_research(&experiment_id, &inner_action, id, &state)
+                    })
+                    .map(Some)
+            });
+        let reservation = match admission {
+            Ok(reservation) => reservation,
+            Err(error) => {
+                return NextActionOutcome::blocked(
+                    "research_admission",
+                    format!("Bound research not admitted: {error:#}"),
+                )
+                .with_stage_visibility("blocked", "protected_summary");
+            },
+        };
+        if let Some(reservation) = &reservation
+            && action_continuity::research_web_request(&inner_action)
+                .is_ok_and(|request| request.is_some())
+        {
+            let inner_outcome = handle_next_action_with_author(conv, &inner_action, ctx, author);
+            if inner_outcome.status != "handled" {
+                research_jobs::clear_prepared(conv, &inner_action);
+                let _ = store.transition_research(reservation, "released_unstarted");
+                return inner_outcome;
+            }
+            match research_jobs::enqueue(&store, conv, reservation.clone()) {
+                Ok(()) => {
+                    let mut outcome = NextActionOutcome::handled(
+                        "experiment_continuity",
+                        "Bound web action queued; execution and delivery have not occurred.",
+                    )
+                    .with_stage_visibility("read_only", "protected_summary")
+                    .with_research_budget(reservation.metadata());
+                    outcome.status = "queued".to_string();
+                    return outcome;
+                },
+                Err(error) => {
+                    let _ = store.transition_research(reservation, "released_unstarted");
+                    return NextActionOutcome::blocked(
+                        "research_admission",
+                        format!("Bound web action could not be queued: {error:#}"),
+                    );
+                },
+            }
+        }
+        if let Some(reservation) = &reservation
+            && inner_action.split_whitespace().next().is_some_and(|base| {
+                matches!(
+                    base.to_ascii_uppercase().as_str(),
+                    "MIKE_READ" | "READ_MORE"
+                )
+            })
+        {
+            return research_reading::dispatch(conv, reservation.clone(), |conv| {
+                handle_next_action_with_author(conv, &inner_action, ctx, author)
+            }).unwrap_or_else(|error| NextActionOutcome::blocked("research_handoff", format!("Bound reading handoff is unresolved: {error:#}. Inspect the retained operation; no automatic retry.")));
+        }
+        if let Some(reservation) = &reservation
+            && astrid_source_study::research_source_route(&inner_action).is_some()
+        {
+            return super::study_handoff::research::dispatch(conv, reservation.clone(), |conv| {
+                handle_next_action_with_author(conv, &inner_action, ctx, author)
+            }).unwrap_or_else(|_| NextActionOutcome::blocked("research_handoff",
+                "Bound source handoff is unresolved. Inspect the retained operation; no automatic retry."));
+        }
+        if let Some(reservation) = &reservation
+            && let Err(error) = store.claim_research_start(reservation)
+        {
+            let _ = store.transition_research(reservation, "released_unstarted");
+            return NextActionOutcome::blocked(
+                "research_admission",
+                format!("Bound research did not start: {error:#}"),
+            )
+            .with_stage_visibility("blocked", "protected_summary");
+        }
+        let mut inner_outcome = handle_next_action_with_author(
             conv,
             &inner_action,
             NextActionContext {
@@ -231,9 +375,24 @@ fn handle_next_action_with_author(
             },
             author,
         );
+        let lifecycle = match inner_outcome.status.as_str() {
+            "handled" => "completed",
+            "failed" => "failed",
+            _ => "blocked",
+        };
+        if let Some(reservation) = &reservation
+            && let Err(error) = store.transition_research(reservation, lifecycle)
+        {
+            return NextActionOutcome::blocked("research_receipt", format!("Host dispatch returned, but its durable terminal receipt is uncertain: {error:#}. Do not replay automatically."))
+                .with_stage_visibility("blocked", "protected_summary")
+                .with_research_budget(reservation.metadata());
+        }
+        inner_outcome.research_budget_v1 = reservation
+            .as_ref()
+            .map(action_continuity::ResearchReservation::metadata);
         let record_result = action_continuity::record_experiment_bind_run(
             ctx.db,
-            selector.as_deref(),
+            Some(&experiment_id),
             &inner_action,
             &inner_outcome,
             ctx.fill_pct,
@@ -262,8 +421,9 @@ fn handle_next_action_with_author(
             },
         };
         conv.emphasis = Some(message.clone());
-        return NextActionOutcome::handled("experiment_continuity", message)
-            .with_stage_visibility(inner_outcome.stage, inner_outcome.visibility);
+        inner_outcome.route = "experiment_continuity".to_string();
+        inner_outcome.outcome_summary = message;
+        return inner_outcome;
     }
 
     if crate::transition_afterimages::is_action(&base_action) {

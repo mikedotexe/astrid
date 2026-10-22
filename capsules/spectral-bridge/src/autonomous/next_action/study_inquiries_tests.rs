@@ -1,4 +1,41 @@
 use super::{canonicalize_next_action_components, parse_next_action};
+
+#[test]
+fn selected_open_routes_to_reader_without_replacing_pending_work() {
+    let authored = "OPEN astrid/capsules/spectral_bridge/src/action_continuity/runtime.rs 1";
+    assert_eq!(
+        parse_next_action(&format!("NEXT: {authored}")),
+        Some(authored)
+    );
+    assert_eq!(
+        parse_next_action(&format!("```text\nNEXT: {authored}\n```")),
+        None
+    );
+    let (base, canonical) = canonicalize_next_action_components(authored);
+    assert_eq!(base, "SELF_STUDY");
+    assert_eq!(canonical, format!("SELF_STUDY {authored}"));
+    let report = super::action_preflight_report(authored);
+    assert_eq!(report.canonical_action, canonical);
+    assert_eq!(
+        report.effective_route,
+        super::action_preflight_report(&canonical).effective_route
+    );
+    let mut conv = super::ConversationState::new(Vec::new(), None);
+    let first = super::study_navigation::handle_request(&mut conv, &base, &canonical).unwrap();
+    assert!(first.handled);
+    let target = conv.introspect_target.clone().unwrap();
+    assert_eq!(target.label, canonical);
+    let second = super::study_navigation::handle_request(
+        &mut conv,
+        "SELF_STUDY",
+        "SELF_STUDY OPEN astrid/other.rs 1",
+    )
+    .unwrap();
+    assert!(second.outcome_summary.contains("Pending choice preserved"));
+    assert_eq!(conv.introspect_target.unwrap().label, target.label);
+    let nested = super::action_preflight_report(&format!("EXPERIMENT_BIND current :: {authored}"));
+    assert!(!nested.effective_route.contains("unwired"));
+}
 #[test]
 fn inquiry_navigation_preserves_exact_choices_and_session_separators() {
     for choice in [

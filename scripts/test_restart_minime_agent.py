@@ -72,6 +72,10 @@ class Backend:
 
 
 class ReloadTests(unittest.TestCase):
+    def test_public_web_overrides_are_in_managed_configuration(self):
+        for key in ("MINIME_PUBLIC_WEB_HELPER", "MINIME_PUBLIC_WEB_HELPER_SHA256", "MINIME_PUBLIC_WEB_CONFIG"):
+            self.assertIn(key, ENV_KEYS)
+
     def test_ollama_writing_release_selection_is_in_managed_config(self):
         self.assertIn("MINIME_OLLAMA_WRITING_RELEASE", ENV_KEYS)
         self.assertIn("MINIME_OLLAMA_WRITING_RELEASE_SHA256", ENV_KEYS)

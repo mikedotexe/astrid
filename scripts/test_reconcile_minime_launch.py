@@ -95,6 +95,71 @@ class ReconciliationTests(unittest.TestCase):
             self.run_tool()
         self.assertFalse((self.root / "out").exists())
 
+    def test_choice_helper_is_required_and_frozen_without_canonical_writes(self):
+        name = "minime_autonomy/choice_presentation.py"
+        self.assertIn(name, tool.OVERLAY)
+        (self.canonical / name).unlink()
+        (self.candidate / name).write_bytes(b"# synthetic choice presentation\n")
+        self.refresh_status()
+        before = tool.inventory(self.canonical)
+        result = self.run_tool()
+        self.assertEqual(tool.inventory(self.canonical), before)
+        self.assertEqual(result["selected_inputs"][name], tool.sha(self.candidate / name))
+        self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
+                         (self.candidate / name).read_bytes())
+
+    def test_missing_choice_helper_refuses_snapshot(self):
+        (self.candidate / "minime_autonomy/choice_presentation.py").unlink()
+        with self.assertRaisesRegex(ValueError, "required candidate input missing"):
+            self.run_tool()
+        self.assertFalse((self.root / "out").exists())
+
+    def test_projection_snapshot_module_is_required_and_frozen_with_runtime(self):
+        name = "minime_autonomy/projection_snapshot.py"
+        self.assertIn(name, tool.OVERLAY)
+        (self.canonical / name).unlink()
+        (self.candidate / name).write_text("# operation-local read observations\n")
+        self.refresh_status()
+        before = tool.inventory(self.canonical)
+        result = self.run_tool()
+        self.assertEqual(tool.inventory(self.canonical), before)
+        self.assertEqual(set(result["selected_inputs"]) - set(before), {name})
+        self.assertEqual(result["selected_inputs"][name], tool.sha(self.candidate / name))
+        self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
+                         (self.candidate / name).read_bytes())
+
+    def test_missing_projection_snapshot_module_refuses_release(self):
+        (self.candidate / "minime_autonomy/projection_snapshot.py").unlink()
+        with self.assertRaisesRegex(ValueError, "required candidate input missing"):
+            self.run_tool()
+        self.assertFalse((self.root / "out").exists())
+
+    def test_root_control_plane_is_frozen_with_its_runtime_consumer(self):
+        name = "continuity_control_plane.py"
+        self.assertIn(name, tool.OVERLAY)
+        before = tool.inventory(self.canonical)
+        (self.candidate / name).write_text("# reviewed lexical draft consumer\n")
+        result = self.run_tool()
+        self.assertEqual(tool.inventory(self.canonical), before)
+        self.assertEqual(result["selected_inputs"][name], tool.sha(self.candidate / name))
+        self.assertEqual((Path(result["snapshot_root"]) / name).read_bytes(),
+                         (self.candidate / name).read_bytes())
+
+    def test_missing_root_control_plane_refuses_snapshot(self):
+        (self.candidate / "continuity_control_plane.py").unlink()
+        with self.assertRaisesRegex(ValueError, "required candidate input missing"):
+            self.run_tool()
+        self.assertFalse((self.root / "out").exists())
+
+    def test_durable_launch_environment_is_an_explicit_reviewed_overlay(self):
+        name = "launchd/autonomous-agent.env"
+        self.assertIn(name, tool.OVERLAY)
+        before = tool.inventory(self.canonical)
+        (self.candidate / name).write_text("MINIME_PUBLIC_WEB_CONFIG=/synthetic/config.json\n")
+        result = self.run_tool()
+        self.assertEqual(tool.inventory(self.canonical), before)
+        self.assertEqual(result["selected_inputs"][name], tool.sha(self.candidate / name))
+
     def test_legacy_recall_consumers_are_selected_without_touching_live_sources(self):
         names = ("minime_autonomy/expressive_journal.py", "minime_autonomy/research.py")
         for name in names:

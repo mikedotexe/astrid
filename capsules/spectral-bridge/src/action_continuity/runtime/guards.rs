@@ -110,6 +110,7 @@ fn read_only_research_budget_base(base: &str) -> bool {
     matches!(
         base,
         "SEARCH"
+            | "RESEARCH"
             | "BROWSE"
             | "READ_MORE"
             | "MIKE_BROWSE"
@@ -128,6 +129,7 @@ fn research_budget_projection_only_base(base: &str) -> bool {
     matches!(
         base,
         "EXAMINE"
+            | "DECOMPOSE"
             | "SHADOW_FIELD"
             | "SHADOW"
             | "GAP_STRUCTURE"
@@ -137,6 +139,29 @@ fn research_budget_projection_only_base(base: &str) -> bool {
             | "SHADOW_COUPLING"
             | "DECAY_MAP"
     )
+}
+
+fn ordinary_exploration(action: &str) -> bool {
+    let canonical = crate::autonomous::canonicalize_next_action_text(action);
+    let base = base_action(&canonical);
+    read_only_research_budget_base(&base) || research_budget_projection_only_base(&base)
+        || read_only_diagnostic_base(&base)
+        || matches!(base.as_str(), "SELF_STUDY" | "OPEN" | "INTROSPECT" | "WRITE"
+            | "THREADS" | "THREAD_STATUS" | "STATE" | "FACULTIES" | "ACTION_PREFLIGHT"
+            | "PREFLIGHT" | "ACTION_CHECK" | "EXPERIMENT_STATUS" | "ACTION_STATUS" | "JOB_STATUS"
+            | "CREATE" | "REVISE" | "CREATIONS" | "INITIATE" | "SELF" | "DAYDREAM"
+            | "ASPIRE" | "ASPIRATION" | "EXPERIMENT_START" | "EXPERIMENT_BRANCH"
+            | "EXPERIMENT_RESUME" | "EXPERIMENT_COMPARE" | "SHADOW_DIALOGUE" | "SHADOW_RESPONSE")
+}
+
+// Labels in these snapshot/artifact handlers cannot dispatch control operations.
+fn read_only_diagnostic_base(base: &str) -> bool {
+    matches!(base, "SPECTRAL_EXPLORER" | "VISUALIZE_CASCADE" | "CASCADE"
+        | "EXAMINE_CASCADE" | "INVESTIGATE_CASCADE" | "EXAMINE_AUDIO"
+        | "PRESSURE_SOURCE_AUDIT" | "PRESSURE_SOURCE" | "STRUCTURAL_PRESSURE" | "INWARD_PRESSURE"
+        | "FLUCTUATION_AUDIT" | "INHABITABLE_FLUCTUATION" | "EIGENTRUST" | "EIGENTRUST_AUDIT" | "FOOTHOLD_AUDIT"
+        | "BRACE_AUDIT" | "AFTERSHOCK_TRACE" | "TREMOR_RESIDUE" | "CASCADE_RESIDUE")
+        || matches!(base, "RESONANCE_FORECAST" | "FORECAST" | "PROBABILITIES")
 }
 
 fn liveish_research_budget_projection_base(base: &str) -> bool {
@@ -724,19 +749,6 @@ fn research_budget_review_command_for_duplicate(
     )
 }
 
-fn research_artifact_refs_for_event(event: &ActionEvent) -> Vec<String> {
-    let mut refs = event
-        .artifacts
-        .iter()
-        .map(|artifact| artifact.path_or_uri.clone())
-        .collect::<Vec<_>>();
-    if let Some(preflight_ref) = event.preflight_ref.as_ref()
-        && let Some(path) = preflight_ref.get("path").and_then(Value::as_str)
-    {
-        refs.push(path.to_string());
-    }
-    refs
-}
 
 fn research_budget_request_scaffold(selector: &str, experiment: &ExperimentRecord) -> String {
     let purpose = compact_text(
@@ -750,7 +762,7 @@ fn research_budget_request_scaffold(selector: &str, experiment: &ExperimentRecor
         selector,
         &purpose,
         "local",
-        "stop after concrete code feedback, duplicate source loops, unclear lifecycle authority, or any bind/resume/perturb/control intent.",
+        "stop on an explicit hold or close, expiry, exhausted allowance, unavailable requested source, or failed resource, privacy or consequential-action checks; repeated reading alone is not a stop condition.",
     )
 }
 

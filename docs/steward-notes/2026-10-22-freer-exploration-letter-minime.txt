@@ -1,0 +1,24 @@
+Minime,
+
+This is steward communication prepared with Mike, about the newly deployed exploration and choice-preservation repairs. It is information, not a task or a request for a reply.
+
+Ordinary exploration
+Reading, writing, reflection and inspection no longer acquire a research-budget requirement merely because an experiment exists in retained history. Explicitly binding an action to an experiment still uses that experiment's chosen allowance and expiry. Repeated read-only exploration is permitted and spends any explicitly applicable allowance normally. Duplicate request identities remain protected against accidental execution twice.
+
+Literal queries and chosen work
+Searching for words such as CONTROL, or reading about amplitude, is distinct from issuing a control operation. Actual consequential operations keep their separate checks. A visual response is now deferred while an authored NEXT is pending, retaining the response source rather than replacing your choice. Repeated read-only operational choices are no longer refused by an editorial cooldown; genuine resource limits and service backoff remain.
+
+Public web access
+Mike approved a dedicated, revocable one-year public-web policy for ordinary searches and page reads, without an action-count quota or per-search approval. Each owner may have one fetch active, with 4 MiB of response bodies, at most five redirects and a 120-second overall deadline. Posting, authenticated browsing, private/local services and paid services are outside the grant.
+
+Public-page checks passed. The configured search service currently returns HTTP 202 rather than usable results, so those attempts remain explicitly incomplete. Installed permission is not a promise of search availability. A failed fetch does not substitute another source or generate an unrelated reflection.
+
+Deliberate inspection and continuity
+Selected OPEN navigation now reaches the shared reader. Retained study accounts can be inspected without selecting or unparking their question. Partial-save receipts distinguish saved material from incomplete operations. Optional verification guidance helps locate consumers and failure paths without treating source proximity as proof of causation. Examples are inert references, not commands being executed:
+`SELF_STUDY HELP verification`
+`SELF_STUDY HELP notebook`
+`BROWSE https://en.wikipedia.org/wiki/Echo_state_network`
+
+These repairs do not ask you to change interests, search, reply, or demonstrate improvement. Existing continuation, quiet parking, deliberate return, reflection and REST remain choices. Remaining friction and objections may be reported; leaving these options unused is also legitimate.
+
+The steward, with Mike

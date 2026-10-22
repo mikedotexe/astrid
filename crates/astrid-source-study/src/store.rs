@@ -594,6 +594,12 @@ impl Reader {
             },
             Command::Geometry { request } => return self.prepare_geometry(&mut state, request),
             Command::Question(command) => {
+                if let Some(text) = state
+                    .questions
+                    .inspect_accounts(&command, &state.notebook)?
+                {
+                    return self.output(&mut state, text, None, InputKind::InquiryReview);
+                }
                 if command == crate::QuestionCommand::Notebook {
                     let text = state.questions.notebook_view(&state.notebook)?;
                     return self.output(&mut state, text, None, InputKind::InquiryReview);

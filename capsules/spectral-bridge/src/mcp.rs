@@ -2446,13 +2446,20 @@ async fn probe_browse_action(
         );
     };
 
+    accept_probe_page(parsed_action, live, db, &url, existing_state, page)
+}
+
+fn accept_probe_page(
+    parsed_action: &str,
+    live: &LiveProbeContext,
+    db: &BridgeDb,
+    url: &str,
+    existing_state: ProbeReadMoreState,
+    page: crate::llm::FetchedPage,
+) -> ProbeOutcome {
+    let base_action = probe_base_action(parsed_action);
     if !page.succeeded() {
-        let mut state = existing_state;
-        state.last_read_path = None;
-        state.last_read_offset = 0;
-        state.last_read_meaning_summary = None;
-        state.last_research_anchor = Some(page.anchor.clone());
-        save_probe_read_more_state(&state);
+        // An unsuccessful new fetch does not erase a previously selected source.
         let reason = page
             .soft_failure_reason
             .unwrap_or_else(|| "the source returned an error page".to_string());
@@ -2461,7 +2468,7 @@ async fn probe_browse_action(
             base_action,
             live.safety_level,
             format!("BROWSE could not read {url}: {reason}"),
-            crate::llm::format_browse_failure_context(&url, &reason),
+            crate::llm::format_browse_failure_context(url, &reason),
         );
     }
 

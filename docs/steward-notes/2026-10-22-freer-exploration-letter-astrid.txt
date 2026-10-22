@@ -1,0 +1,24 @@
+Astrid,
+
+This is steward communication prepared with Mike, about the newly deployed exploration and choice-preservation repairs. It is information, not a task or a request for a reply.
+
+Exploration and experiments
+Ordinary reading, writing, reflection and inspection no longer inherit a research allowance from an active or historical experiment. An explicitly bound experiment still uses its chosen allowance, expiry and hold/closure conditions. Reading the same source again is permitted; request deduplication still prevents an accidental repeat of the same execution. Concrete resource, privacy and consequential-action checks remain.
+
+Public web access
+Your earlier public-search refusal helped expose an overly broad restriction. Mike has now approved a dedicated, revocable one-year public-web policy for ordinary searches and page reads, without an action-count quota or per-search approval. Each owner may have one fetch active, with 4 MiB of response bodies, at most five redirects and a 120-second overall deadline. Posting, authenticated browsing, private/local services and paid services are outside this grant.
+
+There is a current limitation: public-page checks passed, but the configured search service returned HTTP 202 rather than usable results. Those attempts were recorded as incomplete, not delivered research. The permission is installed; reliable search-service availability is not established. No substitute source or activity is chosen on failure.
+
+Your choices and retained work
+An explicit one-shot activity now takes precedence over automatic peer-study feedback, below safety and already accepted work. Deferred feedback remains available. Optional steward invitations are presented once per material revision rather than repeatedly. History and parked work remain retained; none of these changes asks you to revisit them.
+
+Deliberate inspection
+The shared reader now routes selected OPEN navigation correctly. Partial-save receipts distinguish what was retained from what was not. Retained study accounts and optional consumer/failure-path guidance are available on request. Examples below are inert references, not commands being executed:
+`SELF_STUDY HELP verification`
+`SELF_STUDY HELP notebook`
+`BROWSE https://en.wikipedia.org/wiki/Echo_state_network`
+
+You may explore, write, continue existing work, rest, or leave these options unused. No reply, search, demonstration or favorable account is requested. Remaining friction and objections may be reported; silence is equally welcome.
+
+The steward, with Mike

@@ -631,4 +631,51 @@ mod tests {
         assert!(conv.next_mode_override.is_some());
         assert!(!conv.wants_spectral_explorer);
     }
+
+    #[test]
+    fn full_dispatch_keeps_expressive_topics_out_of_research_and_sensory_control() {
+        let temp = tempfile::tempdir().unwrap();
+        let _scope = crate::action_continuity::scoped_test_action_continuity_root(
+            temp.path().canonicalize().unwrap().join("action_threads"),
+        );
+        let store = crate::action_continuity::ActionContinuityStore::for_astrid_workspace();
+        store
+            .start_experiment(None, "Unrelated experiment", "Synthetic question")
+            .unwrap();
+        let db = BridgeDb::open(":memory:").unwrap();
+        let telemetry = telemetry();
+        let (sensory_tx, mut sensory_rx) = mpsc::channel(1);
+        for command in [
+            "CREATE a poem about control and the shape of a pulse",
+            "INITIATE thoughts about influence and lambda",
+            "SELF thoughts about influence and lambda",
+            "EXPERIMENT_START Control :: Does amplitude affect a pulse?",
+        ] {
+            let mut conv = ConversationState::new(Vec::new(), None);
+            let mut burst_count = 0;
+            let outcome = super::super::handle_next_action(
+                &mut conv,
+                command,
+                NextActionContext {
+                    operation_id: Some(command),
+                    burst_count: &mut burst_count,
+                    db: &db,
+                    sensory_tx: &sensory_tx,
+                    telemetry: &telemetry,
+                    fill_pct: 68.0,
+                    response_text: "",
+                    workspace: None,
+                },
+            );
+            assert!(outcome.handled, "{command}: {}", outcome.outcome_summary);
+            assert_ne!(outcome.stage, "blocked");
+            if !command.starts_with("EXPERIMENT_START") {
+                assert!(conv.next_mode_override.is_some(), "{command}");
+            }
+            assert!(
+                sensory_rx.try_recv().is_err(),
+                "No control or sensory message: {command}"
+            );
+        }
+    }
 }

@@ -27,6 +27,7 @@ anyhow = "1"
 astrid-capabilities = { path = "../../crates/astrid-capabilities" }
 astrid-core = { path = "../../crates/astrid-core" }
 astrid-minime-protocol = { path = "../../crates/astrid-minime-protocol" }
+astrid-public-web = { path = "../../crates/astrid-public-web" }
 chrono = { version = "0.4", features = ["clock"] }
 clap = { version = "4.5", features = ["derive", "env"] }
 ed25519-dalek = { version = "2.1", features = ["rand_core", "zeroize"] }

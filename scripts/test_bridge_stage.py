@@ -79,6 +79,28 @@ class StageTests(unittest.TestCase):
         self.assertEqual(stage.verify_stage(self.directory, run_binary=False), ready)
         self.assertEqual((self.directory / "helpers/substrate_probe_v2.py").read_text(), "# fixture\n")
         self.assertEqual((self.directory / "helpers/astrid-source-study").read_bytes(), b"synthetic binary")
+        self.assertEqual((self.directory / "helpers/astrid-public-web").read_bytes(), b"synthetic binary")
+
+    def test_public_web_helper_tampering_is_rejected(self):
+        self.build()
+        helper = self.directory / "helpers/astrid-public-web"
+        helper.chmod(0o700)
+        helper.write_bytes(b"changed web transport")
+        with self.assertRaisesRegex(ValueError, "artifact changed: public-web-helper"):
+            stage.verify_stage(self.directory, run_binary=False)
+
+    def test_v3_reader_release_remains_verifiable_without_web_helper(self):
+        self.build()
+        manifest_path = self.directory / "manifest.json"
+        manifest = stage.json_file(manifest_path)
+        del manifest["artifacts"]["public-web-helper"]
+        stage.atomic_json(manifest_path, manifest)
+        ready_path = self.directory / "ready.json"
+        ready = stage.json_file(ready_path)
+        ready["schema"] = "bridge_staged_release_v3"
+        ready["manifest_sha256"] = stage.sha(manifest_path)
+        stage.atomic_json(ready_path, ready)
+        self.assertEqual(stage.verify_stage(self.directory, run_binary=False), ready)
 
     def test_shared_reader_tampering_is_rejected(self):
         self.build()

@@ -202,7 +202,7 @@ pub fn prompt_summary() -> Option<String> {
         research_budget_priority,
         sovereign_loop,
         research_dossier,
-        projection_current_next_display(&projection, thread.current_next.as_deref()),
+        thread.current_next.as_deref().unwrap_or("(none yet)"),
         control_plane,
         resonance,
         pressure,

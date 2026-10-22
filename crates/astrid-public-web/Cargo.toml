@@ -1,0 +1,31 @@
+[package]
+name = "astrid-public-web"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Standing delegated public-web policy and bounded shared fetch transport"
+
+[dependencies]
+astrid-minime-protocol.workspace = true
+astrid-capabilities.workspace = true
+astrid-core.workspace = true
+async-trait.workspace = true
+flate2.workspace = true
+fs2.workspace = true
+hex.workspace = true
+nix.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tokio.workspace = true
+tempfile.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+astrid-crypto.workspace = true
+tokio = { workspace = true, features = ["test-util"] }
+
+[lints]
+workspace = true

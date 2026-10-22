@@ -113,8 +113,18 @@ pub(crate) fn persist_activity(
     Ok(committed)
 }
 
-pub(crate) fn load_activity(store: &ActionContinuityStore) -> Result<ActivityRuntimeV1> {
-    let _lock = store.reader_owner_transaction()?;
+/// Deployment inspection must not create a lock, migrate state, or repair cursors.
+pub(crate) fn inspect_activity(store: &ActionContinuityStore) -> Result<ActivityRuntimeV1> {
+    anyhow::ensure!(
+        !store.root().is_symlink(),
+        "linked activity owner path refused"
+    );
+    for name in [RUNTIME_FILE, PREVIOUS_FILE, LEGACY_FILE] {
+        anyhow::ensure!(
+            !store.root().join(name).is_symlink(),
+            "linked activity checkpoint refused"
+        );
+    }
     let upgraded = store.root().join(RUNTIME_FILE).exists();
     if upgraded {
         verify_guard(store)?;
@@ -146,9 +156,15 @@ pub(crate) fn load_activity(store: &ActionContinuityStore) -> Result<ActivityRun
     if u64::try_from(bytes.len())? > MAX_RUNTIME_BYTES {
         return Err(anyhow!("activity selection exceeds size limit"));
     }
-    let mut activity: ActivityRuntimeV1 = serde_json::from_slice(&bytes)
+    let activity: ActivityRuntimeV1 = serde_json::from_slice(&bytes)
         .context("activity selection is corrupt; refusing legacy cursor recovery")?;
     validate_activity(&activity)?;
+    Ok(activity)
+}
+
+pub(crate) fn load_activity(store: &ActionContinuityStore) -> Result<ActivityRuntimeV1> {
+    let _lock = store.reader_owner_transaction()?;
+    let mut activity = inspect_activity(store)?;
     if let Some(reader) = activity.return_reader.as_ref() {
         preview_reader(store, reader)?;
     }

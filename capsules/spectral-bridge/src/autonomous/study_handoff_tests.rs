@@ -63,8 +63,7 @@ impl Fixture {
         Ok(id)
     }
     fn prepare(&mut self, id: &str) -> StudyOutput {
-        let target = self.conv.introspect_target.as_ref().unwrap().clone();
-        prepare(&self.store, &mut self.conv, id, || {
+        prepare(&self.store, &mut self.conv, id, |target| {
             super::super::prepare_shared_study_target(&self.reader, Some(target))
         })
         .unwrap()

@@ -564,7 +564,7 @@ mod tests {
     }
 
     #[test]
-    fn pending_self_study_forces_dialogue_before_drift_modes() {
+    fn explicit_introspection_precedes_retained_peer_feedback() {
         let mut conv = ConversationState::new(vec![], None);
         conv.pending_remote_self_study = Some(RemoteJournalEntry {
             path: PathBuf::from("self_study.txt"),
@@ -574,12 +574,13 @@ mod tests {
         conv.wants_introspect = true;
         assert_eq!(
             choose_mode(&mut conv, SafetyLevel::Green, 20.0, None),
-            Mode::Dialogue
+            Mode::Introspect
         );
         assert!(
-            conv.wants_introspect,
-            "forced dialogue should not consume pending introspection choice"
+            !conv.wants_introspect,
+            "the explicit one-shot choice should be consumed"
         );
+        assert!(conv.pending_remote_self_study.is_some());
     }
 
     #[test]
@@ -2165,15 +2166,16 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
         });
         let line =
             steward_query_line_from_slot(&slot, "Steward elicitation fanout packet V3").unwrap();
-        assert!(line.contains("Holds 2 optional routed item(s)"));
-        assert!(line.contains("primary `tail_entropy` has topic gravity 19"));
+        assert!(line.contains("\"packet_items\":2"));
+        assert!(line.contains("\"primary_topic\":\"tail_entropy\""));
+        assert!(line.contains("\"primary_topic_gravity\":19"));
         assert!(line.contains("route=tail_cartography"));
         assert!(!line.to_lowercase().contains("control"));
         assert!(!line.to_lowercase().contains("obligation"));
     }
 
     #[test]
-    fn steward_query_review_target_line_still_uses_introspect() {
+    fn steward_query_review_target_is_reference_not_a_selected_action() {
         let slot = json!({
             "subject": "review of agency.rs",
             "ts": 1_783_100_000_u64,
@@ -2181,7 +2183,10 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
             "review_target": "src/agency.rs 42",
         });
         let line = steward_query_line_from_slot(&slot, "review of agency.rs").unwrap();
-        assert!(line.contains("INTROSPECT src/agency.rs 42"));
+        assert!(line.contains("\"review_target\":\"src/agency.rs 42\""));
+        assert!(line.contains("STEWARD_INVITATION STATUS"));
+        assert!(!line.contains("NEXT:"));
+        assert!(!line.contains("INTROSPECT src/agency.rs 42"));
         assert_eq!(
             review_target_match_basis("src/agency.rs 42"),
             "src/agency.rs"

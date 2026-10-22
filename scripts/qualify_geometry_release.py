@@ -286,6 +286,18 @@ def preparation_retry_probe(output, reader):
                 idempotent_retry_qualified=True, owners=results)
 
 
+def valid_launch_inventory(value):
+    return (isinstance(value, dict) and 0 < len(value) <= 2000
+            and set(LAUNCH_INPUTS_REQUIRED) <= value.keys()
+            and all(isinstance(name, str) and name and "\0" not in name
+                    and Path(name).parts and not Path(name).is_absolute()
+                    and ".." not in Path(name).parts
+                    and Path(name).as_posix() == name
+                    and isinstance(digest, str) and len(digest) == 64
+                    and all(char in "0123456789abcdef" for char in digest)
+                    for name, digest in value.items()))
+
+
 def verify_launch_binding(reconciliation, inputs):
     receipt_bytes = reconciliation.read_bytes()
     receipt = json.loads(receipt_bytes)
@@ -293,10 +305,26 @@ def verify_launch_binding(reconciliation, inputs):
             and receipt.get("schema") == "minime_launch_source_reconciliation_v1"
             and receipt.get("selected_inputs") == inputs,
             "qualified Python inputs differ from launch reconciliation")
-    require(inventory(Path(receipt["bindings"]["canonical_root"])) == receipt["canonical_inputs"],
-            "canonical sources changed since reconciliation")
+    before, selected = receipt.get("canonical_inputs"), receipt.get("selected_inputs")
+    require(valid_launch_inventory(before) and valid_launch_inventory(selected),
+            "malformed source inventory in launch reconciliation")
+    bindings = receipt.get("bindings")
+    canonical = bindings.get("canonical_root") if isinstance(bindings, dict) else None
+    require(isinstance(canonical, str) and "\0" not in canonical
+            and Path(canonical).is_absolute(), "invalid canonical root in launch reconciliation")
+    observed = inventory(Path(canonical))
+    matches_before, matches_selected = observed == before, observed == selected
+    require(matches_before or matches_selected,
+            "canonical sources changed outside both exact launch reconciliation inventories")
+    boundary = ("original_and_selected_inputs" if matches_before and matches_selected
+                else "original_canonical_inputs" if matches_before else "selected_inputs")
+    # Matching installed bytes does not establish how they arrived or which
+    # sources a running process loaded. The handoff runner verifies those facts.
     return dict(receipt=str(reconciliation), receipt_sha256=hashlib.sha256(receipt_bytes).hexdigest(),
-                exact_selected_inputs=True, canonical_applied=False)
+                exact_selected_inputs=True, observed_boundary=boundary,
+                observation_scope="canonical_source_inventory_only", canonical_writes=False,
+                installer_provenance_verified=False, drain_verified=False,
+                readiness_verified=False, activation_performed=False)
 
 
 def qualify(old_stage, stage, minime, output, reconciliation=None):
@@ -332,7 +360,7 @@ def qualify(old_stage, stage, minime, output, reconciliation=None):
                         preparation_retry_probe=retry,
                         launch_source_reconciliation=launch_binding,
                         activation_blockers=["source-bound review of host scheduler interruption and activity-selector migration evidence",
-                                             "reviewed Python overlay still requires cooperative canonical installation" if launch_binding
+                                             "canonical installation provenance and running identity require separate handoff verification" if launch_binding
                                              else "canonical Python source and launch selection reconciliation"],
                         activation_performed=False, live_eligible_now=False,
                         boundaries=["synthetic state, not copied private/live state",

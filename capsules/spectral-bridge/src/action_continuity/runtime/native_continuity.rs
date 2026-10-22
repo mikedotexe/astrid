@@ -236,6 +236,9 @@ fn read_only_control_intent_base(base: &str) -> bool {
 }
 
 fn read_only_control_intent_matches(value: &str) -> Vec<String> {
+    if ordinary_exploration(value) {
+        return Vec::new();
+    }
     let normalized = normalize_guard_signal(value);
     let near_context = [
         "lambda",

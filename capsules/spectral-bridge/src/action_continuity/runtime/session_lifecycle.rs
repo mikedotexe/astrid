@@ -483,6 +483,9 @@ impl ActionContinuityStore {
         let thread: ResearchThread =
             serde_json::from_slice(&fs::read(self.thread_dir(&thread_id).join("thread.json"))?)?;
         let mut summary = self.continuity_session_summary_v1(&thread, selector.as_deref(), 8)?;
+        summary["retained_draft"] = self
+            .resolve_continuity_session_draft(&thread, selector.as_deref())?
+            .unwrap_or(Value::Null);
         if let Some(session_id) = summary["latest_session"]["session_id"].as_str() {
             let preview = self.reader_bookmark_preview(&thread.thread_id, session_id)?;
             summary["reader_preview"] = serde_json::to_value(preview)?;

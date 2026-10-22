@@ -86,17 +86,6 @@ pub async fn self_reflect(
     result.filter(|t| t.len() > 20)
 }
 
-/// Simple URL encoding for search queries.
-fn urlencoded(s: &str) -> String {
-    s.chars()
-        .map(|c| match c {
-            ' ' => '+'.to_string(),
-            c if c.is_ascii_alphanumeric() || "-_.~".contains(c) => c.to_string(),
-            c => format!("%{:02X}", c as u32),
-        })
-        .collect()
-}
-
 /// Decode a percent-encoded URL string (e.g. `%2F` → `/`).
 fn urlencoded_decode(s: &str) -> String {
     let mut result = String::with_capacity(s.len());

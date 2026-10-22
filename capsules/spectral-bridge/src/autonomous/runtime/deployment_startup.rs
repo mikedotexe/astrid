@@ -34,19 +34,41 @@ fn checkpoint(path: &Path) -> Result<Value, String> {
 }
 
 pub fn inspect_deployment_inputs() -> Result<Value, String> {
+    let study = super::study_handoff::inspect_deployment_compatibility(
+        &crate::action_continuity::ActionContinuityStore::for_astrid_workspace(),
+    )
+    .map_err(|error| error.to_string())?;
+    let research = crate::action_continuity::research_transaction_compatibility(
+        &crate::paths::bridge_paths()
+            .bridge_workspace()
+            .join("action_threads"),
+    )
+    .map_err(|error| error.to_string())?;
     Ok(
         json!({"schema":"bridge_deployment_inputs_v1", "mutation_performed":false,
         "checkpoint":checkpoint(&crate::paths::bridge_paths().state_path())?,
-        "self_control":deployment_handoff::inspect_startup()?}),
+        "self_control":deployment_handoff::inspect_startup()?, "research_transactions":research,
+        "study_handoff":study}),
     )
 }
 
 pub fn apply_deployment_startup() -> Result<Value, String> {
     // Decode the conversation before consuming the one-shot state handoff.
     let checkpoint = checkpoint(&crate::paths::bridge_paths().state_path())?;
+    let study = super::study_handoff::inspect_deployment_compatibility(
+        &crate::action_continuity::ActionContinuityStore::for_astrid_workspace(),
+    )
+    .map_err(|error| error.to_string())?;
+    let research = crate::action_continuity::research_transaction_compatibility(
+        &crate::paths::bridge_paths()
+            .bridge_workspace()
+            .join("action_threads"),
+    )
+    .map_err(|error| error.to_string())?;
     Ok(
         json!({"schema":"bridge_deployment_startup_v1", "pid":std::process::id(),
-        "checkpoint":checkpoint, "self_control":deployment_handoff::apply_startup()?,
+        "checkpoint":checkpoint, "research_transactions":research, "study_handoff":study,
+        "self_control":deployment_handoff::apply_startup()?,
         "admission_started":false, "authority":"operator_maintenance_witness_only"}),
     )
 }

@@ -100,16 +100,21 @@ impl NextActionOutcome {
                 .with_stage_visibility("read_only", visibility),
             Err(error) => {
                 let needs_input = error.downcast_ref::<ContinuityInputError>().is_some();
+                let save_incomplete = save_receipts::is_save_error(&error);
                 let mut outcome = Self::blocked("action_continuity", format!("{error:#}"))
                     .with_stage_visibility(
-                        if needs_input {
+                        if save_incomplete {
+                            "save_incomplete"
+                        } else if needs_input {
                             "needs_input"
                         } else {
                             "blocked"
                         },
                         visibility,
                     );
-                if needs_input {
+                if save_incomplete {
+                    outcome.status = "failed".to_string();
+                } else if needs_input {
                     outcome.status = "needs_input".to_string();
                 }
                 outcome

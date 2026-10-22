@@ -580,6 +580,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "astrid-public-web"
+version = "0.1.0"
+dependencies = [
+ "astrid-capabilities",
+ "astrid-core",
+ "astrid-crypto",
+ "astrid-minime-protocol",
+ "async-trait",
+ "flate2",
+ "fs2",
+ "hex",
+ "nix 0.29.0",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "astrid-source-study"
 version = "0.1.0"
 dependencies = [

@@ -4,6 +4,7 @@
 //! can advance a source bookmark. These records never claim understanding.
 #![deny(unsafe_code)]
 
+mod action_route;
 mod catalog;
 mod command;
 pub mod command_boundary;
@@ -48,6 +49,7 @@ pub use writing_recovery::{
     FinalWritingCapacity, WritingCapacity, WritingRecovery, writing_storage_only,
 };
 
+pub use action_route::{SourceActionRoute, research_source_route, source_action_route};
 pub use catalog::{Catalog, Repository, Source};
 pub use command::Command;
 pub use evidence::InputKind;

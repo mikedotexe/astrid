@@ -1,6 +1,7 @@
 """Synthetic snapshot safety tests; no services, live data, or native builds."""
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -90,23 +91,119 @@ class SnapshotTests(unittest.TestCase):
             qualify.write_json(path, {"changed": True})
         self.assertEqual(path.read_bytes(), original)
 
-    def launch_receipt(self):
-        inputs = qualify.inventory(self.source)
+    def launch_receipt(self, *, distinct=False):
+        before = qualify.inventory(self.source)
+        inputs = before
+        if distinct:
+            self.selected = self.root / "selected"
+            shutil.copytree(self.source, self.selected)
+            for name in ("autonomous_agent.py", "minime_autonomy/source_study.py",
+                         "minime_autonomy/selected_only.py"):
+                (self.selected / name).write_text("# selected synthetic input\n")
+            inputs = qualify.inventory(self.selected)
         receipt = self.root / "reconciliation.json"
         receipt.write_text(json.dumps({
             "schema": "minime_launch_source_reconciliation_v1",
             "selected_inputs": inputs,
-            "canonical_inputs": inputs,
+            "canonical_inputs": before,
             "bindings": {"canonical_root": str(self.source)},
         }))
         return receipt, inputs
 
+    def assert_source_only_binding(self, binding):
+        self.assertTrue(binding["exact_selected_inputs"])
+        self.assertEqual(binding["observation_scope"], "canonical_source_inventory_only")
+        for key in ("canonical_writes", "installer_provenance_verified", "drain_verified",
+                    "readiness_verified", "activation_performed"):
+            self.assertIs(binding[key], False)
+        self.assertNotIn("canonical_applied", binding)
+
     def test_launch_binding_matches_exact_frozen_inputs_without_claiming_installation(self):
         receipt, inputs = self.launch_receipt()
+        original = receipt.read_bytes()
         binding = qualify.verify_launch_binding(receipt, inputs)
         self.assertEqual(binding["receipt_sha256"], qualify.sha(receipt))
-        self.assertTrue(binding["exact_selected_inputs"])
-        self.assertFalse(binding["canonical_applied"])
+        self.assertEqual(binding["observed_boundary"], "original_and_selected_inputs")
+        self.assert_source_only_binding(binding)
+        self.assertEqual(receipt.read_bytes(), original)
+
+    def test_launch_binding_accepts_exact_before_or_fully_selected_inventory(self):
+        receipt, inputs = self.launch_receipt(distinct=True)
+        original = receipt.read_bytes()
+        before = qualify.inventory(self.source)
+        binding_before = qualify.verify_launch_binding(receipt, inputs)
+        self.assertEqual(binding_before["observed_boundary"], "original_canonical_inputs")
+        self.assert_source_only_binding(binding_before)
+        self.assertEqual(qualify.inventory(self.source), before)
+        shutil.copytree(self.selected, self.source, dirs_exist_ok=True)
+        binding_selected = qualify.verify_launch_binding(receipt, inputs)
+        self.assertEqual(binding_selected["observed_boundary"], "selected_inputs")
+        self.assert_source_only_binding(binding_selected)
+        self.assertEqual(qualify.inventory(self.source), inputs)
+        self.assertEqual(receipt.read_bytes(), original)
+        self.assertEqual(binding_before["receipt_sha256"], binding_selected["receipt_sha256"])
+        # Existing callers compare the two observations to reject mid-run changes.
+        self.assertNotEqual(binding_before, binding_selected)
+
+    def test_launch_binding_rejects_partial_install_and_partial_rollback(self):
+        receipt, inputs = self.launch_receipt(distinct=True)
+        original = receipt.read_bytes()
+        old = (self.source / "autonomous_agent.py").read_bytes()
+        shutil.copyfile(self.selected / "autonomous_agent.py", self.source / "autonomous_agent.py")
+        with self.assertRaisesRegex(ValueError, "canonical sources changed"):
+            qualify.verify_launch_binding(receipt, inputs)
+        shutil.copytree(self.selected, self.source, dirs_exist_ok=True)
+        (self.source / "autonomous_agent.py").write_bytes(old)
+        with self.assertRaisesRegex(ValueError, "canonical sources changed"):
+            qualify.verify_launch_binding(receipt, inputs)
+        self.assertEqual(receipt.read_bytes(), original)
+
+    def test_launch_binding_rejects_missing_extra_and_drifted_selected_inputs(self):
+        receipt, inputs = self.launch_receipt(distinct=True)
+        shutil.copytree(self.selected, self.source, dirs_exist_ok=True)
+        original = receipt.read_bytes()
+        missing = self.source / "mikemind/__init__.py"
+        saved = missing.read_bytes()
+        missing.unlink()
+        with self.assertRaisesRegex(ValueError, "canonical sources changed"):
+            qualify.verify_launch_binding(receipt, inputs)
+        missing.write_bytes(saved)
+        extra = self.source / "extra.py"
+        extra.write_text("# not selected\n")
+        with self.assertRaisesRegex(ValueError, "canonical sources changed"):
+            qualify.verify_launch_binding(receipt, inputs)
+        extra.unlink()
+        (self.source / "autonomous_agent.py").write_text("# drift after installation\n")
+        with self.assertRaisesRegex(ValueError, "canonical sources changed"):
+            qualify.verify_launch_binding(receipt, inputs)
+        self.assertEqual(receipt.read_bytes(), original)
+
+    def test_launch_binding_rejects_malformed_inventory_even_at_other_valid_boundary(self):
+        receipt, inputs = self.launch_receipt(distinct=True)
+        shutil.copytree(self.selected, self.source, dirs_exist_ok=True)
+        valid = json.loads(receipt.read_bytes())
+        malformed = (None, [], {}, {"autonomous_agent.py": "g" * 64},
+                     {**inputs, "": "a" * 64}, {**inputs, ".": "a" * 64},
+                     {**inputs, "nul\0.py": "a" * 64},
+                     {**inputs, "../escape.py": "a" * 64},
+                     {**inputs, "/absolute.py": "a" * 64},
+                     {**inputs, "alias/../escape.py": "a" * 64},
+                     {**inputs, "extra.py": True}, {**inputs, "extra.py": "a" * 63},
+                     {**inputs, "extra.py": "A" * 64},
+                     {k: v for k, v in inputs.items() if k != qualify.LAUNCH_INPUTS_REQUIRED[0]})
+        for field in ("canonical_inputs", "selected_inputs"):
+            for value in malformed:
+                with self.subTest(field=field, value=value):
+                    receipt.write_text(json.dumps({**valid, field: value}))
+                    supplied = value if field == "selected_inputs" else inputs
+                    with self.assertRaisesRegex(ValueError, "launch reconciliation"):
+                        qualify.verify_launch_binding(receipt, supplied)
+        for bindings in (None, [], {}, {"canonical_root": None},
+                         {"canonical_root": "relative"}, {"canonical_root": ""}):
+            with self.subTest(bindings=bindings):
+                receipt.write_text(json.dumps({**valid, "bindings": bindings}))
+                with self.assertRaisesRegex(ValueError, "launch reconciliation"):
+                    qualify.verify_launch_binding(receipt, inputs)
 
     def test_launch_binding_rejects_candidate_and_canonical_drift(self):
         receipt, inputs = self.launch_receipt()

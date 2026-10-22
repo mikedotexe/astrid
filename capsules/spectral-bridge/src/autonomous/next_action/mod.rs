@@ -28,12 +28,15 @@ mod probe_self;
 mod propose_test;
 pub(crate) mod protected_diagnostics;
 mod regulator_map;
+pub(crate) mod research_jobs;
+pub(crate) mod research_reading;
 mod resource_governor;
 mod self_regulation;
 pub(crate) mod shadow;
 pub(crate) mod sovereignty;
 mod space_hold;
 mod spectral_drift;
+pub(super) mod steward_invitation;
 #[cfg(test)]
 mod study_inquiries_tests;
 pub(in crate::autonomous) mod study_navigation;
@@ -458,6 +461,12 @@ fn is_action_token_like(token: &str) -> bool {
 ///   "EXAMINE foo AND DEFER reason"           → ["EXAMINE foo", "DEFER reason"]
 ///   "A AND B AND C AND D"                    → ["A", "B", "C AND D"]  (truncated to 3)
 fn split_multi_action(original: &str) -> Vec<String> {
+    if leading_action_token(original) == "STEWARD_INVITATION" {
+        return vec![original.to_string()];
+    }
+    if astrid_source_study::command_boundary::literal_arguments(original) {
+        return vec![original.to_string()];
+    }
     if astrid_source_study::response_choice::is_geometry_action(original)
         || astrid_source_study::command_boundary::has_study_payload(original)
     {
@@ -467,7 +476,9 @@ fn split_multi_action(original: &str) -> Vec<String> {
     let mut segments: Vec<String> = Vec::new();
     let mut remaining = original;
     while segments.len() + 1 < MAX_MULTI_ACTION_SEGMENTS {
-        if astrid_source_study::command_boundary::has_study_payload(remaining) {
+        if leading_action_token(remaining) == "STEWARD_INVITATION"
+            || astrid_source_study::command_boundary::has_study_payload(remaining)
+        {
             break;
         }
         // Search for next case-insensitive " AND " whose post-segment
@@ -512,6 +523,9 @@ fn split_multi_action(original: &str) -> Vec<String> {
 }
 
 fn unresolved_angle_placeholder(text: &str) -> Option<String> {
+    if astrid_source_study::command_boundary::literal_arguments(text) {
+        return None;
+    }
     let mut rest = text;
     while let Some(start) = rest.find('<') {
         let after_start = &rest[start + 1..];
@@ -1165,8 +1179,10 @@ fn normalize_feedback_shadow_model_alias(
 }
 
 fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
-    if leading_action_token(next_action.trim_start()) == "AFTERIMAGE_KEEP"
-        || astrid_source_study::response_choice::is_geometry_action(next_action)
+    if matches!(
+        leading_action_token(next_action.trim_start()).as_str(),
+        "AFTERIMAGE_KEEP" | "STEWARD_INVITATION"
+    ) || astrid_source_study::response_choice::is_geometry_action(next_action)
         || astrid_source_study::command_boundary::has_study_payload(next_action)
     {
         return (
@@ -1177,6 +1193,10 @@ fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
     let original =
         unwrap_outer_action_wrappers(strip_choice_metadata_from_next_action(next_action));
     let base_action = leading_action_token(&original);
+
+    if let Some(route) = astrid_source_study::source_action_route(&original) {
+        return ("SELF_STUDY".into(), route.canonical_action);
+    }
 
     if let Some((normalized_base, normalized_original)) =
         normalize_experiment_typo_alias(&base_action, &original)
@@ -1364,6 +1384,9 @@ fn normalize_steward_typo_alias(base_action: &str, original: &str) -> Option<(St
 }
 
 fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
+    if base_action == "STEWARD_INVITATION" {
+        return "protected_summary";
+    }
     if base_action == "WRITE" {
         return "protected";
     }
@@ -1479,6 +1502,9 @@ fn action_continuity_visibility_for_base(base_action: &str) -> &'static str {
 }
 
 fn action_continuity_stage_for_base(base_action: &str) -> &'static str {
+    if base_action == "STEWARD_INVITATION" {
+        return "language_only";
+    }
     if base_action == "WRITE" {
         return "language_only";
     }
@@ -1692,6 +1718,9 @@ fn is_action_preflight_base(base_action: &str) -> bool {
 }
 
 fn route_for_preflight_base(base_action: &str) -> String {
+    if base_action == "STEWARD_INVITATION" {
+        return "steward_invitation".into();
+    }
     if crate::transition_afterimages::is_action(base_action) {
         return "afterimage".into();
     }
@@ -2030,7 +2059,7 @@ pub(crate) fn action_preflight_report(action_text: &str) -> ActionPreflightRepor
     let mut likely_gate = "normal dispatcher gates would apply".to_string();
 
     if let Some(token) = unresolved_angle_placeholder(&canonical_action)
-        && base_action != "AFTERIMAGE_KEEP"
+        && !matches!(base_action.as_str(), "AFTERIMAGE_KEEP" | "EXPERIMENT_BIND")
     {
         stage = "blocked".to_string();
         route = "placeholder".to_string();
@@ -2038,6 +2067,23 @@ pub(crate) fn action_preflight_report(action_text: &str) -> ActionPreflightRepor
         expected_continuity_effect =
             "Would record a blocked action-continuity event; no runtime action would execute."
                 .to_string();
+    } else if base_action == "STEWARD_INVITATION" {
+        match steward_invitation::parse(&canonical_action) {
+            Ok(command) => {
+                likely_gate = "Existing dispatcher gates and bounded invitation metadata/history checks apply; no read, presentation, or receipt mutation during preflight.".into();
+                expected_continuity_effect = if command == steward_invitation::Command::Status {
+                    "Retrieves retained metadata only; no letter delivery, model generation, reply, focus release, or continuation."
+                } else {
+                    "Records only this material revision as deferred or declined; retains the slot and letter. No model generation, reply, focus release, or continuation."
+                }.into();
+            },
+            Err(_) => {
+                stage = "blocked".into();
+                likely_gate = "blocked: use exactly STEWARD_INVITATION STATUS, STEWARD_INVITATION DEFER, or STEWARD_INVITATION DECLINE".into();
+                expected_continuity_effect =
+                    "No invitation mutation, generation, or continuation.".into();
+            },
+        }
     } else if base_action == "EXPERIMENT_BIND" {
         match action_continuity::parse_experiment_bind(&canonical_action) {
             Ok((selector, inner_action)) => {
@@ -2065,6 +2111,28 @@ pub(crate) fn action_preflight_report(action_text: &str) -> ActionPreflightRepor
                     likely_gate = format!(
                         "inner action `{inner_action}` would be dispatched through normal NEXT gates"
                     );
+                    let admission = (|| -> anyhow::Result<()> {
+                        anyhow::ensure!(
+                            unresolved_angle_placeholder(&inner_action).is_none(),
+                            "unresolved executable operand"
+                        );
+                        let store = action_continuity::ActionContinuityStore::new(
+                            bridge_paths().bridge_workspace().join("action_threads"),
+                        );
+                        let _transaction =
+                            action_continuity::research_owner_transaction(store.root())?;
+                        let exact = store.resolve_experiment_bind_target(selector.as_deref())?;
+                        if action_continuity::research_binding_requires_budget(&inner_action)? {
+                            store.research_preflight(&exact, &inner_action)?;
+                        }
+                        crate::public_web::authorize_action(&inner_action)
+                            .map_err(anyhow::Error::msg)?;
+                        Ok(())
+                    })();
+                    if let Err(error) = admission {
+                        stage = "blocked".to_string();
+                        likely_gate = format!("blocked: explicit experiment admission ({error:#})");
+                    }
                 }
                 expected_continuity_effect =
                     "Would append an experiment run after the inner action resolves; no bind happens during preflight."
@@ -2088,6 +2156,23 @@ pub(crate) fn action_preflight_report(action_text: &str) -> ActionPreflightRepor
         expected_continuity_effect =
             "Would execute the legacy experiment path through existing gates and append a legacy experiment run."
                 .to_string();
+    }
+    if stage != "blocked" {
+        match crate::public_web::authorize_action(&canonical_action) {
+            Ok(Some(_)) => {
+                likely_gate = "Standing public-web policy verified; fetch rechecks revocation, owner/release identity, destinations and transport limits. No inherited experiment allowance is required.".to_string();
+                expected_continuity_effect = "Fetch and subsequent model delivery have separate receipts. Preflight performs neither.".to_string();
+            },
+            Err(reason) => {
+                stage = "blocked".to_string();
+                route = "public_web_authorization".to_string();
+                likely_gate = reason;
+                expected_continuity_effect =
+                    "No fetch queued; local inspection and writing remain separate choices."
+                        .to_string();
+            },
+            Ok(None) => {},
+        }
     }
     if matches!(stage.as_str(), "read_only" | "observe")
         && active_experiment_auto_linkable_base(&base_action)
@@ -3945,16 +4030,15 @@ mod tests {
         let control_bind = action_preflight_report(
             "ACTION_PREFLIGHT EXPERIMENT_BIND current :: PERTURB lambda-edge",
         );
-        assert_eq!(control_bind.stage, "live_control");
+        assert_eq!(control_bind.stage, "blocked");
         assert!(
             control_bind
                 .effective_route
                 .contains("experiment_continuity")
         );
-        assert!(
-            control_bind
-                .expected_continuity_effect
-                .contains("experiment run")
+        assert_eq!(
+            action_preflight_report("PERTURB lambda-edge").stage,
+            "live_control"
         );
 
         let peer_bind = action_preflight_report(

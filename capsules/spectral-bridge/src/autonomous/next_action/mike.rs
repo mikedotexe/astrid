@@ -82,6 +82,9 @@ pub(super) fn handle_action(
                 return true;
             }
             if file_path.is_dir() {
+                if !super::research_reading::start_host(conv) {
+                    return true;
+                }
                 let listing = mike_browse_project(&file_path, &path_arg);
                 conv.pending_file_listing = Some(listing);
                 conv.last_read_path = None;
@@ -90,6 +93,9 @@ pub(super) fn handle_action(
                 return true;
             }
             if is_pdf_path(&file_path) {
+                if !super::research_reading::start_host(conv) {
+                    return true;
+                }
                 match super::pdf::read_pdf_window(&file_path, &root, 1, super::pdf::PDF_CHAR_BUDGET)
                 {
                     Ok(window) => {
@@ -140,7 +146,12 @@ pub(super) fn handle_action(
             conv.pending_file_listing = Some(
                 match super::super::activity_reading::choose_saved_text(conv, &file_path, &path_arg)
                 {
-                    Ok(message) => message,
+                    Ok(message) => match super::research_reading::queue_selected(conv) {
+                        Ok(()) => message,
+                        Err(error) => format!(
+                            "[Bound saved reading could not be queued: {error:#}. Its source is retained.]"
+                        ),
+                    },
                     Err(error) => format!(
                         "[Could not select saved reading {path_arg}: {error}. The prior bookmark is retained.]"
                     ),

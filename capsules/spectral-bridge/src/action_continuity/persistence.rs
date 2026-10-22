@@ -23,14 +23,25 @@ impl ActionContinuityStore {
     }
 
     pub(super) fn append_jsonl<T: Serialize>(&self, path: &Path, value: &T) -> Result<()> {
+        let _transaction = research_transactions::OwnerTransaction::enter(&self.root)?;
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
         }
         if path.file_name() == Some(OsStr::new("continuity_sessions.jsonl")) {
             return self.append_session_jsonl(path, serde_json::to_value(value)?);
         }
+        if matches!(
+            path.file_name().and_then(OsStr::to_str),
+            Some("authority_gate.jsonl" | "experiments.jsonl")
+        ) {
+            research_transactions::strict_rows(path)?;
+        }
         let mut file = OpenOptions::new().create(true).append(true).open(path)?;
         writeln!(file, "{}", serde_json::to_string(value)?)?;
+        file.sync_all()?;
+        if let Some(parent) = path.parent() {
+            fs::File::open(parent)?.sync_all()?;
+        }
         Ok(())
     }
 
@@ -109,6 +120,7 @@ impl ActionContinuityStore {
     }
 
     pub(super) fn write_json<T: Serialize>(&self, path: &Path, value: &T) -> Result<()> {
+        let _transaction = research_transactions::OwnerTransaction::enter(&self.root)?;
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
         }

@@ -10,10 +10,14 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+#[path = "writing_command.rs"]
+mod command;
 #[path = "writing_observations.rs"]
 mod observations;
 #[path = "writing_presentation.rs"]
 mod presentation;
+use command::WritingSyntax;
+pub use command::is_private_writing_continuation;
 
 pub(crate) struct ReflectionSeed {
     pub prose: String,
@@ -201,14 +205,10 @@ impl Writer {
         seed: Option<ReflectionSeed>,
     ) -> Result<StudyOutput> {
         let mut state = self.load()?;
-        let rest = action
-            .trim()
-            .strip_prefix("WRITE")
-            .context("use WRITE <choice>")?
-            .trim();
-        let (verb, arg) = rest.split_once(' ').unwrap_or((rest, ""));
-        let verb = verb.to_ascii_uppercase();
-        let arg = arg.trim();
+        let WritingSyntax {
+            verb,
+            argument: arg,
+        } = WritingSyntax::parse(action)?;
         let storage_only = crate::writing_storage_only(action);
         let affected_draft = state.active.clone();
         if storage_only && state.operations.len() >= 65_536 {

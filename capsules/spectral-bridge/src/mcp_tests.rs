@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde_json::json;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 use tokio::sync::RwLock;
 
@@ -466,108 +465,99 @@ async fn probe_action_list_files_returns_context_and_logs() {
 }
 
 #[tokio::test]
-async fn probe_action_browse_and_read_more_use_probe_state() {
-    let _probe_state_guard = PROBE_STATE_TEST_LOCK.lock().await;
+async fn frozen_browse_and_read_more_preserve_probe_state() {
+    let _guard = PROBE_STATE_TEST_LOCK.lock().await;
     clear_probe_read_more_state();
-
-    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let addr = listener.local_addr().unwrap();
-    let page_body = "Manipulable relationships between eigenvalue branches and perception remain relevant to the current question. ".repeat(64);
-    let server_body = page_body.clone();
-    let server = tokio::spawn(async move {
-        let (mut stream, _) = listener.accept().await.unwrap();
-        let mut buf = vec![0_u8; 1024];
-        let _ = stream.read(&mut buf).await.unwrap();
-        let response = format!(
-            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n{}",
-            server_body.len(),
-            server_body
-        );
-        stream.write_all(response.as_bytes()).await.unwrap();
-    });
-
-    let state = Arc::new(RwLock::new(BridgeState::new()));
-    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
-    let browse = tool_probe_action(
-        &json!({"action_text": format!("BROWSE http://{addr}/page")}),
-        &state,
+    let body =
+        "A synthetic page with enough distinct text to exercise saved reading and continuation. "
+            .repeat(100);
+    let url = "https://example.test/synthetic";
+    let page = crate::llm::page_from_frozen_html(url, "fixture", reqwest::StatusCode::OK, body);
+    let live = LiveProbeContext {
+        safety_level: SafetyLevel::Green,
+        fill_pct: Some(68.0),
+        lambda1: None,
+        telemetry: None,
+        fingerprint: None,
+    };
+    let db = BridgeDb::open(":memory:").unwrap();
+    let outcome = accept_probe_page(
+        "BROWSE https://example.test/synthetic",
+        &live,
         &db,
-    )
-    .await
-    .unwrap();
-    server.await.unwrap();
+        url,
+        ProbeReadMoreState::default(),
+        page,
+    );
+    assert_eq!(outcome.status, "ok");
+    assert!(
+        outcome
+            .experienced_text
+            .contains("Relevant knowledge from the web:")
+    );
+    assert!(outcome.experienced_text.contains("Why it may matter:"));
+    let saved = load_probe_read_more_state().unwrap();
+    let path = saved.last_read_path.clone().unwrap();
+    let resumed = probe_read_more_action(SafetyLevel::Green);
+    assert_eq!(resumed.status, "ok");
+    assert!(
+        resumed
+            .experienced_text
+            .contains("[Continuing reading from offset")
+    );
 
-    assert_eq!(browse["structuredContent"]["status"], "ok");
-    let browse_text = browse["structuredContent"]["experienced_text"]
-        .as_str()
-        .unwrap();
-    assert!(browse_text.contains("Relevant knowledge from the web:"));
-    assert!(browse_text.contains("Why it may matter:"));
-    assert!(browse_text.contains("[You read the page at"));
-    assert!(probe_state_path().exists());
-
-    let artifact_path = browse["structuredContent"]["artifacts"][0]["path"]
-        .as_str()
-        .unwrap()
-        .to_string();
-    assert!(PathBuf::from(&artifact_path).exists());
-
-    let read_more = tool_probe_action(&json!({"action_text": "READ_MORE"}), &state, &db)
-        .await
-        .unwrap();
-    assert_eq!(read_more["structuredContent"]["status"], "ok");
-    let read_more_text = read_more["structuredContent"]["experienced_text"]
-        .as_str()
-        .unwrap();
-    assert!(read_more_text.contains("[Meaning summary from this document:]"));
-    assert!(read_more_text.contains("[Continuing reading from offset"));
-
-    let _ = fs::remove_file(artifact_path);
+    let before = fs::read(probe_state_path()).unwrap();
+    let failed = crate::llm::page_from_frozen_html(
+        url,
+        "fixture",
+        reqwest::StatusCode::NOT_FOUND,
+        "<html>missing</html>".into(),
+    );
+    let outcome = accept_probe_page(
+        "BROWSE https://example.test/missing",
+        &live,
+        &db,
+        url,
+        load_probe_read_more_state().unwrap(),
+        failed,
+    );
+    assert_eq!(outcome.status, "error");
+    assert!(
+        outcome
+            .experienced_text
+            .contains("No complete source was delivered")
+    );
+    assert_eq!(fs::read(probe_state_path()).unwrap(), before);
+    fs::remove_file(path).unwrap();
     clear_probe_read_more_state();
 }
 
 #[tokio::test]
-async fn probe_action_browse_soft_failure_returns_explicit_failure() {
-    let _probe_state_guard = PROBE_STATE_TEST_LOCK.lock().await;
-    clear_probe_read_more_state();
-
+async fn probe_public_web_refusal_never_contacts_local_service() {
+    let _guard = PROBE_STATE_TEST_LOCK.lock().await;
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
-    let server = tokio::spawn(async move {
-        let (mut stream, _) = listener.accept().await.unwrap();
-        let mut buf = vec![0_u8; 1024];
-        let _ = stream.read(&mut buf).await.unwrap();
-        let body = "<html><title>Page Not Found</title><body>Page Not Found. The page you are trying to reach cannot be found. Error.</body></html>";
-        let response = format!(
-            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n{}",
-            body.len(),
-            body
-        );
-        stream.write_all(response.as_bytes()).await.unwrap();
-    });
-
     let state = Arc::new(RwLock::new(BridgeState::new()));
-    let db = Arc::new(crate::db::BridgeDb::open(":memory:").unwrap());
-    let browse = tool_probe_action(
-        &json!({"action_text": format!("BROWSE http://{addr}/missing")}),
+    let db = Arc::new(BridgeDb::open(":memory:").unwrap());
+    let response = tool_probe_action(
+        &json!({"action_text":format!("BROWSE http://{addr}/page")}),
         &state,
         &db,
     )
     .await
     .unwrap();
-    server.await.unwrap();
-
-    assert_eq!(browse["structuredContent"]["status"], "error");
-    let experienced = browse["structuredContent"]["experienced_text"]
-        .as_str()
-        .unwrap();
-    assert!(experienced.contains("could not be meaningfully read"));
-    assert!(experienced.contains("NEXT: SEARCH"));
-
-    let state_file = load_probe_read_more_state().unwrap_or_default();
-    assert!(state_file.last_read_path.is_none());
-    assert!(state_file.last_read_meaning_summary.is_none());
-    clear_probe_read_more_state();
+    assert_eq!(response["structuredContent"]["status"], "error");
+    assert!(
+        response["structuredContent"]["experienced_text"]
+            .as_str()
+            .unwrap()
+            .contains("No complete source was delivered")
+    );
+    assert!(
+        tokio::time::timeout(std::time::Duration::from_millis(30), listener.accept())
+            .await
+            .is_err()
+    );
 }
 
 #[tokio::test]
@@ -620,10 +610,7 @@ async fn probe_action_rich_next_returns_dry_run_preflight() {
 
     assert_eq!(result["structuredContent"]["status"], "preflight");
     assert_eq!(result["structuredContent"]["preflight"]["dry_run"], true);
-    assert_eq!(
-        result["structuredContent"]["preflight"]["stage"],
-        "live_control"
-    );
+    assert_eq!(result["structuredContent"]["preflight"]["stage"], "blocked");
     assert!(
         result["structuredContent"]["preflight"]["effective_route"]
             .as_str()

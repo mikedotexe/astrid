@@ -1104,6 +1104,7 @@ impl ConversationState {
             form_constraint: None,
             search_topic: None,
             browse_url: None,
+            pending_bound_research: None,
             last_research_anchor: None,
             last_read_path: None,
             last_read_offset: 0,
@@ -3250,6 +3251,36 @@ mod tests {
         conv.note_inbox_exchange_outcome(false, "dialogue_fallback");
         assert!(conv.inbox_may_force_dialogue());
     }
+
+    #[test]
+    fn explicit_activity_precedes_peer_study_without_consuming_it() {
+        use super::choose_mode;
+        use crate::types::SafetyLevel;
+        let mut conv = ConversationState::new(Vec::new(), None);
+        conv.pending_remote_self_study = Some(crate::journal::RemoteJournalEntry {
+            path: std::path::PathBuf::from("/synthetic/self_study.txt"),
+            kind: RemoteJournalKind::SelfStudy,
+            source_label: None,
+        });
+        conv.next_mode_override = Some(Mode::Daydream);
+        assert_eq!(
+            choose_mode(&mut conv, SafetyLevel::Green, 68.0, None),
+            Mode::Daydream
+        );
+        assert!(conv.pending_remote_self_study.is_some());
+        assert!(conv.next_mode_override.is_none());
+        conv.wants_introspect = true;
+        assert_eq!(
+            choose_mode(&mut conv, SafetyLevel::Red, 99.0, None),
+            Mode::Witness
+        );
+        assert!(conv.wants_introspect);
+        assert_eq!(
+            choose_mode(&mut conv, SafetyLevel::Green, 68.0, None),
+            Mode::Introspect
+        );
+        assert!(conv.pending_remote_self_study.is_some());
+    }
 }
 
 /// Decide which mode to use for this exchange.
@@ -3268,10 +3299,6 @@ pub(super) fn choose_mode(
         return Mode::Witness;
     }
 
-    if conv.pending_remote_self_study.is_some() {
-        super::next_action::introspection_cadence::defer_pending(conv, "pending_peer_self_study");
-        return Mode::Dialogue;
-    }
     if conv.wants_introspect {
         super::next_action::introspection_cadence::defer_pending(
             conv,
@@ -3288,6 +3315,11 @@ pub(super) fn choose_mode(
     if let Some(mode) = conv.next_mode_override.take() {
         super::next_action::introspection_cadence::defer_pending(conv, "newer_one_shot_mode");
         return mode;
+    }
+
+    if conv.pending_remote_self_study.is_some() {
+        super::next_action::introspection_cadence::defer_pending(conv, "pending_peer_self_study");
+        return Mode::Dialogue;
     }
 
     if safety != SafetyLevel::Green {

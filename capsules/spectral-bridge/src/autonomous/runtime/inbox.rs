@@ -29,9 +29,7 @@ fn check_inbox_at_cutoff_with_trace(
                 .metadata()
                 .and_then(|metadata| metadata.modified())
                 .is_ok_and(|modified| modified <= cutoff);
-            (p.is_file()
-                && p.extension().is_some_and(|ext| ext == "txt")
-                && before_or_at_cutoff)
+            (p.is_file() && p.extension().is_some_and(|ext| ext == "txt") && before_or_at_cutoff)
                 .then_some(p)
         })
         .collect();
@@ -57,9 +55,10 @@ fn check_inbox_at_cutoff_with_trace(
                 record_open_steward_query(fname, content);
             }
             let identity = correspondence_v1::contact_source_identity_for_inbox_file(path, content);
-            let source_ref_fallback = path
-                .file_name()
-                .map_or_else(|| "unknown_inbox_source".into(), |name| name.to_string_lossy());
+            let source_ref_fallback = path.file_name().map_or_else(
+                || "unknown_inbox_source".into(),
+                |name| name.to_string_lossy(),
+            );
             let source = contact_capacity::InboxSourceMaterialV1::new(
                 source_ref_fallback.into_owned(),
                 &source_bytes,
@@ -126,13 +125,8 @@ fn check_inbox_at_cutoff_with_trace(
     }
 }
 
-/// Persist a single-slot "open steward question" so a `mike_query_*` letter
-/// stays visible in the prompt until answered — the un-muffle invariant applied
-/// to steward outreach. A one-shot inbox surfacing scrolls out of context before
-/// the being chooses a NEXT (the `mike_query_wider_voice` question was lost this
-/// way ~a month, despite explicitly inviting a TELL_STEWARD reply). Idempotent:
-/// keeps the original `ts` if this same file is already recorded (check_inbox
-/// reads without moving, so it can re-see the letter until retire).
+/// Retain optional invitation metadata. Material revision, not filename or
+/// receipt timestamp, determines whether it can be presented once again.
 fn record_open_steward_query(fname: &str, content: &str) {
     let path = bridge_paths().open_steward_query_path();
     record_open_steward_query_at(&path, fname, content);
@@ -144,23 +138,17 @@ fn record_open_steward_query_at(path: &Path, fname: &str, content: &str) {
     {
         return;
     }
-    if let Ok(existing) = std::fs::read_to_string(path)
-        && let Ok(v) = serde_json::from_str::<Value>(&existing)
-        && v.get("file").and_then(Value::as_str) == Some(fname)
-    {
-        return;
-    }
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs());
     let slot = open_steward_query_slot(fname, content, now);
-    let subject = slot
-        .get("subject")
-        .and_then(Value::as_str)
-        .unwrap_or("your steward's question");
-    if let Ok(s) = serde_json::to_string_pretty(&slot) {
-        let _ = std::fs::write(path, s);
-        info!("⟢ Open steward question recorded: {subject}");
+    if let Err(reason) =
+        next_action::steward_invitation::Store::new(path).and_then(|store| store.record(slot))
+    {
+        warn!(
+            reason,
+            "optional invitation metadata not recorded; prior state preserved"
+        );
     }
 }
 
@@ -171,6 +159,7 @@ fn open_steward_query_slot(fname: &str, content: &str, now: u64) -> Value {
         Some(rt) => json!({ "subject": subject, "ts": now, "file": fname, "review_target": rt }),
         None => json!({ "subject": subject, "ts": now, "file": fname }),
     };
+    slot["content_sha256"] = json!(next_action::steward_invitation::hash(content.as_bytes()));
     if let Some(packet_mode) = extract_steward_query_header(content, "Packet-mode:")
         && let Some(obj) = slot.as_object_mut()
     {
@@ -269,89 +258,27 @@ fn extract_review_target(content: &str) -> Option<String> {
     None
 }
 
-/// Persistent one-line reminder of any unanswered steward question, or `None`
-/// if none/answered/expired. Clears on TTL (48h) or a fresh `steward_report_*`
-/// in the outbox root (cheap read_dir over the small outbox, never the archive).
+/// Present optional metadata once per material revision. Expiry or a newer
+/// report quiets ambient presentation without deleting the retained slot.
 fn open_steward_query_line() -> Option<String> {
     let path = bridge_paths().open_steward_query_path();
-    let content = std::fs::read_to_string(&path).ok()?;
-    let slot: Value = serde_json::from_str(&content).ok()?;
-    let subject = slot.get("subject").and_then(Value::as_str)?;
-    if subject.is_empty() {
-        return None;
-    }
-    let ts = slot.get("ts").and_then(Value::as_u64).unwrap_or(0);
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs());
-    let mut answered = now.saturating_sub(ts) > 48 * 3600;
-    if !answered && let Ok(entries) = std::fs::read_dir(bridge_paths().astrid_outbox_dir()) {
-        for e in entries.filter_map(Result::ok) {
-            let is_report = e
-                .path()
-                .file_name()
-                .and_then(|n| n.to_str())
-                .is_some_and(|n| n.starts_with("steward_report"));
-            if is_report
-                && let Ok(meta) = e.metadata()
-                && let Ok(modt) = meta.modified()
-                && let Ok(d) = modt.duration_since(std::time::UNIX_EPOCH)
-                && d.as_secs() > ts
-            {
-                answered = true;
-                break;
-            }
-        }
-    }
-    if answered {
-        let _ = std::fs::remove_file(&path);
-        return None;
-    }
-    steward_query_line_from_slot(&slot, subject)
+    next_action::steward_invitation::Store::new(&path)
+        .and_then(|store| store.offer(&bridge_paths().astrid_outbox_dir(), now))
+        .unwrap_or_else(|reason| {
+            warn!(
+                reason,
+                "optional invitation presentation unavailable; retained state preserved"
+            );
+            None
+        })
 }
 
-fn steward_query_line_from_slot(slot: &Value, subject: &str) -> Option<String> {
-    if slot.get("packet_mode").and_then(Value::as_str) == Some("v3_state_fanout_packet") {
-        let packet_items = slot
-            .get("packet_items")
-            .and_then(Value::as_u64)
-            .unwrap_or(0);
-        let primary_topic = slot
-            .get("primary_topic")
-            .and_then(Value::as_str)
-            .filter(|s| !s.is_empty())
-            .unwrap_or("(none)");
-        let gravity = slot
-            .get("primary_topic_gravity")
-            .and_then(Value::as_u64)
-            .map_or_else(|| "unknown".to_string(), |value| value.to_string());
-        let intent_summary = slot
-            .get("intent_summary")
-            .and_then(Value::as_str)
-            .filter(|s| !s.is_empty())
-            .unwrap_or("choose any part, defer, or decline freely");
-        return Some(format!(
-            "⟢ Steward packet visible — {subject}. \
-             Holds {packet_items} optional routed item(s); primary `{primary_topic}` has topic gravity {gravity}. \
-             Intent: {intent_summary}. Engage any part, defer, or decline."
-        ));
-    }
-    if let Some(rt) = slot
-        .get("review_target")
-        .and_then(Value::as_str)
-        .filter(|s| !s.is_empty())
-    {
-        return Some(format!(
-            "⟢ Steward invites your review of `{rt}` — {subject}. \
-             On your own cadence: INTROSPECT {rt}, then optionally TELL_STEWARD roadmap :: <what you found>. \
-             An invitation, not a task — engage, defer, or decline. This stays until you look."
-        ));
-    }
-    Some(format!(
-        "⟢ Open steward question (still awaiting your reply) — {subject}. \
-         Respond when ready: TELL_STEWARD roadmap :: <your answer>. \
-         Fragments are fine; you may decline. This stays until you answer."
-    ))
+#[cfg(test)]
+fn steward_query_line_from_slot(slot: &Value, _subject: &str) -> Option<String> {
+    next_action::steward_invitation::render(slot).ok()
 }
 
 /// A review `review_target` is issued as `<path> <line>` (e.g.
@@ -388,47 +315,29 @@ fn review_artifact_fulfills_invitation(
         && matches!(carriage_status, "complete" | "complete_after_repair")
 }
 
-/// Clear a pending REVIEW invitation after its target produced a complete,
+/// Quiet a retained REVIEW invitation after its target produced a complete,
 /// persisted introspection artifact. Tolerant match — canonical
 /// introspect-label equality OR the resolved file's basename matching the
 /// invitation's target basename.
-fn clear_review_slot_after_successful_introspection(
-    label: &str,
-    source_path: &std::path::Path,
-) {
+fn clear_review_slot_after_successful_introspection(label: &str, source_path: &std::path::Path) {
     let path = bridge_paths().open_steward_query_path();
-    let Ok(content) = std::fs::read_to_string(&path) else {
-        return;
-    };
-    let Ok(slot) = serde_json::from_str::<Value>(&content) else {
-        return;
-    };
-    let Some(rt) = slot
-        .get("review_target")
-        .and_then(Value::as_str)
-        .filter(|s| !s.is_empty())
-    else {
-        return;
-    };
-    let rt_basis = review_target_match_basis(rt);
-    let rt_canon = introspect::canonicalize_introspect_target_label(rt_basis);
-    let label_canon = introspect::canonicalize_introspect_target_label(label);
-    let rt_base = std::path::Path::new(rt_basis)
-        .file_name()
-        .and_then(|n| n.to_str());
-    let src_base = source_path.file_name().and_then(|n| n.to_str());
-    if label_canon == rt_canon || (rt_base.is_some() && rt_base == src_base) {
-        match std::fs::remove_file(&path) {
-            Ok(()) => info!(
-                "⟢ Review invitation fulfilled by complete persisted INTROSPECT {label}; slot cleared"
-            ),
-            Err(error) => warn!(
-                label,
-                path = %path.display(),
-                error = %error,
-                "complete review artifact persisted, but invitation slot could not be cleared"
-            ),
-        }
+    let result = next_action::steward_invitation::Store::new(&path).and_then(|store| {
+        store.attend_if(|rt| {
+            let rt_basis = review_target_match_basis(rt);
+            let rt_canon = introspect::canonicalize_introspect_target_label(rt_basis);
+            let label_canon = introspect::canonicalize_introspect_target_label(label);
+            let rt_base = std::path::Path::new(rt_basis)
+                .file_name()
+                .and_then(|n| n.to_str());
+            let src_base = source_path.file_name().and_then(|n| n.to_str());
+            label_canon == rt_canon || (rt_base.is_some() && rt_base == src_base)
+        })
+    });
+    if let Err(reason) = result {
+        warn!(
+            reason,
+            "complete review artifact persisted; invitation metadata unchanged"
+        );
     }
 }
 

@@ -18,7 +18,7 @@ import subprocess
 
 from environment_receipts import write_build_manifest
 
-SCHEMA = "bridge_staged_release_v3"
+SCHEMA = "bridge_staged_release_v4"
 AUTHORITY = "build_manifest_witness_not_deploy_authority"
 EXCLUDED = {".git", ".runtime", "target", "workspace", "node_modules", ".venv", "__pycache__", ".DS_Store"}
 HELPERS = {"substrate-probe-v2": "substrate_probe_v2.py", "release-launcher": "launchd_spectral_bridge.sh", "release-selection": "bridge_release_launch.py"}
@@ -45,6 +45,7 @@ OPTIONAL_TOOLS = (
 # predate this shared module; once present it must survive the build unchanged.
 SHARED_SOURCES = ("capsules/shared/managed_dir.rs",)
 ARTIFACTS = {"spectral-bridge": "spectral-bridge-server", "source-study-reader": "helpers/astrid-source-study",
+             "public-web-helper": "helpers/astrid-public-web",
              **{name:f"helpers/{path}" for name,path in HELPERS.items()}}
 
 
@@ -191,7 +192,7 @@ def verify_stage(stage: Path, *, run_binary: bool = True) -> dict:
     if (stage / "failure.json").exists():
         raise ValueError("stage has a retained failure record; rebuild in a new directory")
     ready = json_file(stage / "ready.json")
-    if ready.get("schema") not in {SCHEMA, "bridge_staged_release_v2", "bridge_staged_release_v1"} or ready.get("status") != "staged_verified_not_activated":
+    if ready.get("schema") not in {SCHEMA, "bridge_staged_release_v3", "bridge_staged_release_v2", "bridge_staged_release_v1"} or ready.get("status") != "staged_verified_not_activated":
         raise ValueError("stage has no completed build witness")
     manifest_path = stage / "manifest.json"
     if sha(manifest_path) != ready.get("manifest_sha256"):
@@ -211,6 +212,8 @@ def verify_stage(stage: Path, *, run_binary: bool = True) -> dict:
         raise ValueError("manifest source reference mismatch")
     expected_artifacts = dict(ARTIFACTS)
     if ready["schema"] != SCHEMA:
+        expected_artifacts.pop("public-web-helper")
+    if ready["schema"] in {"bridge_staged_release_v1", "bridge_staged_release_v2"}:
         expected_artifacts.pop("source-study-reader")
     if ready["schema"] == "bridge_staged_release_v1":
         expected_artifacts = {name: ARTIFACTS[name] for name in ("spectral-bridge", "substrate-probe-v2")}
@@ -264,6 +267,10 @@ def stage_build(source: Path, stage: Path, actor: str, ack: str) -> dict:
                             str(source / "Cargo.toml"), "-p", "astrid-source-study", "--bin", "astrid-source-study",
                             "--target", target, "--target-dir", str(stage / "build")]
             subprocess.run(reader_build, cwd=source, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=600)
+            web_build = ["cargo", "build", "--release", "--locked", "--offline", "--manifest-path",
+                         str(source / "Cargo.toml"), "-p", "astrid-public-web", "--bin", "astrid-public-web",
+                         "--target", target, "--target-dir", str(stage / "build")]
+            subprocess.run(web_build, cwd=source, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=600)
         if packages != local_packages(source) or before != input_snapshot(source, packages):
             raise ValueError("source or build environment changed during compilation; stage refused")
         binary = stage / ARTIFACTS["spectral-bridge"]
@@ -273,6 +280,9 @@ def stage_build(source: Path, stage: Path, actor: str, ack: str) -> dict:
         reader_binary = stage / ARTIFACTS["source-study-reader"]
         shutil.copyfile(stage / "build" / target / "release/astrid-source-study", reader_binary)
         reader_binary.chmod(0o555)
+        web_binary = stage / ARTIFACTS["public-web-helper"]
+        shutil.copyfile(stage / "build" / target / "release/astrid-public-web", web_binary)
+        web_binary.chmod(0o555)
         for name, filename in HELPERS.items():
             helper = stage / ARTIFACTS[name]
             original = source / "scripts" / filename
@@ -287,7 +297,7 @@ def stage_build(source: Path, stage: Path, actor: str, ack: str) -> dict:
         manifest_path = stage / "manifest.json"
         manifest = write_build_manifest(manifest_path, component="spectral-bridge", repository=source,
                                         artifacts={name: stage / relative for name, relative in ARTIFACTS.items()},
-                                        actor=actor, command=" ".join(build) + " && " + " ".join(reader_build))
+                                        actor=actor, command=" && ".join(" ".join(args) for args in (build, reader_build, web_build)))
         source_hash = sha(stage / "source-inputs.json")
         if manifest["repository"]["head"] != before["head"]:
             raise ValueError("repository HEAD changed during staging")

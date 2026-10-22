@@ -59,6 +59,7 @@ pub mod memory;
 pub mod message_archive;
 pub mod paths;
 pub mod prompt_budget;
+pub(crate) mod public_web;
 pub mod reciprocal_experiential;
 pub mod reflective;
 pub mod rescue_policy;

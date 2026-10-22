@@ -34,6 +34,8 @@ struct Job {
     phase: Phase,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     uncertainty_review: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    research: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -65,8 +67,12 @@ impl Phase {
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Intent {
+    #[serde(default)]
+    schema_version: u32,
     owner_root: PathBuf,
     target: IntrospectTargetV2,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    research: Option<crate::action_continuity::ResearchReservation>,
 }
 
 fn digest(bytes: impl AsRef<[u8]>) -> String {
@@ -127,6 +133,7 @@ impl HandoffState {
             ensure!(
                 id.strip_prefix("study-job-").is_some_and(valid_hash)
                     && valid_hash(&job.intent)
+                    && job.research.as_deref().is_none_or(valid_hash)
                     && job.output.as_deref().is_none_or(valid_hash),
                 "invalid study handoff identity"
             );
@@ -231,6 +238,23 @@ fn intent(store: &ActionContinuityStore, id: &str, job: &Job) -> Result<Introspe
         record.owner_root == store.root() && record.target.operation_id.as_deref() == Some(id),
         "study handoff owner or operation mismatch"
     );
+    // Unbound private continuations never use research admission. Preserve their
+    // legacy intent bytes while keeping every other pending legacy route closed.
+    ensure!(
+        record.schema_version == 2
+            || (record.schema_version == 0
+                && (job.phase.terminal()
+                    || job.phase == Phase::Claimed
+                    || (matches!(job.phase, Phase::Queued | Phase::Prepared)
+                        && job.research.is_none()
+                        && record.research.is_none()
+                        && record.target.offset == super::state::IntrospectOffsetV2::Auto
+                        && astrid_source_study::writing::is_private_writing_continuation(
+                            &record.target.label,
+                        )))),
+        "legacy pending study has no research binding evidence; retained unchanged. Drain with the originating runtime or establish admission provenance before activation; no automatic replacement or retry"
+    );
+    research::validate_binding(id, job, &record)?;
     Ok(record.target)
 }
 
@@ -247,6 +271,7 @@ pub(super) fn queue(
         !operation.is_empty() && operation.len() <= 512,
         "durable study operation identity required"
     );
+    let _research_lock = crate::action_continuity::research_owner_transaction(store.root())?;
     let _lock = store.reader_owner_transaction()?;
     let mut selection = activity_reading::load_activity(store)?;
     ensure!(
@@ -263,14 +288,34 @@ pub(super) fn queue(
     );
     requested.operation_id = Some(id.clone());
     let record = Intent {
+        schema_version: 2,
         owner_root: store.root().into(),
         target: requested.clone(),
+        research: research::dispatch_reservation(),
     };
+    let research_hash = record
+        .research
+        .as_ref()
+        .map(serde_json::to_vec)
+        .transpose()?
+        .map(digest);
+    research::validate_binding(
+        &id,
+        &Job {
+            intent: String::new(),
+            output: None,
+            phase: Phase::Queued,
+            uncertainty_review: None,
+            research: research_hash.clone(),
+        },
+        &record,
+    )?;
     let hash = digest(serde_json::to_vec(&record)?);
     let handoff = &mut selection.study_handoff;
     if let Some(job) = handoff.jobs.get(&id) {
         ensure!(job.intent == hash, "conflicting study operation retry");
         intent(store, &id, job)?;
+        research::check_phase(store, &id, job)?;
         if job.phase.terminal() {
             return Ok(false);
         }
@@ -295,9 +340,15 @@ pub(super) fn queue(
             replace && matches!(previous.phase, Phase::Queued | Phase::Prepared),
             "pending or uncertain study preserved; later choice was not queued"
         );
+        intent(store, active, previous)?;
+        research::transition(store, active, previous, "released_unstarted")?;
         previous.phase = Phase::Superseded;
     }
     retain(store, &record)?;
+    if let Some(ticket) = &record.research {
+        store.validate_research_reservation(ticket)?;
+        store.queue_source_study_research(ticket)?;
+    }
     handoff.jobs.insert(
         id.clone(),
         Job {
@@ -305,6 +356,7 @@ pub(super) fn queue(
             output: None,
             phase: Phase::Queued,
             uncertainty_review: None,
+            research: research_hash,
         },
     );
     handoff.active = Some(id);
@@ -333,6 +385,7 @@ pub(super) fn verify_pending(
     conv: &mut ConversationState,
     target: Option<&IntrospectTargetV2>,
 ) -> Result<bool> {
+    let _research_lock = crate::action_continuity::research_owner_transaction(store.root())?;
     let _lock = store.reader_owner_transaction()?;
     let selection = activity_reading::load_activity(store)?;
     let target = target.context("legacy pending study requires explicit reselection")?;
@@ -349,6 +402,7 @@ pub(super) fn verify_pending(
         intent(store, id, job)? == *target,
         "pending study differs from its retained choice"
     );
+    research::check_phase(store, id, job)?;
     if job.phase.terminal() {
         return Ok(false);
     }
@@ -367,12 +421,17 @@ pub(super) fn prepare(
     store: &ActionContinuityStore,
     conv: &mut ConversationState,
     id: &str,
-    build: impl FnOnce() -> Result<astrid_source_study::StudyOutput>,
+    build: impl FnOnce(IntrospectTargetV2) -> Result<astrid_source_study::StudyOutput>,
 ) -> Result<astrid_source_study::StudyOutput> {
+    let _research_lock = crate::action_continuity::research_owner_transaction(store.root())?;
     let _lock = store.reader_owner_transaction()?;
     let mut selection = activity_reading::load_activity(store)?;
     let job = selected(&mut selection, id)?;
-    intent(store, id, job)?;
+    let target = intent(store, id, job)?;
+    research::check_phase(store, id, job)?;
+    if let Some(ticket) = research::reservation(store, id, job)? {
+        store.validate_research_start(&ticket)?;
+    }
     ensure!(
         matches!(job.phase, Phase::Queued | Phase::Prepared),
         "study invocation already claimed; recovery required"
@@ -380,7 +439,11 @@ pub(super) fn prepare(
     if let Some(hash) = &job.output {
         return read(store, hash);
     }
-    let output = build()?;
+    let output = build(target)?;
+    ensure!(
+        job.research.is_none() || output.generation_requested,
+        "bound source operation did not prepare generation; no debit"
+    );
     job.output = Some(retain(store, &output)?);
     job.phase = Phase::Prepared;
     conv.activity = activity_reading::persist_activity(store, &selection)?;
@@ -392,6 +455,7 @@ pub(super) fn claim(
     conv: &mut ConversationState,
     id: &str,
 ) -> Result<()> {
+    let _research_lock = crate::action_continuity::research_owner_transaction(store.root())?;
     let _lock = store.reader_owner_transaction()?;
     let mut selection = activity_reading::load_activity(store)?;
     let job = selected(&mut selection, id)?;
@@ -400,6 +464,7 @@ pub(super) fn claim(
         job.phase == Phase::Prepared,
         "study provider invocation already claimed or not prepared"
     );
+    research::check_phase(store, id, job)?;
     let output: astrid_source_study::StudyOutput = read(
         store,
         job.output.as_deref().context("prepared input missing")?,
@@ -408,6 +473,18 @@ pub(super) fn claim(
         output.generation_requested,
         "storage-only operation cannot claim a provider invocation"
     );
+    if let Some(ticket) = research::reservation(store, id, job)?
+        && let Err(error) = store.claim_research_start(&ticket)
+    {
+        // Release only a canonically unstarted operation. An ambiguous debit
+        // must retain the prepared job and refuse automatic replay.
+        store.transition_research(&ticket, "released_unstarted")?;
+        job.phase = Phase::Failed;
+        selection.study_handoff.active = None;
+        conv.activity = activity_reading::persist_activity(store, &selection)?;
+        conv.wants_introspect = false;
+        return Err(error);
+    }
     job.phase = Phase::Claimed;
     conv.activity = activity_reading::persist_activity(store, &selection)?;
     Ok(())
@@ -419,10 +496,15 @@ pub(super) fn stored(
     conv: &mut ConversationState,
     id: &str,
 ) -> Result<()> {
+    let _research_lock = crate::action_continuity::research_owner_transaction(store.root())?;
     let _lock = store.reader_owner_transaction()?;
     let mut selection = activity_reading::load_activity(store)?;
     let job = selected(&mut selection, id)?;
     intent(store, id, job)?;
+    ensure!(
+        job.research.is_none(),
+        "bound research cannot terminate as storage"
+    );
     ensure!(
         job.phase == Phase::Prepared,
         "storage completion requires prepared input"
@@ -448,6 +530,7 @@ pub(super) fn failed(
     id: &str,
     provider_returned: bool,
 ) -> Result<()> {
+    let _research_lock = crate::action_continuity::research_owner_transaction(store.root())?;
     let _lock = store.reader_owner_transaction()?;
     let mut selection = activity_reading::load_activity(store)?;
     let job = selected(&mut selection, id)?;
@@ -460,6 +543,16 @@ pub(super) fn failed(
         },
         "failure does not match the admission phase; uncertain work retained"
     );
+    research::transition(
+        store,
+        id,
+        job,
+        if provider_returned {
+            "failed"
+        } else {
+            "released_unstarted"
+        },
+    )?;
     job.phase = Phase::Failed;
     selection.study_handoff.active = None;
     conv.activity = activity_reading::persist_activity(store, &selection)?;
@@ -474,7 +567,7 @@ pub(super) fn ensure_run_job(conv: &mut ConversationState) -> Result<Option<Stri
     if conv.activity.native_focus_window.is_some() {
         return Ok(None);
     }
-    if let Some(target) = &conv.introspect_target {
+    if let Some(target) = conv.introspect_target.clone() {
         let id = target
             .operation_id
             .as_deref()
@@ -482,6 +575,14 @@ pub(super) fn ensure_run_job(conv: &mut ConversationState) -> Result<Option<Stri
         ensure!(
             id.starts_with("study-job-"),
             "legacy study handoff is unverified; explicitly replace/reselect it"
+        );
+        ensure!(
+            verify_pending(
+                &ActionContinuityStore::for_astrid_workspace(),
+                conv,
+                Some(&target)
+            )?,
+            "study operation is already terminal"
         );
         return Ok(Some(id.into()));
     }
@@ -544,6 +645,7 @@ pub(super) fn delivered(
     reader: &astrid_source_study::Reader,
     receipt: &PromptDeliveryReceiptV1,
 ) -> Result<()> {
+    let _research_lock = crate::action_continuity::research_owner_transaction(store.root())?;
     let _lock = store.reader_owner_transaction()?;
     let mut selection = activity_reading::load_activity(store)?;
     let job = selected(&mut selection, id)?;
@@ -552,6 +654,7 @@ pub(super) fn delivered(
         "study delivery was not admitted"
     );
     intent(store, id, job)?;
+    research::check_phase(store, id, job)?;
     let output: astrid_source_study::StudyOutput = read(
         store,
         job.output.as_deref().context("prepared input missing")?,
@@ -568,6 +671,7 @@ pub(super) fn delivered(
             Path::new(&receipt.retained_artifact_path),
         )?;
     }
+    research::transition(store, id, job, "completed")?;
     job.phase = Phase::Delivered;
     selection.study_handoff.active = None;
     conv.activity = activity_reading::persist_activity(store, &selection)?;
@@ -582,6 +686,7 @@ pub(super) fn reconcile(
     reader: &astrid_source_study::Reader,
     deliveries: &Path,
 ) -> Result<()> {
+    let _research_lock = crate::action_continuity::research_owner_transaction(store.root())?;
     let _lock = store.reader_owner_transaction()?;
     let selection = activity_reading::load_activity(store)?;
     if let Some(id) = conv
@@ -618,6 +723,10 @@ pub(super) fn reconcile(
         conv.activity.native_focus_window.is_none(),
         "ordinary study and protected focus require explicit reconciliation"
     );
+    if research::recover_known_failure(store, conv, &selection, id)? {
+        return Ok(());
+    }
+    research::check_phase(store, id, job)?;
     if job.phase == Phase::Claimed {
         let recovered = crate::llm::recover_retained_delivery_at(deliveries, &content_id(id), 0)?;
         let Some((receipt, _)) = recovered else {
@@ -641,9 +750,30 @@ pub(super) fn reconcile(
     Ok(())
 }
 
+#[path = "study_research.rs"]
+pub(in crate::autonomous) mod research;
 #[path = "study_handoff_review.rs"]
 mod review;
 pub(crate) use review::stage_configured_review;
+
+/// This is a read-only compatibility snapshot, not a claim of worker quiescence.
+pub(super) fn inspect_deployment_compatibility(
+    store: &ActionContinuityStore,
+) -> Result<serde_json::Value> {
+    let selection = activity_reading::inspect_activity(store)?;
+    if let Some(id) = &selection.study_handoff.active {
+        let job = &selection.study_handoff.jobs[id];
+        intent(store, id, job)?;
+        if let Some(hash) = &job.output {
+            let _: astrid_source_study::StudyOutput = read(store, hash)?;
+        }
+    }
+    Ok(
+        serde_json::json!({"schema":"study_handoff_compatibility_v1",
+        "pending":selection.study_handoff.active.is_some(),
+        "worker_quiescence_verified":false, "mutation_performed":false}),
+    )
+}
 
 pub(super) fn reconcile_configured(conv: &mut ConversationState) -> Result<()> {
     reconcile(

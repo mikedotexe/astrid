@@ -53,6 +53,12 @@ enum Operation {
     RecoverNavigation {
         action: String,
     },
+    SourceActionRoute {
+        action: String,
+    },
+    ResearchSourceRoute {
+        action: String,
+    },
     Prepare {
         action: String,
     },
@@ -73,24 +79,8 @@ fn run() -> Result<serde_json::Value> {
         .take(16 * 1024 * 1024)
         .read_to_string(&mut input)?;
     let request: Request = serde_json::from_str(&input)?;
-    if let Operation::WritingPolicy { action } = &request.operation {
-        return Ok(
-            serde_json::json!({"storage_only": astrid_source_study::writing_storage_only(action)}),
-        );
-    }
-    if let Operation::AnalyzeResponse {
-        text,
-        private_writing,
-    } = &request.operation
-    {
-        return Ok(serde_json::to_value(
-            astrid_source_study::response_choice::inspect_response(text, *private_writing),
-        )?);
-    }
-    if let Operation::RecoverNavigation { action } = &request.operation {
-        return Ok(serde_json::to_value(
-            astrid_source_study::recover_local_navigation(action),
-        )?);
+    if let Some(response) = stateless_response(&request.operation)? {
+        return Ok(response);
     }
     let catalog = match (request.astrid_root, request.minime_root) {
         (Some(astrid), Some(minime)) => Catalog::installation(&astrid, &minime)?,
@@ -144,6 +134,8 @@ fn run() -> Result<serde_json::Value> {
             request,
         )?)?),
         Operation::AnalyzeResponse { .. }
+        | Operation::SourceActionRoute { .. }
+        | Operation::ResearchSourceRoute { .. }
         | Operation::RecoverNavigation { .. }
         | Operation::WritingPolicy { .. } => {
             unreachable!("handled before constructing a reader")
@@ -168,6 +160,32 @@ fn run() -> Result<serde_json::Value> {
             &response_json,
         )?)?),
     }
+}
+
+fn stateless_response(operation: &Operation) -> Result<Option<serde_json::Value>> {
+    let response = match operation {
+        Operation::SourceActionRoute { action } => {
+            serde_json::json!({"route": astrid_source_study::source_action_route(action)})
+        },
+        Operation::ResearchSourceRoute { action } => {
+            serde_json::json!({"canonical_action": astrid_source_study::research_source_route(action)})
+        },
+        Operation::WritingPolicy { action } => {
+            serde_json::json!({"storage_only": astrid_source_study::writing_storage_only(action)})
+        },
+        Operation::AnalyzeResponse {
+            text,
+            private_writing,
+        } => serde_json::to_value(astrid_source_study::response_choice::inspect_response(
+            text,
+            *private_writing,
+        ))?,
+        Operation::RecoverNavigation { action } => {
+            serde_json::to_value(astrid_source_study::recover_local_navigation(action))?
+        },
+        _ => return Ok(None),
+    };
+    Ok(Some(response))
 }
 
 fn writing_recovery_response(

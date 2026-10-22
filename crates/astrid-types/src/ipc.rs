@@ -476,6 +476,11 @@ fn default_session_id() -> String {
 
 /// Declared origin of a terminal agent response.
 ///
+/// This is one response-origin category, not an accumulating history of state
+/// changes or a measure of memory or continuity. The optional field on
+/// [`IpcPayload::AgentResponse`] is a backward-compatible schema addition:
+/// legacy responses without it still decode.
+///
 /// This value is supplied by the producing capsule and is not authority on its
 /// own. Authority-sensitive consumers must also verify the producer and turn
 /// trace at a trusted host boundary.
@@ -521,7 +526,8 @@ pub enum IpcPayload {
         /// Session ID for multi-session attribution.
         #[serde(default = "default_session_id")]
         session_id: String,
-        /// Declared response origin. Absent on legacy producers.
+        /// Declared origin of this response, not its accumulated history.
+        /// Absent on legacy producers; presence does not establish authority.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         response_provenance: Option<AgentResponseProvenanceV1>,
     },
@@ -770,7 +776,11 @@ pub enum IpcPayload {
         /// Raw data.
         data: Value,
     },
-    /// Unrecognized payload type from a newer protocol version.
+    /// Unrecognized payload type encountered by direct serde deserialization.
+    ///
+    /// This unit variant retains neither the original type tag nor its fields.
+    /// Envelope metadata on [`IpcMessage`] is separate. To retain unfamiliar
+    /// JSON data, use [`Self::from_json_value`], which falls back to `Custom`.
     #[serde(other)]
     Unknown,
 }
@@ -821,7 +831,13 @@ impl IpcPayload {
     }
 
     /// Deserialize a JSON [`Value`] into an `IpcPayload`, falling back to
-    /// [`Custom`](Self::Custom) for unrecognised or missing type tags.
+    /// [`Custom`](Self::Custom) for unrecognised or missing type tags, or
+    /// malformed fields of a known variant.
+    ///
+    /// The fallback retains the complete JSON value, not its original wire
+    /// formatting. Recognized variants use their typed schema, which may omit
+    /// unrecognized fields. This conversion does not validate permission to
+    /// publish, execute, or treat a payload's declared origin as authoritative.
     pub fn from_json_value(data: Value) -> Self {
         let is_known = data
             .get("type")
@@ -987,7 +1003,7 @@ mod tests {
     }
 
     #[test]
-    fn agent_response_provenance_is_additive_and_typed() {
+    fn optional_response_origin_preserves_legacy_decoding_and_typed_categories() {
         let legacy: IpcPayload = serde_json::from_value(serde_json::json!({
             "type": "agent_response",
             "text": "legacy",

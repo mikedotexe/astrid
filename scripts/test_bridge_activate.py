@@ -202,6 +202,50 @@ class TransactionFilesTests(unittest.TestCase):
         self.backend.ready = {"manifest_sha256":"fixture", "binary_sha256":"fixture"}
         self.backend.begin({"status":"preparing"})
 
+    def test_public_web_launch_selection_detects_file_and_override_drift(self):
+        path = self.root / ".runtime/public-web/astrid/launch.env"
+        path.parent.mkdir(parents=True)
+        path.write_text("export ASTRID_PUBLIC_WEB_CONFIG=/synthetic/one.json\n")
+        response = subprocess.CompletedProcess([], 0, stdout="", stderr="")
+        with patch.object(activation.subprocess, "run", return_value=response):
+            original = self.backend.public_web_launch_binding()
+            self.backend.old = {"public_web_launch":original}
+            self.backend.assert_public_web_launch()
+            path.write_text("export ASTRID_PUBLIC_WEB_CONFIG=/synthetic/two.json\n")
+            with self.assertRaisesRegex(RuntimeError, "selection changed"):
+                self.backend.assert_public_web_launch()
+            path.write_text("export ASTRID_PUBLIC_WEB_CONFIG=/synthetic/one.json\n")
+            response.stdout = "/synthetic/override.json"
+            with self.assertRaisesRegex(RuntimeError, "selection changed"):
+                self.backend.assert_public_web_launch()
+        self.assertNotIn("/synthetic/", json.dumps(original))
+
+    def test_public_web_launch_absence_is_bound_and_symlinks_refused(self):
+        path = self.root / ".runtime/public-web/astrid/launch.env"
+        response = subprocess.CompletedProcess([], 1, stdout="", stderr="")
+        with patch.object(activation.subprocess, "run", return_value=response):
+            self.backend.old = {"public_web_launch":self.backend.public_web_launch_binding()}
+            path.parent.mkdir(parents=True)
+            path.write_text("synthetic")
+            with self.assertRaisesRegex(RuntimeError, "selection changed"):
+                self.backend.assert_public_web_launch()
+            path.unlink()
+            path.symlink_to(path.parent / "missing")
+            with self.assertRaisesRegex(RuntimeError, "regular file"):
+                self.backend.public_web_launch_binding()
+
+    def test_public_web_environment_is_sourced_before_override_import(self):
+        script = Path(activation.__file__).with_name("launchd_spectral_bridge.sh").read_text()
+        block = script.split("PUBLIC_WEB_LAUNCH_CONFIG=", 1)[1].split("\nfor key in", 1)[0]
+        root = self.root / "launch"
+        root.mkdir()
+        selected = root / "web.env"
+        selected.write_text("export ASTRID_PUBLIC_WEB_CONFIG=/synthetic/durable.json\n")
+        body = 'PUBLIC_WEB_LAUNCH_CONFIG="$SELECTED"\n' + block.split("\n", 1)[1]
+        result = subprocess.run(["/bin/bash", "-c", body + '\nprintf "%s" "$ASTRID_PUBLIC_WEB_CONFIG"'],
+                                env={"SELECTED":str(selected)}, capture_output=True, text=True, check=True)
+        self.assertEqual(result.stdout, "/synthetic/durable.json")
+
     def test_foreign_hold_is_never_replaced(self):
         path = self.backend.control / "hold.json"
         path.write_text('{"owner":"foreign"}')

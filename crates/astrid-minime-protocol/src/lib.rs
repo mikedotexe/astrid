@@ -14,6 +14,8 @@ mod telemetry;
 mod version;
 mod volition;
 
+pub use volition::public_web;
+
 pub use division::{
     DIVISION_ACTION_AVAILABILITY_SCHEMA_V1, DIVISION_COMMAND_SCHEMA_V1, DIVISION_COMMIT_SCOPE_V1,
     DIVISION_EVENT_SCHEMA_V1, DIVISION_READINESS_POLICY_V1, DIVISION_RECEIPT_SCHEMA_V1,

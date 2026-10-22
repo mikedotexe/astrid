@@ -216,7 +216,7 @@ class LaunchdBridge(StoppedTransitionMixin):
 
     def inspect(self, expected_pid: int) -> dict:
         self.ready = stage_tools.verify_stage(self.stage)
-        if self.ready["schema"] not in {"bridge_staged_release_v2", "bridge_staged_release_v3"}:
+        if self.ready["schema"] not in {"bridge_staged_release_v2", "bridge_staged_release_v3", "bridge_staged_release_v4"}:
             raise ValueError("activation requires the startup-gated V2 release bundle")
         self.verify_bundle()
         if os.path.lexists(self.control / "hold.json"):
@@ -236,12 +236,29 @@ class LaunchdBridge(StoppedTransitionMixin):
         self.native("--verify-deployment-inputs")
         self.old = {"started_at":identity[0], "binary":str(binary), "binary_sha256":stage_tools.sha(binary),
                     "manifest_sha256":stage_tools.sha(self.canonical_manifest),
-                    "launcher_sha256":stage_tools.sha(self.launcher), "drain_supported":supported}
+                    "launcher_sha256":stage_tools.sha(self.launcher), "drain_supported":supported,
+                    "public_web_launch":self.public_web_launch_binding()}
         if os.path.lexists(self.selection_helper):
             self.old["selection_helper_sha256"] = digest(self.selection_helper)
         if os.path.lexists(self.control / "active.json"):
             self.old["selection_sha256"] = digest(self.control / "active.json")
         return self.old
+
+    def public_web_launch_binding(self) -> dict:
+        path = self.root / ".runtime/public-web/astrid/launch.env"
+        if path.is_symlink() or (os.path.lexists(path) and (not path.is_file() or path.resolve() != path)):
+            raise RuntimeError("public-web launch selection is not a regular file")
+        selected = subprocess.run(["launchctl", "getenv", "ASTRID_PUBLIC_WEB_CONFIG"],
+                                  capture_output=True, text=True, timeout=10, check=False)
+        if selected.returncode not in (0, 1) or selected.stderr.strip():
+            raise RuntimeError("cannot inspect public-web launch override")
+        return {"durable_sha256":digest(path) if path.exists() else None,
+                "override_sha256":hashlib.sha256(selected.stdout.strip().encode()).hexdigest()}
+
+    def assert_public_web_launch(self, initial: dict | None = None) -> None:
+        expected = (initial if initial is not None else self.old) or {}
+        if "public_web_launch" in expected and self.public_web_launch_binding() != expected["public_web_launch"]:
+            raise RuntimeError("public-web launch selection changed during activation")
 
     def verify_launch_configuration(self, expected_pid: int | None) -> None:
         installed = plistlib.loads((Path.home() / "Library/LaunchAgents" / f"{LABEL}.plist").read_bytes())
@@ -282,6 +299,7 @@ class LaunchdBridge(StoppedTransitionMixin):
 
     def install_hold_and_launcher(self, initial: dict) -> None:
         self.verify_bundle()
+        self.assert_public_web_launch(initial)
         if digest(self.launcher) != initial["launcher_sha256"]:
             raise RuntimeError("launcher changed before installation")
         self.retain_hold()
@@ -301,6 +319,7 @@ class LaunchdBridge(StoppedTransitionMixin):
             atomic_bytes(destination, data, 0o755)
 
     def assert_old(self, pid: int, initial: dict) -> None:
+        self.assert_public_web_launch(initial)
         if self.pid() != pid or drain.process_identity(pid) != (initial["started_at"], initial["binary"]):
             raise RuntimeError("old process identity changed; no signal sent")
         if stage_tools.sha(Path(initial["binary"])) != initial["binary_sha256"]:
@@ -372,6 +391,7 @@ class LaunchdBridge(StoppedTransitionMixin):
         return True
 
     def snapshot_and_handoff(self, actor: str, ack: str) -> None:
+        self.assert_public_web_launch()
         feedback_path = self.workspace / RUNTIME_FEEDBACK_FILE
         check = self.native("--verify-deployment-inputs")
         feedback, feedback_bytes = read_runtime_feedback(feedback_path)
@@ -403,6 +423,7 @@ class LaunchdBridge(StoppedTransitionMixin):
             stage_tools.atomic_json(self.transaction / "handoff.json", result)
 
     def select_release(self, *, allow_recovery_tool_changes: bool = False) -> None:
+        self.assert_public_web_launch()
         self.assert_stopped_feedback()
         self.verify_bundle(allow_recovery_tool_changes=allow_recovery_tool_changes)
         path = self.control / "active.json"
@@ -417,6 +438,7 @@ class LaunchdBridge(StoppedTransitionMixin):
             "manifest_sha256":self.ready["manifest_sha256"], "transaction":str(self.transaction)})
 
     def release_hold(self) -> None:
+        self.assert_public_web_launch()
         self.assert_stopped_feedback()
         path = self.control / "hold.json"
         if stage_tools.json_file(path) != self.guard:
@@ -463,6 +485,7 @@ class LaunchdBridge(StoppedTransitionMixin):
         deadline = time.monotonic() + timeout
         expected = self.native("--verify-deployment-manifest")["deployment_identity"]
         while time.monotonic() < deadline:
+            self.assert_public_web_launch()
             pid = self.pid()
             if expected_pid is not None and pid != expected_pid:
                 raise RuntimeError("expected replacement PID changed during verification")
@@ -530,7 +553,7 @@ class LaunchdBridge(StoppedTransitionMixin):
         if type(failed.get("old_pid")) is not int or failed["old_pid"] <= 1 or failed["old_pid"] == expected_pid:
             raise ValueError("recovery PID must identify the replacement, not the old process")
         self.ready = stage_tools.verify_stage(self.stage)
-        if (self.ready["schema"] not in {"bridge_staged_release_v2", "bridge_staged_release_v3"}
+        if (self.ready["schema"] not in {"bridge_staged_release_v2", "bridge_staged_release_v3", "bridge_staged_release_v4"}
                 or failed.get("stage") != str(self.stage)
                 or failed.get("manifest_sha256") != self.ready["manifest_sha256"]
                 or failed.get("binary_sha256") != self.ready["binary_sha256"]):
