@@ -49,7 +49,7 @@ class HandoffTests(unittest.TestCase):
         return backend, packet, snapshot
 
     def test_installer_holds_before_first_replace_and_preserves_source_backups(self):
-        with tempfile.TemporaryDirectory() as tmp, patch("paired_minime_handoff.time.sleep"), patch(
+        with tempfile.TemporaryDirectory() as tmp, patch("time.sleep") as sleep, patch(
                 "paired_minime_handoff.bridge_stage.verify_stage", return_value={"manifest_sha256": "a"}):
             root = Path(tmp).resolve()
             backend, packet, snapshot = self.install_fixture(root)
@@ -60,11 +60,14 @@ class HandoffTests(unittest.TestCase):
             self.assertEqual(backend.signals, [])
             self.assertTrue(handoff.owned)
             self.assertEqual(events[0]["phase"], "installation_held")
+            self.assertEqual(events[-1]["phase"], "installed_sources_verified")
+            sleep.assert_not_called()
+            self.assertEqual(backend.reviewed_installation.validate(backend), inventory(snapshot))
             for path in OVERLAY:
                 self.assertEqual((root / "receipt.source-before" / path).read_text(), "# old\n")
 
     def test_new_reviewed_modules_install_under_hold_without_invented_backups(self):
-        with tempfile.TemporaryDirectory() as tmp, patch("paired_minime_handoff.time.sleep"), patch(
+        with tempfile.TemporaryDirectory() as tmp, patch("time.sleep"), patch(
                 "paired_minime_handoff.bridge_stage.verify_stage", return_value={"manifest_sha256": "a"}):
             root = Path(tmp).resolve()
             backend, packet, snapshot = self.install_fixture(root)
@@ -135,8 +138,32 @@ class HandoffTests(unittest.TestCase):
             self.assertEqual((backend.root / "scripts/launchd_autonomous_agent.sh").read_bytes(),
                              (snapshot / "scripts/launchd_autonomous_agent.sh").read_bytes())
 
+    def test_post_install_drift_blocks_reload_without_sleeping_or_signaling(self):
+        for mutation in ("source", "mode", "hold", "new_input"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as tmp, patch(
+                    "paired_minime_handoff.bridge_stage.verify_stage",
+                    return_value={"manifest_sha256": "a"}), patch("time.sleep") as sleep:
+                root = Path(tmp).resolve()
+                backend, packet, snapshot = self.install_fixture(root)
+                handoff = AgentOnlyHandoff(root, root / "receipt.jsonl", "synthetic")
+                handoff.install(backend, packet, 10, lambda event: None)
+                source = backend.root / OVERLAY[0]
+                if mutation == "source":
+                    source.write_text("# drift\n")
+                elif mutation == "mode":
+                    source.chmod(0o700)
+                elif mutation == "hold":
+                    handoff.hold.write_text('{"foreign":true}')
+                else:
+                    (backend.root / "minime_autonomy/unreviewed.py").write_text("# drift\n")
+                with self.assertRaises(RuntimeError):
+                    backend.reload(expected_inputs=inventory(snapshot), handoff=handoff)
+                self.assertEqual(backend.signals, [])
+                self.assertTrue(handoff.hold.exists())
+                sleep.assert_not_called()
+
     def test_agent_only_installs_and_reloads_without_bridge_activation(self):
-        with tempfile.TemporaryDirectory() as tmp, patch("paired_minime_handoff.time.sleep"), patch(
+        with tempfile.TemporaryDirectory() as tmp, patch("time.sleep"), patch(
                 "paired_minime_handoff.bridge_stage.verify_stage", return_value={"manifest_sha256": "a"}), patch(
                 "paired_minime_handoff.subprocess.run", side_effect=AssertionError("peer activation")):
             root = Path(tmp).resolve()
@@ -342,7 +369,7 @@ class InstalledRecoveryTests(unittest.TestCase):
                            "manifest_sha256": "1" * 64, "binary_sha256": "c" * 64}
         self.enterContext(patch("paired_minime_handoff.bridge_stage.verify_stage",
             side_effect=lambda path: self.ready.copy() if path == self.stage else self.old_ready.copy()))
-        self.enterContext(patch("paired_minime_handoff.time.sleep"))
+        self.enterContext(patch("time.sleep"))
         self.enterContext(patch("paired_minime_handoff.subprocess.run",
                                side_effect=AssertionError("live subprocess forbidden")))
         self.bridge_check = self.enterContext(patch("paired_minime_handoff.LaunchdBridge.inspect",
@@ -417,6 +444,28 @@ class InstalledRecoveryTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "ownership changed"):
                 self.original_handoff.assert_hold()
         self.assert_preserved()
+
+    def test_legacy_completed_install_receipt_remains_recoverable(self):
+        rows = evidence_rows(self.original.read_bytes())
+        rows[-1] = {"phase": "installed_waiting_for_unchanged_quiet_window", "seconds": 185}
+        self.original.write_text("".join(json.dumps(row) + "\n" for row in rows))
+        self.original_bytes = self.original.read_bytes()
+        with ExitStack() as stack:
+            handoff, emit = self.open(stack)
+            handoff.adopt(emit)
+            self.backend.validate()
+            self.assertEqual(self.backend.signals, [])
+        self.assert_preserved()
+
+    def test_tampered_completed_install_identity_is_not_recoverable(self):
+        rows = evidence_rows(self.original.read_bytes())
+        rows[-1]["selected_inputs_sha256"] = "0" * 64
+        self.original.write_text("".join(json.dumps(row) + "\n" for row in rows))
+        with ExitStack() as stack, self.assertRaisesRegex(RuntimeError, "not completely receipted"):
+            self.open(stack)
+        self.assertFalse(self.receipt.exists())
+        self.assertEqual(self.hold.read_bytes(), self.original_hold_bytes)
+        self.assertEqual(self.backend.signals, [])
 
     def test_normal_reload_and_transition_are_reused_after_adoption(self):
         with ExitStack() as stack:

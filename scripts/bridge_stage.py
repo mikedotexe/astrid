@@ -17,8 +17,9 @@ import stat
 import subprocess
 
 from environment_receipts import write_build_manifest
+import bridge_reuse as reuse
 
-SCHEMA = "bridge_staged_release_v4"
+SCHEMA = "bridge_staged_release_v5"
 AUTHORITY = "build_manifest_witness_not_deploy_authority"
 EXCLUDED = {".git", ".runtime", "target", "workspace", "node_modules", ".venv", "__pycache__", ".DS_Store"}
 HELPERS = {"substrate-probe-v2": "substrate_probe_v2.py", "release-launcher": "launchd_spectral_bridge.sh", "release-selection": "bridge_release_launch.py"}
@@ -29,9 +30,10 @@ TOOLS = ("scripts/build_bridge.sh", "scripts/bridge_stage.py", "scripts/bridge_a
 # Retained source trees can predate these tools. Bind the paired wrappers and
 # their local import closure when present, including package initialization.
 OPTIONAL_TOOLS = (
+    "scripts/bridge_reuse.py", "scripts/bridge_test_receipts.py",
     "scripts/bridge_stopped_recovery.py", "scripts/research_release_compatibility.py",
     "scripts/paired_minime_handoff.py", "scripts/reconcile_minime_launch.py",
-    "scripts/restart_minime_agent.py", "scripts/qualify_geometry_release.py",
+    "scripts/restart_minime_agent.py", "scripts/finish_minime_work.py", "scripts/qualify_geometry_release.py",
     "scripts/minime_next_handoff.py",
     "scripts/authority_state.py",
     *(f"scripts/steward_control/{name}.py" for name in (
@@ -192,7 +194,7 @@ def verify_stage(stage: Path, *, run_binary: bool = True) -> dict:
     if (stage / "failure.json").exists():
         raise ValueError("stage has a retained failure record; rebuild in a new directory")
     ready = json_file(stage / "ready.json")
-    if ready.get("schema") not in {SCHEMA, "bridge_staged_release_v3", "bridge_staged_release_v2", "bridge_staged_release_v1"} or ready.get("status") != "staged_verified_not_activated":
+    if ready.get("schema") not in {SCHEMA, "bridge_staged_release_v4", "bridge_staged_release_v3", "bridge_staged_release_v2", "bridge_staged_release_v1"} or ready.get("status") != "staged_verified_not_activated":
         raise ValueError("stage has no completed build witness")
     manifest_path = stage / "manifest.json"
     if sha(manifest_path) != ready.get("manifest_sha256"):
@@ -210,8 +212,16 @@ def verify_stage(stage: Path, *, run_binary: bool = True) -> dict:
     source_ref = manifest.get("source_inputs", {})
     if source_ref.get("path") != str(source_path) or source_ref.get("sha256") != ready.get("source_inputs_sha256"):
         raise ValueError("manifest source reference mismatch")
+    if ready["schema"] == SCHEMA:
+        compiled_path = stage / "compiled-inputs.json"
+        compiled = json_file(compiled_path)
+        compiled_hash = sha(compiled_path)
+        if (compiled.get("schema") != reuse.SCHEMA
+                or ready.get("compiled_inputs_sha256") != compiled_hash
+                or manifest.get("compiled_inputs") != {"path": str(compiled_path), "sha256": compiled_hash}):
+            raise ValueError("compiled input witness mismatch")
     expected_artifacts = dict(ARTIFACTS)
-    if ready["schema"] != SCHEMA:
+    if ready["schema"] in {"bridge_staged_release_v1", "bridge_staged_release_v2", "bridge_staged_release_v3"}:
         expected_artifacts.pop("public-web-helper")
     if ready["schema"] in {"bridge_staged_release_v1", "bridge_staged_release_v2"}:
         expected_artifacts.pop("source-study-reader")
@@ -239,7 +249,12 @@ def verify_stage(stage: Path, *, run_binary: bool = True) -> dict:
     return ready
 
 
-def stage_build(source: Path, stage: Path, actor: str, ack: str) -> dict:
+def compilation_inputs(source: Path, snapshot: dict, target: str, environment: dict) -> dict:
+    return reuse.compiled_inputs(source, snapshot, target, reuse.compiler_context(source, target, environment),
+                                 {str(source / name) for name in (*TOOLS, *OPTIONAL_TOOLS)})
+
+
+def stage_build(source: Path, stage: Path, actor: str, ack: str, reuse_from: Path | None = None) -> dict:
     source = source.resolve(strict=True)
     stage = stage.absolute()
     check_environment()
@@ -257,32 +272,42 @@ def stage_build(source: Path, stage: Path, actor: str, ack: str) -> dict:
             raise ValueError("stage cannot be inside a package input tree")
         before = input_snapshot(source, packages)
         target = host_target(source)
+        environment = reuse.build_environment()
+        compiled = compilation_inputs(source, before, target, environment)
         atomic_json(stage / "source-inputs.json", before)
-        build = ["cargo", "build", "--release", "--locked", "--offline", "--manifest-path",
-                 str(source / "capsules/spectral-bridge/Cargo.toml"), "--bin", "spectral-bridge-server",
-                 "--target", target, "--target-dir", str(stage / "build")]
-        with (stage / "build.log").open("xb") as log:
-            subprocess.run(build, cwd=source, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=3600)
-            reader_build = ["cargo", "build", "--release", "--locked", "--offline", "--manifest-path",
-                            str(source / "Cargo.toml"), "-p", "astrid-source-study", "--bin", "astrid-source-study",
-                            "--target", target, "--target-dir", str(stage / "build")]
-            subprocess.run(reader_build, cwd=source, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=600)
-            web_build = ["cargo", "build", "--release", "--locked", "--offline", "--manifest-path",
-                         str(source / "Cargo.toml"), "-p", "astrid-public-web", "--bin", "astrid-public-web",
-                         "--target", target, "--target-dir", str(stage / "build")]
-            subprocess.run(web_build, cwd=source, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=600)
+        atomic_json(stage / "compiled-inputs.json", compiled)
+        build, reader_build, web_build = reuse.build_commands(source, target, stage / "build")
+        donor_ready = None
+        donor_manifest = None
+        if reuse_from is not None:
+            reuse_from = reuse_from.resolve(strict=True)
+            donor_ready = verify_stage(reuse_from)
+            if donor_ready["schema"] != SCHEMA:
+                raise ValueError("legacy stage lacks compiled-input evidence; record one new baseline build")
+            reuse.matching_inputs(json_file(reuse_from / "compiled-inputs.json"), compiled)
+            donor_manifest = json_file(reuse_from / "manifest.json")
+        else:
+            with (stage / "build.log").open("xb") as log:
+                for args, timeout in ((build, 3600), (reader_build, 600), (web_build, 600)):
+                    subprocess.run(args, cwd=source, env=environment, stdout=log,
+                                   stderr=subprocess.STDOUT, check=True, timeout=timeout)
+                log.flush()
+                os.fsync(log.fileno())
         if packages != local_packages(source) or before != input_snapshot(source, packages):
             raise ValueError("source or build environment changed during compilation; stage refused")
         binary = stage / ARTIFACTS["spectral-bridge"]
-        shutil.copyfile(stage / "build" / target / "release/spectral-bridge-server", binary)
-        binary.chmod(0o555)
         (stage / "helpers").mkdir(mode=0o700)
-        reader_binary = stage / ARTIFACTS["source-study-reader"]
-        shutil.copyfile(stage / "build" / target / "release/astrid-source-study", reader_binary)
-        reader_binary.chmod(0o555)
-        web_binary = stage / ARTIFACTS["public-web-helper"]
-        shutil.copyfile(stage / "build" / target / "release/astrid-public-web", web_binary)
-        web_binary.chmod(0o555)
+        for name, filename in reuse.BINARIES.items():
+            destination = stage / ARTIFACTS[name]
+            original = (reuse_from / ARTIFACTS[name] if reuse_from is not None
+                        else stage / "build" / target / "release" / filename)
+            shutil.copyfile(original, destination)
+            destination.chmod(0o555)
+            if donor_manifest is not None and sha(destination) != donor_manifest["artifacts"][name]["sha256"]:
+                raise ValueError(f"reused artifact changed during copy: {name}")
+        if reuse_from is not None:
+            if verify_stage(reuse_from) != donor_ready:
+                raise ValueError("donor stage changed during reuse")
         for name, filename in HELPERS.items():
             helper = stage / ARTIFACTS[name]
             original = source / "scripts" / filename
@@ -294,16 +319,28 @@ def stage_build(source: Path, stage: Path, actor: str, ack: str) -> dict:
         for artifact in [stage / path for path in ARTIFACTS.values()]:
             with artifact.open("rb") as handle:
                 os.fsync(handle.fileno())
+        if (packages != local_packages(source) or before != input_snapshot(source, packages)
+                or environment != reuse.build_environment()
+                or compiled != compilation_inputs(source, before, target, environment)):
+            raise ValueError("inputs changed during compilation or staging; stage refused")
         manifest_path = stage / "manifest.json"
         manifest = write_build_manifest(manifest_path, component="spectral-bridge", repository=source,
                                         artifacts={name: stage / relative for name, relative in ARTIFACTS.items()},
-                                        actor=actor, command=" && ".join(" ".join(args) for args in (build, reader_build, web_build)))
+                                        actor=actor, command=(f"verified artifact reuse from {reuse_from}" if reuse_from
+                                            else " && ".join(" ".join(args) for args in (build, reader_build, web_build))))
         source_hash = sha(stage / "source-inputs.json")
         if manifest["repository"]["head"] != before["head"]:
             raise ValueError("repository HEAD changed during staging")
         manifest["repository"]["source_identity_sha256"] = source_hash
         manifest["source_inputs"] = {"path": str(stage / "source-inputs.json"), "sha256": source_hash,
                                      "file_count": len(before["files"]), "scope": before["scope"]}
+        manifest["compiled_inputs"] = {"path": str(stage / "compiled-inputs.json"),
+                                       "sha256": sha(stage / "compiled-inputs.json")}
+        manifest["artifact_production"] = {"mode": "reused" if reuse_from else "compiled",
+            "donor_stage": str(reuse_from) if reuse_from else None,
+            "donor_manifest_sha256": donor_ready["manifest_sha256"] if donor_ready else None,
+            "donor_prepared_at": donor_ready["prepared_at"] if donor_ready else None,
+            "cargo_build_invocations": 0 if reuse_from else 3}
         atomic_json(manifest_path, manifest)
         result = json.loads(command([str(binary), "--deployment-manifest", str(manifest_path),
                                      "--verify-deployment-manifest"], cwd=stage, timeout=60))
@@ -311,6 +348,7 @@ def stage_build(source: Path, stage: Path, actor: str, ack: str) -> dict:
             raise ValueError("native executable did not verify its staged identity")
         ready = {"schema": SCHEMA, "status": "staged_verified_not_activated", "stage": str(stage),
                  "source_root": str(source), "native_target": target, "source_inputs_sha256": source_hash,
+                 "compiled_inputs_sha256": sha(stage / "compiled-inputs.json"),
                  "manifest_sha256": sha(manifest_path), "binary_sha256": sha(binary),
                  "prepared_at": dt.datetime.now(dt.UTC).isoformat(), "actor": actor,
                  "acknowledgement_sha256": hashlib.sha256(ack.encode()).hexdigest(),
@@ -332,6 +370,7 @@ def main() -> int:
     build.add_argument("--stage-dir", type=Path, required=True)
     build.add_argument("--actor", required=True)
     build.add_argument("--ack", required=True)
+    build.add_argument("--reuse-from", type=Path)
     verify = sub.add_parser("verify")
     verify.add_argument("--stage-dir", type=Path, required=True)
     args = parser.parse_args()
@@ -339,7 +378,7 @@ def main() -> int:
         if args.command == "build":
             if os.environ.get("ASTRID_SANCTIONED_BRIDGE_STAGE") != "1":
                 raise ValueError("build through scripts/build_bridge.sh --stage-dir")
-            result = stage_build(args.source_root, args.stage_dir, args.actor, args.ack)
+            result = stage_build(args.source_root, args.stage_dir, args.actor, args.ack, args.reuse_from)
         else:
             result = verify_stage(args.stage_dir)
         print(json.dumps({"ok": True, **result}, indent=2))

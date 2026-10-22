@@ -45,7 +45,8 @@ class DeploymentWrapperTests(unittest.TestCase):
                 "    output.write(json.dumps({'argv': args, 'sanctioned': os.environ.get('ASTRID_SANCTIONED_BRIDGE_ACTIVATION')}) + '\\n')\n"
                 "if len(args) < 2 or args[0] != '-B': sys.exit(97)\n"
                 "name = pathlib.Path(args[1]).name\n"
-                "if name not in {'deploy_preflight.py', 'bridge_activate.py'}: sys.exit(98)\n"
+                "if name not in {'deploy_preflight.py', 'bridge_activate.py', 'bridge_stage.py'}: sys.exit(98)\n"
+                "if name == 'bridge_stage.py' and os.environ.get('ASTRID_SANCTIONED_BRIDGE_STAGE') != '1': sys.exit(96)\n"
                 "if name == 'deploy_preflight.py' and args[args.index('--repo') + 1] == os.environ.get('MOCK_FAIL_PREFLIGHT_REPO'): sys.exit(23)\n"
             )
             mock.chmod(0o755)
@@ -100,6 +101,20 @@ class DeploymentWrapperTests(unittest.TestCase):
                 result, calls, _ = self.activation_run(arguments)
                 self.assertEqual(result.returncode, 64, result.stderr)
                 self.assertEqual(calls, [])
+
+    def test_system_bash_passes_explicit_reuse_only_to_staging(self):
+        for donor in ([], ["--reuse-from", "/fixture/verified stage"]):
+            result, calls, source = self.activation_run([
+                "--stage-dir", "/fixture/new stage", "--actor", "test", "--ack", "test", *donor])
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(len(calls), 2)
+            self.assertEqual(calls[1]["argv"], ["-B", f"{source}/scripts/bridge_stage.py", "build",
+                "--source-root", source, "--stage-dir", "/fixture/new stage", "--actor", "test", "--ack", "test", *donor])
+        for args in (["--reuse-from"], ["--reuse-from", "--restart"], ["--reuse-from", "/fixture/stage"],
+                     ["--activate-stage", "/fixture/stage", "--reuse-from", "/fixture/donor"]):
+            result, calls, _ = self.activation_run(args)
+            self.assertEqual(result.returncode, 64, result.stderr)
+            self.assertEqual(calls, [])
 
     def test_system_bash_stops_when_canonical_preflight_fails(self) -> None:
         result, calls, _ = self.activation_run([

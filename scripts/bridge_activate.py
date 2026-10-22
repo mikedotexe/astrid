@@ -216,7 +216,7 @@ class LaunchdBridge(StoppedTransitionMixin):
 
     def inspect(self, expected_pid: int) -> dict:
         self.ready = stage_tools.verify_stage(self.stage)
-        if self.ready["schema"] not in {"bridge_staged_release_v2", "bridge_staged_release_v3", "bridge_staged_release_v4"}:
+        if self.ready["schema"] not in {"bridge_staged_release_v2", "bridge_staged_release_v3", "bridge_staged_release_v4", "bridge_staged_release_v5"}:
             raise ValueError("activation requires the startup-gated V2 release bundle")
         self.verify_bundle()
         if os.path.lexists(self.control / "hold.json"):
@@ -553,7 +553,7 @@ class LaunchdBridge(StoppedTransitionMixin):
         if type(failed.get("old_pid")) is not int or failed["old_pid"] <= 1 or failed["old_pid"] == expected_pid:
             raise ValueError("recovery PID must identify the replacement, not the old process")
         self.ready = stage_tools.verify_stage(self.stage)
-        if (self.ready["schema"] not in {"bridge_staged_release_v2", "bridge_staged_release_v3", "bridge_staged_release_v4"}
+        if (self.ready["schema"] not in {"bridge_staged_release_v2", "bridge_staged_release_v3", "bridge_staged_release_v4", "bridge_staged_release_v5"}
                 or failed.get("stage") != str(self.stage)
                 or failed.get("manifest_sha256") != self.ready["manifest_sha256"]
                 or failed.get("binary_sha256") != self.ready["binary_sha256"]):

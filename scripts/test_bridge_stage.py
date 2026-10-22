@@ -62,13 +62,14 @@ class StageTests(unittest.TestCase):
         stage.atomic_json(output, value)
         return value
 
-    def build(self, compiler=None):
+    def build(self, compiler=None, reuse_from=None):
         with patch.object(stage, "local_packages", return_value=[self.package]), \
              patch.object(stage, "command", side_effect=self.command), \
              patch.object(stage, "write_build_manifest", side_effect=self.manifest), \
+             patch.object(stage.reuse, "compiler_context", return_value={"synthetic_toolchain": 1}), \
              patch.object(stage.subprocess, "run", side_effect=compiler or self.compiler), \
              patch.object(stage, "check_environment"):
-            return stage.stage_build(self.source, self.directory, "test-operator", "isolated fixture")
+            return stage.stage_build(self.source, self.directory, "test-operator", "isolated fixture", reuse_from)
 
     def test_build_preserves_live_files_and_verifies_versioned_artifacts(self):
         ready = self.build()
@@ -80,6 +81,99 @@ class StageTests(unittest.TestCase):
         self.assertEqual((self.directory / "helpers/substrate_probe_v2.py").read_text(), "# fixture\n")
         self.assertEqual((self.directory / "helpers/astrid-source-study").read_bytes(), b"synthetic binary")
         self.assertEqual((self.directory / "helpers/astrid-public-web").read_bytes(), b"synthetic binary")
+
+    def donor(self):
+        self.build()
+        donor = self.directory
+        self.directory = self.directory.with_name("two")
+        return donor
+
+    def no_compile(self, *args, **kwargs):
+        self.fail("explicit reuse must not invoke a compiler or silently fall back")
+
+    def test_restage_tool_change_reuses_binaries_but_copies_current_helpers(self):
+        donor = self.donor()
+        old = (donor / "manifest.json").read_bytes()
+        (self.source / "scripts/deploy_preflight.py").write_text("# new preflight\n")
+        (self.source / "scripts/substrate_probe_v2.py").write_text("# new helper\n")
+        ready = self.build(self.no_compile, donor)
+        self.assertNotEqual(ready["manifest_sha256"], stage.sha(donor / "manifest.json"))
+        self.assertEqual((donor / "manifest.json").read_bytes(), old)
+        manifest = stage.json_file(self.directory / "manifest.json")
+        self.assertEqual(manifest["artifact_production"]["cargo_build_invocations"], 0)
+        self.assertEqual(manifest["artifact_production"]["mode"], "reused")
+        self.assertEqual((self.directory / "helpers/substrate_probe_v2.py").read_text(), "# new helper\n")
+        for relative in (stage.ARTIFACTS[key] for key in stage.reuse.BINARIES):
+            self.assertEqual(stage.sha(donor / relative), stage.sha(self.directory / relative))
+            self.assertNotEqual((donor / relative).stat().st_ino, (self.directory / relative).stat().st_ino)
+        self.assertFalse((self.directory / "build").exists())
+        self.assertFalse((self.directory / "build.log").exists())
+
+    def test_source_change_refuses_reuse_without_compilation(self):
+        donor = self.donor()
+        (self.package / "src/main.rs").write_text("fn changed() {}")
+        with self.assertRaisesRegex(ValueError, "compiled inputs do not match.*files"):
+            self.build(self.no_compile, donor)
+        self.assertFalse((self.directory / "ready.json").exists())
+        self.assertTrue((self.directory / "failure.json").is_file())
+
+    def test_legacy_stage_still_verifies_but_cannot_authorize_reuse(self):
+        donor = self.donor()
+        ready = stage.json_file(donor / "ready.json")
+        ready["schema"] = "bridge_staged_release_v4"
+        stage.atomic_json(donor / "ready.json", ready)
+        stage.verify_stage(donor, run_binary=False)
+        with self.assertRaisesRegex(ValueError, "legacy stage lacks"):
+            self.build(self.no_compile, donor)
+
+    def test_changed_compiled_witness_refuses_reuse(self):
+        donor = self.donor()
+        (donor / "compiled-inputs.json").write_text('{"schema":"bridge_compiled_inputs_v1"}')
+        with self.assertRaisesRegex(ValueError, "compiled input witness"):
+            self.build(self.no_compile, donor)
+
+    def test_changed_donor_binary_refuses_reuse(self):
+        donor = self.donor()
+        binary = donor / "helpers/astrid-source-study"
+        binary.chmod(0o600)
+        binary.write_bytes(b"changed")
+        with self.assertRaisesRegex(ValueError, "artifact changed"):
+            self.build(self.no_compile, donor)
+
+    def test_donor_changes_during_copy_never_publish_ready(self):
+        donor = self.donor()
+        original_copy = stage.shutil.copyfile
+        def changed_copy(source, destination):
+            result = original_copy(source, destination)
+            if Path(source).name == "astrid-source-study":
+                Path(destination).write_bytes(b"copy corruption")
+            return result
+        with patch.object(stage.shutil, "copyfile", side_effect=changed_copy):
+            with self.assertRaisesRegex(ValueError, "changed during copy"):
+                self.build(self.no_compile, donor)
+        self.assertFalse((self.directory / "ready.json").exists())
+
+    def test_failed_donor_never_reused(self):
+        donor = self.donor()
+        stage.atomic_json(donor / "failure.json", {"error": "retained failure"})
+        with self.assertRaisesRegex(ValueError, "retained failure"):
+            self.build(self.no_compile, donor)
+
+    def test_environment_change_during_build_refuses_ready(self):
+        calls = 0
+        def context(*args):
+            nonlocal calls
+            calls += 1
+            return {"environment_sha256": str(calls)}
+        # Use the real stage transaction, replacing only external dependencies.
+        with patch.object(stage, "local_packages", return_value=[self.package]), \
+             patch.object(stage, "command", side_effect=self.command), \
+             patch.object(stage.reuse, "compiler_context", side_effect=context), \
+             patch.object(stage.subprocess, "run", side_effect=self.compiler), \
+             patch.object(stage, "check_environment"):
+            with self.assertRaisesRegex(ValueError, "inputs changed"):
+                stage.stage_build(self.source, self.directory, "test", "test")
+        self.assertFalse((self.directory / "ready.json").exists())
 
     def test_public_web_helper_tampering_is_rejected(self):
         self.build()
@@ -245,7 +339,8 @@ class StageTests(unittest.TestCase):
     def test_paired_orchestration_imports_are_in_named_inventory(self):
         scripts = Path(stage.__file__).parent
         pending = [scripts / name for name in (
-            "paired_minime_handoff.py", "reconcile_minime_launch.py", "restart_minime_agent.py")]
+            "paired_minime_handoff.py", "reconcile_minime_launch.py", "restart_minime_agent.py",
+            "finish_minime_work.py")]
         visited = set()
 
         def add_module(module):
