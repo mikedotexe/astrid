@@ -124,21 +124,9 @@ CLAUDE_MODEL = "claude-3-haiku-20240307"
 
 def capture_frame(camera_index: int = 0) -> Optional[bytes]:
     """Capture a single frame from the camera, return as JPEG bytes."""
-    try:
-        import cv2
-        cap = cv2.VideoCapture(camera_index)
-        if not cap.isOpened():
-            log.error("Camera not accessible")
-            return None
-        ret, frame = cap.read()
-        cap.release()
-        if not ret:
-            return None
-        _, buf = cv2.imencode(".jpg", frame)
-        return buf.tobytes()
-    except ImportError:
-        log.error("OpenCV not installed — pip install opencv-python")
-        return None
+    from camera_capture import capture_frame as capture_in_worker
+
+    return capture_in_worker(camera_index, logger=log)
 
 
 def see_with_claude(image_bytes: bytes, prompt: str) -> Optional[str]:
