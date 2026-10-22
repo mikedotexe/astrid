@@ -1,0 +1,59 @@
+{
+  "active_run": {
+    "exit_code": 0,
+    "output": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/runs/01-original-normal",
+    "pid": 43200,
+    "state": "finished"
+  },
+  "actual_completed_wall": 1792194966.3913999,
+  "actual_new_cases": 1,
+  "actual_started_wall": 1792194949.990398,
+  "all_host_interval_coverage_passed": true,
+  "child_exit_code": 0,
+  "created_at": "2026-10-16T23:57:21.377254+00:00",
+  "current_protected_file_and_process_identities_match": true,
+  "duration_s": 16.401001930236816,
+  "error": "ValueError: initial child command is not the exact owned launcher or pinned runtime argv",
+  "host_window": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-root-review.json",
+    "sha256": "14d520242fa771f69968647d8b66d07da74ff899ac836a985c699e0bcf9cb61c"
+  },
+  "initial_process_observation": {
+    "command": "(python3.12)",
+    "pid": 43200,
+    "started_at": "Fri Oct 16 16:55:50 2026"
+  },
+  "interpretation": "Initial retained ps command was the incomplete name-only string (python3.12), not a full exact argv. This is insufficient provenance; failure is retained. Any new publication wait must be bounded read-only evidence gathering within existing case budget, preserving exact PID/start/argv/interpreter validation and prohibiting control/launch retry. No allocator or causal memory claim.",
+  "monitor": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-04.json",
+    "sha256": "1ad96f54b6673748d2168a0aca9d3c84b1fb15f228460808c0aa8b713634030c"
+  },
+  "monitor_completion_reason": "owned_finish_request",
+  "monitor_samples": 21,
+  "monitor_source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2_run04.py",
+    "sha256": "f82f686d9651509de1ecc451049ca6629794efcdce15b0011915322679f4873e"
+  },
+  "no_further_case_released": true,
+  "passed": false,
+  "probes": 0,
+  "processes_absent": {
+    "40516": true,
+    "42861": true,
+    "43171": true,
+    "43200": true
+  },
+  "production_mutations": 0,
+  "protected_file_count": 237,
+  "protected_process_count": 7,
+  "qualified_matrix": false,
+  "result": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/runs/01-original-normal/result.json",
+    "sha256": "82d99e0c74bfc9e9539bc346cc6c77538da3626d6912eb97326941fb76ac78a1"
+  },
+  "root_release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v2-release-01.json",
+    "sha256": "e2fb95c784c3fe1d0933e75b87ffd5bf79f1f0ab1eae42a9449ef53474e08f6a"
+  },
+  "schema": "reservoir_private_case_root_failure_review_v1"
+}

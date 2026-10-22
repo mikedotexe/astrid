@@ -1,0 +1,36 @@
+{
+  "baseline": {
+    "health_failure_samples": 0,
+    "observer_process": "27294     1 Thu Oct 15 18:20:57 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python",
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observations-post-perception-01/20261016T012057Z/soak_result.json",
+    "samples": 15,
+    "state": "running"
+  },
+  "baseline_changed_inputs": [],
+  "baseline_identity_count_checked": 119,
+  "candidate_source_matches_production_snapshot": true,
+  "candidate_workspace_created": false,
+  "characterization": {
+    "cpu_s": {
+      "system": 0.015347999999999999,
+      "user": 0.054062
+    },
+    "elapsed_s": 0.00036645890213549137,
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/lifecycle-characterization.json",
+    "sha256": "acb4b1538063e54c4b14fb69986b2d284a2628a263823c1a517546f155890123",
+    "tests": 8
+  },
+  "production_mutations": 0,
+  "protected_processes": {
+    "22354": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+    "35486": "35486 35461 Thu Oct 15 13:14:29 2026     /Applications/Ollama.app/Contents/Resources/ollama serve",
+    "3888": "3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state",
+    "3893": "3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active",
+    "82314": "82314     1 Thu Oct 15 07:49:29 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60",
+    "82528": "82528     1 Thu Oct 15 07:49:42 2026     /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/writing-admission-guidance-20261014/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous"
+  },
+  "protected_processes_unchanged": true,
+  "schema": "perception_lifecycle_isolation_verification_v1",
+  "source_implementation_changes": 0,
+  "verified_at": "2026-10-16T01:28:29.753487+00:00"
+}

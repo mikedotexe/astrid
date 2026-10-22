@@ -1,0 +1,155 @@
+{
+  "core_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-06",
+  "execution_authorized": false,
+  "fixture_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03",
+  "immutability": "02/05 source and all prior evidence preserved;03/06 prepared flags false, exact final enabled closure requires new independent qualification. No test/import/process execution by this contract.",
+  "native": {
+    "aggregate_delta": "Top-level native:{root,owner:{path,sha256},callers:[{caller,owner:{path,sha256},log:{path,sha256}}],artifacts:{absolute path:sha256}}. Exact whole native tree, no exclusions, private owned no symlink. Existing run artifacts/readiness included unchanged in main inventory.",
+    "bounds": {
+      "caller_count_max": 72,
+      "event_bytes_max": 262144,
+      "events_per_caller_max": 12000,
+      "total_native_bytes_max": 67108864
+    },
+    "caller_namespace": "parent OR exactly one sealed executor step.id; no alias/retry of an existing namespace",
+    "common_fields": [
+      "schema",
+      "sequence",
+      "previous_sha256",
+      "type",
+      "command_id",
+      "caller_owner_sha256",
+      "wall_time_ns",
+      "monotonic"
+    ],
+    "consumer": "Reconstruct full native chains; bind exact caller PID/expected argv to parent/executor raw identities and times, fixed argv allowlists/root/token/labels; require all commands naturally reaped and no unresolved; resolve every query link to exact exit. Require separate existing parent closeout. New child-command records do not fabricate Host/controller action success.",
+    "created_fields": [
+      "pid",
+      "argv",
+      "intent_sha256"
+    ],
+    "event_schema": "owned_fixture_native_event_v1",
+    "exit_fields": [
+      "pid",
+      "argv",
+      "intent_sha256",
+      "created_sha256",
+      "returncode",
+      "naturally_reaped",
+      "stdout",
+      "stderr",
+      "signals_sent"
+    ],
+    "identity": "Root/caller PID+expected argv are bound before launching native children. Accepted aggregate ties actual parent/executor identity and all natural reaps to these records. Created command ownership is direct Popen child PID/argv; no invented OS start when a short-lived command exits before observation.",
+    "intent_fields": [
+      "argv",
+      "terminal",
+      "timeout_s",
+      "kind"
+    ],
+    "log_path": "<native root>/<caller>/commands.jsonl",
+    "owner_fields": [
+      "schema",
+      "root_owner",
+      "caller",
+      "pid",
+      "expected_argv",
+      "release",
+      "created_wall_time_ns"
+    ],
+    "owner_schema": "owned_fixture_native_caller_v1",
+    "query_link_fields": [
+      "path",
+      "command_id",
+      "intent_sha256",
+      "created_sha256",
+      "exit_sha256"
+    ],
+    "root": "<fixture03>/runs/owned-native-<token>",
+    "root_owner_fields": [
+      "schema",
+      "root",
+      "fixture_root",
+      "token",
+      "release",
+      "parent_pid",
+      "parent_expected_argv",
+      "python",
+      "python_files",
+      "created_wall_time_ns"
+    ],
+    "root_owner_path": "owner.json",
+    "root_owner_schema": "owned_fixture_native_root_v1",
+    "root_reservation": "Native root/owner reserved once after exact release validation and before initial parent query; it is a one-use attempt marker. Root fixture setup owner is created only after exact initial identity query, never rewritten.",
+    "sequence": "Per caller command IDs begin1 and increase by1; intent\u2192created\u2192exit on success; an unresolved row ends caller/run. Popen failure may have no created row/pid. Known reaped nonzero produces exit but command caller semantic guards refuse; command effect is never inferred from return alone.",
+    "timeouts": "Retain20second captured commands and180second interactive sudo debug; no kill/terminate/contextmanager/automatic relaunch. Natural exit is recorded separately from unknown external effect. Timeout/interruption/write failure retains durable intent and known child/reap status.",
+    "unresolved_fields": [
+      "pid",
+      "argv",
+      "intent_sha256",
+      "created_sha256",
+      "error_type",
+      "error",
+      "naturally_reaped",
+      "known_returncode",
+      "may_still_be_alive",
+      "signals_sent",
+      "retry_permitted"
+    ]
+  },
+  "readiness": {
+    "budget": "One existing300second parent executor phase budget starts before readiness; acceptance cutoff=min(start+90,phase_deadline). Pre/post observation checks and clamped sleep. Preparing/sealing counts against phase budget; launch receives floor(remaining), never a renewed300.",
+    "fields": [
+      "schema",
+      "step",
+      "release",
+      "root",
+      "parent_claim",
+      "parent_identity",
+      "executor_session",
+      "prior_signal",
+      "prior_debug",
+      "previous_exit",
+      "stable_heads",
+      "phase_started_monotonic",
+      "phase_deadline_monotonic",
+      "readiness_deadline_monotonic",
+      "started_wall_time_ns",
+      "completed_wall_time_ns",
+      "samples",
+      "final_inspection",
+      "expected_heads",
+      "ready_identity",
+      "guard",
+      "source_artifacts_sha256",
+      "coordination"
+    ],
+    "final_inspection": "Normal {path,sha256} reference to exclusive <run>/readiness/<step.id>-inspection.json; no provisional inspection is passed as authority.",
+    "path": "<run>/readiness/<step.id>.json",
+    "prior_refs": "prior_signal/prior_debug each hold exact retained intent/result refs; previous_exit is immediately prior executor exit ref; parent_claim is exact original parent action claim ref.",
+    "query_link": "Each raw query row retains argv/returncode/stdout/stderr/observed_wall_time_ns plus native_command described below.",
+    "request_delta": "Only selected two request objects add readiness:{path,sha256}; parent executor result adds same readiness ref. Parent result still binds exact request and exit.",
+    "sample_fields": [
+      "started_monotonic",
+      "completed_monotonic",
+      "observed_wall_time_ns",
+      "target",
+      "old_pid_observation",
+      "other_role",
+      "guard",
+      "queries"
+    ],
+    "schema": "owned_fixture_holder_readiness_v1",
+    "session": "Exactly one parent resume_one session per selected step, wholly inside its parent action claim/result interval, end before corresponding executor launch. Three existing parent sessions unchanged.",
+    "stable_heads": "controller_head_sha256,host_operations_sha256,recovery_head_sha256, equal before/after polling; final expected_heads also includes final inspection_sha256."
+  },
+  "schedule": {
+    "executors": 71,
+    "new_parent_sessions": 2,
+    "parent_actions": 74,
+    "selected_steps": "Exactly proposed_schedule resume_one/reconcile actions held_verified:provider and held_verified:reservoir; no other readiness records",
+    "total_parent_sessions": 5
+  },
+  "schema": "fixture03_candidate06_interface_v1",
+  "status": "implementation_contract_source_only"
+}

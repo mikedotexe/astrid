@@ -1,0 +1,14 @@
+{
+  "debug_output": "This subcommand requires root privileges: debug\n",
+  "debug_returncode": 1,
+  "debug_supported": false,
+  "failure": "next_spawn_override_unsupported_no_signal_sent",
+  "host_version": "27.0.1",
+  "label": "com.codex.model-handoff-fixture.0172962543824e55a9b64d79a712a6dc",
+  "launcher_sha256": "cfb970f01e57f3bdd30196443b1c4931f50a66609405622a9f0a2e60d2abf60f",
+  "original_pid": 41547,
+  "passed": false,
+  "schema": "model_launchd_handoff_fixture_v1",
+  "scope": "owned_stdlib_fixture_no_model_no_gpu_no_production_services",
+  "signal_sent": false
+}

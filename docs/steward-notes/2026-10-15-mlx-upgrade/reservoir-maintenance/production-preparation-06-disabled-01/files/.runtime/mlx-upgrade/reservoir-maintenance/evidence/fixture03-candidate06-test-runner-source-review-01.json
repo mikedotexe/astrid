@@ -1,0 +1,46 @@
+{
+  "accepted_source_only": true,
+  "actual_os_acceptance": false,
+  "checks": [
+    "Exact fixture03/production06 scope, current Python family hashes, runner hash, all current03+06 Python inputs and selected test-module inventory are verified before target imports.",
+    "All three private execution flags must be false before/after; fixture03/runs must remain absent. Exact expected test count, zero errors/failures/skips/forbidden imports/actions and unchanged source/protected/preserved inventories gate success.",
+    "Import guard rejects named numerical/model/hardware/service modules. Audit rejects subprocess, sockets, ctypes, process spawn/exec/signals and local Python execution not in the exact source hash map.",
+    "Audited filesystem writes/mutations are confined to fresh scratch. Descriptor writes through audited open require a unique regular nlink1 nonsymlink scratch inode; dir_fd cleanup must resolve to owned scratch directories.",
+    "Only two exact receipt/log paths may be exclusively created after tests. Generic mutation/link/symlink rules do not grant access to those output paths.",
+    "The only runner02 delta is the reviewed plan capture/recheck/reference correction. Source-only examination performed; no target import, compilation, test or native action."
+  ],
+  "findings": [],
+  "limitations": [
+    "The audit hook constrains this reviewed fake-test path, not arbitrary hostile Python or unaudited low-level writes through preexisting descriptors. It is not an OS sandbox.",
+    "Failure before suite/receipt publication is not an accepted result and does not authorize retry."
+  ],
+  "preserved_unrun_runner": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture03_candidate06_tests_01.py",
+    "sha256": "592b7739640381ed72ea759ccdcf42c59b56aa9731efeffa6178a1aaa5df941d"
+  },
+  "production_qualified": false,
+  "remaining_plan_requirements": [
+    "Root must freeze and review each scope plan before execution, including complete actual external local Python dependencies and the final exact test-discovery count. No plan exists in this review and no test result is inferred.",
+    "Both exact preserved failed fixture RUN and successful ABORT roots must be explicit in preserved_roots/original_inventory; protected source, interpreter and immutable helper maps must be complete.",
+    "Serialize one root-owned run per fresh output/scratch path only after source freeze and independent implementation review. This receipt does not release a test slot or live work."
+  ],
+  "resolved_finding": {
+    "fix": "Runner02 captures plan_bytes and their reference once before parsing, rechecks the same SHA after validation and at closeout, includes plan_unchanged in acceptance and emits the captured reference. The preserved01 remains unexecuted.",
+    "issue": "Runner01 parsed a plan but computed its receipt reference only after tests, so an external edit could bind results to different plan bytes.",
+    "old_lines": [
+      38,
+      180
+    ]
+  },
+  "reviewed_at": "2026-10-17T14:47:00.681774+00:00",
+  "reviewer": "codex-mlx-upstream",
+  "runner": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture03_candidate06_tests_02.py",
+    "sha256": "c472d4728101fd9b207985834ef0517845e275c91ddc9e594d6559bd1ed9a4d4"
+  },
+  "schema": "fixture03_candidate06_guarded_runner_source_review_v1",
+  "scope": "static_review_of_unexecuted_stdlib_fake_test_runner",
+  "target_imports": false,
+  "test_execution_authorized": false,
+  "tests_run": false
+}

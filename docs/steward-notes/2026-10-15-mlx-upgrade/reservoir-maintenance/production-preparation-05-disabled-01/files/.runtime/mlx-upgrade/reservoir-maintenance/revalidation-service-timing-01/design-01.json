@@ -1,0 +1,82 @@
+{
+  "created_at": "2026-10-17T01:32:22.002528+00:00",
+  "deadline": {
+    "checks": "Python tracing, audited opens, profiled C-read boundaries and explicit stage boundaries.",
+    "cooperative": true,
+    "limit": "No signal, child watchdog, force or retry. A blocked OS/C call cannot be preempted; it is rejected on return. Instrumentation overhead is included and prevents interpreting this as uninstrumented reviewer time.",
+    "review_s": 120,
+    "total_s": 180
+  },
+  "exact_target": "Unchanged qualification-harness-v3 review_matrix.review called once with the fourteen accepted matrix receipt paths.",
+  "execution_authorized": false,
+  "guards": [
+    "-I -B and exact reviewed ordinary interpreter; no target module preloaded.",
+    "Load unchanged source bytes with original filenames/origins, no monkeypatch of reviewer functions or boolean substitute.",
+    "Saved path/target inode, link inode, size, mtime, ctime, mode, UID and canonical target checked before/after. Descriptor identity checked at profiled read boundaries.",
+    "Private exact source/receipt/snapshot allowlist plus only the three already-budgeted Python3.12 interpreter aliases outside that harness.",
+    "No numeric/hardware imports; no later unplanned imports; process, network, thread, signal, filesystem mutation, ctypes and mmap operations blocked.",
+    "One exclusive timing-result-01.json descriptor is owned by the wrapper. No input/production writes; any failure is retained and no automatic repeat is authorized.",
+    "Full returned matrix object must equal accepted matrix-review-01.json; all exact read counters must equal the saved successful read map."
+  ],
+  "inputs": {
+    "bytes": 4554,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-inputs-01.json",
+    "sha256": "5bbabc9c88080f4fd4c79c6224bbfe0b00c1064a4f7908451a97273214f24a14"
+  },
+  "logical_budget": {
+    "full_file_bytes": 4715809975,
+    "maximum_file_bytes": 2180277,
+    "method": "Each audited read-open charges the entire saved file length. Profiled _io.read calls must match audited opens exactly. These are logical source-specific charges, not measured OS read bytes or physical I/O.",
+    "per_path_ceilings": "Exact saved logical_read_groups.service_v3_review_matrix_once_read_map.visits; no added allowance if it proves inaccurate.",
+    "read_opens": 11569,
+    "unique_paths": 11123,
+    "unique_recorded_file_identities": 11122
+  },
+  "prepared_by": "mlx_upstream",
+  "preserved_preparation_read_error": {
+    "description": "A metadata-only exploration first treated visits as a list; KeyError slice(None,2,None) revealed it is a path-to-count dictionary. No target payload opened and no source/test execution occurred."
+  },
+  "production_qualified": false,
+  "recorded_entrypoint_test_receipt": {
+    "bytes": 7862,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-preflight-tests-01.json",
+    "sha256": "6d10335338e42f800e5cc41a0fe251062784bdae0f04e0bc5952dc7f9777c7b5"
+  },
+  "remaining_unmeasured": [
+    "Whether the provisional source-derived read map exactly matches the unchanged reviewer execution.",
+    "Instrumented elapsed time, physical I/O, cache effects, total05 admission time, repeated admission cost and complete live maintenance duration.",
+    "No standalone stage acceptance transfers to enabled production release, owned OS fixture or ProductionHost."
+  ],
+  "schema": "reservoir_service_review_timing_design_v1",
+  "separate_setup_scope": {
+    "interpretation": "Setup verification and poststage metadata checks are included in total elapsed but excluded from the timed reviewer call.",
+    "metadata_json_bytes": 17196470,
+    "other_reads": "Exact saved correction, root assessment, accepted matrix, wrapper/input sidecars, and ordinary timing Python3.14 executable; all separately charged and bounded.",
+    "payload_discovery": "No traversal; target metadata checks iterate only previously saved selected paths. The reviewer retains its own fixed *.py harness enumeration.",
+    "source_files": 11,
+    "target_modules_loaded": 6
+  },
+  "status": "unexecuted_source_draft_requires_independent_review_and_separate_root_release",
+  "target_imports": false,
+  "test_receipt_review": {
+    "log_hash_verified": true,
+    "recorded_errors": 0,
+    "recorded_failures": 0,
+    "recorded_forbidden_actions": [],
+    "reviewer_tests_run": 0,
+    "source_hashes_verified": 17,
+    "tests": 37
+  },
+  "tests_run": false,
+  "timing_executed": false,
+  "unexecuted_test_plan": [
+    "Use only temporary inert files and fake clock, never target reviewer/payloads: changed metadata, unbudgeted read/write/control/import, visit/byte/file/read-call ceilings, descriptor drift, deadline and exclusive receipt refusal.",
+    "Separately under a parent test slot, exercise one inert full-file read for each actual pathlib read_bytes/read_text method to verify Python3.14 profile-hook accounting.",
+    "No current source tests, target imports, timing execution, OS publication probes, process controls or numerical workloads have run."
+  ],
+  "wrapper": {
+    "bytes": 19901,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review.py",
+    "sha256": "537e2c0fe9c033ebc0b49a4e65e103364516c461025a396130e021fb6042b996"
+  }
+}

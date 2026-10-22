@@ -1,0 +1,62 @@
+--- /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/evidence/source-checkpoint-01/test_owned_fixture_commands.py.txt
++++ /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/test_owned_fixture_commands.py
+@@ -96,9 +96,9 @@
+ 
+     def test_created_publication_failure_retains_known_pid(self):
+         child=self.child();original=self.command.append
+-        def append(kind,*args,**kwargs):
+-            if kind=='created':raise OSError('inert publication failure')
+-            return original(kind,*args,**kwargs)
++        def append(event_type,*args,**kwargs):
++            if event_type=='created':raise OSError('inert publication failure')
++            return original(event_type,*args,**kwargs)
+         with mock.patch.object(self.command,'append',side_effect=append),self.assertRaises(OSError):
+             self.command.run(['/bin/ps','-p','22','-o','lstart='])
+         row=self.rows()[-1];self.assertEqual(row['pid'],child.pid);self.assertIsNone(row['created_sha256'])
+@@ -106,9 +106,9 @@
+ 
+     def test_exit_publication_failure_retains_known_natural_reap(self):
+         child=self.child();original=self.command.append
+-        def append(kind,*args,**kwargs):
+-            if kind=='exit':raise OSError('inert exit publication failure')
+-            return original(kind,*args,**kwargs)
++        def append(event_type,*args,**kwargs):
++            if event_type=='exit':raise OSError('inert exit publication failure')
++            return original(event_type,*args,**kwargs)
+         with mock.patch.object(self.command,'append',side_effect=append),self.assertRaises(OSError):
+             self.command.run(['/bin/ps','-p','22','-o','lstart='])
+         row=self.rows()[-1];self.assertTrue(row['naturally_reaped']);self.assertFalse(row['may_still_be_alive'])
+--- /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/evidence/source-checkpoint-01/test_owned_recovery_host.py.txt
++++ /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/test_owned_recovery_host.py
+@@ -9,6 +9,7 @@
+ import plistlib
+ import shutil
+ import sys
++import tempfile
+ import time
+ from types import SimpleNamespace
+ import unittest
+@@ -100,7 +101,13 @@
+             guard=patch(name,side_effect=AssertionError('forbidden real IO: '+name));guard.start();self.addCleanup(guard.stop)
+         self.core_binding={'root':str(CORE_ROOT),'artifacts':{str(p):h.sha(p) for p in CORE_ROOT.glob('*.py')},'flags':source_flags()}
+         self.core=load_core({'core':self.core_binding});self.token=uuid.uuid4().hex
+-        runs=h.HERE/'runs';runs.mkdir(exist_ok=True,mode=0o700)
++        # The strict runtime root predicate stays active; only its test namespace
++        # is relocated into the runner-owned scratch. Source hashes stay real.
++        source_here=h.HERE
++        temporary=tempfile.TemporaryDirectory();self.addCleanup(temporary.cleanup)
++        here_patch=patch.object(h,'HERE',Path(temporary.name).resolve())
++        here_patch.start();self.addCleanup(here_patch.stop)
++        runs=h.HERE/'runs';runs.mkdir(mode=0o700)
+         self.root=runs/('owned-recovery-'+self.token);self.root.mkdir(mode=0o700)
+         self.addCleanup(lambda:shutil.rmtree(self.root))
+         self.python=Path(sys.executable);binding={'uid':os.getuid(),'boot_uuid':'fake-boot','os':'stdlib-fake'}
+@@ -109,7 +116,7 @@
+         # another attribute to avoid accidentally using a real system adapter.
+         self.io.host_binding_method=self.io.host_binding
+         self.io.host=self.io.host_binding_method
+-        artifacts={str(p):h.sha(p) for p in h.HERE.glob('*.py')}
++        artifacts={str(p):h.sha(p) for p in source_here.glob('*.py')}
+         artifacts.update({str(p):h.sha(p) for p in (h.WORKER_SOURCE,h.HOLD_SOURCE)})
+         for source in (h.WORKER_SOURCE,h.HOLD_SOURCE):shutil.copyfile(source,self.root/source.name)
+         envspec=importlib.util.spec_from_file_location('fixture_test_hold',h.HOLD_SOURCE)

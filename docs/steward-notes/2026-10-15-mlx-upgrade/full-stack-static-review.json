@@ -1,0 +1,392 @@
+{
+  "schema": "mlx_full_stack_static_review_v1",
+  "reviewed_at": "2026-10-16T00:35:39Z",
+  "reviewer": "codex-mlx-upgrade/mlx_upstream",
+  "scope": "Read installed source, package metadata, model configuration and safetensors headers only. No target-package imports, model loading, GPU operations, live requests, source edits or runtime changes.",
+  "stages": {
+    "comparison": "core: MLX0.32.4, MLX-LM0.31.3",
+    "candidate": "full: MLX0.32.4, MLX-LM0.32.0, Transformers5.7.0"
+  },
+  "acceptance": {
+    "runtime_qualified": false,
+    "promotion_accepted": false,
+    "proof_input": false,
+    "conclusion": "No confirmed static API compatibility blocker found. A meaningful repetition-history behavior change requires Stage2 matched output and feedback review; static review cannot establish load success, numerical correctness, quality, timing or memory acceptance."
+  },
+  "source_identity": {
+    "coupled_astrid_server.py": {
+      "core_sha256": "d67a0704c7498c49ed0ac36ea5b3d161f74753419f823327f1b1572d9203610f",
+      "full_sha256": "d67a0704c7498c49ed0ac36ea5b3d161f74753419f823327f1b1572d9203610f",
+      "identical": true
+    },
+    "generation_controls.py": {
+      "core_sha256": "f1fcf078ab20c106ad41b7142f54125413d66b3b8e3687d6d6eb1930b3b9cd13",
+      "full_sha256": "f1fcf078ab20c106ad41b7142f54125413d66b3b8e3687d6d6eb1930b3b9cd13",
+      "identical": true
+    },
+    "mlx_reservoir.py": {
+      "core_sha256": "7bf189ff5d618e9002a623ae5d38a206758a80738ee79477eaf8059a1d383f1e",
+      "full_sha256": "7bf189ff5d618e9002a623ae5d38a206758a80738ee79477eaf8059a1d383f1e",
+      "identical": true
+    },
+    "wide_coupling.py": {
+      "core_sha256": "1bc08b46e1d4f869894384504fc31453be5afaf9319e80c351324f73d6b7ff73",
+      "full_sha256": "1bc08b46e1d4f869894384504fc31453be5afaf9319e80c351324f73d6b7ff73",
+      "identical": true
+    }
+  },
+  "static_compatibility": [
+    {
+      "area": "loader_and_model",
+      "finding": "load still accepts model_config and lazy and returns (model, tokenizer). gemma4.Model and sanitize remain; language_model.model.embed_tokens and make_cache remain compatible with frozen server. Keep existing shim: upstream adds vision filtering, while the frozen shim also filters audio_embedder tensors.",
+      "evidence": [
+        "frozen_server",
+        "full_loader",
+        "full_gemma_wrapper"
+      ]
+    },
+    {
+      "area": "quantization",
+      "finding": "New per-tensor inference is consistent with all331 text quantized tensors inspected using safetensors headers: all scales BF16, all packed shapes imply5bits at configured group64, and weight/bias entries are present. This is structural evidence, not an actual load.",
+      "evidence": [
+        "full_loader",
+        "pinned_model_config"
+      ]
+    },
+    {
+      "area": "gemma_shared_kv",
+      "finding": "New sanitize logic drops projections for shared-KV layers. The pinned text config has num_hidden_layers48 and num_kv_shared_layers0, so no actual layer is newly removed by this branch.",
+      "evidence": [
+        "full_gemma_text",
+        "pinned_model_config"
+      ]
+    },
+    {
+      "area": "generation_and_feedback_api",
+      "finding": "generate_step retains positional prompt/model, sampler and logits_processors, two-element token/logprob yields and generation_stream. Added stream argument defaults to the same exported stream. MLX0.32.4 declares ThreadLocalStream support. Frozen reservoir ticks continue only for nonterminal, nonfiltered emitted tokens on generation_stream.",
+      "evidence": [
+        "full_generation",
+        "core_generation",
+        "mlx_stream_api",
+        "frozen_server"
+      ]
+    },
+    {
+      "area": "tokenizer",
+      "finding": "Transformers5.7 retains explicit GemmaTokenizer and generic config fallback when model configuration lookup is unsupported. MLX wrapper still exposes encode, template delegation with enable_thinking=False, EOS IDs and detokenizer reset/add/finalize. No actual tokenizer construction or rendered-prompt equivalence was performed.",
+      "evidence": [
+        "full_tokenizer_wrapper",
+        "transformers_auto_tokenizer",
+        "transformers_gemma_tokenizer",
+        "transformers_tokenizer_backend",
+        "pinned_tokenizer_config"
+      ]
+    },
+    {
+      "area": "dependency_versions",
+      "finding": "Prepared mlx0.32.4 and transformers5.7.0 meet MLX-LM0.32.0 constraints. Prepared huggingface-hub1.8.0, tokenizers0.22.2 and safetensors0.7.0 meet relevant Transformers5.7 metadata constraints.",
+      "evidence": [
+        "mlx_lm_metadata",
+        "transformers_metadata"
+      ]
+    }
+  ],
+  "prompt_history_behavior_change": {
+    "classification": "Meaningful Stage2 behavior change; not an API incompatibility and not an accepted quality result.",
+    "cause": "0.31.3 prefill consumes every prompt token except the final token without appending those chunks to processor history.0.32.0 appends each processed chunk. Both subsequently append the final prompt token and generated tokens, then pass that same history to each processor in order.",
+    "applies_to": "Any tokenized prompt longer than one token with the frozen server, which always installs a reservoir logits processor. It is not restricted to prompts longer than the2048-token prefill chunk.",
+    "additional_repetition": {
+      "owns_separate_history": false,
+      "default_penalty": null,
+      "default_context_size": 20,
+      "default_effect": "No additional repetition processor is constructed when repetition_penalty is omitted. Penalty1 produces an identity transformation.",
+      "when_enabled": "The factory closure slices the supplied tokens[-context_size:] directly. For a fixed identical generated trace and window20, predictionsT1 throughT19 can directly differ from older history; fromT20, lastPrompt+19generated fills the same window. Actual token divergence can persist afterward.",
+      "production_request_claim": "Frozen server default and supported payload behavior verified. This review does not claim every live caller omits or sets repetition_penalty."
+    },
+    "reservoir_repetition": {
+      "always_installed": true,
+      "owns_separate_token_history": false,
+      "default_rep_window": 64,
+      "default_rep_penalty": 2.0,
+      "initial_y2": 0.0,
+      "effect_even_when_additional_penalty_omitted": true,
+      "operation": "When abs(rep)>0.001, rep=coupling_strength*(2*sigmoid(y2)-1); add -rep*2.0 for every token occurrence in supplied history[-64:]. Repeated indices accumulate. Positive rep discourages those tokens and negative rep favors them.",
+      "direct_window_estimate": "Conditioned on identical generated tokens, extra prompt history can affect predictions throughT63. At predictionT64 the preceding63generated tokens plus the final prompt token already fill64 positions in both versions. Divergent generated tokens or reservoir state may carry downstream effects indefinitely.",
+      "earliest_effect": "y2 starts0, so the reservoir repeat term is initially inactive. Both generators precomputeT2 before yieldingT1. IfT1 is ordinary content and its feedback crosses the threshold, the earliest affected prediction isT3. Filtered tokens delay feedback; a terminal token ends generation.",
+      "prompt_is_not_ticked": "Expanded history changes the repeat-logit term; frozen server still does not feed prompt tokens into the reservoir. Only emitted nonterminal, nonfiltered tokens update state.",
+      "quality_implication": "More of the prompt tail can be discouraged or favored early in the response even with additional repetition_penalty=None. Early token differences can then feed back into later reservoir state. Requires actual Stage2 sampled-output and feedback review."
+    },
+    "lookahead_contract": "Both versions predict one token ahead before yielding. Feedback after yieldedT1 first reaches predictionT3, not the already computedT2. max_tokensN computes an extra next-token prediction while yielding exactlyN; trace checks must distinguish predictions from consumer callbacks.",
+    "evidence": [
+      "core_generation",
+      "full_generation",
+      "frozen_controls",
+      "full_sample_utils",
+      "frozen_reservoir",
+      "frozen_server"
+    ]
+  },
+  "remaining_validation": [
+    "Actual baseline/core/full qualification under accepted host-memory conditions.",
+    "CPU toy trace of real generate_step ordering and stream restoration across installed versions.",
+    "Matched native generation completion, rendered prompt, output quality and repetition/coupling review.",
+    "Required Stage1 acceptance and observations before any Stage2 promotion."
+  ],
+  "files": {
+    "frozen_server": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/source/coupled_astrid_server.py",
+      "sha256": "d67a0704c7498c49ed0ac36ea5b3d161f74753419f823327f1b1572d9203610f",
+      "line_ranges": [
+        [
+          228,
+          285
+        ],
+        [
+          289,
+          371
+        ],
+        [
+          532,
+          548
+        ],
+        [
+          1034,
+          1052
+        ],
+        [
+          1119,
+          1204
+        ]
+      ],
+      "role": "Preserved loader, shim, embedding lookup, prompt, processor order, token-to-reservoir feedback"
+    },
+    "frozen_controls": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/source/generation_controls.py",
+      "sha256": "f1fcf078ab20c106ad41b7142f54125413d66b3b8e3687d6d6eb1930b3b9cd13",
+      "line_ranges": [
+        [
+          28,
+          70
+        ]
+      ],
+      "role": "Optional additional repetition penalty defaults to None; window20; forwards supplied history processor"
+    },
+    "frozen_reservoir": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/source/mlx_reservoir.py",
+      "sha256": "7bf189ff5d618e9002a623ae5d38a206758a80738ee79477eaf8059a1d383f1e",
+      "line_ranges": [
+        [
+          208,
+          246
+        ],
+        [
+          268,
+          297
+        ]
+      ],
+      "role": "Always installed reservoir processor; initial y2=0; default window64; frequency-sensitive additive repeat term"
+    },
+    "frozen_wide": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/source/wide_coupling.py",
+      "sha256": "1bc08b46e1d4f869894384504fc31453be5afaf9319e80c351324f73d6b7ff73",
+      "line_ranges": [
+        [
+          1,
+          112
+        ]
+      ],
+      "role": "Embedding-based projection remains frozen"
+    },
+    "core_generation": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/core/.venv/lib/python3.12/site-packages/mlx_lm/generate.py",
+      "sha256": "270778ad53eaca55a8533d82e6752660fe5d2605c4aa0879b48a50a91f69345f",
+      "line_ranges": [
+        [
+          396,
+          470
+        ]
+      ],
+      "role": "0.31.3 drops prefill chunks from processor history; same one-token lookahead"
+    },
+    "full_generation": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages/mlx_lm/generate.py",
+      "sha256": "4a3bf57f5679dac73791f069268866ab5b9336e58582d436b31133984e4b6971",
+      "line_ranges": [
+        [
+          225,
+          225
+        ],
+        [
+          304,
+          319
+        ],
+        [
+          394,
+          473
+        ]
+      ],
+      "role": "0.32.0 API, stream, full-prefill history and one-token lookahead"
+    },
+    "full_sample_utils": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages/mlx_lm/sample_utils.py",
+      "sha256": "3aac92d804b6b91c82a4e2844697a8723de26f6af57e10013a482b967e739cfa",
+      "line_ranges": [
+        [
+          120,
+          134
+        ],
+        [
+          276,
+          306
+        ]
+      ],
+      "role": "Additional repetition processor receives caller tokens and slices them; owns no independent history"
+    },
+    "full_loader": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages/mlx_lm/utils.py",
+      "sha256": "d442babbfd891bfa61ec9c6feead9024e206a333a357c5e4a07554c4ea138965",
+      "line_ranges": [
+        [
+          47,
+          64
+        ],
+        [
+          381,
+          405
+        ],
+        [
+          408,
+          507
+        ],
+        [
+          610,
+          668
+        ]
+      ],
+      "role": "Unified alias, new quantization inference, retained config override/load return API"
+    },
+    "full_gemma_wrapper": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages/mlx_lm/models/gemma4.py",
+      "sha256": "7301367b6ffcfb125f036186650c6f56cb55be6d1e0893edae8308d27049eb47",
+      "line_ranges": [
+        [
+          13,
+          92
+        ]
+      ],
+      "role": "ModelArgs, language_model, sanitize, layers and cache APIs retained"
+    },
+    "full_gemma_text": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages/mlx_lm/models/gemma4_text.py",
+      "sha256": "73ffa75e9069ce7b2f864ccd8f0267bb80c5b5d4e2b73102b8a2a93fe03f936d",
+      "line_ranges": [
+        [
+          611,
+          643
+        ]
+      ],
+      "role": "New shared-KV sanitization; pinned checkpoint has zero shared layers"
+    },
+    "full_tokenizer_wrapper": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages/mlx_lm/tokenizer_utils.py",
+      "sha256": "ecb52655e86ff6d6db6a657601ece11f195e85971482eb2d0f40c20de17eb4c5",
+      "line_ranges": [
+        [
+          353,
+          405
+        ],
+        [
+          513,
+          547
+        ],
+        [
+          661,
+          732
+        ]
+      ],
+      "role": "Template delegation, detokenizer/reset, EOS and tokenizer loading API"
+    },
+    "transformers_auto_tokenizer": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages/transformers/models/auto/tokenization_auto.py",
+      "sha256": "c6dedd0e94d041f57879cd473832df02f37e22b50e5f89a0c74c09ff2f4c8371",
+      "line_ranges": [
+        [
+          680,
+          738
+        ],
+        [
+          849,
+          880
+        ]
+      ],
+      "role": "Generic config fallback and supported tokenizer registration"
+    },
+    "transformers_gemma_tokenizer": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages/transformers/models/gemma/tokenization_gemma.py",
+      "sha256": "ff2481e06983015188575dc62bd2fa0e6f33ed2d01165d940efe77b80ee8d419",
+      "line_ranges": [
+        [
+          26,
+          109
+        ]
+      ],
+      "role": "Explicit GemmaTokenizer remains available"
+    },
+    "transformers_tokenizer_backend": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages/transformers/tokenization_utils_tokenizers.py",
+      "sha256": "71fe603de67a75393063c2c79019c4b62a631f026b247af037ff760ca6986bca",
+      "line_ranges": [
+        [
+          328,
+          440
+        ]
+      ],
+      "role": "Existing tokenizer.json backend and special-token handling"
+    },
+    "mlx_stream_api": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages/mlx/core/__init__.pyi",
+      "sha256": "bcdbd51e4d664df491b5537cfb2d36102f3c49614ca2aba4497fdc99102e7f1e",
+      "line_ranges": [
+        [
+          100,
+          188
+        ]
+      ],
+      "role": "ThreadLocalStream accepted by mx.stream and synchronize"
+    },
+    "mlx_lm_metadata": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages/mlx_lm-0.32.0.dist-info/METADATA",
+      "sha256": "10975e46c6f5eb7549cff8bd897e6cd9cd3167bec55bbf043f92bf2621af217e",
+      "line_ranges": [
+        [
+          21,
+          24
+        ]
+      ],
+      "role": "Requires mlx>=0.32.2 and transformers>=5.7.0"
+    },
+    "transformers_metadata": {
+      "path": "/Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages/transformers-5.7.0.dist-info/METADATA",
+      "sha256": "4c3fdee409f3c12a1c54dd780e8b9f0eca177a6004db4418f0e3794e01ca2cac",
+      "line_ranges": [
+        [
+          25,
+          32
+        ]
+      ],
+      "role": "Relevant dependency constraints"
+    },
+    "pinned_model_config": {
+      "path": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09/config.json",
+      "sha256": "73fa40c54e0bc2ec00cddba6d600f99565854120e28fa675ac5ac589e97f5240",
+      "line_ranges": [],
+      "role": "Pinned unified Gemma model configuration; no model_file; num_kv_shared_layers0"
+    },
+    "pinned_tokenizer_config": {
+      "path": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09/tokenizer_config.json",
+      "sha256": "fc1384a911d2c9860ac07bc3ceafff20bff26695991744b7dbe5e1e4522bfa57",
+      "line_ranges": [],
+      "role": "Explicit GemmaTokenizer class, locally pinned tokenizer assets"
+    }
+  }
+}

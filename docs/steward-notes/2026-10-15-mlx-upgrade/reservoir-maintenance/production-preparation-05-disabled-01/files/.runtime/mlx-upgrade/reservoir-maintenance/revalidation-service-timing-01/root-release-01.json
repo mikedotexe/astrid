@@ -1,0 +1,42 @@
+{
+  "all_agent_tests_held": true,
+  "at": "2026-10-17T01:37:14.086193+00:00",
+  "ceilings": {
+    "cooperative_stage_s": 120,
+    "cooperative_total_s": 180,
+    "logical_bytes": 4715809975,
+    "max_file_bytes": 2180277,
+    "read_opens": 11569
+  },
+  "host_spot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/host-budget-spot-01.json",
+    "sha256": "5d5f27d9d777ade9a570aa3577c4ccdf8ab4f903075b5a384e035af9d37854e2"
+  },
+  "independent_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/independent-guard-review-01.json",
+    "sha256": "0a416519c122200e69972e960978f88936d755df1f1164035aea6891e585df82"
+  },
+  "inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-inputs-01.json",
+    "sha256": "5bbabc9c88080f4fd4c79c6224bbfe0b00c1064a4f7908451a97273214f24a14"
+  },
+  "output": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-result-01.json",
+  "pressure_now": "1",
+  "production_qualified": false,
+  "retry_authorized": false,
+  "schema": "bounded_service_review_timing_root_release_v1",
+  "scope": "exact unchanged service-v3 review_matrix.review once; no child/numerical/OS control",
+  "single_stage_allowed": true,
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/root-source-review-01.json",
+    "sha256": "378df50574eb428a74a77adf001c4fce018c661bf2c3c4937798b3c6d2e0f49d"
+  },
+  "tests": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/guard-tests-01.json",
+    "sha256": "9c7e3ed6873adbe30b16cc9d6a08cf8915157229fd184b4cba2d2134792b3ee7"
+  },
+  "wrapper": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review.py",
+    "sha256": "3acb70ced2ff9adef261897ec3d726a81646efdebe2b0943caa62beb464fe418"
+  }
+}

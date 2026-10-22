@@ -1,0 +1,55 @@
+{
+  "schema": "reservoir_entrypoint_independent_source_review_v1",
+  "created_at": "2026-10-17T01:20:10.150693+00:00",
+  "reviewer": "mlx_upstream",
+  "status": "accepted_disabled_source_only_tests_unrun",
+  "accepted_source": true,
+  "production_qualified": false,
+  "execution_authorized": false,
+  "checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-source-checkpoint-01.json",
+    "sha256": "86f4450044c8af30eeb79680939d226ecbccfcfade7fe30a5c92dda51b103608"
+  },
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_entrypoint.py": "a32fac0b1733719ac3c995215f95b97f13d606cc657f6707166bd7a21661dcd1",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_preflight.py": "8b355ee2a9b90fff1f7bf26a8923e59294abf1563604645b36ac279d1d51e824",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_entrypoint.py": "d43ddb7deffa4b92d966e5f31f7eda53eabfe3f3fc6ff0731743ab594e002801",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_preflight.py": "c998cb23966aadd35d265d8446ba61b38ac615b320d3a2c53f140414cb1bf66c"
+  },
+  "interfaces_read": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_host.py": "18bf34c606df39da65c4d7b392d51e88d7285b0048c032bf7a7877df9da9dfae",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_retained.py": "5c287b8757dfd7e8eb876fa8064edba7e4d51d11c179a0c3ed7274effe331a9b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery_driver.py": "a092c51499c353b53ddf4c09a43cf2d308ce951a535274f652cf755fb815d904",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/reservoir_maintenance.py": "55e53b84d8caae818fc29fb997761c160cb296e2512207d4d9dbe48da15c5536",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/transaction_execution.py": "2b4e5ad98f4e920ceb67a161480afaffde9e6a44e3c9007645dc9e9445ccc4cb"
+  },
+  "blocking_findings": [],
+  "checks": [
+    "Ordinary non-elevated uid and interactive stdin required for action modes; read-only check/inspect do not require TTY.",
+    "Both independent false production flags reject action modes before preparation read, Host construction or capture.",
+    "Exact bounded owned canonical preparation/head bytes, SHA256, fixed transaction root, uid, fixed loaded module origins, full local runtime helper hashes and exact pinned framework interpreter family are enforced.",
+    "Fresh refuses any retained root; raw admission precedes capture; original preparation is reread before and after capture; one Controller.run call uses its existing shared execution lock.",
+    "Resume requires exact four history hashes, retained Host attachment without capture, unchanged preparation, one resume_one call and the existing authoritative under-lock reconstruction.",
+    "Preflight delegates to the exact fixed-origin final fixture reader; legacy fixture fields no longer supply acceptance; normalized interpreter and host proof remain mandatory.",
+    "No retry, cleanup, rollback, arbitrary target, arbitrary command or privilege elevation was added. Exceptions retain effects and records."
+  ],
+  "test_review": {
+    "declared_tests": 16,
+    "executed_by_reviewer": 0,
+    "source_only": "Tests use temporary JSON records and mocked Host/OS boundaries. They cover disabled/no-capture, uid/TTY, exact record hash/type/path, stale/fresh root, preparation drift, one-step dispatch and preserved capture errors.",
+    "nonblocking_gap": "Dispatch tests mock source_and_interpreter; focused fake tests of that new function (wrong loaded origin, omitted helper, interpreter family/hash drift) would strengthen final enabled-release qualification."
+  },
+  "limits": [
+    "This review does not enable flags or accept the actual OS recovery fixture, ProductionHost transaction, stopped live restore or maintenance duration.",
+    "Partial capture may leave an incomplete transaction before controller journal creation; it remains an explicit operator-review stop with no automatic capture replay.",
+    "Subsequent helper-closure additions or source changes require a new exact-source checkpoint/review delta."
+  ],
+  "reviewer_actions": {
+    "source_read_and_hash_only": true,
+    "tests": 0,
+    "target_imports": 0,
+    "numeric_imports": 0,
+    "runtime_probes": 0,
+    "service_changes": 0
+  }
+}

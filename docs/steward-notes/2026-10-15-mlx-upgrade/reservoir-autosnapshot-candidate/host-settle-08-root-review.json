@@ -1,0 +1,144 @@
+{
+  "accepted_mlx_baseline": false,
+  "all_health_samples_passed": true,
+  "all_source_and_process_identities_matched": true,
+  "automatic_repeat": false,
+  "build_test_activity_samples": 0,
+  "completed_at": "2026-10-16T22:49:47.704548+00:00",
+  "created_at": "2026-10-16T22:52:03.134141+00:00",
+  "current_eligible_window_s": 300.0068550109863,
+  "duration_s": 302.0164190419018,
+  "eligible_window_sample_indices": [
+    0,
+    60
+  ],
+  "final_sample_to_completion_s": 2.007769823074341,
+  "first_sample_after_start_s": 0.2662041187286377,
+  "five_minute_eligible_window_observed": true,
+  "health_failure_samples": 0,
+  "host_cpu_idle_percent_range": [
+    28.24,
+    78.16
+  ],
+  "independent_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-review.json",
+    "sha256": "114012c4b785c120b1cc236159f79f8df8e21bcc5bb6b221dda224bf478a845e"
+  },
+  "input_binding": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-bindings.json",
+    "sha256": "49916f600b4414d41d91ce965051db60de862b9bce597efdccb7ddf43ad7cc06"
+  },
+  "invalid_sample_gaps": 0,
+  "launch": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-launch-01.json",
+    "sha256": "5ec5f8af851f0c5f1da3486d22c0e3e396fa53cdff2fcd94d283a44f70a98b2d"
+  },
+  "limits": [
+    "Accepts this completed sampled host admission window only. It is not an accepted MLX passive baseline, a model/package qualification, a service change authorization, or a guarantee of conditions after completion.",
+    "Root must retain current ownership and independently enforce the exact qualification release and continuous v2 host supervision before and during any private numerical case; later contention or stale admission is not waived.",
+    "No causal RAM-reclaim or remote-session-closure conclusion is drawn. Build detection covers observed Cargo/rustc/target-test executables, not all possible CPU activity.",
+    "Identity proof is the exact reviewed observer's every-sample validation plus matching start/end maps. Reviewer did not run current probes or rehash237 live inputs.",
+    "Earlier failed windows and refused preflights remain valid historical evidence."
+  ],
+  "longest_eligible_window_s": 300.0068550109863,
+  "max_sample_gap_s": 5.008225917816162,
+  "min_sample_gap_s": 4.991710901260376,
+  "numeric_cases_authorized": false,
+  "numeric_cases_executed": 0,
+  "observation_errors": [],
+  "passed": true,
+  "per_sample_identity_checks_passed": 61,
+  "positive_consecutive_swap_increases": 0,
+  "preflight": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-preflight-03.json",
+    "sha256": "4cca45e2bc74425368ed80837da56ecd4bae2e1f6573e2e43df3e99b1c820540"
+  },
+  "pressure_level_counts": {
+    "1": 61
+  },
+  "production_mutations": 0,
+  "protected_exact_processes": 7,
+  "protected_files": 237,
+  "provenance": {
+    "completed_passive_inputs": [
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observations-post-perception-01/20261016T012057Z/soak_result.json",
+        "sha256": "0163de7a88bc7c5b75a44077660a6f4790dfa187ea293ba192f6fc6b8a1cc7f1"
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive-rusage-02.json",
+        "sha256": "226fe7c63ad3950cd50c5d7498904515cee2a320d923b853b7a3a4e73b23396b"
+      }
+    ],
+    "historical_failed07": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07.json",
+      "sha256": "4ca343f39773e3910b449facc632bc955471a6d5743e7457e20c2087b4106848"
+    },
+    "historical_failed07_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-root-review.json",
+      "sha256": "dd35bd2266028f398e91961959184eef5ba718ef8b07c7d7a12028b9dac2ba4a"
+    },
+    "observer_pid": 23587,
+    "ownership_reaudit": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-ownership-reaudit.json",
+      "sha256": "da69b1504897dfacd26c2258ed3ac1cbffd469d98bb3748822dc2e54bec602db"
+    },
+    "perception_restart_receipt": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/maintenance/perception-recover-01.json",
+      "sha256": "5fdc6bdccfbaf5acf37e1bdf8e25f95e307a225f284428712bbcaf2a2e8bc6a6"
+    },
+    "retained_cpu_receipt": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/focused-tests-final-07.json",
+      "sha256": "51652181168727dc08b4ddfe3764454e61ff84c723dd6a973c8377dd30ca8f84"
+    },
+    "source_binding_preflight_launch_and_endpoint_consistent": true,
+    "steward_pause_generation": 528
+  },
+  "raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08.json",
+    "sha256": "2624125047f38c00fee0fa393908b827977ae43c17393445395a15945e605227"
+  },
+  "reason": "Root and independent recomputation accept the strict ending300.006855-second window. Each numerical case still requires fresh root release, healthy v2 coverage and exact frozen harness; no MLX baseline or production change accepted.",
+  "reviewer": "root",
+  "root_raw_assessment": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-root-raw-assessment-01.json",
+    "sha256": "293b199f5b1ebcdd1e345a1decdbdf50c5bfaa41da75a08fc524980c9caaece8"
+  },
+  "samples": 61,
+  "schema": "reservoir_fixture_host_settle_review_v1",
+  "source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-observer.py",
+    "sha256": "114fcec2a3263e98646628189fdb0c1e40f8e3032cb5716e08f00713e3845a78"
+  },
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-source-review.json",
+    "sha256": "d1bb2c3d96c864a689e26ca661cc6f35b9605d8961e7d704d0ec6c4c45eeabec"
+  },
+  "started_at": "2026-10-16T22:44:45.423719+00:00",
+  "state": "completed_passed",
+  "swap_end_bytes": 17875075072.0,
+  "swap_net_change_bytes": -2481518018.5600014,
+  "swap_start_bytes": 20356593090.56,
+  "vm_byte_ranges": {
+    "compressor_bytes": {
+      "max": 12631392256,
+      "min": 11302109184
+    },
+    "free_bytes": {
+      "max": 6334300160,
+      "min": 92897280
+    },
+    "inactive_bytes": {
+      "max": 16652533760,
+      "min": 8717303808
+    },
+    "speculative_bytes": {
+      "max": 417234944,
+      "min": 160104448
+    },
+    "wired_bytes": {
+      "max": 32485539840,
+      "min": 21970059264
+    }
+  }
+}

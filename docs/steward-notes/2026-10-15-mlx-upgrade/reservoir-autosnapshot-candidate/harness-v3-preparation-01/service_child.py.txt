@@ -1,0 +1,330 @@
+"""Released real-service child. Importing this file does not import numeric packages."""
+from __future__ import annotations
+
+import argparse
+import asyncio
+from contextlib import asynccontextmanager
+import importlib.metadata
+import hashlib
+import gc
+import json
+import os
+from pathlib import Path
+import sys
+import time
+import traceback
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common import (CASES, Events, ImportGuard, check_imports, check_source, digest,
+                    harness_hashes, read_json, require, write_json)
+from fixture import COUNT, NAMES, fill
+from process_identity import identity, interpreter, same_identity
+from snapshot_oracle import expected_payload, verify_files, verify_restored
+
+
+class Recorder:
+    def __init__(self, np, service, case, variant, events):
+        self.np, self.service, self.case, self.variant, self.events = np, service, case, variant, events
+        self.auto_task = None
+        self.phase = "seed"
+        self.index = 0
+        self.rows, self.batches, self.pushes = [], [], []
+        self.last_expected = {}
+        self.last_files = {}
+        self.cancellation_seen = False
+        self.original = {name: getattr(service, name) for name in
+                         ("snapshot_handle", "snapshot_all", "auto_snapshot_loop", "push_handle_state")}
+        if variant == "candidate":
+            self.original["snapshot_all_cooperative"] = service.snapshot_all_cooperative
+        self.save_handle = service.persistence.save_handle
+
+    def snapshot(self, name):
+        self.index += 1
+        index, phase = self.index, self.phase
+        expected = expected_payload(self.np, self.service, name)
+        started = time.time()
+        row = {"name": name, "index": index, "phase": phase, "started_wall": started,
+               "started_mono": time.monotonic(), "expected": expected, "passed": False}
+        self.rows.append(row)
+        self.events.emit("writer_start", name=name, index=index, phase=phase)
+        try:
+            result = self.original["snapshot_handle"](name)
+            row["completed_wall"] = time.time()
+            row["files"] = verify_files(self.np, self.service.persistence.state_dir, name,
+                                         expected, started, row["completed_wall"],
+                                         self.service.persistence.state_dir.parent / "snapshots" / phase)
+            row["passed"] = True
+            self.last_expected[name] = expected
+            self.last_files[name] = row["files"]
+            return result
+        except BaseException as error:
+            row["error"] = f"{type(error).__name__}: {error}"
+            if phase == "periodic" and self.case == "writer-error" and index == 34:
+                old = self.last_files[name]
+                state = self.service.persistence.state_dir
+                row["prior_file_preserved"] = (
+                    digest(state / f"{name}.npz") == old["npz_sha256"]
+                    and digest(state / f"{name}_thermostats.json") == old["thermostat_sha256"])
+            raise
+        finally:
+            row["completed_mono"] = time.monotonic()
+            self.events.emit("writer_end", name=name, index=index, phase=phase,
+                             passed=row["passed"], error=row.get("error"))
+            if phase == "periodic" and self.case.startswith("cancel") and index == 7:
+                asyncio.get_running_loop().call_soon(self.auto_task.cancel)
+
+    def delayed_save(self, *args, **kwargs):
+        if self.phase == "periodic":
+            if self.case == "writer-error" and self.index == 34:
+                raise OSError("injected private writer failure before file write")
+            delay = 20 / COUNT if self.case == "aggregate" else 0
+            if self.case == "single" and self.index == 1:
+                delay = 3.2
+        else:
+            delay = 20 / COUNT if self.phase == "final" and self.case == "cancel-delayed-final" else 0
+        if delay:
+            time.sleep(delay)
+        return self.save_handle(*args, **kwargs)
+
+    def begin(self, phase):
+        self.phase, self.index = phase, 0
+        row = self.events.emit("batch_start", phase=phase)
+        self.batches.append(row)
+
+    def end(self, error=None):
+        self.batches.append(self.events.emit("batch_end", phase=self.phase, count=self.index,
+                                           error=error))
+
+    def synchronous(self):
+        phase = "periodic" if asyncio.current_task() is self.auto_task else "final"
+        self.begin(phase)
+        try:
+            return self.original["snapshot_all"]()
+        finally:
+            self.end()
+
+    async def cooperative(self):
+        self.begin("periodic")
+        error = None
+        try:
+            return await self.original["snapshot_all_cooperative"]()
+        except BaseException as caught:
+            error = type(caught).__name__
+            raise
+        finally:
+            self.end(error)
+
+    async def auto(self):
+        self.auto_task = asyncio.current_task()
+        try:
+            return await self.original["auto_snapshot_loop"]()
+        except asyncio.CancelledError:
+            self.cancellation_seen = True
+            self.events.emit("auto_cancelled")
+            raise
+
+    def push(self, name, *args, **kwargs):
+        before = self.service.handles[name].tick_count
+        result = self.original["push_handle_state"](name, *args, **kwargs)
+        row = self.events.emit("push_applied", name=name, before_tick=before,
+                               after_tick=self.service.handles[name].tick_count,
+                               meta=kwargs.get("meta"), response=result)
+        self.pushes.append(row)
+        return result
+
+    def install(self):
+        self.service.snapshot_handle = self.snapshot
+        self.service.snapshot_all = self.synchronous
+        self.service.auto_snapshot_loop = self.auto
+        self.service.push_handle_state = self.push
+        self.service.persistence.save_handle = self.delayed_save
+        if self.variant == "candidate":
+            self.service.snapshot_all_cooperative = self.cooperative
+
+    def restore(self):
+        for name, method in self.original.items():
+            setattr(self.service, name, method)
+        self.service.persistence.save_handle = self.save_handle
+
+
+async def exercise(args, record, events):
+    source, hashes = check_source(args.manifest, args.variant)
+    require(sys.version_info[:3] == (3, 12, 13), "use pinned Python 3.12.13")
+    require(interpreter() == read_json(args.manifest)["expected_interpreter"], "pinned child interpreter changed")
+    require(importlib.metadata.version("websockets") == "16.0", "use pinned websockets16.0")
+    guard = ImportGuard()
+    sys.meta_path.insert(0, guard)
+    sys.path.insert(0, str(source))
+    # This is the only real-service import boundary; parent must explicitly release execution.
+    import reservoir_service as module
+    import numpy as np
+    import torch
+    torch.set_num_threads(1)
+    torch.set_default_device("cpu")
+    state = args.output / "state"
+    service = module.ReservoirService(input_dim=32, n_nodes=192, backend="numpy", state_dir=state)
+    require(service.bridge.default_backend == "numpy", "wrong backend")
+    record["module_origins"] = check_imports(source)
+    record["packages"] = {name: importlib.metadata.version(name) for name in
+                          ("numpy", "torch", "scikit-learn", "websockets")}
+    require(record["packages"] == read_json(args.manifest)["expected_packages"], "prepared CPU packages changed")
+    record["distribution_files"] = {}
+    for name in record["packages"]:
+        distribution = importlib.metadata.distribution(name)
+        record["distribution_files"][name] = {
+            str(distribution.locate_file(item)): digest(distribution.locate_file(item))
+            for item in distribution.files or [] if Path(item).name in ("METADATA", "RECORD")}
+        require(len(record["distribution_files"][name]) == 2, f"distribution provenance missing: {name}")
+    record["source_hashes"] = hashes
+    fill(np, service)
+    recorder = Recorder(np, service, args.case, args.variant, events)
+    # Seed using the actual writer, and validate all files before runtime begins.
+    service.snapshot_handle = recorder.snapshot
+    for name in NAMES:
+        service.snapshot_handle(name)
+    service.snapshot_handle = recorder.original["snapshot_handle"]
+    require(len(recorder.last_expected) == COUNT, "seed incomplete")
+    record["fixture_sha256"] = hashlib.sha256(json.dumps(
+        {name: {key: value for key, value in expected.items() if key != "last_live_wall_time"}
+         for name, expected in recorder.last_expected.items()}, sort_keys=True, separators=(",", ":"),
+        allow_nan=False).encode()).hexdigest()
+    recorder.install()
+    real_serve = module.serve
+
+    @asynccontextmanager
+    async def owned_serve(handler, host, port, *positional, **kwargs):
+        require(host == "127.0.0.1" and port == 0, "only an OS-selected loopback port is allowed")
+        async with real_serve(handler, host, port, *positional, **kwargs) as server:
+            addresses = [sock.getsockname() for sock in server.sockets]
+            require(len(addresses) == 1 and addresses[0][0] == "127.0.0.1", "unexpected listener")
+            events.emit("ready", address=list(addresses[0]))
+            yield server
+
+    module.serve = owned_serve
+    loop = asyncio.get_running_loop()
+    control_buffer = bytearray()
+
+    def control():
+        data = os.read(args.control_fd, 4096)
+        if not data:
+            loop.remove_reader(args.control_fd)
+            events.emit("control_eof")
+            service._shutdown.set()
+            return
+        control_buffer.extend(data)
+        while b"\n" in control_buffer:
+            line, _, rest = control_buffer.partition(b"\n")
+            control_buffer[:] = rest
+            require(line == b"shutdown", "unknown private control command")
+            events.emit("shutdown_requested")
+            service._shutdown.set()
+
+    loop.add_reader(args.control_fd, control)
+    try:
+        await service.run(host="127.0.0.1", port=0)
+        # Allow cancellation of the now-idle autosnapshot task to be delivered.
+        if recorder.auto_task is not None:
+            await asyncio.gather(recorder.auto_task, return_exceptions=True)
+        record["writer_rows"] = recorder.rows
+        record["batches"] = recorder.batches
+        record["pushes"] = recorder.pushes
+        record["auto_cancellation_seen"] = recorder.cancellation_seen
+        final_rows = [row for row in recorder.rows if row["phase"] == "final"]
+        require(len(final_rows) == COUNT and all(row["passed"] for row in final_rows),
+                "final snapshot did not preserve every handle")
+        errors = [row for row in recorder.rows if not row["passed"]]
+        if args.case == "writer-error":
+            require(len(errors) == 1 and errors[0].get("prior_file_preserved") is True,
+                    "injected failure did not preserve prior file or unexpected writer error")
+        else:
+            require(not errors, "unexpected writer failure")
+        expected = dict(recorder.last_expected)
+    finally:
+        record["writer_rows"] = recorder.rows
+        record["batches"] = recorder.batches
+        record["pushes"] = recorder.pushes
+        recorder.restore()
+        module.serve = real_serve
+        loop.remove_reader(args.control_fd)
+        os.close(args.control_fd)
+    record["process_identity_after_listener"] = identity(os.getpid())
+    same_identity(record["process_identity_before"], record["process_identity_after_listener"])
+    events.emit("listener_closed", process_identity=record["process_identity_after_listener"])
+    return source, state, expected
+
+
+def restore_cycles(args, record, source, state, expected):
+    # asyncio.run has closed its loop/tasks/signal handlers. Release unreachable old
+    # service cycles before constructing the first fresh restore object.
+    gc.collect()
+    import reservoir_service as module
+    import numpy as np
+    # Fresh real object: restore, check every field, resnapshot, restore again.
+    restored = module.ReservoirService(input_dim=32, n_nodes=192, backend="numpy", state_dir=state)
+    restored.restore_all()
+    record["restore_one"] = verify_restored(np, restored, expected)
+    roundtrip_started = time.time()
+    restored.snapshot_all()
+    roundtrip_ended = time.time()
+    record["roundtrip_files"] = {
+        name: verify_files(np, state, name, expected[name], roundtrip_started, roundtrip_ended,
+                           args.output / "snapshots" / "roundtrip") for name in NAMES}
+    del restored
+    gc.collect()
+    restored_two = module.ReservoirService(input_dim=32, n_nodes=192, backend="numpy", state_dir=state)
+    restored_two.restore_all()
+    record["restore_two"] = verify_restored(np, restored_two, expected)
+    before = restored_two.handles[NAMES[-1]].event_seq
+    restored_two.push_handle_state(NAMES[-1], *[__import__("base64").b64encode(
+        layer.astype(np.float32).tobytes()).decode() for layer in restored_two.bridge.read_state(NAMES[-1])],
+        tick_delta=0, meta={"source": "synthetic-sequence-check"})
+    require(restored_two.handles[NAMES[-1]].event_seq == before + 1, "event sequence did not continue")
+    record["event_sequence_continued"] = True
+    record["final_import_origins"] = check_imports(source)
+    for files in record["distribution_files"].values():
+        require(all(digest(path) == expected_hash for path, expected_hash in files.items()),
+                "distribution provenance changed during case")
+    check_source(args.manifest, args.variant)
+    record["preservation_passed"] = True
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--manifest", type=Path, required=True)
+    parser.add_argument("--variant", choices=("original", "candidate"), required=True)
+    parser.add_argument("--case", choices=CASES, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--control-fd", type=int, required=True)
+    args = parser.parse_args()
+    args.output = args.output.resolve()
+    require(args.output.is_dir() and not (args.output / "child.json").exists(), "fresh child output required")
+    events = Events(args.output / "events.jsonl")
+    before = harness_hashes()
+    record = {"schema": "reservoir_private_child_v1", "variant": args.variant, "case": args.case,
+              "pid": os.getpid(), "started_wall": time.time(), "preservation_passed": False,
+              "manifest_sha256": digest(args.manifest), "harness_hashes": before,
+              "process_identity_before": identity(os.getpid()), "interpreter": interpreter()}
+    status = 1
+    try:
+        events.emit("child_started", executable=sys.executable)
+        source, state, expected = asyncio.run(exercise(args, record, events))
+        restore_cycles(args, record, source, state, expected)
+        record["process_identity_after_restore"] = identity(os.getpid())
+        same_identity(record["process_identity_before"], record["process_identity_after_restore"])
+        require(harness_hashes() == before, "harness changed during run")
+        status = 0
+    except BaseException as error:
+        record["error"] = f"{type(error).__name__}: {error}"
+        traceback.print_exc()
+    finally:
+        record["completed_wall"] = time.time()
+        record["exit_code"] = status
+        events.emit("child_completed", exit_code=status)
+        events.close()
+        record["events_sha256"] = digest(args.output / "events.jsonl")
+        write_json(args.output / "child.json", record, exclusive=True)
+    return status
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

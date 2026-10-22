@@ -1,0 +1,44 @@
+--- /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_coordinator.py (disabled archive)
++++ /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_coordinator.py (final enabled)
+@@ -15,7 +15,7 @@
+ 
+ HERE = Path(__file__).resolve().parent
+ RUNS = HERE / 'runs'
+-FIXTURE_EXECUTION_ENABLED = False
++FIXTURE_EXECUTION_ENABLED = True
+ MAX_STEPS = 96
+ CONTROL = Path('/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/steward_control_v1/control.json')
+ LEASE = CONTROL.with_name('lease.json')
+--- /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_host.py (disabled archive)
++++ /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_host.py (final enabled)
+@@ -19,7 +19,7 @@
+ import production_preflight as p
+ 
+ m = p.m
+-PRODUCTION_EXECUTION_ENABLED = False
++PRODUCTION_EXECUTION_ENABLED = True
+ HOLDER_PYTHON = Path('/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14')
+ 
+ 
+--- /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/reservoir_maintenance.py (disabled archive)
++++ /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/reservoir_maintenance.py (final enabled)
+@@ -27,7 +27,7 @@
+                    "reservoir_source", "reservoir_candidate", "reservoir_settings", "interpreter",
+                    "helpers", "fixture"}
+ MAX_RECORD = 4 * 1024 * 1024
+-PRODUCTION_CONTROLLER_ENABLED = False
++PRODUCTION_CONTROLLER_ENABLED = True
+ 
+ 
+ class Refusal(RuntimeError):
+--- /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/README.md (disabled archive)
++++ /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/README.md (final preparation)
+@@ -1,6 +1,6 @@
+-# Disabled exact-release owned fixture02
++# Final-source owned fixture02 preparation
+ 
+-This source-only copy preserves fixture01 and its evidence. It adds a finite ordinary-user parent, exact final05 source binding and a retained raw-result producer. FIXTURE_EXECUTION_ENABLED is false. The parent, executors and native adapters refuse OS work while it remains false. No release manifest or OS result is supplied here, and the new tests have not been run.
++This private copy preserves fixture01 and its evidence. It adds a finite ordinary-user parent, exact final05 source binding and a retained raw-result producer. The disabled source archive preserves 62 passing fixture tests and 299 passing maintenance-tool tests with independent reviews. The three execution flags are now literal true through a separately recorded source delta; those test receipts describe the archived disabled bytes. No actual OS fixture has run. Execution still requires an independently reviewed immutable release binding these exact final bytes, current ownership, interpreter and sealed schedule. Enabling these private source flags neither runs a service nor qualifies production maintenance.
+ 
+ The future parent entrypoint is owned_fixture_run.py. Its default prints not_executed; it starts no process or service. Eventual explicit execution must select an independently reviewed immutable release, use the exact pinned interpreter and parent argv, run as the ordinary owning user in a Terminal, and find an unused private root/result path. The coordinating root agent will provide the concrete command only after final source, tests, reviews and current ownership/host gates are accepted. This document is not an execution command.
+ 

@@ -1,0 +1,25 @@
+{
+  "archived_at": "2026-10-16T03:03:45.839567+00:00",
+  "files": [
+    {
+      "archive_path": "design-v1.json",
+      "bytes": 20948,
+      "sha256": "d89206c91b6343ab3278f2b651b011863697c822f804d36b4c0310326db97920",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/design-v1.json"
+    },
+    {
+      "archive_path": "design-v1-provenance.json",
+      "bytes": 2867,
+      "sha256": "7834b1b99561b604c7c9f1679b16d1fdd2678d3c333bf181a3707f0facc09c4b",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/design-v1-provenance.json"
+    }
+  ],
+  "no_runtime_actions": true,
+  "notes": [
+    "Preserve original v1 proposal unchanged; later review may simplify it.",
+    "Root is reviewing a no-wrapper restore verification path using actual private restore on exact stopped bytes, unchanged production inputs and complete clean startup logs. This is deterministic-path evidence, not a direct live byte-equality observation.",
+    "Any hold-control sequence still requires a newly qualified owned fixture and ready exact administrator commands before live use."
+  ],
+  "schema": "reservoir_maintenance_design_archive_v1",
+  "status": "unimplemented_proposal_with_open_design_questions_not_executable"
+}

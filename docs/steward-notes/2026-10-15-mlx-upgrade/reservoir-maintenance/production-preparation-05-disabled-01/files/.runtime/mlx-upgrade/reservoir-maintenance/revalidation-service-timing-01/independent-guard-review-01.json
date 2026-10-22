@@ -1,0 +1,54 @@
+{
+  "actual_timing_released": false,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/design-01.json": "645437257d8f12f85904306aaa4455ccd43861eef9f401ee094c065e4ae1f219",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/run_guard_tests_01.py": "ab3f6ab52aecd91da80652c019f78b2898f4d603254b6716ebe724ef6c4e1e75",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/test_timing_guard.py": "86fd19609903cb077811920fd4ff88fbaf060fa2db2c6cd4accd17a2c214fbd2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review.py": "3acb70ced2ff9adef261897ec3d726a81646efdebe2b0943caa62beb464fe418",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-inputs-01.json": "5bbabc9c88080f4fd4c79c6224bbfe0b00c1064a4f7908451a97273214f24a14"
+  },
+  "blocking_findings": [],
+  "created_at": "2026-10-17T01:36:49.008176+00:00",
+  "limits": [
+    "This accepts the narrow guard implementation and recorded fake-test evidence; no actual service-review timing has run or is authorized by this receipt.",
+    "Cooperative deadline, instrumentation overhead and source-specific logical read charging remain explicit limits; physical I/O and complete05 maintenance duration are unmeasured."
+  ],
+  "log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/guard-tests-01.txt",
+    "sha256": "131a7e3adb35fc2fceaa052b1f68830758b0842a1600a7cd9e9aa46ca42cae11"
+  },
+  "preserved_draft": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review_draft01.py.archive",
+    "sha256": "537e2c0fe9c033ebc0b49a4e65e103364516c461025a396130e021fb6042b996"
+  },
+  "production_qualified": false,
+  "recorded_errors": 0,
+  "recorded_failures": 0,
+  "recorded_guard_violations": [],
+  "recorded_tests": 9,
+  "reviewer": "mlx_upstream",
+  "reviewer_actions": {
+    "payload_traversal": 0,
+    "runtime_probes": 0,
+    "source_and_receipt_read_hash_only": true,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "reviewer_prepublication_check_note": "An initial literal delta-removal assertion used the wrong diagnostic wording. Read-only diff confirmed exactly the three intended added lines; corrected assertion passed. No file was written by that failed check.",
+  "root_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/root-source-review-01.json",
+    "sha256": "378df50574eb428a74a77adf001c4fce018c661bf2c3c4937798b3c6d2e0f49d"
+  },
+  "schema": "reservoir_service_timing_independent_guard_review_v1",
+  "source_delta": "Only the direct os/posix descriptor mutation C-call refusal was added. Exact frozen target source loading, review invocation, read budgets, full result equality and deadline semantics are unchanged.",
+  "status": "accepted_narrow_guard_delta_and_recorded_inert_tests_only",
+  "test_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/guard-tests-01.json",
+    "sha256": "9c7e3ed6873adbe30b16cc9d6a08cf8915157229fd184b4cba2d2134792b3ee7"
+  },
+  "test_scope_review": [
+    "Actual pathlib byte/text reads operate only on tiny temporary inert files and verify profile read counts. Audited read-open charges are supplied explicitly to those isolated tests.",
+    "Fake event/call tests cover unbudgeted reads, writes, descriptor opens, process/network/control actions, byte/visit/file ceilings, descriptor identity drift, repeated read, deadline, import/enumeration refusal and finished-stage reopen.",
+    "The parent runner rejects numerical/hardware/control execution and confirms no six frozen target modules loaded; all five bound artifact hashes and retained log match."
+  ]
+}

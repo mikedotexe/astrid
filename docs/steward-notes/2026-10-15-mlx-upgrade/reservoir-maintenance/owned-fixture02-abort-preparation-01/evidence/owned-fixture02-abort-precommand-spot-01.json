@@ -1,0 +1,154 @@
+{
+  "/Users/v/other/astrid": {
+    "head": "297023ab75ebdc1ee0beb28848d8b50fb4965191",
+    "index": "",
+    "status": " M CHANGELOG.md\n M docs/astrid-mlx-upgrade-runbook.md\n M scripts/astrid_live_soak.py\n M scripts/astrid_mlx_soak_compare.py\n M scripts/astrid_model_canary.py\n M scripts/capture_stack_receipt.sh\n M scripts/test_astrid_live_soak.py\n M scripts/test_astrid_mlx_soak_compare.py\n?? docs/steward-notes/2026-10-15-inbox-format-repair.json\n?? docs/steward-notes/2026-10-15-mlx-upgrade/\n?? docs/steward-notes/2026-10-15-perception-memory/\n?? scripts/astrid_mlx_candidate.py\n?? scripts/astrid_mlx_embedding_gate.py\n?? scripts/astrid_mlx_fixture.py\n?? scripts/astrid_mlx_generator_contract.py\n?? scripts/astrid_mlx_memory.py\n?? scripts/astrid_soak_observer.py\n?? scripts/astrid_soak_performance.py\n?? scripts/model_environment.py\n?? scripts/model_environment_activate.py\n?? scripts/model_qualification.py\n?? scripts/model_runtime_identity.py\n?? scripts/prepare_mlx_environments.py\n?? scripts/qualify_mlx_offline.py\n?? scripts/qualify_mlx_packages.py\n?? scripts/qualify_model_launchd_handoff.py\n?? scripts/stage_mlx_manifests.py\n?? scripts/test_astrid_mlx_candidate.py\n?? scripts/test_astrid_mlx_embedding_gate.py\n?? scripts/test_astrid_mlx_generator_contract.py\n?? scripts/test_astrid_mlx_shutdown.py\n?? scripts/test_astrid_soak_observer.py\n?? scripts/test_model_environment.py\n?? scripts/test_model_environment_activate.py\n?? scripts/test_model_qualification.py\n?? scripts/test_model_runtime_identity.py\n?? scripts/test_prepare_mlx_environments.py\n?? scripts/test_qualify_mlx_packages.py\n?? scripts/test_qualify_model_launchd_handoff.py\n?? scripts/test_stage_mlx_manifests.py\n"
+  },
+  "/Users/v/other/minime": {
+    "head": "b8d47c7ad7adbf21b17f19942e6d3489b4ed65fb",
+    "index": "",
+    "status": ""
+  },
+  "abort_root_absent": true,
+  "completed_at": "2026-10-17T06:32:54.310623+00:00",
+  "coordination": {
+    "actor": "codex-mlx-upgrade",
+    "pause_generation": 528,
+    "paused": true,
+    "reason": "Continue user-authorized isolated reservoir and staged MLX qualification after completed truthful-return paired rollout and clean shared-tree re-audit; preserve all paused automations and unrelated work",
+    "recorded_at": "2026-10-16T18:55:22.383738+00:00",
+    "schema": "steward_control_state_v1",
+    "schema_version": 1
+  },
+  "coordination_sha256": "d722df02a823393130dfb31c402c1600754ef887cda04da2b272adf6099478e3",
+  "health": {
+    "body": {
+      "model": "coupled-astrid",
+      "ready": true,
+      "reservoir": {
+        "last_sync_unix_ms": 1792218710481,
+        "operation": "push_state",
+        "status": "connected"
+      },
+      "status": "ready",
+      "worker": {
+        "heartbeat_age_ms": 44.051,
+        "last_generation_error": null,
+        "phase": "ready",
+        "queue_capacity": 4,
+        "queue_depth": 0
+      }
+    },
+    "http_status": 200
+  },
+  "lease_absent": true,
+  "memory_context_raw": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 10240.00M  used = 9213.00M  free = 1027.00M  (encrypted)\n",
+  "preflight": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-preflight-01.json",
+    "sha256": "94bf0ca4165cbebb662de9bb53020c8d3299b19467008782a9a3aa549140a75a"
+  },
+  "queries": [
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/Users/v/other/astrid",
+        "rev-parse",
+        "HEAD"
+      ],
+      "naturally_reaped": true,
+      "pid": 21373,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "297023ab75ebdc1ee0beb28848d8b50fb4965191\n"
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/Users/v/other/astrid",
+        "diff",
+        "--cached",
+        "--name-status"
+      ],
+      "naturally_reaped": true,
+      "pid": 21374,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/Users/v/other/astrid",
+        "status",
+        "--porcelain=v1"
+      ],
+      "naturally_reaped": true,
+      "pid": 21375,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": " M CHANGELOG.md\n M docs/astrid-mlx-upgrade-runbook.md\n M scripts/astrid_live_soak.py\n M scripts/astrid_mlx_soak_compare.py\n M scripts/astrid_model_canary.py\n M scripts/capture_stack_receipt.sh\n M scripts/test_astrid_live_soak.py\n M scripts/test_astrid_mlx_soak_compare.py\n?? docs/steward-notes/2026-10-15-inbox-format-repair.json\n?? docs/steward-notes/2026-10-15-mlx-upgrade/\n?? docs/steward-notes/2026-10-15-perception-memory/\n?? scripts/astrid_mlx_candidate.py\n?? scripts/astrid_mlx_embedding_gate.py\n?? scripts/astrid_mlx_fixture.py\n?? scripts/astrid_mlx_generator_contract.py\n?? scripts/astrid_mlx_memory.py\n?? scripts/astrid_soak_observer.py\n?? scripts/astrid_soak_performance.py\n?? scripts/model_environment.py\n?? scripts/model_environment_activate.py\n?? scripts/model_qualification.py\n?? scripts/model_runtime_identity.py\n?? scripts/prepare_mlx_environments.py\n?? scripts/qualify_mlx_offline.py\n?? scripts/qualify_mlx_packages.py\n?? scripts/qualify_model_launchd_handoff.py\n?? scripts/stage_mlx_manifests.py\n?? scripts/test_astrid_mlx_candidate.py\n?? scripts/test_astrid_mlx_embedding_gate.py\n?? scripts/test_astrid_mlx_generator_contract.py\n?? scripts/test_astrid_mlx_shutdown.py\n?? scripts/test_astrid_soak_observer.py\n?? scripts/test_model_environment.py\n?? scripts/test_model_environment_activate.py\n?? scripts/test_model_qualification.py\n?? scripts/test_model_runtime_identity.py\n?? scripts/test_prepare_mlx_environments.py\n?? scripts/test_qualify_mlx_packages.py\n?? scripts/test_qualify_model_launchd_handoff.py\n?? scripts/test_stage_mlx_manifests.py\n"
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/Users/v/other/minime",
+        "rev-parse",
+        "HEAD"
+      ],
+      "naturally_reaped": true,
+      "pid": 21376,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "b8d47c7ad7adbf21b17f19942e6d3489b4ed65fb\n"
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/Users/v/other/minime",
+        "diff",
+        "--cached",
+        "--name-status"
+      ],
+      "naturally_reaped": true,
+      "pid": 21377,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/Users/v/other/minime",
+        "status",
+        "--porcelain=v1"
+      ],
+      "naturally_reaped": true,
+      "pid": 21378,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/usr/sbin/sysctl",
+        "kern.memorystatus_vm_pressure_level",
+        "vm.swapusage"
+      ],
+      "naturally_reaped": true,
+      "pid": 21379,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 10240.00M  used = 9213.00M  free = 1027.00M  (encrypted)\n"
+    }
+  ],
+  "schema": "owned_fixture02_abort_precommand_spot_v1",
+  "scope": "read_only_health_and_repository_spot_not_numerical_admission",
+  "service_actions": false,
+  "started_at": "2026-10-17T06:32:54.181227+00:00"
+}

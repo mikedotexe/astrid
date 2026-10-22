@@ -1,0 +1,827 @@
+{
+  "accepted_numerical_proofs_preserved_separately": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-matrix-root-acceptance-01.json",
+      "sha256": "739c5a4261c645747dd516456017c2dacfeb230fb0b84dad2122bc7cf37fa6be"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/qualification.json",
+      "sha256": "023ea4a004d64b841f8bc381b86cc62d24648e521dbb0c4832e4e85563209a2c"
+    }
+  ],
+  "actual_os_fixture_executed": false,
+  "core_python_count": 36,
+  "created_at": "2026-10-17T01:55:58.131570+00:00",
+  "entries": [
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py",
+      "bytes": 7142,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py",
+      "sha256": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/test_reservoir_maintenance.py",
+      "bytes": 18129,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/test_reservoir_maintenance.py",
+      "sha256": "67275c384b058c2f90977d3ec8b60e29c1788d47f08cfa1f983c6dc31bfd0a15"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/final-enabling-design-01.json",
+      "bytes": 27666,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/final-enabling-design-01.json",
+      "sha256": "929eb1ab0867586134de490499d610fb773c1f971c32ce34f1830a2d7c36cbab"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-guarded-tests-01.json",
+      "bytes": 25651,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-guarded-tests-01.json",
+      "sha256": "a84ed9c1332b56e157a58b9843f7023c94959327318c5406a23e49b129c3aee5"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-guarded-tests-01.txt",
+      "bytes": 9659,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-guarded-tests-01.txt",
+      "sha256": "5e53926cfaf2fd215f5237b6d12179b510c6416aa4f66ce216eb46ca64c9b423"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture02-producer-test-closeout-review-01.json",
+      "bytes": 22162,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture02-producer-test-closeout-review-01.json",
+      "sha256": "0972108ed58264d25b84efba963d17711cab91912373d7a38ddaf8f98ab46793"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-recovery-fixture-02-final-release-design-01.json",
+      "bytes": 31291,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-recovery-fixture-02-final-release-design-01.json",
+      "sha256": "bd2d817e42830967b796f99bfad32895aacf1b201484a4b366fa59a48313f019"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-candidate-05-consumer-alignment-design-01.json",
+      "bytes": 20403,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-candidate-05-consumer-alignment-design-01.json",
+      "sha256": "fb16f04676ecc0b373f0acc32746df781e1599906338051198055dcf23786935"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-candidate-05-consumer-alignment-design-02.json",
+      "bytes": 23549,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-candidate-05-consumer-alignment-design-02.json",
+      "sha256": "75ede60f27c6aee89ba3879cd4c01f964cd5ff9a0ee3e82dc89e34b80442080f"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-01-failure-review.json",
+      "bytes": 1570,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-01-failure-review.json",
+      "sha256": "e7a5bac554e99f4181bd1ddc9aeb798100c5a520c1e4cad575aba12a5daadaea"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-01.json",
+      "bytes": 26155,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-01.json",
+      "sha256": "f4bb4eea1fadf2f5ee8b009b3cdb18da6d1bd0e6d09c4641a5cc774ab7d410fd"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-01.txt",
+      "bytes": 48988,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-01.txt",
+      "sha256": "6755a227ff142c8f9493edf349622b68fb3e1de0147c7be50c253568c76d77d3"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-02-independent-review.json",
+      "bytes": 25777,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-02-independent-review.json",
+      "sha256": "ebe749e6ffe2fbe1d33b994fa515beb32f5550de00b8529205ab86d99c5cc768"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-02.json",
+      "bytes": 34549,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-02.json",
+      "sha256": "2eaae3b202d7ebae15afbdc724165aa9e3c34d254db37279c83513ded530ecd0"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-02.txt",
+      "bytes": 48988,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-02.txt",
+      "sha256": "9fae6941ca190a215d50fec38dba3efe0c0f925d84d7886c7908d94afa116fb0"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-disabled-root-test-review-01.json",
+      "bytes": 1651,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-disabled-root-test-review-01.json",
+      "sha256": "58afdda7f9c9dd43e6cc977f1f7c26056fdab08a13fb8de5384d6263b4a2da61"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture02_reader05_tests_01.py",
+      "bytes": 5412,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture02_reader05_tests_01.py",
+      "sha256": "35b4c9b3ac8641839567451921c6f3a0da5d9ee316c2030e0dad5aa1cb8b68a8"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_production05_combined_tests_01.py",
+      "bytes": 5239,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_production05_combined_tests_01.py",
+      "sha256": "a27bb32ea9073c56585767661ce637f89beec555a50400a292cf9783ed93cef0"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_production05_combined_tests_02.py",
+      "bytes": 6434,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_production05_combined_tests_02.py",
+      "sha256": "aa41096549929de49450199ee56b55822284c636208d6e44b18c39988abe5842"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_reader05_tests_02.py",
+      "bytes": 5369,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_reader05_tests_02.py",
+      "sha256": "b5cf482ee7baf380c8b0844b0a5c162dc52b50fe32af30de2171d39f949483e4"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/README.md",
+      "bytes": 5238,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/README.md",
+      "sha256": "77a23e0d16a782c165d513e616b64556a3c192820f5f83445790e44874631a41"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_cleanup.py",
+      "bytes": 12682,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_cleanup.py",
+      "sha256": "5637d6269990e70b9ec0dbc6505173d891171f7dfbeca4c543ca4364c4097a66"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_cleanup_host.py",
+      "bytes": 10401,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_cleanup_host.py",
+      "sha256": "3aa97ac474aa77d67d2617435823c802a5e725526967af3d7b98a26f489f6ace"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_coordinator.py",
+      "bytes": 30328,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_coordinator.py",
+      "sha256": "8916fab1874d6790e3e222b06353e3776fd83c1765500e7e2f64df03f9b1cd8f"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_injection.py",
+      "bytes": 8571,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_injection.py",
+      "sha256": "fb4fac96f776fb615ad26fef3db43856f70e7f7ea0c348a76100021a3a714fc0"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_pin.py",
+      "bytes": 11743,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_pin.py",
+      "sha256": "99f2522f163ba303fd28b71d802dc5bcf749447b29a3f6449e9bccf5da0d2eca"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_plan.py",
+      "bytes": 4532,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_plan.py",
+      "sha256": "6f49c5f5d7f9154e0a1b9e0a69171aa04a1125f8522ed63725087fbea6303c69"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_records.py",
+      "bytes": 8014,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_records.py",
+      "sha256": "728c1f178cb3a6f8e1a88f0229d8a691fb11d11bd8b090e07c480c0ec5b88300"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_result.py",
+      "bytes": 14615,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_result.py",
+      "sha256": "823ce8eb4a036711d8c5b46b6458402a6f2bce6f1af59a4c6a1920edf08e46b2"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_retained.py",
+      "bytes": 24975,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_retained.py",
+      "sha256": "d1b09bc4eae7f41593557fc028ee03289953c8a5b7c8f5cdb205d8807bfc70a2"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_run.py",
+      "bytes": 10139,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_run.py",
+      "sha256": "c5c7117abce79963d22aed713f9d3fee388b6d4d060eda71357ac29f52ac775d"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_setup.py",
+      "bytes": 14476,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_setup.py",
+      "sha256": "731d9243f9e6afc8c019edaf2c13b700d6c896a91e68678d183d50e81e48d28b"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_system.py",
+      "bytes": 7283,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_system.py",
+      "sha256": "96a95258ae81652f5ad3e1bf222f9159163ad134e6dd7113d16fbabeb6576817"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_witnesses.py",
+      "bytes": 11441,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_witnesses.py",
+      "sha256": "3530284ed90730b5c78f277c195d10b20103924806c5d0ca6091f1e20789acd8"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_pin_sentinel.py",
+      "bytes": 1789,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_pin_sentinel.py",
+      "sha256": "1e8008dfb6f2d245232d229e30bd41d3765615ed6f13123993c0776bafdb6829"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_pin_system.py",
+      "bytes": 3554,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_pin_system.py",
+      "sha256": "60897105636e29b6a986f7983e2d6514c7237243e45c34f3c0dd3d00c20493da"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_core.py",
+      "bytes": 4304,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_core.py",
+      "sha256": "111041830169d70bafa98ab54bd2a6f4c76f7d26a7910dc3a68a984d53f2ab15"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_host.py",
+      "bytes": 31198,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_host.py",
+      "sha256": "0fa54ce45e72452fb01108360dc0c48aade212cfc47de77fdf0167a45aba286a"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/raw-proof-interface-01.json",
+      "bytes": 6944,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/raw-proof-interface-01.json",
+      "sha256": "cdfbcbf855401cca73494e16d1b0e409befb78243f4249dc67a9b63c58b932c3"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/raw-proof-interface-02.json",
+      "bytes": 8668,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/raw-proof-interface-02.json",
+      "sha256": "c533c430717c064adb4a918f904fcfb2608824251458666a86cc011395343996"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/root-source-review-01.json",
+      "bytes": 2330,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/root-source-review-01.json",
+      "sha256": "af444e4b0eeff92695fe030d43e30ddb88d33fea1edfc7e398ce7646027a8f13"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/root-test-count-clarification-01.json",
+      "bytes": 1088,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/root-test-count-clarification-01.json",
+      "sha256": "d2feda75f41aef53fd734cadd4596d00ec457ce671bc4ff2783dc454d7c3fc49"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-checkpoint-01.json",
+      "bytes": 5126,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-checkpoint-01.json",
+      "sha256": "c0219ede5508a8d4f8bb68f7c6dedc29e602c9d91d42d1ca4d8c839be0f25890"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-checkpoint-02.json",
+      "bytes": 7364,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-checkpoint-02.json",
+      "sha256": "54eee06e05237fd0c4f614cb707c18a1708321bbfea4d0c5bd5a2ddccfe873e4"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-checkpoint-03.json",
+      "bytes": 7393,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-checkpoint-03.json",
+      "sha256": "8a2798806dd6524deb188bc64c531403652f65e07e53afdcef0f09900e00a68d"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-parent-01.json",
+      "bytes": 7020,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-parent-01.json",
+      "sha256": "d8c473de1d8c1c12285936f9ec6abba870bf35fd112fc4f3e6f3d3fe169aa10f"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_coordinator.py",
+      "bytes": 17728,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_coordinator.py",
+      "sha256": "06051d8ec4f62cd4c6a53aa995b4512d62c746b29efa9cd01942ecee1f247aa3"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_pin.py",
+      "bytes": 7626,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_pin.py",
+      "sha256": "b3be3df73d2c6f998a6e09ea2ce293314fd8f42b487419728ffb138b163108f9"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_run.py",
+      "bytes": 22084,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_run.py",
+      "sha256": "a49a0f9fce2cb31cf5e4c7811409ba8cc24eda3e7446825df8f9917e9fd03f26"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_recovery_host.py",
+      "bytes": 23485,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_recovery_host.py",
+      "sha256": "e3e43d76d3ceb0b01188fc0f2f6b5b3d0c9acb04a6de83738aa3047708da77ef"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-independent-source-review-01.json",
+      "bytes": 4735,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-independent-source-review-01.json",
+      "sha256": "99741bc475583349eb8fb513e2b5f6a4c0dcc8036886c7ed163373268531b6f9"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-independent-source-review-02.json",
+      "bytes": 5491,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-independent-source-review-02.json",
+      "sha256": "06527320af37c047611c8c7b98b0f1a15335e32768dfc483ae140ab8b796056f"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-independent-source-review-03.json",
+      "bytes": 3931,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-independent-source-review-03.json",
+      "sha256": "6e710f4182ef31804b3022b5c6387edec452fc9a93d60600be5ba11b48a81031"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-preflight-tests-01.json",
+      "bytes": 7862,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-preflight-tests-01.json",
+      "sha256": "6d10335338e42f800e5cc41a0fe251062784bdae0f04e0bc5952dc7f9777c7b5"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-preflight-tests-01.txt",
+      "bytes": 5927,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-preflight-tests-01.txt",
+      "sha256": "ac1a653d74db50ae41e9106bfcc356715a5e4c32605d797ebd649394d8e97012"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-source-checkpoint-01.json",
+      "bytes": 1128,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-source-checkpoint-01.json",
+      "sha256": "86f4450044c8af30eeb79680939d226ecbccfcfade7fe30a5c92dda51b103608"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-source-checkpoint-02.json",
+      "bytes": 1686,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-source-checkpoint-02.json",
+      "sha256": "093f7e656baa18babe3b7543433c4c6c8e4f4301d2591e29e2e588371a5cdadd"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-source-checkpoint-03.json",
+      "bytes": 1763,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-source-checkpoint-03.json",
+      "sha256": "906eb2eb9e3c747e4c586643a0d353c19aaea7c4448bbf8ee6e310fd482ca81f"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-independent-source-review-01.json",
+      "bytes": 14499,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-independent-source-review-01.json",
+      "sha256": "c75eaf1cac885714b99373ab2ddb7485d1f41abbbd1a86b85fd54663c00d0986"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-independent-source-review-02.json",
+      "bytes": 10740,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-independent-source-review-02.json",
+      "sha256": "c674853ec4f3aaaec97762f6741b6540c9e62b45e64b6e507eca1b2c42da0c27"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-source-checkpoint-01/manifest.json",
+      "bytes": 1663,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-source-checkpoint-01/manifest.json",
+      "sha256": "d3520a57f9d42b23cc8756038bfaeb48e315cabf3f9638662c78885ab3d3cf35"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-source-checkpoint-01/production_fixture_admission.py.txt",
+      "bytes": 44228,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-source-checkpoint-01/production_fixture_admission.py.txt",
+      "sha256": "d86f58e54c73f09c2a48c94adde637915300c3158fa0f3c09d3ee6f9e4d6c5fe"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-source-checkpoint-01/production_fixture_history.py.txt",
+      "bytes": 51395,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-source-checkpoint-01/production_fixture_history.py.txt",
+      "sha256": "2454597e2746df37e82ef6668a523d202e366a491bdda926d3e37f9731f541b1"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-source-checkpoint-01/test_production_fixture_admission.py.txt",
+      "bytes": 33398,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-source-checkpoint-01/test_production_fixture_admission.py.txt",
+      "sha256": "fde5aab52567253224944d35f5079fb719de5bbc54e05bd9261cc2db82e64fa8"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-consumer-root-source-review-01.json",
+      "bytes": 1528,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-consumer-root-source-review-01.json",
+      "sha256": "51bcf1ef700850f74020d4b7dff2a9d5fb82cc34f26b32121d209aedb46748da"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-consumer-source-checkpoint-01.json",
+      "bytes": 2994,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-consumer-source-checkpoint-01.json",
+      "sha256": "c436bb6ec0a3d6b6b527a3731f31026aacf3ee5bf46401b81f3eb0905b9a8d98"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-consumer-source-checkpoint-02.json",
+      "bytes": 3430,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-consumer-source-checkpoint-02.json",
+      "sha256": "5311a99b0b0b9529aee68e87e42f2c29aba00638b8ec15cee5fee0125c590a15"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-consumer-source-checkpoint-03.json",
+      "bytes": 3462,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-consumer-source-checkpoint-03.json",
+      "sha256": "a605104a10392b56180da789a3abae6291b98ae7d216bca11f5c17f8b73c5e41"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-consumer-source-checkpoint-04.json",
+      "bytes": 3409,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-consumer-source-checkpoint-04.json",
+      "sha256": "6dfab43bfedb67c218c652cc4255511ff2ad2b829f3cbca6c1c8c41a2f2fa8ea"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-reader-tests-01.json",
+      "bytes": 6103,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-reader-tests-01.json",
+      "sha256": "87621921f62a2720093e7c2df6c6b178366f2fbc183df092f0dab2356a2fea61"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-reader-tests-01.txt",
+      "bytes": 6457,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-reader-tests-01.txt",
+      "sha256": "aa855236f4fe32361f06a4dd865b4ca678349965bd1ed8e873b88b00972070e3"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/run_entrypoint_tests_01.py",
+      "bytes": 4487,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/run_entrypoint_tests_01.py",
+      "sha256": "1ede37eec8199bb44743f408cee88d1ddde845af5d095bdfd4de6b774d0a1f5f"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/run_numeric_reader_tests_01.py",
+      "bytes": 4364,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/run_numeric_reader_tests_01.py",
+      "sha256": "20a4608bf29aafaf1552b29cf97a0ac923d64a74d7353f295f9f590612ea9021"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/metadata_preflight.py",
+      "bytes": 12399,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/metadata_preflight.py",
+      "sha256": "3c2bce47648596f8988e0884081625f729d77856526c1b062f5078b68684d318"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_admission.py",
+      "bytes": 33204,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_admission.py",
+      "sha256": "6a047fc63f3a8cf05a865f72eb0f9c42b1cc58c5137eda86e85eb96d662253ed"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_entrypoint.py",
+      "bytes": 8420,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_entrypoint.py",
+      "sha256": "a32fac0b1733719ac3c995215f95b97f13d606cc657f6707166bd7a21661dcd1"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_fixture_admission.py",
+      "bytes": 44231,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_fixture_admission.py",
+      "sha256": "69f85904322db994707432d9f288df8e485607b6a1a6cc1a1ee7253a2bbd961a"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_fixture_history.py",
+      "bytes": 51398,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_fixture_history.py",
+      "sha256": "506bd5cfeeda0dcb2315ec601aaa29e54eae58fa117310f5d60ffc66b83e8013"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_host.py",
+      "bytes": 30328,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_host.py",
+      "sha256": "18bf34c606df39da65c4d7b392d51e88d7285b0048c032bf7a7877df9da9dfae"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_preflight.py",
+      "bytes": 29874,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_preflight.py",
+      "sha256": "01aed915bee64829b2c579e2be4124eb7738d25ccb20d41a7666d3bccfe63534"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery.py",
+      "bytes": 19760,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery.py",
+      "sha256": "893f70d91a8955df5e60cbacc3caf22dc08f2c1c8863677180a5cfc37a5f14d7"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery_driver.py",
+      "bytes": 13161,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery_driver.py",
+      "sha256": "a092c51499c353b53ddf4c09a43cf2d308ce951a535274f652cf755fb815d904"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery_inspect.py",
+      "bytes": 49003,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery_inspect.py",
+      "sha256": "eaafdbbd0521c8a25468d0d40613fcc5e8d2be105b73a511089228dfbde5cdc3"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_restore_admission.py",
+      "bytes": 14267,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_restore_admission.py",
+      "sha256": "8ca6fd9139a788b9fca28895f8a98bc0697255afa57a846d722e7466b4719162"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_restore_runner.py",
+      "bytes": 12331,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_restore_runner.py",
+      "sha256": "f7c9be6dffc8161af2d678bfd804e0642e31611b7877d55b98a71429e4bd903e"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_retained.py",
+      "bytes": 26564,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_retained.py",
+      "sha256": "5c287b8757dfd7e8eb876fa8064edba7e4d51d11c179a0c3ed7274effe331a9b"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/recovery_ledger.py",
+      "bytes": 5616,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/recovery_ledger.py",
+      "sha256": "fd855cd1613e9fbab1a8e5ae8df4a144fc936bdb7fa5525f3bee0a4e8b03ee84"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/recovery_phases.py",
+      "bytes": 21079,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/recovery_phases.py",
+      "sha256": "df6e3e959f79e560dfbe8904cbf9546b79e27b2819f7f5b8ab1aa89bb6917389"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/reservoir_maintenance.py",
+      "bytes": 28725,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/reservoir_maintenance.py",
+      "sha256": "55e53b84d8caae818fc29fb997761c160cb296e2512207d4d9dbe48da15c5536"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/reservoir_maintenance_state.py",
+      "bytes": 20175,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/reservoir_maintenance_state.py",
+      "sha256": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/restore_verifier.py",
+      "bytes": 31763,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/restore_verifier.py",
+      "sha256": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/source-parent-04.json",
+      "bytes": 11592,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/source-parent-04.json",
+      "sha256": "c36e751de8e7ff398542c7fe784cd954ecfd9ad5b66460036096943b75e5acbf"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_admission.py",
+      "bytes": 28957,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_admission.py",
+      "sha256": "83c997249a72cbb6a8600a3b94a9845280e333c90fd81c461f5d814f8f2c3533"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_controller.py",
+      "bytes": 8243,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_controller.py",
+      "sha256": "6d7b05f415d033c164f85abdc22fbcbb7303f9fc2022f4fc03de6f68b4b7ba40"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_entrypoint.py",
+      "bytes": 13840,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_entrypoint.py",
+      "sha256": "fb059b7fe81ce99af98ab8c87617c46798e903fe68c0eec992f7d8a6544f262e"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_fixture_admission.py",
+      "bytes": 34910,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_fixture_admission.py",
+      "sha256": "a58e4fa279710ed4f67a9c27f072bfb59d677e938874d8bbc1be8f848b8aa7d1"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_host.py",
+      "bytes": 15030,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_host.py",
+      "sha256": "37f234156c1eabd902faf26ce9ee5409841d5332b12218ba407a6b45658d8d61"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_preflight.py",
+      "bytes": 20341,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_preflight.py",
+      "sha256": "c6d4ff825edf5c2ed823f1bbddbfcb51d10932129d029e83a87cfbea5130518a"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_recovery.py",
+      "bytes": 14505,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_recovery.py",
+      "sha256": "5331b9ca3ae00e01e2e010aef52705e48e9beea4cfafbd3cfb543eaf355198a8"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_recovery_driver.py",
+      "bytes": 17991,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_recovery_driver.py",
+      "sha256": "0a948bbce5d3f6dc77b82254ab5a5858db9626a9a6cd80d2f7569347fd6c6355"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_recovery_inspect.py",
+      "bytes": 29623,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_recovery_inspect.py",
+      "sha256": "5b5af27039762aa4527d89d16bce29005d434dc1da11db37e28eb560311f8fca"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_restore_admission.py",
+      "bytes": 14600,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_restore_admission.py",
+      "sha256": "1404e7b499770af296ad2aa86d16f6cca65d06379b02efb6a081b51d8549ca03"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_restore_runner.py",
+      "bytes": 15148,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_restore_runner.py",
+      "sha256": "82986ef70d485f73a11cbd8d02c074b6f910e39b6101bc20b79ab57c2b48b804"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_retained.py",
+      "bytes": 17992,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_retained.py",
+      "sha256": "e9dea40dcd0ba6baeb5e67142dfcc605625cb15449588dc903632e5460a5dde7"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_service_admission.py",
+      "bytes": 9384,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_service_admission.py",
+      "sha256": "cd5f121aad506590aad66178579115de6ba4df9986b5ab29889ddcb22a542739"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_recovery_phases.py",
+      "bytes": 4642,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_recovery_phases.py",
+      "sha256": "3a4c17fc8ec0caaa61424028c28a208fac681c70a367e6bcd91cb48c1ee69d03"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_reservoir_maintenance_state.py",
+      "bytes": 16133,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_reservoir_maintenance_state.py",
+      "sha256": "5c896092de2a2da6351c7a05ffe78a080fcfd49e91630fd5764b6110a9075834"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_restore_verifier.py",
+      "bytes": 16791,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_restore_verifier.py",
+      "sha256": "0494a6570245cfc2e6a76cd18188789130c7cedf3b1eb80743522e0e5e3f7522"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_transaction_execution.py",
+      "bytes": 7330,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_transaction_execution.py",
+      "sha256": "996d4a57be06ff2055a292f06e83c38247685db8b3c6dc6fc2ace44dda91d44a"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/transaction_execution.py",
+      "bytes": 4937,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/transaction_execution.py",
+      "sha256": "2b4e5ad98f4e920ceb67a161480afaffde9e6a44e3c9007645dc9e9445ccc4cb"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/child_admission.py",
+      "bytes": 20390,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/child_admission.py",
+      "sha256": "21b13f54390bbb058a26749d84aad625cda6df7f2df2e8917782e432107aa99d"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/design-01.json",
+      "bytes": 5430,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/design-01.json",
+      "sha256": "645437257d8f12f85904306aaa4455ccd43861eef9f401ee094c065e4ae1f219"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/guard-tests-01.json",
+      "bytes": 2612,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/guard-tests-01.json",
+      "sha256": "9c7e3ed6873adbe30b16cc9d6a08cf8915157229fd184b4cba2d2134792b3ee7"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/guard-tests-01.txt",
+      "bytes": 1352,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/guard-tests-01.txt",
+      "sha256": "131a7e3adb35fc2fceaa052b1f68830758b0842a1600a7cd9e9aa46ca42cae11"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/host-budget-spot-01.json",
+      "bytes": 43711,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/host-budget-spot-01.json",
+      "sha256": "5d5f27d9d777ade9a570aa3577c4ccdf8ab4f903075b5a384e035af9d37854e2"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/independent-guard-review-01.json",
+      "bytes": 4017,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/independent-guard-review-01.json",
+      "sha256": "0a416519c122200e69972e960978f88936d755df1f1164035aea6891e585df82"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/independent-result-review-01.json",
+      "bytes": 10629,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/independent-result-review-01.json",
+      "sha256": "c43a6f8a39ac12ae76f323975ec7b54aaf4bd5e6f33e49d2c9de7ad5e901aded"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/post-stage-host-spot-01.json",
+      "bytes": 43676,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/post-stage-host-spot-01.json",
+      "sha256": "f7e9195912755ef2081991cf268b889deee938907a79e691f8c35210945cdd69"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/root-release-01.json",
+      "bytes": 2099,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/root-release-01.json",
+      "sha256": "bec8d732013e2d8d87798525f75409fafe2f9c6b1ff98eaf8d0062b172a8dd98"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/root-result-review-01.json",
+      "bytes": 1728,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/root-result-review-01.json",
+      "sha256": "ba203135605aa5c0f9df4d47c97a683461dd71e102bb3d776aad9cf649168a19"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/root-source-review-01.json",
+      "bytes": 1721,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/root-source-review-01.json",
+      "sha256": "378df50574eb428a74a77adf001c4fce018c661bf2c3c4937798b3c6d2e0f49d"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/run_guard_tests_01.py",
+      "bytes": 2801,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/run_guard_tests_01.py",
+      "sha256": "ab3f6ab52aecd91da80652c019f78b2898f4d603254b6716ebe724ef6c4e1e75"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/test_timing_guard.py",
+      "bytes": 4726,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/test_timing_guard.py",
+      "sha256": "86fd19609903cb077811920fd4ff88fbaf060fa2db2c6cd4accd17a2c214fbd2"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review.py",
+      "bytes": 20153,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review.py",
+      "sha256": "3acb70ced2ff9adef261897ec3d726a81646efdebe2b0943caa62beb464fe418"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review_draft01.py.archive",
+      "bytes": 19901,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review_draft01.py.archive",
+      "sha256": "537e2c0fe9c033ebc0b49a4e65e103364516c461025a396130e021fb6042b996"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-inputs-01.json",
+      "bytes": 4554,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-inputs-01.json",
+      "sha256": "5bbabc9c88080f4fd4c79c6224bbfe0b00c1064a4f7908451a97273214f24a14"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-result-01.json",
+      "bytes": 429224,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-result-01.json",
+      "sha256": "0a0f5ffb85992ed6704234c6c6d02e87cffce25c7eb67ae6528bc7dff8fae151"
+    },
+    {
+      "archived": "files/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2.py",
+      "bytes": 8718,
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2.py",
+      "sha256": "fbaea5a9132b6d1ed92262d70dfadbd5f3d2cc2c93c2b4bb90662ed41e5d687d"
+    },
+    {
+      "archived": "files/scripts/model_environment.py",
+      "bytes": 15235,
+      "original": "/Users/v/other/astrid/scripts/model_environment.py",
+      "sha256": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587"
+    }
+  ],
+  "final_enabling_design": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/final-enabling-design-01.json",
+    "sha256": "929eb1ab0867586134de490499d610fb773c1f971c32ce34f1830a2d7c36cbab"
+  },
+  "fixture_python_count": 21,
+  "fixture_tests": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-guarded-tests-01.json",
+    "sha256": "a84ed9c1332b56e157a58b9843f7023c94959327318c5406a23e49b129c3aee5"
+  },
+  "flags": {
+    "FIXTURE_EXECUTION_ENABLED": false,
+    "PRODUCTION_CONTROLLER_ENABLED": false,
+    "PRODUCTION_EXECUTION_ENABLED": false
+  },
+  "independent_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-02-independent-review.json",
+    "sha256": "ebe749e6ffe2fbe1d33b994fa515beb32f5550de00b8529205ab86d99c5cc768"
+  },
+  "limits": [
+    "Disabled test evidence is not an actual OS fixture or production qualification.",
+    "Failed first combined receipt and superseded reader bytes remain in this archive.",
+    "All57 final code files require a later exact three-literal flag delta and final review before an owned fixture release."
+  ],
+  "private_archive": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-preparation-05-disabled-01",
+  "production_qualified": false,
+  "public_archive": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-maintenance/production-preparation-05-disabled-01",
+  "root_test_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-disabled-root-test-review-01.json",
+    "sha256": "58afdda7f9c9dd43e6cc977f1f7c26056fdab08a13fb8de5384d6263b4a2da61"
+  },
+  "schema": "reservoir_disabled_preparation_archive_v1",
+  "scope": "disabled_source_tests_and_reviews_only",
+  "test_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-02.json",
+    "sha256": "2eaae3b202d7ebae15afbdc724165aa9e3c34d254db37279c83513ded530ecd0"
+  }
+}

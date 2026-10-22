@@ -1,0 +1,22 @@
+{
+  "schema": "reservoir_maintenance_state_cpu_tests_v1",
+  "started_at": "2026-10-16T03:18:54.680324+00:00",
+  "completed_at": "2026-10-16T03:18:54.809108+00:00",
+  "elapsed_seconds": 0.12869033310562372,
+  "command": [
+    "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+    "-I",
+    "-B",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_reservoir_maintenance_state.py"
+  ],
+  "returncode": 0,
+  "passed": true,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/reservoir_maintenance_state.py": "30fc7e3aa9e90719d89fc34f3dc509e49b6b9d95735af6f45c2cff826ed561fa",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_reservoir_maintenance_state.py": "423c651b09e07476850d2fc1c648874dc66764a1ad2a024fb83435ed308e135e",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/state-tests-01.txt": "b3ee117e7bb2a5c7ec10b915efb3e7d3cd143e070af4a4465204440f66f01bac"
+  },
+  "scope": "Synthetic private files, stdlib log parsers and backup fault tests only; no NumPy, service/model imports, actual state files, network, signals or live changes.",
+  "real_restore_qualified": false,
+  "production_execution_available": false
+}

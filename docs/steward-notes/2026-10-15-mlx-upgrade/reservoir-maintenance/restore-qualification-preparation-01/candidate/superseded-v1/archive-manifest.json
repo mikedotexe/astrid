@@ -1,0 +1,21 @@
+{
+  "schema": "restore_qualification_superseded_v1",
+  "reason": "Static lazy LSM origin-check blocker; no numerical execution, no accepted qualification",
+  "artifacts": [
+    {
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/restore_verifier.py",
+      "archived_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/superseded-v1/restore_verifier.py",
+      "sha256": "e363cc1144c7a92279a3bde5eabfcf7647d8ff6b8e56e445cfd7b560c21a8c16"
+    },
+    {
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/reservoir_maintenance_state.py",
+      "archived_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/superseded-v1/reservoir_maintenance_state.py",
+      "sha256": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594"
+    },
+    {
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/inputs.json",
+      "archived_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/superseded-v1/inputs.json",
+      "sha256": "b1f6ed36ecca35844bbe4dce0035b7096ba8ba1f53b477f98942da72e4d2437e"
+    }
+  ]
+}

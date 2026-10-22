@@ -1,0 +1,158 @@
+{
+  "schema": "passive_perception_memory_completed_review_v1",
+  "reviewed_at": "2026-10-16T03:27:34.808976+00:00",
+  "reviewer": "Codex /root",
+  "completed_observation_valid": true,
+  "raw_result": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive-rusage-02.json",
+    "sha256": "226fe7c63ad3950cd50c5d7498904515cee2a320d923b853b7a3a4e73b23396b"
+  },
+  "launch": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/passive-memory-continuation-02.json",
+    "sha256": "07dfdba5cf8e3593b3145a3a36f82071a792cea1f2b127ddb445b219dd1f55c1"
+  },
+  "state": "completed",
+  "completed_at": "2026-10-16T03:21:59.676151+00:00",
+  "duration_observed_s": 5520.003480833024,
+  "sample_count": 93,
+  "max_sample_gap_s": 60.05685408296995,
+  "summary": {
+    "sample_count": 93,
+    "footprint_bytes_first": 437322952,
+    "footprint_bytes_last": 214058160,
+    "footprint_bytes_min": 115344536,
+    "footprint_bytes_max": 437322952,
+    "endpoint_delta_bytes": -223264792
+  },
+  "footprint_bytes_median": 161580184,
+  "ten_sample_blocks": [
+    {
+      "sample_indices": [
+        0,
+        9
+      ],
+      "start_elapsed_s": 0.011075708083808422,
+      "end_elapsed_s": 540.0162285000551,
+      "footprint_bytes_min": 115344536,
+      "footprint_bytes_median": 135750808.0,
+      "footprint_bytes_max": 437322952
+    },
+    {
+      "sample_indices": [
+        10,
+        19
+      ],
+      "start_elapsed_s": 600.015567000024,
+      "end_elapsed_s": 1140.03524883301,
+      "footprint_bytes_min": 134055064,
+      "footprint_bytes_median": 145892504.0,
+      "footprint_bytes_max": 153240728
+    },
+    {
+      "sample_indices": [
+        20,
+        29
+      ],
+      "start_elapsed_s": 1200.023687625071,
+      "end_elapsed_s": 1740.0091214999557,
+      "footprint_bytes_min": 132449432,
+      "footprint_bytes_median": 145056920.0,
+      "footprint_bytes_max": 161580184
+    },
+    {
+      "sample_indices": [
+        30,
+        39
+      ],
+      "start_elapsed_s": 1800.0186546249315,
+      "end_elapsed_s": 2340.01434600004,
+      "footprint_bytes_min": 145343616,
+      "footprint_bytes_median": 158295204.0,
+      "footprint_bytes_max": 169526424
+    },
+    {
+      "sample_indices": [
+        40,
+        49
+      ],
+      "start_elapsed_s": 2400.017794375075,
+      "end_elapsed_s": 2940.0072293749545,
+      "footprint_bytes_min": 153633968,
+      "footprint_bytes_median": 155337904.0,
+      "footprint_bytes_max": 162464944
+    },
+    {
+      "sample_indices": [
+        50,
+        59
+      ],
+      "start_elapsed_s": 3000.0137514160015,
+      "end_elapsed_s": 3540.012960541062,
+      "footprint_bytes_min": 149587120,
+      "footprint_bytes_median": 175015088.0,
+      "footprint_bytes_max": 188892312
+    },
+    {
+      "sample_indices": [
+        60,
+        69
+      ],
+      "start_elapsed_s": 3600.0192496250384,
+      "end_elapsed_s": 4140.016399957938,
+      "footprint_bytes_min": 165381296,
+      "footprint_bytes_median": 178881700.0,
+      "footprint_bytes_max": 192332976
+    },
+    {
+      "sample_indices": [
+        70,
+        79
+      ],
+      "start_elapsed_s": 4200.012264166027,
+      "end_elapsed_s": 4740.017850500066,
+      "footprint_bytes_min": 154911920,
+      "footprint_bytes_median": 180544688.0,
+      "footprint_bytes_max": 189023408
+    },
+    {
+      "sample_indices": [
+        80,
+        89
+      ],
+      "start_elapsed_s": 4800.014175374992,
+      "end_elapsed_s": 5340.02114558313,
+      "footprint_bytes_min": 180208816,
+      "footprint_bytes_median": 188794032.0,
+      "footprint_bytes_max": 202622128
+    },
+    {
+      "sample_indices": [
+        90,
+        92
+      ],
+      "start_elapsed_s": 5400.016332624946,
+      "end_elapsed_s": 5520.014556541108,
+      "footprint_bytes_min": 203064496,
+      "footprint_bytes_median": 210961584,
+      "footprint_bytes_max": 214058160
+    }
+  ],
+  "process_identity": {
+    "pid": 22354,
+    "parent_pid": 1,
+    "started_at": "Thu Oct 15 18:10:13 2026",
+    "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic"
+  },
+  "same_kernel_identity_every_sample": true,
+  "observer_exited": true,
+  "script_and_abi_match_reviewed_launch": true,
+  "interpretation": [
+    "Initial transient peak of417.06MiB subsided to110.00MiB; a negative whole-run endpoint delta alone would conceal later upward movement.",
+    "Typical ten-sample medians rose from129.46MiB in the first block to180.05MiB over minutes80\u201389; the final three samples were193.66,201.19,204.14MiB. This is upward drift over this window, not a demonstrated allocator leak rate.",
+    "No10.7GiB recurrence in92minutes. Long-term stability and a specific allocation cause are not established. The staged containment remains undeployed and requires hardware/output/sustained-memory acceptance after MLX rollout observations."
+  ],
+  "automatic_repeat": false,
+  "production_mutations": false,
+  "root_cause_established": false,
+  "sustained_memory_stability_established": false
+}

@@ -1,0 +1,106 @@
+{
+  "core_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-06",
+  "execution_flags_changed": false,
+  "final_release_created": false,
+  "fixture_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03",
+  "fixture_source_checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/evidence/source-checkpoint-01.json",
+    "sha256": "cb34ae43252b824b75c1b9f85092bd786117ec300664c4b3e2d68a46d5b19722"
+  },
+  "fixture_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-source-checkpoint-01-independent-review-01.json",
+    "sha256": "5813335130453e4bf62cbf0fcb4850540dffc508e40ae2b0f2a3f570e61968d0"
+  },
+  "frozen_inputs_unchanged": true,
+  "future_fixed_paths": {
+    "inputs": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-source-inputs-01.json",
+    "native": "<fixture03>/runs/owned-native-<same-token>",
+    "release": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-release-01.json",
+    "result": "<fixture03>/evidence/owned-recovery-<same-token>-result.json",
+    "run": "<fixture03>/runs/owned-recovery-<new-token>",
+    "validation_output": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-release-validation-01.json"
+  },
+  "input_contract": {
+    "additional_review_evidence": "Preserved archive/enabling delta and actual tests/reviews should be included for root and independent final-source review. The wrapper consumes exact input hash and compares runtime/source/schedule fields to coordinator-validated release; it does not substitute for those independent reviews.",
+    "hash_parameter": "--inputs-sha256 is required; exactly64 lowercase hexadecimal characters; mismatch refused before target import. There is no default/self-updating digest.",
+    "required": [
+      "scope=owned_fixture_only",
+      "release_stage=final_enabled",
+      "core_root=exact06",
+      "actual_os_fixture_executed=false",
+      "production_qualified=false",
+      "fixture_artifacts",
+      "core_artifacts",
+      "core_flags",
+      "python",
+      "python_files",
+      "coordination",
+      "host_binding",
+      "executor_plan",
+      "injections"
+    ],
+    "schema": "owned_fixture03_final_source_review_inputs_v1"
+  },
+  "limits": [
+    "30 seconds is a cooperative acceptance deadline from validator main entry, not a hard wall-clock interrupt; blocked reads may overrun and must refuse after returning.",
+    "Validation is a point-in-time retained source/config/path check, not a host-health or continuous-authority monitor; final parent rechecks its fixed release/ownership.",
+    "The audit hook is defense for the reviewed fixed path, not a general Python sandbox.",
+    "Precondition failure before exclusive output open can leave no receipt; no target import/action has begun then.",
+    "Final enabling changes bound bytes; earlier disabled tests/reviews remain historical and cannot by themselves certify the exact enabled OS run."
+  ],
+  "os_queries_performed": false,
+  "production_qualified": false,
+  "reference_only_old_validator": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/validate_fixture02_final_release_01.py",
+    "sha256": "4a42bae6a894d23e43daa4d51eef3c7db693a6b3d83496fdf68d43e2d200367b"
+  },
+  "run_directories_created": false,
+  "schema": "owned_fixture03_final_release_workflow_design_v1",
+  "status": "source_only_not_execution_authority",
+  "steps": [
+    {
+      "action": "Root completes independently reviewed03/06 source and serialized guarded stdlib test receipts; retain every failure and all source checkpoints. Cross-contract native/readiness consumer checks must pass before final release.",
+      "order": 1
+    },
+    {
+      "action": "Root preserves the complete disabled source/evidence closure and authors a narrow enabling delta for only the three literal flags in fixture03 coordinator and candidate06 controller/Host. Independently review exact post-delta source. Enabling bytes are private preparation only, not live production authority.",
+      "order": 2
+    },
+    {
+      "action": "Root re-audits actual host/boot, ordinary UID, current control/lease ownership and protected inputs/processes without inferring authority from historical528 evidence. Fixed source currently requires codex-mlx-upgrade generation528 and no lease; a changed authority cannot be repaired or overridden by this validator.",
+      "order": 3
+    },
+    {
+      "action": "Root authors new immutable final-source input manifest, exact schedule/injections and independent final-enabled source review. Bind complete all-direct.py core06 and fixture03 source maps, fixture README, worker/hold sources, actual Python launcher/framework family, coordination, host identity, test/review receipts, preserved disabled archive and enabling delta. Source review has no release back-reference cycle.",
+      "order": 4
+    },
+    {
+      "action": "Root chooses a new token only after confirming private fixture run, native sibling and result destinations are all unused, then authors exact immutable release_v2 with approved owned-fixture-only scope, final_enabled stage, both core flags true, exact source review/schedule/interpreter and sudo_debug true. No record claims completed fixture or production acceptance.",
+      "order": 5
+    },
+    {
+      "action": "After separate validator source review, root may invoke the fixed read-only validator using selected Python -I -B and explicit --inputs-sha256 equal to the independently recorded final input manifest digest. It does not choose/create a release, run token, source flag, authority or run directory. It imports only the hash-bound pure validation call path under an audit guard and writes one exclusive validation receipt.",
+      "order": 6
+    },
+    {
+      "action": "Only after passed validator/raw receipt review and fresh root admission does root give the ordinary-user Terminal command using exact release.python -B fixture03/owned_fixture_run.py --execute --release fixed final release path. Never sudo the whole parent, prewarm credentials, background/restart it, rerun a failed token or patch runtime flags. This note deliberately supplies no currently executable final command.",
+      "order": 7
+    },
+    {
+      "action": "Root independently validates actual71 executor/74 parent phase chains, five parent sessions, readiness/native evidence, all natural reaps and exact state/check-in/pin oracles; obtain separate post-Terminal parent-absence closeout from another observer. Retain both run and native sibling inventories. Unknown/failed outcome remains failed and needs separately reviewed exact owned cleanup; no automatic retry or production transfer.",
+      "order": 8
+    }
+  ],
+  "target_imports_performed": false,
+  "tests_executed": false,
+  "validator": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/validate_fixture03_final_release_01.py",
+    "sha256": "db96f8365ce37ca547b45032c01e7711513fd25be9336c1558e0e76b528a40db"
+  },
+  "validator_guards": [
+    "Fixed03/06 paths and complete source sets; selected/current Python family; fresh -I -B process.",
+    "Original input/release refs rechecked after validation, source/interpreter hashes rechecked; three destinations absent including dangling symlink refusal.",
+    "Only exclusive preopened validation receipt may be written; no subprocess, signal, socket, ctypes, hardware/numerical module or local unbound bytecode.",
+    "Only target call is coordinator.validate_release; no Host construction, load_core, native commands, actual fixture or production call."
+  ]
+}

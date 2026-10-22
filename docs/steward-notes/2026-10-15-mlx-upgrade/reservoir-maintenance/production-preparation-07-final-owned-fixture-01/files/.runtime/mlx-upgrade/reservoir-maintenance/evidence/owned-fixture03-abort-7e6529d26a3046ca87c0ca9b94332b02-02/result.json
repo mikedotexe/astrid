@@ -1,0 +1,95 @@
+{
+  "abort_executor_absence_requires_independent_closeout": true,
+  "cleanup_only": true,
+  "final": {
+    "guards_absent": true,
+    "holders_absent": true,
+    "observation_kind": "OS absence, not waitpid of launchd workers",
+    "old_workers_absent": true,
+    "reservoir_log": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02/reservoir.events.jsonl",
+      "sha256": "8da5312c6008ea897b0bef8d4755bd8e8bd9b4c90f7d7f0b9486d066952916a2"
+    },
+    "sources": {
+      "count": 373,
+      "sha256": "c349745650560f3f74be71abaea7edbe138bdf72ad864df0709939be1b874bda"
+    },
+    "state": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02/state.json",
+      "sha256": "fa40c1ba9a83f543250e08e16b7b27d3d9a9a58e80d1bd0c1bde1830aafa6008"
+    }
+  },
+  "force_used": false,
+  "original_fixture_passed": false,
+  "original_release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-release-01.json",
+    "sha256": "1ee094f1a0d71f9df05114a12b0350b2aaebc403371d4dbbbf7e6cc688a1396d"
+  },
+  "original_snapshot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-failed-run-snapshot-01/manifest.json",
+    "sha256": "1792065d3c013d032224e84fc33d78f1a674d044d0ece4d6f51cc5c6e20ee6ea"
+  },
+  "passed": true,
+  "production_qualified": false,
+  "proof": {
+    "checkin": {
+      "ack": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02/ack.provider-6858-1449606478912083.json",
+        "sha256": "f8487f3d19923ab081a22c18cd324d429f068c14b8ec2a15aa10a0e3bfd06bd2"
+      },
+      "expected_state": {
+        "fixture_astrid": {
+          "ticks": 11
+        },
+        "fixture_minime": {
+          "ticks": 7
+        }
+      },
+      "one_unique_checkin": true,
+      "provider_log": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02/provider.events.jsonl",
+        "sha256": "b8dac2db23b39804e3ae5405d4acf8747fd438ea7f66cf0c67f037deeb74c732"
+      },
+      "request": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02/request.provider-6858-1449606478912083.json",
+        "sha256": "5ad26c81b4554689d853660ed2421cbd88b0175ffe7a2038c568cece939aa68d"
+      },
+      "reservoir_log": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02/reservoir.events.jsonl",
+        "sha256": "8da5312c6008ea897b0bef8d4755bd8e8bd9b4c90f7d7f0b9486d066952916a2"
+      },
+      "saved": true,
+      "state": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02/state.json",
+        "sha256": "fa40c1ba9a83f543250e08e16b7b27d3d9a9a58e80d1bd0c1bde1830aafa6008"
+      }
+    },
+    "host_binding": {
+      "boot_uuid": "A86C8146-975D-4935-85A6-A7879EC7BBE3",
+      "hostname": "m3-volya",
+      "os_version": "27.0.1",
+      "uid": 501
+    },
+    "original": {
+      "original_file_count": 132,
+      "original_snapshot": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-failed-run-snapshot-01/manifest.json",
+        "sha256": "1792065d3c013d032224e84fc33d78f1a674d044d0ece4d6f51cc5c6e20ee6ea"
+      },
+      "provider_guard_released": true,
+      "saved": true
+    }
+  },
+  "provider_replayed": false,
+  "resumed_original_main": false,
+  "schema": "owned_fixture03_abort_result_v2",
+  "state": {
+    "fixture_astrid": {
+      "ticks": 11
+    },
+    "fixture_minime": {
+      "ticks": 7
+    }
+  },
+  "stateful_worker_bootout": false
+}

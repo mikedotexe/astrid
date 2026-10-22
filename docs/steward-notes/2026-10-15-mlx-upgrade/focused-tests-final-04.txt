@@ -1,0 +1,178 @@
+........................................................................ [ 28%]
+........................................ [ 44%]
+........................................................ [ 67%]
+.........................................................................F.F..F.F.                                                    [100%]
+=================================== FAILURES ===================================
+_ EmbeddingGateTests.test_exact_frozen_main_and_shim_load_once_lazily_with_bound_audit _
+
+self = <test_astrid_mlx_embedding_gate.EmbeddingGateTests testMethod=test_exact_frozen_main_and_shim_load_once_lazily_with_bound_audit>
+
+    def test_exact_frozen_main_and_shim_load_once_lazily_with_bound_audit(self):
+        before = {name: (self.source / name).read_bytes() for name in gate.SOURCE_NAMES}
+        status, audit = self.run_gate()
+>       self.assertEqual(status, 0)
+E       AssertionError: 1 != 0
+
+scripts/test_astrid_mlx_embedding_gate.py:90: AssertionError
+_ EmbeddingGateTests.test_loader_failure_and_interrupt_restore_loader_and_record_memory (error='RuntimeError') _
+
+self = <test_astrid_mlx_embedding_gate.EmbeddingGateTests testMethod=test_loader_failure_and_interrupt_restore_loader_and_record_memory>
+
+    def test_loader_failure_and_interrupt_restore_loader_and_record_memory(self):
+        for error in (RuntimeError("loader failed"), KeyboardInterrupt()):
+            with self.subTest(error=type(error).__name__):
+                self.audit = self.root / (type(error).__name__ + ".json")
+                self.loader_failure = error
+                status, audit = self.run_gate()
+                self.assertNotEqual(status, 0)
+                self.assertFalse(audit["passed"])
+>               self.assertTrue(audit["loader_restored"])
+E               AssertionError: False is not true
+
+scripts/test_astrid_mlx_embedding_gate.py:128: AssertionError
+_ EmbeddingGateTests.test_loader_failure_and_interrupt_restore_loader_and_record_memory (error='KeyboardInterrupt') _
+
+self = <test_astrid_mlx_embedding_gate.EmbeddingGateTests testMethod=test_loader_failure_and_interrupt_restore_loader_and_record_memory>
+
+    def test_loader_failure_and_interrupt_restore_loader_and_record_memory(self):
+        for error in (RuntimeError("loader failed"), KeyboardInterrupt()):
+            with self.subTest(error=type(error).__name__):
+                self.audit = self.root / (type(error).__name__ + ".json")
+                self.loader_failure = error
+                status, audit = self.run_gate()
+                self.assertNotEqual(status, 0)
+                self.assertFalse(audit["passed"])
+>               self.assertTrue(audit["loader_restored"])
+E               AssertionError: False is not true
+
+scripts/test_astrid_mlx_embedding_gate.py:128: AssertionError
+_____ EmbeddingGateTests.test_missing_load_and_source_mutation_fail_closed _____
+
+self = <test_astrid_mlx_embedding_gate.EmbeddingGateTests testMethod=test_missing_load_and_source_mutation_fail_closed>
+
+    def test_missing_load_and_source_mutation_fail_closed(self):
+        self.write_sources(body="    pass\n")
+        status, audit = self.run_gate()
+        self.assertEqual(status, 1)
+        self.assertEqual(audit["loader_calls"], 0)
+        self.audit = self.root / "mutated.json"
+        self.write_sources(body=("    cas._load_mlx_runtime(sys.argv[2], memory_map_requested=False)\n"
+                                 "    from pathlib import Path\n"
+                                 "    Path(wide_coupling.__file__).write_text('changed')\n"))
+        status, audit = self.run_gate()
+        self.assertEqual(status, 1)
+>       self.assertIn("frozen source changed", audit["error"])
+E       AssertionError: 'frozen source changed' not found in 'ValueError: frozen source module was already imported; use a fresh qualification process'
+
+scripts/test_astrid_mlx_embedding_gate.py:190: AssertionError
+__ EmbeddingGateTests.test_original_test_assertion_failure_is_not_suppressed ___
+
+self = <test_astrid_mlx_embedding_gate.EmbeddingGateTests testMethod=test_original_test_assertion_failure_is_not_suppressed>
+
+    def test_original_test_assertion_failure_is_not_suppressed(self):
+        self.write_sources(body="    cas._load_mlx_runtime(sys.argv[2], memory_map_requested=False)\n    assert False, 'original assertion'\n")
+        status, audit = self.run_gate()
+        self.assertEqual(status, 1)
+        self.assertFalse(audit["passed"])
+>       self.assertIn("AssertionError: original assertion", audit["error"])
+E       AssertionError: 'AssertionError: original assertion' not found in 'ValueError: frozen source module was already imported; use a fresh qualification process'
+
+scripts/test_astrid_mlx_embedding_gate.py:117: AssertionError
+_ EmbeddingGateTests.test_second_load_remains_failure_even_when_frozen_test_catches_it _
+
+self = <test_astrid_mlx_embedding_gate.EmbeddingGateTests testMethod=test_second_load_remains_failure_even_when_frozen_test_catches_it>
+
+    def test_second_load_remains_failure_even_when_frozen_test_catches_it(self):
+        self.write_sources(body=("    cas._load_mlx_runtime(sys.argv[2], memory_map_requested=False)\n"
+                                 "    try: cas._load_mlx_runtime(sys.argv[2], memory_map_requested=False)\n"
+                                 "    except ValueError: pass\n"))
+        status, audit = self.run_gate()
+        self.assertEqual(status, 1)
+        self.assertFalse(audit["passed"])
+>       self.assertEqual((audit["loader_calls"], audit["load_attempts"]), (1, 2))
+E       AssertionError: Tuples differ: (0, 0) != (1, 2)
+E       
+E       First differing element 0:
+E       0
+E       1
+E       
+E       - (0, 0)
+E       + (1, 2)
+
+scripts/test_astrid_mlx_embedding_gate.py:155: AssertionError
+_ EmbeddingGateTests.test_unexpected_overrides_and_wrong_model_never_reach_loader (kwargs='lazy=False') _
+
+self = <test_astrid_mlx_embedding_gate.EmbeddingGateTests testMethod=test_unexpected_overrides_and_wrong_model_never_reach_loader>
+
+    def test_unexpected_overrides_and_wrong_model_never_reach_loader(self):
+        for kwargs in ("lazy=False", "lazy=True", "adapter_path='other'", "model_config={'model_type':'other'}"):
+            with self.subTest(kwargs=kwargs):
+                self.audit = self.root / (str(len(list(self.root.glob('*.json')))) + ".json")
+                self.write_sources(shim_kwargs=kwargs)
+                status, audit = self.run_gate()
+                self.assertEqual(status, 1)
+                self.assertEqual(audit["loader_calls"], 0)
+>               self.assertIn("unexpected loader overrides", audit["error"])
+E               AssertionError: 'unexpected loader overrides' not found in 'ValueError: frozen source module was already imported; use a fresh qualification process'
+
+scripts/test_astrid_mlx_embedding_gate.py:140: AssertionError
+_ EmbeddingGateTests.test_unexpected_overrides_and_wrong_model_never_reach_loader (kwargs='lazy=True') _
+
+self = <test_astrid_mlx_embedding_gate.EmbeddingGateTests testMethod=test_unexpected_overrides_and_wrong_model_never_reach_loader>
+
+    def test_unexpected_overrides_and_wrong_model_never_reach_loader(self):
+        for kwargs in ("lazy=False", "lazy=True", "adapter_path='other'", "model_config={'model_type':'other'}"):
+            with self.subTest(kwargs=kwargs):
+                self.audit = self.root / (str(len(list(self.root.glob('*.json')))) + ".json")
+                self.write_sources(shim_kwargs=kwargs)
+                status, audit = self.run_gate()
+                self.assertEqual(status, 1)
+                self.assertEqual(audit["loader_calls"], 0)
+>               self.assertIn("unexpected loader overrides", audit["error"])
+E               AssertionError: 'unexpected loader overrides' not found in 'ValueError: frozen source module was already imported; use a fresh qualification process'
+
+scripts/test_astrid_mlx_embedding_gate.py:140: AssertionError
+_ EmbeddingGateTests.test_unexpected_overrides_and_wrong_model_never_reach_loader (kwargs="adapter_path='other'") _
+
+self = <test_astrid_mlx_embedding_gate.EmbeddingGateTests testMethod=test_unexpected_overrides_and_wrong_model_never_reach_loader>
+
+    def test_unexpected_overrides_and_wrong_model_never_reach_loader(self):
+        for kwargs in ("lazy=False", "lazy=True", "adapter_path='other'", "model_config={'model_type':'other'}"):
+            with self.subTest(kwargs=kwargs):
+                self.audit = self.root / (str(len(list(self.root.glob('*.json')))) + ".json")
+                self.write_sources(shim_kwargs=kwargs)
+                status, audit = self.run_gate()
+                self.assertEqual(status, 1)
+                self.assertEqual(audit["loader_calls"], 0)
+>               self.assertIn("unexpected loader overrides", audit["error"])
+E               AssertionError: 'unexpected loader overrides' not found in 'ValueError: frozen source module was already imported; use a fresh qualification process'
+
+scripts/test_astrid_mlx_embedding_gate.py:140: AssertionError
+_ EmbeddingGateTests.test_unexpected_overrides_and_wrong_model_never_reach_loader (kwargs="model_config={'model_type':'other'}") _
+
+self = <test_astrid_mlx_embedding_gate.EmbeddingGateTests testMethod=test_unexpected_overrides_and_wrong_model_never_reach_loader>
+
+    def test_unexpected_overrides_and_wrong_model_never_reach_loader(self):
+        for kwargs in ("lazy=False", "lazy=True", "adapter_path='other'", "model_config={'model_type':'other'}"):
+            with self.subTest(kwargs=kwargs):
+                self.audit = self.root / (str(len(list(self.root.glob('*.json')))) + ".json")
+                self.write_sources(shim_kwargs=kwargs)
+                status, audit = self.run_gate()
+                self.assertEqual(status, 1)
+                self.assertEqual(audit["loader_calls"], 0)
+>               self.assertIn("unexpected loader overrides", audit["error"])
+E               AssertionError: 'unexpected loader overrides' not found in 'ValueError: frozen source module was already imported; use a fresh qualification process'
+
+scripts/test_astrid_mlx_embedding_gate.py:140: AssertionError
+=========================== short test summary info ============================
+FAILED scripts/test_astrid_mlx_embedding_gate.py::EmbeddingGateTests::test_exact_frozen_main_and_shim_load_once_lazily_with_bound_audit
+SUBFAILED(error='RuntimeError') scripts/test_astrid_mlx_embedding_gate.py::EmbeddingGateTests::test_loader_failure_and_interrupt_restore_loader_and_record_memory
+SUBFAILED(error='KeyboardInterrupt') scripts/test_astrid_mlx_embedding_gate.py::EmbeddingGateTests::test_loader_failure_and_interrupt_restore_loader_and_record_memory
+FAILED scripts/test_astrid_mlx_embedding_gate.py::EmbeddingGateTests::test_missing_load_and_source_mutation_fail_closed
+FAILED scripts/test_astrid_mlx_embedding_gate.py::EmbeddingGateTests::test_original_test_assertion_failure_is_not_suppressed
+FAILED scripts/test_astrid_mlx_embedding_gate.py::EmbeddingGateTests::test_second_load_remains_failure_even_when_frozen_test_catches_it
+SUBFAILED(kwargs='lazy=False') scripts/test_astrid_mlx_embedding_gate.py::EmbeddingGateTests::test_unexpected_overrides_and_wrong_model_never_reach_loader
+SUBFAILED(kwargs='lazy=True') scripts/test_astrid_mlx_embedding_gate.py::EmbeddingGateTests::test_unexpected_overrides_and_wrong_model_never_reach_loader
+SUBFAILED(kwargs="adapter_path='other'") scripts/test_astrid_mlx_embedding_gate.py::EmbeddingGateTests::test_unexpected_overrides_and_wrong_model_never_reach_loader
+SUBFAILED(kwargs="model_config={'model_type':'other'}") scripts/test_astrid_mlx_embedding_gate.py::EmbeddingGateTests::test_unexpected_overrides_and_wrong_model_never_reach_loader
+10 failed, 246 passed, 53 subtests passed in 3.95s

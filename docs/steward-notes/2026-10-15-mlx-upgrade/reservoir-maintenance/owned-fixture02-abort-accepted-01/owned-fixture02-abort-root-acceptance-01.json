@@ -1,0 +1,46 @@
+{
+  "accepted": true,
+  "accepted_at": "2026-10-17T14:37:16.106224+00:00",
+  "archive": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-accepted-01/archive-manifest.json",
+    "sha256": "b7d0a3de5706632f5913108b4ec2eaf220ac69f2e6bf1aa414f12ff435e4d8ec"
+  },
+  "independent_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-actual-independent-review-01.json",
+    "sha256": "742259e4e1d3917501f87a1e2292526259d745820c9466dacf786184724d0426"
+  },
+  "mlx_qualified": false,
+  "next": "Separate versioned fixture03/candidate06 readiness and no-force native-command preparation; no old parent or abort rerun.",
+  "old_executor_absence": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-old-executor-absence-01.json",
+    "sha256": "515b05c2bd3e6d75637cfa3cd4f86746c05ee72aae12fec269eab9048b751d1d"
+  },
+  "original_failure_preserved": true,
+  "original_fixture_passed": false,
+  "postexit": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-postexit-observation-01.json",
+    "sha256": "76e572221c44eb45a598ebf149a854d478d1713c7c5a78beda07abcf9a1aadc5"
+  },
+  "production_qualified": false,
+  "protected_files": 237,
+  "protected_processes": 7,
+  "result": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-4327212894d64b31980b98bf3fbd7fc2-01/result.json",
+    "sha256": "166a9b0b8cf5923ba6d65a7985c4da7623897d527827e6fe1cf865b5a6a48789"
+  },
+  "root_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-actual-root-review-01.json",
+    "sha256": "146c734bfb36eefbcd2390ebbf16401cb591b3f988ba2aa277a1f5949fe7129b"
+  },
+  "schema": "owned_fixture02_abort_root_acceptance_v1",
+  "scope": "synthetic_cleanup_only",
+  "state": {
+    "fixture_astrid": {
+      "ticks": 11
+    },
+    "fixture_minime": {
+      "ticks": 7
+    }
+  },
+  "steward_pause_generation": 528
+}

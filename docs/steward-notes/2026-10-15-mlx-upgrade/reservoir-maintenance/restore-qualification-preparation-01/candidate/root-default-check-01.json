@@ -1,0 +1,55 @@
+{
+  "schema": "reservoir_restore_qualifier_default_check_v1",
+  "started_at": "2026-10-16T17:42:16.563321+00:00",
+  "duration_s": 0.12129770894534886,
+  "exit_code": 0,
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-I",
+    "-B",
+    "-c",
+    "import sys,importlib.abc,runpy\nclass NoNumeric(importlib.abc.MetaPathFinder):\n def find_spec(self,name,path=None,target=None):\n  if name.split('.')[0] in {'numpy','torch','mlx','mlx_lm','coremltools','sklearn','websockets'}:raise AssertionError('forbidden numeric import: '+name)\nsys.meta_path.insert(0,NoNumeric())\ndef audit(event,args):\n if event in {'subprocess.Popen','os.kill','os.killpg','socket.connect','socket.bind'}:raise AssertionError('forbidden live action: '+event)\nsys.addaudithook(audit)\nsys.argv=[sys.argv[1]]\nrunpy.run_path(sys.argv[0],run_name='__main__')\n",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/qualify_restore.py"
+  ],
+  "source_hashes": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/qualify_restore.py": "33bb2f958fc5ec1c6c2eee37d729447f603d68d0872e8bff4284829c1094f4d8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/test_qualification.py": "a2fe486ee0d4b44140dcad23c570addd3eefc5910cfe9ccf1ad61ffc975f9b57",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/seed_fixture.py": "4a3507615ff5a8f25f9fcd8d0ca592beee14820c1a591045446fc0a8e190c7b8"
+  },
+  "source_unchanged": true,
+  "raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/root-default-check-01.txt",
+    "sha256": "22ba9a351bf72f41bbf630eb732d10ec980b2686bd12fd52291f287c2cb36f38"
+  },
+  "result": {
+    "passed": false,
+    "status": "not_executed",
+    "production_qualified": false,
+    "cases": [
+      "complete",
+      "missing-sidecar",
+      "malformed-sidecar",
+      "corrupt-npz",
+      "schema-mismatch",
+      "config-mismatch",
+      "source-drift",
+      "package-drift",
+      "backup-drift"
+    ],
+    "inputs": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/inputs.json",
+      "sha256": "f830793317e866c30f02770581713ff171e5309c36362c4f2f44c069090ab6e7"
+    },
+    "artifacts": {
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/qualify_restore.py": "33bb2f958fc5ec1c6c2eee37d729447f603d68d0872e8bff4284829c1094f4d8",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/seed_fixture.py": "4a3507615ff5a8f25f9fcd8d0ca592beee14820c1a591045446fc0a8e190c7b8",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/test_qualification.py": "a2fe486ee0d4b44140dcad23c570addd3eefc5910cfe9ccf1ad61ffc975f9b57",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594"
+    }
+  },
+  "no_numeric_imports_or_live_actions": true,
+  "production_qualified": false
+}

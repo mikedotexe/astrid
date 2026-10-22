@@ -1,0 +1,629 @@
+"""Independent retained-file validation of the exact-release owned OS fixture.
+
+Only stdlib file/JSON/plist/hash/AST reads are used. No lifecycle modules are
+imported, and no Host, command, process lookup, network or signal is available.
+Recorded absence is historical evidence, never a current runtime assertion.
+"""
+from __future__ import annotations
+
+import ast
+import datetime
+import hashlib
+import json
+import math
+import os
+from pathlib import Path
+import plistlib
+import re
+import stat
+import sys
+
+HERE = Path(__file__).resolve().parent
+FIXTURE = HERE.parent / 'owned-recovery-fixture-02'
+HOLD = Path('/Users/v/other/astrid/scripts/model_environment.py')
+CONTROL = Path('/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/steward_control_v1/control.json')
+PREFIX = 'com.codex.reservoir-maintenance-fixture.'
+ROLES = ('provider', 'reservoir')
+MAX_JSON = 8 * 1024 * 1024
+MAX_FILE = 256 * 1024 * 1024
+MAX_TOTAL = 1024 * 1024 * 1024
+MAX_FILES = 10000
+MAX_RUN_FILES = 5000
+MAX_RUN_BYTES = 64 * 1024 * 1024
+MAX_RUN_DIRECTORIES = 5000
+STATE11 = {'fixture_astrid': {'ticks': 11}, 'fixture_minime': {'ticks': 7}}
+STATE22 = {'fixture_astrid': {'ticks': 22}, 'fixture_minime': {'ticks': 7}}
+WITNESSES = ('provider_drain', 'final_snapshot', 'backup', 'private_restore', 'startup', 'provider_ready')
+PAIR = {'hold_intent': 'hold_created', 'debug_intent': 'debug_result',
+        'signal_intent': 'signal_sent', 'held_bootout_intent': 'held_job_absent',
+        'install_intent': 'install_completed', 'bootstrap_intent': 'bootstrap_ready',
+        'hold_release_intent': 'hold_released'}
+OP = dict(zip(PAIR, ('create_hold', 'arm_next_spawn', 'signal_stop', 'remove_held',
+                    'install_repair', 'bootstrap_original', 'release_hold')))
+
+
+def require(value, message):
+    if not value:
+        raise ValueError(message)
+
+
+def digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'),
+                                     allow_nan=False).encode()).hexdigest()
+
+
+def sha_value(value):
+    return isinstance(value, str) and re.fullmatch('[0-9a-f]{64}', value) is not None
+
+
+def identity(value):
+    require(isinstance(value, dict) and set(value) == {'pid', 'started_at', 'argv'}
+            and type(value['pid']) is int and value['pid'] > 1
+            and isinstance(value['started_at'], str) and value['started_at']
+            and isinstance(value['argv'], list) and value['argv']
+            and all(isinstance(x, str) and x for x in value['argv']), 'exact process identity missing')
+    return value
+
+
+def finite(value):
+    return type(value) in (int, float) and math.isfinite(value)
+
+
+def stamp(value):
+    return (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns,
+            value.st_ctime_ns, value.st_mode, value.st_uid, value.st_nlink)
+
+
+class Files:
+    """Stable bounded reads, memoized only inside this validation invocation.
+
+    No state persists across admission calls. Reuse and finish recheck device,
+    inode, size, mtime, ctime, mode, uid and link count. Content memoization does
+    not waive a reference hash or complete-inventory check. Private run bytes
+    have a separate 64 MiB/5000-file ceiling from source/interpreter bindings.
+    """
+    def __init__(self):
+        self.seen = {}; self.total = 0; self.objects = {}; self.allowed = None
+        self.run_root = None; self.run_seen = {}; self.directories = {}
+
+    def bind_run(self, root):
+        root = Path(root)
+        require(self.run_root is None or self.run_root == root, 'run budget root changed')
+        self.run_root = root
+        for path, saved in self.seen.items():
+            if Path(path).is_relative_to(root): self.run_seen[path] = saved['stamp'][2]
+        require(len(self.run_seen) <= MAX_RUN_FILES and sum(self.run_seen.values()) <= MAX_RUN_BYTES,
+                'private run exceeds finite budget')
+
+    def directory(self, path):
+        path = Path(path)
+        require(path.is_absolute() and path == path.resolve(strict=True), 'noncanonical private directory')
+        info = path.lstat()
+        require(stat.S_ISDIR(info.st_mode) and info.st_uid == os.getuid()
+                and not stat.S_IMODE(info.st_mode) & 0o077, 'unowned or public private directory')
+        if str(path) in self.directories:
+            require(stamp(info) == self.directories[str(path)], 'private directory changed during validation')
+        self.directories[str(path)] = stamp(info)
+
+    def read(self, path, expected=None, *, content=False):
+        path = Path(path)
+        require(path.is_absolute() and path == path.resolve(strict=True), 'noncanonical evidence path')
+        require(self.allowed is None or str(path) in self.allowed, 'reference outside complete retained input set')
+        if str(path) in self.seen:
+            saved = self.seen[str(path)]
+            require(stamp(path.lstat()) == saved['stamp'], 'evidence changed after read')
+            require(expected is None or saved['sha256'] == expected, 'reference digest differs')
+            if not content: return saved['sha256']
+            if str(path) in self.objects: return self.objects[str(path)]
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            before = os.fstat(fd)
+            in_run = self.run_root is not None and path.is_relative_to(self.run_root)
+            limit = min(MAX_JSON if content else MAX_FILE, MAX_RUN_BYTES if in_run else MAX_FILE)
+            require(stat.S_ISREG(before.st_mode) and before.st_uid == os.getuid()
+                    and before.st_nlink == 1 and before.st_size <= limit,
+                    'unsafe or oversized evidence file')
+            if in_run:
+                limit = min(limit, MAX_RUN_BYTES - sum(self.run_seen.values()) + self.run_seen.get(str(path), 0))
+                require(len(self.run_seen) + (str(path) not in self.run_seen) <= MAX_RUN_FILES
+                        and sum(self.run_seen.values()) - self.run_seen.get(str(path), 0)
+                        + before.st_size <= MAX_RUN_BYTES, 'private run exceeds finite budget')
+            chunks = []; h = hashlib.sha256(); size = 0
+            while chunk := os.read(fd, 1024 * 1024):
+                size += len(chunk); require(size <= limit, 'evidence grew')
+                h.update(chunk)
+                if content: chunks.append(chunk)
+            require(stamp(before) == stamp(os.fstat(fd)) == stamp(path.lstat()), 'evidence changed during read')
+        finally:
+            os.close(fd)
+        actual = h.hexdigest()
+        require(expected is None or expected == actual, 'evidence hash differs: ' + str(path))
+        if str(path) not in self.seen:
+            self.total += size
+            require(len(self.seen) < MAX_FILES and self.total <= MAX_TOTAL, 'fixture evidence exceeds finite budget')
+        self.seen[str(path)] = {'stamp': stamp(before), 'sha256': actual}
+        if in_run: self.run_seen[str(path)] = size
+        if content:
+            value = b''.join(chunks); self.objects[str(path)] = value; return value
+        return actual
+
+    def ref(self, value, *, object=True):
+        require(isinstance(value, dict) and set(value) == {'path', 'sha256'}
+                and isinstance(value['path'], str) and sha_value(value['sha256']), 'invalid exact reference')
+        if not object: return self.read(value['path'], value['sha256'])
+        return self.json(value['path'], value['sha256'])
+
+    def json(self, path, expected=None):
+        def pairs(items):
+            out = {}
+            for key, value in items:
+                require(key not in out, 'duplicate JSON key'); out[key] = value
+            return out
+        value = json.loads(self.read(path, expected, content=True), object_pairs_hook=pairs,
+                           parse_constant=lambda _: require(False, 'nonfinite JSON'))
+        require(isinstance(value, dict), 'evidence object required')
+        return value
+
+    def finish(self):
+        for path, saved in self.seen.items():
+            require(stamp(Path(path).lstat()) == saved['stamp'], 'evidence identity changed during validation')
+        for path, saved in self.directories.items():
+            require(stamp(Path(path).lstat()) == saved, 'private directory changed during validation')
+
+
+def schedule():
+    """Independent finite data contract; no producer schedule is imported."""
+    cleanup = tuple(f'{op}:{role}' for role in ROLES for op in
+                    ('create_hold', 'arm_next_spawn', 'signal_stop', 'held_verified',
+                     'cleanup_witness', 'remove_held', 'job_absent')) + (
+                         'final_state', 'release_hold:provider', 'release_hold:reservoir', 'complete')
+    main = ('signal_stop:provider', 'held_verified:provider', 'witness:provider_drain',
+            'remove_held:provider', 'job_absent:provider', 'create_hold:reservoir',
+            'arm_next_spawn:reservoir', 'signal_stop:reservoir', 'held_verified:reservoir',
+            'witness:final_snapshot', 'remove_held:reservoir', 'job_absent:reservoir',
+            'witness:backup', 'witness:private_restore', 'install_repair',
+            'bootstrap_original:reservoir', 'witness:startup', 'bootstrap_original:provider',
+            'witness:provider_ready', 'release_hold:provider', 'release_hold:reservoir', 'completed')
+    interrupted = {'signal_stop:provider', 'witness:provider_drain', 'remove_held:provider',
+                   'signal_stop:reservoir', 'witness:final_snapshot', 'witness:backup',
+                   'witness:private_restore', 'install_repair', 'bootstrap_original:reservoir',
+                   'bootstrap_original:provider', 'release_hold:provider', 'completed'}
+    cleanup_interrupted = {'signal_stop:provider', 'cleanup_witness:provider', 'remove_held:provider',
+                          'signal_stop:reservoir', 'cleanup_witness:reservoir', 'remove_held:reservoir',
+                          'release_hold:provider', 'complete'}
+    points = [{'id': 'fresh-provider-arm', 'stream': 'host', 'event': 'host:debug_result', 'match': {'role': 'provider'}}]
+    steps = []
+    def add(kind, action, mode='execute', point=None, code=None):
+        steps.append({'id': f'{len(steps)+1:02d}-' + kind.replace('_', '-') + '-' + action.replace(':', '-').replace('_', '-')[:20],
+                      'kind': kind, 'mode': mode, 'action_id': action, 'injection': point,
+                      'expected_exit': (75 if point else 0) if code is None else code})
+    add('lock_hold', 'lock', code=0); add('lock_refusal', 'lock', code=76)
+    add('fresh', 'arm_next_spawn:provider', point='fresh-provider-arm')
+    add('resume_one', 'arm_next_spawn:provider', 'reconcile')
+    for action in main:
+        point = None
+        if action in interrupted:
+            point = 'main-' + action.replace(':', '-').replace('_', '-')
+            bootstrap = action.startswith('bootstrap_original:')
+            points.append({'id': point, 'stream': 'host' if bootstrap else 'action_return',
+                           'event': 'host:bootstrap_command_returned' if bootstrap else action,
+                           'match': {'role': action.split(':')[1]} if bootstrap else {'action_id': action}})
+        add('resume_one', action, 'reconcile' if action.startswith('held_verified:') else 'execute', point)
+        if point: add('resume_one', action, 'reconcile')
+    for action in cleanup:
+        point = None
+        if action in cleanup_interrupted:
+            point = 'cleanup-' + action.replace(':', '-').replace('_', '-')
+            points.append({'id': point, 'stream': 'cleanup_return', 'event': action, 'match': {'action_id': action}})
+        add('cleanup', action, point=point)
+        if point: add('cleanup', action, 'reconcile')
+    for action in ('replace_plist', 'bootstrap', 'verify_exit', 'remove_absent_job', 'complete'):
+        point = None
+        if action in ('replace_plist', 'bootstrap'):
+            point = 'pin-' + action
+            points.append({'id': point, 'stream': 'pin', 'event': 'plist_replaced' if action == 'replace_plist' else 'bootstrap_returned', 'match': {}})
+        add('pin', action, point=point)
+        if point: add('pin', action, 'reconcile')
+    return steps, {'schema': 'owned_fixture_injections_v1', 'scope': 'owned_fixture_only',
+                   'production_qualified': False, 'points': points}
+
+
+def ordered_records(files, root, pattern, *, prefix, width=5):
+    paths = sorted(Path(root).glob(pattern)); require(len(paths) <= 1000, 'history exceeds finite bound')
+    require([p.name for p in paths] == [f'{prefix}{i:0{width}d}.json' for i in range(1, len(paths)+1)], 'history gap')
+    return [files.json(path) for path in paths]
+
+
+def fixture_chain(header, rows, expected_actions):
+    """Reconstruct setup/cleanup/pin claims; no ordinary action may repeat."""
+    previous = digest(header); pending = {}; claims = {}; failed = set(); completed = {}; previous_time = 0
+    for number, row in enumerate(rows, 1):
+        action, kind = row.get('action'), row.get('type')
+        require(row.get('sequence') == number and row.get('previous') == previous
+                and type(row.get('wall_time_ns')) is int and row['wall_time_ns'] > 0
+                and row['wall_time_ns'] >= previous_time, 'fixture chain differs')
+        previous_time = row['wall_time_ns']
+        previous = digest(row)
+        require(len(completed) < len(expected_actions) and action == expected_actions[len(completed)], 'fixture action out of phase')
+        if kind in ('claim', 'reconcile_claim'):
+            if kind == 'claim': require(action not in pending, 'producer action replay')
+            else: require(action in pending, 'reconciliation lacks producer claim')
+            identity(row.get('executor_identity'))
+            pending.setdefault(action, []).append(previous); claims[previous] = row
+        else:
+            require(kind in ('failed', 'result', 'reconciled') and action in pending
+                    and row.get('claim_sha256') == pending[action][-1], 'unmatched fixture result')
+            if kind == 'failed':
+                require(row['claim_sha256'] not in failed, 'duplicate failure'); failed.add(row['claim_sha256']); continue
+            require(isinstance(row.get('result'), dict), 'missing fixture result')
+            if kind == 'result':
+                require(len(pending[action]) == 1 and row['claim_sha256'] not in failed, 'uncertain action requires adoption')
+            else:
+                require(row.get('resolves_claims') == pending[action] and row.get('proof', {}).get('passed') is True,
+                        'reconciliation did not close all claims')
+            completed[action] = row['result']; pending.pop(action)
+    require(not pending and list(completed) == list(expected_actions), 'fixture history incomplete')
+    return completed, previous
+
+
+def process_matches(actual, expected, python_files, python):
+    return (isinstance(actual, list) and len(actual) == len(expected) and actual[1:] == expected[1:]
+            and expected[0] == python and str(Path(actual[0]).resolve(strict=True)) in python_files
+            and str(Path(python).resolve(strict=True)) in python_files)
+
+
+def assert_flag(files, path, name):
+    tree = ast.parse(files.read(path, content=True))
+    values = [node.value for node in tree.body if isinstance(node, ast.Assign)
+              and any(isinstance(t, ast.Name) and t.id == name for t in node.targets)]
+    require(len(values) == 1 and isinstance(values[0],ast.Constant) and values[0].value is True,
+            'fixture cannot transfer preparatory disabled source: ' + name)
+
+
+def inventory(files, root, expected, exclusions):
+    root = Path(root); files.bind_run(root); files.directory(root)
+    require(isinstance(expected, dict) and expected and len(expected) <= MAX_RUN_FILES, 'raw inventory missing or oversized')
+    allowed = {str(root/'setup.lock'), str(root/'execution.lock')}
+    require(isinstance(exclusions, list) and exclusions == sorted(set(exclusions))
+            and set(exclusions) == {p for p in allowed if Path(p).exists() or Path(p).is_symlink()},
+            'unknown or extra evidence inventory exclusion')
+    for path in exclusions:
+        info = Path(path).lstat()
+        require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid() and info.st_nlink == 1
+                and info.st_size == 0 and not stat.S_IMODE(info.st_mode) & 0o077, 'unsafe excluded lock')
+    actual = set(); total = 0; count = 0
+    for directory, dirs, names in os.walk(root, followlinks=False):
+        count += 1; require(count <= MAX_RUN_DIRECTORIES, 'private directory count exceeds finite bound')
+        files.directory(directory)
+        for name in dirs:
+            files.directory(Path(directory)/name)
+        for name in names:
+            path = str(Path(directory)/name)
+            if path not in exclusions:
+                info = Path(path).lstat()
+                require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid() and info.st_nlink == 1,
+                        'unsafe retained file')
+                actual.add(path); total += info.st_size
+                require(len(actual) <= MAX_RUN_FILES and total <= MAX_RUN_BYTES, 'private run exceeds finite budget')
+    require(actual == set(expected), 'unlisted or missing retained fixture file')
+    for path, sha in expected.items():
+        require(Path(path).is_relative_to(root) and sha_value(sha), 'raw artifact outside fixture')
+        files.read(path, sha)
+    return actual
+
+
+def validate_release(files, fixture, review, spec, plan):
+    release = files.ref(fixture['release']); steps, injections = schedule()
+    require(release.get('schema') == 'owned_recovery_fixture_release_v2' and release.get('approved') is True
+            and release.get('scope') == 'owned_fixture_only' and release.get('release_stage') == 'final_enabled'
+            and release.get('qualification_meaning') == 'owned_fixture_exact_final_release_only'
+            and release.get('production_qualified') is False and release.get('final_release_acceptance') is False,
+            'preparatory/legacy fixture release cannot qualify final bytes')
+    coordination = release.get('coordination')
+    require(isinstance(coordination,dict) and set(coordination) == {'control','lease_path','paused','pause_generation','actor','lease_absent'}
+            and coordination['control'].get('path') == str(CONTROL)
+            and coordination['lease_path'] == str(CONTROL.with_name('lease.json')) and coordination['paused'] is True
+            and type(coordination['pause_generation']) is int and coordination['pause_generation'] == 528
+            and coordination['actor'] == 'codex-mlx-upgrade' and coordination['lease_absent'] is True,
+            'historical coordination binding differs')
+    control = files.ref(coordination['control'])
+    require(control.get('schema') == 'steward_control_state_v1' and control.get('schema_version') == 1
+            and control.get('paused') is True and type(control.get('pause_generation')) is int
+            and control['pause_generation'] == 528 and control.get('actor') == 'codex-mlx-upgrade'
+            and spec['immutable_files'].get(str(CONTROL)) == coordination['control']['sha256'],
+            'recorded steward pause ownership differs')
+    token = fixture['transaction_id']; root = Path(fixture['root']); host = plan['host_binding']; uid = host['uid']
+    require(re.fullmatch('[a-f0-9]{32}', token or '') and root == FIXTURE/'runs'/('owned-recovery-'+token)
+            and release['fixture'] == {'root': str(root), 'token': token,
+                'targets': {r: f'gui/{uid}/{PREFIX}{token}.{r}' for r in (*ROLES, 'pin')}}
+            and release['setup_plan'] == ['bootstrap:reservoir','bootstrap:provider']
+            and fixture['host_binding'] == release['host_binding'] == review['host_binding'] == host,
+            'fixture root/targets/host differ')
+    require(release['result_path'] == spec['fixture']['path'] and not Path(release['result_path']).is_relative_to(root)
+            and release['executor_plan'] == steps and fixture['injections'] == release['injections']
+            and files.ref(release['injections']) == injections, 'sealed result/schedule/injections differ')
+    core = release['core']; expected_core = {str(p) for p in HERE.glob('*.py')}
+    require(core.get('root') == str(HERE) and set(core['artifacts']) == expected_core
+            and fixture['final_release_closure'] == review['final_release_closure'] == core['artifacts']
+            and core['flags'] == {'PRODUCTION_CONTROLLER_ENABLED': True, 'PRODUCTION_EXECUTION_ENABLED': True}, 'complete final core closure differs')
+    required_fixture = {str(p) for p in FIXTURE.glob('*.py')} | {str(FIXTURE/'README.md'), str(HOLD),
+        str(HERE.parent/'candidate-v2/maintenance_fixture_worker.py')}
+    require(set(release['artifacts']) == required_fixture and fixture['fixture_artifacts'] == release['artifacts'], 'fixture source closure incomplete')
+    immutable = spec['immutable_files']; source_maps = {**core['artifacts'], **release['artifacts']}
+    for path, sha in source_maps.items():
+        require(immutable.get(path) == sha and sha_value(sha), 'final closure lacks independent preparation binding')
+        files.read(path, sha)
+    require({k:v for k,v in immutable.items() if Path(k).parent == HERE and k.endswith('.py')} == core['artifacts'], 'preparation core closure differs')
+    if 'execution_review' in spec:
+        execution = files.ref(spec['execution_review'])
+        require(all(execution.get('artifacts', {}).get(k) == v for k,v in source_maps.items()), 'execution review omits final fixture closure')
+    assert_flag(files, HERE/'reservoir_maintenance.py', 'PRODUCTION_CONTROLLER_ENABLED')
+    assert_flag(files, HERE/'production_host.py', 'PRODUCTION_EXECUTION_ENABLED')
+    assert_flag(files, FIXTURE/'owned_fixture_coordinator.py', 'FIXTURE_EXECUTION_ENABLED')
+    python = release['python']; resolved = Path(python).resolve(strict=True); family = {resolved}
+    if resolved.parent.name == 'bin' and resolved.parent.parent.parent.name == 'Versions' and resolved.parent.parent.parent.parent.name == 'Python.framework':
+        family.add((resolved.parent.parent/'Resources/Python.app/Contents/MacOS/Python').resolve(strict=True))
+    require(Path(python).is_absolute() and set(release['python_files']) == {str(p) for p in family}
+            and fixture['python'] == python and fixture['python_executables'] == review['python_executables'] == release['python_files'], 'exact Python family differs')
+    for path, sha in release['python_files'].items():
+        require(immutable.get(path) == sha, 'Python family not independently pinned'); files.read(path, sha)
+    source_review = files.ref(release['source_review'])
+    require(source_review.get('schema') == 'owned_recovery_fixture_final_release_source_review_v2'
+            and source_review.get('approved') is True and source_review.get('scope') == 'owned_fixture_only'
+            and source_review.get('reviewer') and source_review.get('release_stage') == 'final_enabled'
+            and source_review.get('core_artifacts') == core['artifacts'] and source_review.get('fixture_artifacts') == release['artifacts']
+            and source_review.get('executor_plan_sha256') == digest(steps) and source_review.get('injections_sha256') == digest(injections)
+            and source_review.get('python') == python and source_review.get('python_files') == release['python_files']
+            and source_review.get('core_flags') == core['flags']
+            and source_review.get('coordination') == coordination, 'final enabling source review differs')
+    return release, steps, injections
+
+
+def check_coordination_observation(record, release, earliest, latest):
+    """Historical file-only guard evidence; does not assert current ownership."""
+    value = record.get('coordination_observation')
+    require(isinstance(value,dict) and set(value) == {'coordination','observed_wall_time_ns'}
+            and value['coordination'] == release['coordination']
+            and type(value['observed_wall_time_ns']) is int
+            and earliest <= value['observed_wall_time_ns'] <= latest, 'coordination observation differs')
+
+
+def check_parent(files, root, fixture, release, steps):
+    parent = fixture['parent']; ident = identity(parent['identity']); start = files.ref(parent['start'])
+    require(parent['parent_reaped'] is False and parent['post_terminal_closeout_required'] is True
+            and start.get('schema') == 'owned_fixture_parent_start_v2' and start['identity'] == ident
+            and start['host_binding'] == fixture['host_binding'] and start['release'] == fixture['release']
+            and start['parent_reaped'] is False and start['started_wall_time_ns'] == fixture['started_wall_time_ns'],
+            'parent cannot attest its own reap')
+    check_coordination_observation(start,release,fixture['started_wall_time_ns'],fixture['completed_wall_time_ns'])
+    argv = [release['python'],'-B',str(FIXTURE/'owned_fixture_run.py'),'--execute','--release',fixture['release']['path']]
+    require(process_matches(ident['argv'],argv,release['python_files'],release['python']), 'parent actual argv differs')
+    header = files.ref(parent['header']); rows = [files.ref(ref) for ref in parent['events']]
+    require(parent['header']['path'] == str(root/'parent/header.json')
+            and rows == ordered_records(files, root/'parent', 'event-*.json', prefix='event-')
+            and header == {'schema': 'owned_fixture_ledger_v1','name':'parent','binding':{
+                'release_sha256':fixture['release']['sha256'],'parent_identity_sha256':digest(ident)}}, 'parent chain binding differs')
+    actions = ['setup', 'lock_pair']
+    for step in steps[2:]:
+        if step == next(s for s in steps if s['kind'] == 'cleanup'): actions.append('cleanup_initialize')
+        if step == next(s for s in steps if s['kind'] == 'pin'): actions.append('pin_initialize')
+        actions.append('executor:'+step['id'])
+    actions.append('finalize')
+    done, head = fixture_chain(header, rows, actions)
+    require(head == parent['head_sha256'] and [r['type'] for r in rows] == ['claim','result']*len(actions)
+            and all(r['executor_identity'] == ident for r in rows if r['type'] == 'claim')
+            and fixture['started_wall_time_ns'] <= rows[0]['wall_time_ns'] <= rows[-1]['wall_time_ns'] <= fixture['completed_wall_time_ns'],
+            'parent replay/failure/incomplete phase')
+    for step, executor in zip(steps[2:], fixture['executors'][2:]):
+        result = done['executor:'+step['id']]
+        require(executor['exit'] in result.values(), 'parent phase does not bind exact executor exit')
+        bounds = [row['wall_time_ns'] for row in rows if row['action'] == 'executor:'+step['id']]
+        require(bounds[0] <= files.ref(executor['launch'])['started_wall_time_ns']
+                <= files.ref(executor['exit'])['completed_wall_time_ns'] <= bounds[1], 'executor outside parent phase')
+    require(fixture['executors'][0]['exit'] in done['lock_pair'].values()
+            and fixture['executors'][1]['exit'] in done['lock_pair'].values(), 'parent lock pair reaps missing')
+    require(done['setup'] == {'root':str(root),'setup_complete':fixture['setup']['complete'],
+                             'scope':'owned_fixture_only','production_qualified':False}, 'parent initial setup result differs')
+    require(done['cleanup_initialize'] == {'context':fixture['cleanup']['context']}
+            and done['pin_initialize'] == {'inputs':fixture['pin']['inputs']}
+            and done['finalize'] == {'final_observations':fixture['final_observations'],'parent_absence_claimed':False},
+            'parent initialization/final references differ')
+    return {'identity':ident,'header':header,'rows':rows,'done':done}
+
+
+def absence_query(row, argv):
+    return (row.get('argv') == argv and row.get('returncode') == 1
+            and not row.get('stdout','').strip() and not row.get('stderr','').strip())
+
+
+def check_query_window(row, earliest, latest):
+    require(type(row.get('observed_wall_time_ns')) is int and earliest <= row['observed_wall_time_ns'] <= latest
+            and type(row.get('returncode')) is int and isinstance(row.get('stdout'),str)
+            and isinstance(row.get('stderr'),str), 'raw query outside exact final phase or malformed')
+
+
+def check_final(files, fixture, release, main, cleanup, pin, executors, finalize_interval):
+    root = Path(fixture['root']); final = files.ref(fixture['final_observations']); parent = fixture['parent']['identity']
+    earliest, latest = finalize_interval
+    require(max(row['exit']['completed_wall_time_ns'] for row in executors.values()) <= earliest,
+            'final observations preceded an executor reap')
+    require(final.get('schema') == 'owned_fixture_final_observations_v2' and final['host_binding'] == fixture['host_binding']
+            and final['observer_identity'] == parent and final['parent_absence_claimed'] is False and final['force_used'] is False
+            and earliest <= final['observed_wall_time_ns'] <= latest <= fixture['completed_wall_time_ns'], 'final observation differs')
+    identities = {}
+    def visit(value):
+        if isinstance(value,dict):
+            if set(value) == {'pid','started_at','argv'}:
+                ident = identity(value)
+                if ident['pid'] == parent['pid']: require(ident == parent,'parent PID reused')
+                else:
+                    key = str(ident['pid']); require(key not in identities or identities[key] == ident,'owned PID reused')
+                    identities[key] = ident
+            else:
+                for child in value.values(): visit(child)
+        elif isinstance(value,list):
+            for child in value: visit(child)
+    for path in fixture['artifacts']:
+        if path.endswith('.json') and Path(path).name not in ('final-observations.json','final-raw-queries.json'):
+            visit(files.json(path))
+    require(final['known_identities'] == identities and final['pid_observations'] == {key:None for key in identities}, 'final identity inventory incomplete')
+    raw = files.ref(final['raw_queries']); queries = raw['queries']
+    require(raw.get('schema') == 'owned_fixture_raw_queries_v2' and raw['host_binding'] == fixture['host_binding']
+            and raw['observer_identity'] == parent and isinstance(queries,list) and 0 < len(queries) <= 5000, 'raw final query set missing')
+    for row in queries:
+        check_query_window(row,earliest,final['observed_wall_time_ns'])
+        argv=row.get('argv',[])
+        require(isinstance(argv,list) and argv and (argv[0] in ('/bin/ps','/usr/sbin/lsof','/usr/sbin/sysctl','/usr/bin/sw_vers')
+                or argv[:2] == ['/bin/launchctl','print']), 'final raw evidence includes an action command')
+    for pid in [*identities, str(pin['sentinel']['pid'])]:
+        require(any(absence_query(row,['/bin/ps','-p',pid,'-o','lstart=']) for row in queries), 'raw owned PID absence missing')
+    for role in ROLES:
+        view = final['roles'][role]; target = release['fixture']['targets'][role]
+        require(view['target'] == target and view['job_loaded'] is False and view['process'] is None
+                and view['listener_pids'] == [] and view['held'] is None, 'final owned role remains')
+        require(any(row['argv'] == ['/bin/launchctl','print',target] and row['returncode'] != 0
+                    and ('Could not find service' in row['stdout']+row['stderr'] or 'Could not find specified service' in row['stdout']+row['stderr'])
+                    for row in queries), 'raw job absence missing')
+        require(final['guards'][role] is False and not (root/('hold-'+role)/'hold.json').exists(), 'hold guard retained')
+    ports = set()
+    for value in main['receipts'].values():
+        details = value['evidence'].get('details', {})
+        if 'sentinel_port' in details: ports.add(str(details['sentinel_port']))
+    for role in ROLES: ports.add(str(files.json(root/'preparation.json')['anchors'][role]['sentinel_port']))
+    for rows in (main['host'], cleanup['host']):
+        ports.update(str(r['sentinel_port']) for r in rows if r['operation'] == 'bootstrap_ready')
+    require(set(final['ports']) == ports and all(v == [] for v in final['ports'].values()), 'final listener inventory differs')
+    for port in ports:
+        require(any(absence_query(row,['/usr/sbin/lsof','-nP',f'-iTCP:{port}','-sTCP:LISTEN','-Fp']) for row in queries), 'raw private port absence missing')
+    sentinel = final['sentinel']; observed = sentinel['pin_observation']; query = raw['pin_query']
+    check_query_window(query,earliest,final['observed_wall_time_ns'])
+    require(files.ref(sentinel['receipt']) == pin['sentinel'] and sentinel['pid'] == pin['sentinel']['pid']
+            and sentinel['process'] is None and observed['job_loaded'] is False and observed['process'] is None
+            and observed['recorded_pid_absent'] is True and observed['listener_pids'] == [] and observed['raw'] == query
+            and query['argv'] == ['/bin/launchctl','print',release['fixture']['targets']['pin']]
+            and query['returncode'] != 0 and ('Could not find service' in query['stdout']+query['stderr']
+                                           or 'Could not find specified service' in query['stdout']+query['stderr']), 'pin final raw absence differs')
+    require(files.ref(final['state']) == STATE22 and files.ref(final['main_backup'])['expected_state'] == STATE11, 'final saved state differs')
+    return final
+
+
+def check_closeout(files, fixture_ref, fixture, review):
+    closeout = files.ref(review['parent_closeout']); parent = fixture['parent']['identity']; observer = identity(closeout['observer_identity'])
+    require(closeout.get('schema') == 'reservoir_owned_recovery_fixture_parent_closeout_v2'
+            and closeout['fixture'] == fixture_ref and closeout['release'] == fixture['release']
+            and closeout['host_binding'] == fixture['host_binding'] and closeout['parent_identity'] == parent
+            and observer['pid'] != parent['pid'] and closeout['parent_absent'] is True
+            and closeout['observation'] == {'queried_pid':parent['pid'],'process':None}
+            and isinstance(closeout.get('observed_at'),str) and closeout['observed_at'], 'independent post-Terminal parent closeout missing')
+    raw = files.ref(closeout['raw_observation'])
+    when = datetime.datetime.fromisoformat(closeout['observed_at'].replace('Z','+00:00'))
+    require(when.tzinfo is not None and when.timestamp()*1e9 > fixture['completed_wall_time_ns']
+            and type(raw.get('observed_wall_time_ns')) is int
+            and fixture['completed_wall_time_ns'] < raw['observed_wall_time_ns'] <= when.timestamp()*1e9
+            and absence_query(raw,['/bin/ps','-p',str(parent['pid']),'-o','pid=']), 'parent closeout lacks later exact raw absence query')
+    final = files.ref(fixture['final_observations'])
+    require(str(observer['pid']) not in final['known_identities'] and observer['pid'] != final['sentinel']['pid'], 'closeout observer was fixture-owned')
+    return closeout
+
+
+def section_references(files, fixture):
+    """Every published section points into the independently complete run map."""
+    def visit(value):
+        if isinstance(value,dict):
+            if set(value) == {'path','sha256'}:
+                require(fixture['artifacts'].get(value['path']) == value['sha256'], 'section points outside exact retained run')
+                files.ref(value,object=False)
+            else:
+                for child in value.values(): visit(child)
+        elif isinstance(value,list):
+            for child in value: visit(child)
+    for name in ('parent','setup','main','recovery','cleanup','pin','executors','final_observations','plan'):
+        visit(fixture[name])
+    root=Path(fixture['root'])
+    lists=(('parent','events','parent','event-*.json'),('setup','events','setup','event-*.json'),
+        ('setup','host_operations','setup-host','host-operation-*.json'),('main','events','controller','event-*.json'),
+        ('main','host_operations','','host-operation-*.json'),('main','witnesses','','*-witness.json'),
+        ('main','worker_logs','','*.events.jsonl'),('recovery','events','recovery','event-*.json'),
+        ('recovery','sessions','execution-sessions','*.json'),('cleanup','events','cleanup','event-*.json'),
+        ('cleanup','host_operations','cleanup','host-operation-*.json'),('cleanup','witnesses','cleanup','*-witness.json'),
+        ('pin','events','pin','event-*.json'))
+    for section,key,directory,pattern in lists:
+        expected=[{'path':str(path),'sha256':fixture['artifacts'][str(path)]} for path in sorted((root/directory).glob(pattern))]
+        require(fixture[section][key] == expected, 'published history section incomplete: '+section+'.'+key)
+    expected = {'core_loaded_origins':fixture['final_release_closure'],'fixture_loaded_origins':fixture['fixture_artifacts']}
+    for name, bound in expected.items():
+        origins = fixture[name]
+        require(isinstance(origins,dict) and origins and all(bound.get(path) == sha for path,sha in origins.items()), 'loaded source origins differ')
+        require(not any(Path(path).name.startswith('test_') for path in origins), 'test implementation loaded in OS fixture')
+    core = {str(HERE/(name+'.py')) for name in ('reservoir_maintenance','transaction_execution','recovery_ledger','recovery_phases','production_recovery_driver')}
+    require(core <= set(fixture['core_loaded_origins'])
+            and str(HERE/'production_host.py') not in fixture['core_loaded_origins'], 'required core origin missing or production Host loaded')
+    required = {str(FIXTURE/(name+'.py')) for name in ('owned_fixture_run','owned_fixture_result','owned_fixture_coordinator',
+        'owned_fixture_records','owned_recovery_host','owned_recovery_core','owned_fixture_system','owned_fixture_retained',
+        'owned_fixture_witnesses','owned_fixture_cleanup','owned_fixture_cleanup_host','owned_fixture_pin','owned_fixture_injection','owned_fixture_setup','owned_fixture_plan','owned_pin_system')}
+    require(required <= set(fixture['fixture_loaded_origins']), 'executed fixture module origin missing')
+
+
+def loaded_origins(record, release):
+    for key, bound in (('core_loaded_origins',release['core']['artifacts']),('fixture_loaded_origins',release['artifacts'])):
+        values = record.get(key)
+        require(isinstance(values,dict) and values and all(bound.get(path) == sha for path,sha in values.items())
+                and not any(Path(p).name.startswith('test_') for p in values), 'actual executor loaded-origin map differs')
+    needed = {str(HERE/(name+'.py')) for name in ('reservoir_maintenance','transaction_execution','recovery_ledger','recovery_phases','production_recovery_driver')}
+    require(needed <= set(record['core_loaded_origins']) and str(HERE/'production_host.py') not in record['core_loaded_origins'], 'executor omitted shared core or loaded production Host')
+    needed = {str(FIXTURE/(name+'.py')) for name in ('owned_fixture_coordinator','owned_recovery_core','owned_recovery_host','owned_fixture_records','owned_fixture_system')}
+    require(needed <= set(record['fixture_loaded_origins']), 'executor omitted fixed fixture implementation')
+
+
+def validate_fixture(spec, plan):
+    """Verify raw historical OS fixture evidence; grants no execution authority."""
+    files = Files(); fixture = files.ref(spec['fixture']); review = files.ref(spec['fixture_review'])
+    require(fixture.get('schema') == 'reservoir_owned_recovery_fixture_result_v2'
+            and fixture.get('scope') == 'owned_fixture_only' and fixture.get('exact_release_fixture_passed') is True
+            and all(fixture.get(k) is False for k in ('production_qualified','production_host_executed','production_pin_schedule_executed','numeric_restore_executed'))
+            and spec['fixture']['sha256'] == plan['input_hashes']['fixture'], 'legacy/wrapped/incomplete fixture result refused')
+    require(review.get('schema') == 'reservoir_owned_recovery_fixture_review_v2' and review.get('accepted') is True
+            and review.get('scope') == 'owned_fixture_only' and review.get('reviewer') and review.get('reviewed_at')
+            and review['fixture'] == spec['fixture'] and review['release'] == fixture['release']
+            and review.get('closure_matches_final_release') is True, 'independent actual fixture review missing')
+    require(isinstance(review.get('recomputed_checks'),dict) and review['recomputed_checks']
+            and all(value is True for value in review['recomputed_checks'].values())
+            and isinstance(review.get('limitations'),list) and review['limitations'], 'independent recomputation/limits missing')
+    release, steps, injections = validate_release(files,fixture,review,spec,plan); root = Path(fixture['root'])
+    initial = inventory(files,root,fixture['artifacts'],fixture['excluded_lock_paths'])
+    require(review.get('raw_artifacts') == fixture['artifacts'], 'review does not bind complete raw run')
+    closeout = files.ref(review['parent_closeout']); files.ref(closeout['raw_observation'])
+    files.allowed = set(files.seen) | set(fixture['artifacts'])
+    section_references(files,fixture)
+    # Import only this inert fixed sibling after checking its independently bound bytes.
+    helper = HERE/'production_fixture_history.py'; files.read(helper,spec['immutable_files'][str(helper)])
+    existing = sys.modules.get('production_fixture_history')
+    require(existing is None or Path(existing.__file__).resolve() == helper, 'foreign fixture history module preloaded')
+    import production_fixture_history as history
+    require(Path(history.__file__).resolve() == helper and history.require is require and history.digest is digest,
+            'fixture history did not use the exact inert reader origin')
+    fixture_plan = files.ref(fixture['plan']); preparation = files.json(root/'preparation.json')
+    require(fixture_plan['transaction_id'] == fixture['transaction_id'] and fixture_plan['host_binding'] == plan['host_binding']
+            and fixture_plan['protected'] == {} and preparation['plan'] == fixture_plan
+            and preparation['transaction_root'] == str(root) and preparation['execution_scope'] == 'owned_fixture'
+            and preparation['artifacts'] == release['artifacts'] and preparation['python_files'] == release['python_files'], 'owned plan/preparation differs')
+    history.check_setup(files,fixture,release,fixture_plan,preparation)
+    executors = history.check_executors(files,fixture,release,steps,injections)
+    parent = check_parent(files,root,fixture,release,steps)
+    sessions = history.check_sessions(files,root,fixture_plan,executors,parent['identity'],parent['rows'])
+    main = history.check_core_history(files,root,fixture_plan,preparation,executors,sessions)
+    logs, checkins, backup = history.check_workers(files,root,fixture_plan,main)
+    cleanup = history.check_cleanup(files,root,fixture_plan,main,executors,logs)
+    history.check_host_effects(files,root,fixture_plan,main,cleanup,release)
+    pin = history.check_pin(files,root,fixture_plan,release,executors)
+    check_final(files,fixture,release,main,cleanup,pin,executors,history.parent_intervals(parent['rows'])['finalize'])
+    check_closeout(files,spec['fixture'],fixture,review)
+    require(inventory(files,root,fixture['artifacts'],fixture['excluded_lock_paths']) == initial, 'run inventory grew while validating')
+    files.finish()
+    return {'schema':'reservoir_owned_recovery_fixture_validation_v2','exact_release_fixture_passed':True,
+            'fixture':spec['fixture'],'review':spec['fixture_review'],'release':fixture['release'],
+            'host_binding':fixture['host_binding'],'python_executables':release['python_files'],
+            'final_release_closure':release['core']['artifacts'],'main_state':STATE11,'cleanup_state':STATE22,
+            'exercised_modules':{'core':fixture['core_loaded_origins'],'fixture':fixture['fixture_loaded_origins']},
+            'production_host_executed':False,'production_pin_schedule_executed':False,'production_qualified':False}
+

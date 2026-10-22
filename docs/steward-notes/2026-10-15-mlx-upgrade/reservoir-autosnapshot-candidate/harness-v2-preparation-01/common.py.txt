@@ -1,0 +1,117 @@
+"""Standard-library-only provenance and private-run helpers."""
+from __future__ import annotations
+
+import hashlib
+import importlib.abc
+import json
+import math
+import os
+from pathlib import Path
+import sys
+import time
+
+HARNESS = Path(__file__).resolve().parent
+CANDIDATE = HARNESS.parent
+SOURCE_FILES = ("reservoir_service.py", "dual_ai_bridge.py", "triple_reservoir_coreml.py",
+                "persistence.py", "rehearsal.py", "lsm_reservoir.py")
+PINNED = {
+    "original": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+    "candidate": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da",
+    "persistence": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+}
+CASES = ("normal", "aggregate", "single", "writer-error", "cancel", "cancel-delayed-final")
+THREAD_ENV = {"OMP_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "MKL_NUM_THREADS": "1",
+              "VECLIB_MAXIMUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1"}
+FORBIDDEN = ("mlx", "mlx_lm", "mlx_reservoir", "coremltools")
+
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def digest(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def write_json(path, value, *, exclusive=False):
+    path = Path(path)
+    if exclusive:
+        with path.open("x") as stream:
+            json.dump(value, stream, sort_keys=True, indent=2, allow_nan=False)
+            stream.write("\n")
+    else:
+        temporary = path.with_name(path.name + ".writing")
+        with temporary.open("w") as stream:
+            json.dump(value, stream, sort_keys=True, indent=2, allow_nan=False)
+            stream.write("\n")
+        os.replace(temporary, path)
+
+
+def read_json(path):
+    return json.loads(Path(path).read_text())
+
+
+def finite(value):
+    return not isinstance(value, bool) and isinstance(value, (int, float)) and math.isfinite(value)
+
+
+def harness_hashes():
+    return {p.name: digest(p) for p in sorted(HARNESS.glob("*.py"))}
+
+
+def check_source(manifest_path, variant):
+    manifest_path = Path(manifest_path).resolve()
+    manifest = read_json(manifest_path)
+    require(manifest["schema"] == "reservoir_private_sources_v1", "unexpected source manifest")
+    root = manifest_path.parent / variant
+    hashes = manifest["variants"][variant]
+    require(set(hashes) == set(SOURCE_FILES), "incomplete source closure")
+    require(hashes["reservoir_service.py"] == PINNED[variant], "service source is not reviewed")
+    require(hashes["persistence.py"] == PINNED["persistence"], "persistence writer changed")
+    for name, expected in hashes.items():
+        require((root / name).is_file() and digest(root / name) == expected,
+                f"private source changed: {name}")
+    return root, hashes
+
+
+class ImportGuard(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if any(fullname == name or fullname.startswith(name + ".") for name in FORBIDDEN):
+            raise ImportError(f"GPU/model import forbidden in private NumPy qualification: {fullname}")
+        return None
+
+
+def check_imports(source):
+    origins = {}
+    for name in SOURCE_FILES:
+        module = sys.modules.get(name[:-3])
+        require(module is not None, f"expected actual module not imported: {name}")
+        origin = Path(module.__file__).resolve()
+        require(origin == (source / name).resolve(), f"wrong source origin: {name}: {origin}")
+        origins[name] = str(origin)
+    require(not any(name == bad or name.startswith(bad + ".")
+                    for name in sys.modules for bad in FORBIDDEN), "forbidden module loaded")
+    return origins
+
+
+class Events:
+    def __init__(self, path):
+        self.path = Path(path)
+        self.stream = self.path.open("x", buffering=1)
+
+    def emit(self, kind, **data):
+        row = {"event": kind, "mono": time.monotonic(), "wall": time.time(), "pid": os.getpid(), **data}
+        self.stream.write(json.dumps(row, sort_keys=True, allow_nan=False) + "\n")
+        return row
+
+    def close(self):
+        self.stream.close()
+
+
+def read_events(path):
+    if not Path(path).exists():
+        return []
+    raw = Path(path).read_bytes()
+    lines = raw.splitlines(keepends=True)
+    return [json.loads(line) for line in lines if line.endswith(b"\n")]

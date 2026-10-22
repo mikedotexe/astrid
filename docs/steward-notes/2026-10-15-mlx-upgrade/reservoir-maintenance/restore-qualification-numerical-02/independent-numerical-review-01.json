@@ -1,0 +1,592 @@
+{
+  "all_claim_monitor_hashes_resolved_to_exact_immutable_permit_snapshots": true,
+  "all_natural_child_exits_reaped": true,
+  "all_ordered_admission_chains_verified": true,
+  "all_permits_current_at_claim_and_launch": true,
+  "case_count": 9,
+  "cases": [
+    {
+      "acceptance": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-accepted.json",
+        "sha256": "9a471b134e58f356c3f73e83dc5c218dc3e582b5d69a7a930a52b08d592b57fc"
+      },
+      "after_margin_s": 2.886953353881836,
+      "before_margin_s": 4.098535060882568,
+      "case": "seed",
+      "child_duration_s": 8.022742748260498,
+      "completed_wall": 1792198614.6821818,
+      "coverage": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-coverage.json",
+        "sha256": "487456c1dbc308cc4981ea596bbd7c22dbbed7a34ca3fb4cf4093b70dd8402d1"
+      },
+      "launch_claim": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-launch-claim.json",
+        "sha256": "556eb39f95fa61d1f4067a6dce3900895a0b8f6aeced6e1f924972290f7fb9d0"
+      },
+      "naturally_reaped": true,
+      "ordinal": 0,
+      "passed": true,
+      "permit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-permit.json",
+        "sha256": "a206c84bd5ad94636464aaa3946d37724f7acdd0f312e4a122bb9b76c35ed541"
+      },
+      "pid": 63348,
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/seed/expected-result.json",
+        "sha256": "444ec413c7c3a7bae2fccf363d81f7dd22f997412510cca4eb23dd1de06b8910"
+      },
+      "returncode": 0,
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-root-review.json",
+        "sha256": "3cf94834a34bbbadd9d9d9f045ba7519f63becc26a657002a5c2080f63806e31"
+      },
+      "started_wall": 1792198606.659439
+    },
+    {
+      "acceptance": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-accepted.json",
+        "sha256": "5f24e3e302f40239c576f319223f7eaaa3a8df3f793d87ae710779030dd16185"
+      },
+      "after_margin_s": 2.099907159805298,
+      "before_margin_s": 4.155094146728516,
+      "case": "complete",
+      "child_duration_s": 8.741702795028687,
+      "completed_wall": 1792198635.465921,
+      "coverage": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-coverage.json",
+        "sha256": "a209ee1d6ef3c2d6e75a0b8c930fcd15f7ce7ec3461da0e16c311eb450da654a"
+      },
+      "expected_rejection": false,
+      "intended_private_mutation_verified": true,
+      "launch_claim": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-launch-claim.json",
+        "sha256": "fab3bd8ecd9d01af98935ec96b7c8d27293476605a63c623ab402cc391aa82e2"
+      },
+      "naturally_reaped": true,
+      "oracle_reason": "Exact stored-state/startup/thermostat/age semantics accepted by the frozen actual verifier; independent raw44-field audit bound by partial review.",
+      "ordinal": 1,
+      "passed": true,
+      "permit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-permit.json",
+        "sha256": "967e0104b50ccfe2d286dcc2c81fbfef32dc2569586da564f7f34b221a6db1ac"
+      },
+      "pid": 63467,
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/complete/expected-result.json",
+        "sha256": "0e6e80ecbba448ec9979df9bf14765f7d88f18acd3c172bbefdb2f852f9d6664"
+      },
+      "returncode": 0,
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-root-review.json",
+        "sha256": "e96a5f55b0e0552f32220a13f057d96d8332e8f7775f70c49e4f4de42c5831ae"
+      },
+      "started_wall": 1792198626.7242181
+    },
+    {
+      "acceptance": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/02-missing-sidecar-accepted.json",
+        "sha256": "6587a736340359e4d5df1a10ab2980fc9d9af7df6a4bc452365ca86b7c39db92"
+      },
+      "after_margin_s": 2.065609931945801,
+      "before_margin_s": 2.1315500736236572,
+      "case": "missing-sidecar",
+      "child_duration_s": 5.798638105392456,
+      "completed_wall": 1792198655.4991622,
+      "coverage": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/02-missing-sidecar-coverage.json",
+        "sha256": "788da8f8358210910fb82fd184b0e4e54a3393d4f7820473104b7fd508d211fb"
+      },
+      "expected_rejection": true,
+      "intended_private_mutation_verified": true,
+      "launch_claim": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/02-missing-sidecar-launch-claim.json",
+        "sha256": "efc23b068a88d7c6f43efe9c27a8793935fea578d97b99b3017a2fda8d2b3312"
+      },
+      "naturally_reaped": true,
+      "oracle_reason": "FileNotFoundError: [Errno 2] No such file or directory: '/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/restore-runs/fixture-cpu-qualification-01-missing-sidecar/input-state/qualification_numpy_thermostats.json'",
+      "ordinal": 2,
+      "passed": true,
+      "permit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/02-missing-sidecar-permit.json",
+        "sha256": "a1fda783a8d725412d7474e54e5b0dec790ab7ccbd7b062e02e7eeaf8670b0ed"
+      },
+      "pid": 63623,
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/missing-sidecar/expected-result.json",
+        "sha256": "dbe4a784f2531741f66748c66c816803553bb8ceba4eeb40c794badd5f5d8f26"
+      },
+      "returncode": 1,
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/02-missing-sidecar-root-review.json",
+        "sha256": "1ccb8e168fc840b13c38e3c8a3ba11f052c5d4396787e0ac5f9d79213c503f8a"
+      },
+      "started_wall": 1792198649.700524
+    },
+    {
+      "acceptance": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/03-malformed-sidecar-accepted.json",
+        "sha256": "0eb042bbca080b0330e0c5f906af26a31b33ed1a6aed71dab6eaed52577293ee"
+      },
+      "after_margin_s": 0.8896839618682861,
+      "before_margin_s": 3.815532922744751,
+      "case": "malformed-sidecar",
+      "child_duration_s": 5.28617787361145,
+      "completed_wall": 1792198676.6705909,
+      "coverage": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/03-malformed-sidecar-coverage.json",
+        "sha256": "71cd43fb9a1228dc6313974a336286a94fa39464f844223cec11273593860c1c"
+      },
+      "expected_rejection": true,
+      "intended_private_mutation_verified": true,
+      "launch_claim": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/03-malformed-sidecar-launch-claim.json",
+        "sha256": "e186f37a42ccdb5271ed25f11999bf15cea921a6c9d70d46087c51bd6efa023a"
+      },
+      "naturally_reaped": true,
+      "oracle_reason": "ValueError: exactly three thermostat sidecars required",
+      "ordinal": 3,
+      "passed": true,
+      "permit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/03-malformed-sidecar-permit.json",
+        "sha256": "c9437dfafbc8b898b8a65c7a3878262f3890643451a0fef869e30b6d01a1edf2"
+      },
+      "pid": 63828,
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/malformed-sidecar/expected-result.json",
+        "sha256": "95e46194d6e1e9d436c3333cf7e286e184b8e0d268e7fce6db54a342ac811ee7"
+      },
+      "returncode": 1,
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/03-malformed-sidecar-root-review.json",
+        "sha256": "6ff19fab8007697f92a9dbd669577562c04bc92f5977fdb37fd3708fc02e9f48"
+      },
+      "started_wall": 1792198671.384413
+    },
+    {
+      "acceptance": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/04-corrupt-npz-accepted.json",
+        "sha256": "dc746fa8a5ef5b7e1e961ed6dc04abcb990b8c753f2a82740b6e2035323512ee"
+      },
+      "after_margin_s": 2.341779947280884,
+      "before_margin_s": 1.994899034500122,
+      "case": "corrupt-npz",
+      "child_duration_s": 5.6633079051971436,
+      "completed_wall": 1792198690.226951,
+      "coverage": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/04-corrupt-npz-coverage.json",
+        "sha256": "5df271ba7cbe4e2e7cf915c536bff184ba4c41bb7c22913cdac79527dda6284e"
+      },
+      "expected_rejection": true,
+      "intended_private_mutation_verified": true,
+      "launch_claim": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/04-corrupt-npz-launch-claim.json",
+        "sha256": "4114d6ef8fb7a0dad41bfa7fc54895315d4b1503a6750c1b4aab0b31e2601747"
+      },
+      "naturally_reaped": true,
+      "oracle_reason": "BadZipFile: File is not a zip file",
+      "ordinal": 4,
+      "passed": true,
+      "permit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/04-corrupt-npz-permit.json",
+        "sha256": "77fe33155f53c8db6e6f47cbc1bb41dda290895ca4540c0da352cc55657ded98"
+      },
+      "pid": 63961,
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/corrupt-npz/expected-result.json",
+        "sha256": "c48d4e4c2166038bd1d36530d23df350876c3c67d2376a4c3c8e7184de940155"
+      },
+      "returncode": 1,
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/04-corrupt-npz-root-review.json",
+        "sha256": "792b22d755618e2079f4d093db2bdd5991fa54a4c43a8db817f69edf690c4776"
+      },
+      "started_wall": 1792198684.563643
+    },
+    {
+      "acceptance": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/05-schema-mismatch-accepted.json",
+        "sha256": "36b23fd38d4a32d5019d4e31dc232edc360ad59a84928f954aae1e1a038ffe72"
+      },
+      "after_margin_s": 1.4956438541412354,
+      "before_margin_s": 2.845427989959717,
+      "case": "schema-mismatch",
+      "child_duration_s": 5.6588499546051025,
+      "completed_wall": 1792198721.072858,
+      "coverage": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/05-schema-mismatch-coverage.json",
+        "sha256": "235479f9f8423b8b3c9244960a474ef0e75ddbf7ff94637ade7a79b173d5041c"
+      },
+      "expected_rejection": true,
+      "intended_private_mutation_verified": true,
+      "launch_claim": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/05-schema-mismatch-launch-claim.json",
+        "sha256": "4afde2b346d9fffae6031ee2a1951adab7d9f8bab48bfa165a941fb64e390c99"
+      },
+      "naturally_reaped": true,
+      "oracle_reason": "ValueError: snapshot schema/fingerprint incompatible",
+      "ordinal": 5,
+      "passed": true,
+      "permit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/05-schema-mismatch-permit.json",
+        "sha256": "e9492382629d7d31f77f8be8c4a0a093a84e264ed77592c557725fe1c47021a1"
+      },
+      "pid": 64217,
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/schema-mismatch/expected-result.json",
+        "sha256": "a72116acb5f78f23a7fd0a8d6552206cbc23c1c0962589a737edaec0062399ba"
+      },
+      "returncode": 1,
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/05-schema-mismatch-root-review.json",
+        "sha256": "ba50f328233bdf72ef9c2da52dde1bb2b6116d4f5de83d40c93a1072f1ee9474"
+      },
+      "started_wall": 1792198715.4140081
+    },
+    {
+      "acceptance": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/06-config-mismatch-accepted.json",
+        "sha256": "3880eb81261967512f1e042c4bbab01cd822434c45943c829f19c8cb27efc2c1"
+      },
+      "after_margin_s": 1.1566681861877441,
+      "before_margin_s": 3.7545669078826904,
+      "case": "config-mismatch",
+      "child_duration_s": 0.08704900741577148,
+      "completed_wall": 1792198741.410035,
+      "coverage": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/06-config-mismatch-coverage.json",
+        "sha256": "d94ef7e0eeef1f6a6ba3bafd94483faa5bc04ffae1984e89dfec976abaf88053"
+      },
+      "expected_rejection": true,
+      "intended_private_mutation_verified": true,
+      "launch_claim": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/06-config-mismatch-launch-claim.json",
+        "sha256": "739deeb76d07c37eb98449187c42ab1349d5864c79607835009fc2a17b209683"
+      },
+      "naturally_reaped": true,
+      "oracle_reason": "ValueError: restore config differs from preserved reservoir command",
+      "ordinal": 6,
+      "passed": true,
+      "permit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/06-config-mismatch-permit.json",
+        "sha256": "8604a4cf09b6154f8d8ef095d93e2aabdceb890f88e04335fbd152c494ae8cf9"
+      },
+      "pid": 64410,
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/config-mismatch/expected-result.json",
+        "sha256": "a301067c0b0312f16744e23a3c65a59b722a7774e7e117c229a38a3f37719772"
+      },
+      "returncode": 1,
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/06-config-mismatch-root-review.json",
+        "sha256": "156f89fb9d96d92e94f177107a210281b54411093798755530a38f87d7222680"
+      },
+      "started_wall": 1792198741.322986
+    },
+    {
+      "acceptance": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/07-source-drift-accepted.json",
+        "sha256": "8e37cace6b59a97d1f93b728fcf96f681908644fec4528a680589074f99a805b"
+      },
+      "after_margin_s": 0.8964169025421143,
+      "before_margin_s": 4.012441873550415,
+      "case": "source-drift",
+      "child_duration_s": 0.09281420707702637,
+      "completed_wall": 1792198756.671894,
+      "coverage": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/07-source-drift-coverage.json",
+        "sha256": "eac4a09d7c2f6d6dc2b5a766ad9999599b06defd94c406f4adc1c70fd11f63df"
+      },
+      "expected_rejection": true,
+      "intended_private_mutation_verified": true,
+      "launch_claim": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/07-source-drift-launch-claim.json",
+        "sha256": "4997500492e97439f625a105ef6b17b1a6a71c995f66d56f243697b405a00911"
+      },
+      "naturally_reaped": true,
+      "oracle_reason": "ValueError: bound file changed: /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/source-drift/source/persistence.py",
+      "ordinal": 7,
+      "passed": true,
+      "permit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/07-source-drift-permit.json",
+        "sha256": "daf381565e834d740c0313a7d8c306cd5b7c2cbe656d92dc1d15d3bb566e605a"
+      },
+      "pid": 64513,
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/source-drift/expected-result.json",
+        "sha256": "8c601383a6bf99985aaf047fcd2f308a4d0b770dd421b3fa2b7d86c9550ee03f"
+      },
+      "returncode": 1,
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/07-source-drift-root-review.json",
+        "sha256": "a67e0ac4a2af6b19402a53d74a53a1d8c70d40d53036cc6673a916ed4f0e5303"
+      },
+      "started_wall": 1792198756.5790799
+    },
+    {
+      "acceptance": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/08-package-drift-accepted.json",
+        "sha256": "5fe4e1722fadeac98630d1ef875589bb903fc093e2c3b9317664e8a00f379d67"
+      },
+      "after_margin_s": 0.491774320602417,
+      "before_margin_s": 2.0902099609375,
+      "case": "package-drift",
+      "child_duration_s": 2.4264988899230957,
+      "completed_wall": 1792198797.076274,
+      "coverage": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/08-package-drift-coverage.json",
+        "sha256": "3e559c4cda19b8baeeb9c75e0c042e6b66ea8cb564ccbac87a9b1413dd246dcc"
+      },
+      "expected_rejection": true,
+      "intended_private_mutation_verified": true,
+      "launch_claim": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/08-package-drift-launch-claim.json",
+        "sha256": "83cdf3f6c2faacb9f0c257c53df2abda7c365387e12b2616cd6bfbe071fa6b63"
+      },
+      "naturally_reaped": true,
+      "oracle_reason": "ValueError: installed package versions differ from inventory",
+      "ordinal": 8,
+      "passed": true,
+      "permit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/08-package-drift-permit.json",
+        "sha256": "21ab5274afde1cf5cb0028c947b35bdd04f0580d3eadfaa702c62b1f5defd4bb"
+      },
+      "pid": 64791,
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/package-drift/expected-result.json",
+        "sha256": "64eef355b82b524f50959adb93602c7ffabca5edb2c68c6b8d9b4b7aaa2812f0"
+      },
+      "returncode": 1,
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/08-package-drift-root-review.json",
+        "sha256": "d5e7b0d65505b308e896a1cf3225eed679512eba5bbb44019428777c6ffbfa0d"
+      },
+      "started_wall": 1792198794.649775
+    },
+    {
+      "acceptance": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/09-backup-drift-accepted.json",
+        "sha256": "546b378710e76befab6f52f195128fac14d53000213ebcf4804b689d7be3e085"
+      },
+      "after_margin_s": 1.8416602611541748,
+      "before_margin_s": 3.0838801860809326,
+      "case": "backup-drift",
+      "child_duration_s": 0.08336496353149414,
+      "completed_wall": 1792198810.726291,
+      "coverage": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/09-backup-drift-coverage.json",
+        "sha256": "81ae3177809d8d4fab4f238d1e863ea89bd9a2d7b9c780a4300852a552537433"
+      },
+      "expected_rejection": true,
+      "intended_private_mutation_verified": true,
+      "launch_claim": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/09-backup-drift-launch-claim.json",
+        "sha256": "e1ad731138d8bc61a628c46dcca69bc5c69fefe56f0bb392162be2cab37fba1c"
+      },
+      "naturally_reaped": true,
+      "oracle_reason": "ValueError: immutable backup changed",
+      "ordinal": 9,
+      "passed": true,
+      "permit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/09-backup-drift-permit.json",
+        "sha256": "f88cbce10d3aa861b92aad1aa2ac5c94fc4a788783bcf78166d4c88c144685b8"
+      },
+      "pid": 64890,
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/backup-drift/expected-result.json",
+        "sha256": "adc56bc78b71baee16b9669ac73632fb7746c50c2bed715ec80b1cd7b1c271b5"
+      },
+      "returncode": 1,
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/09-backup-drift-root-review.json",
+        "sha256": "73a072597640a6c9d68f592779b73f4063578d3ced8880539abed4f693cdeae5"
+      },
+      "started_wall": 1792198810.642926
+    }
+  ],
+  "continuous_host": {
+    "all10children_fully_bracketed": true,
+    "all_permit_and_case_snapshots_exact_final_prefixes": true,
+    "all_samples_passed": true,
+    "bindings": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12-bindings.json",
+      "sha256": "de4de22a0fd0db8d0e1496a8c198af6f4ac38025ba506c2d84358ee7fa478888"
+    },
+    "completed_at": "2026-10-17T01:00:36.260170+00:00",
+    "completion_reason": "owned_finish_request",
+    "duration_s": 248.70238154218532,
+    "max_gap_s": 5.008905410766602,
+    "min_gap_s": 1.7320566177368164,
+    "pause_generation": 528,
+    "positive_consecutive_swap_increases": 0,
+    "protected_files": 237,
+    "protected_processes": 7,
+    "record": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-06.json",
+      "sha256": "2950999c67d65f3d4ce96ef5d31e4fea5f413e0dac49b8fc593126a13905ba5c"
+    },
+    "sampler": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-observer.py",
+      "sha256": "005c5db21d9ff36dd2e867cb54a272cabdc2c1922f0a8bb0f0b5a7ddd5709d05"
+    },
+    "samples": 51,
+    "source": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2_run06.py",
+      "sha256": "f07f81065596d7f1753f49170d744c20d958fe59b7f9d2ae04894769003f167d"
+    },
+    "source_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-run06-source-review-01.json",
+      "sha256": "96c44dbf8631210d476865a7be0d305bdcca8d56df91e4efc6057757a5c6998d"
+    },
+    "start_end_identities_equal": true,
+    "started_at": "2026-10-17T00:56:27.559088+00:00",
+    "sticky_invalidated": false,
+    "stop": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-06-stop.json",
+      "sha256": "ac526f74953c3b23b840cbfa17e08827a089b33880b26f2dd14ed9a4f6d54565"
+    },
+    "swap_end_bytes": 11354966589.44,
+    "swap_start_bytes": 11371743805.44
+  },
+  "created_at": "2026-10-17T01:03:54.224967+00:00",
+  "expected_negative_cases": 8,
+  "host12_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12-review.json",
+    "sha256": "4575ff2c053bf9035bffba083dc747effae0fac42ac08bbbf6df98a8c812e342"
+  },
+  "launch_guard": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/launch-guard.json",
+    "sha256": "69e6321da21e2cc0a08e97bfbf5870090131d5efd4465870383b68b567945853"
+  },
+  "limits": [
+    "The actual positive restore covers two synthetic192-node handles, one NumPy and one LSM-shadow. It does not compare the102 live handles or prove preservation of unstored LSM internal trajectories.",
+    "No ProductionHost transaction, cooperative provider drain/check-in witness, stopped live backup, deployment, enabled release closure or operational recovery is qualified by this matrix. Those remain separate requirements.",
+    "The partial review independently decoded all44 stored field descriptors, thermostat-floor/event/startup oracles and private copies. Actual in-memory equality and elapsed-time behavior are represented by the reviewed frozen verifier comparison; the reviewer did not rerun numerical code.",
+    "All eight expected negative cases rejected for the named exact reason; rejection of an intended corrupt private input is successful control behavior, not a live incident or permission to ignore future failures.",
+    "Continuous host evidence is sampled; it constrains the observed intervals and exact recorded protected maps, without guaranteeing unobserved instants or later host headroom. All earlier host and harness failures remain retained.",
+    "No MLX package/model upgrade, production service change or rollout authorization follows from this synthetic qualification."
+  ],
+  "mlx_qualified": false,
+  "negative_mutations": "Exactly the intended private missing/malformed/corrupt/schema/config/source/package/backup variants; original seed and all original source/package files retained.",
+  "no_child_intervals_overlap": true,
+  "one_immutable_release": true,
+  "partial_positive_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/seed-complete-independent-review-01.json",
+    "sha256": "888e9d3740c1384aa4058ac9c776b8b6a75f8179fa4e27b255ea7e91dfbc82c5"
+  },
+  "passed": true,
+  "positive_cases": 1,
+  "positive_state_semantics": {
+    "qualification_numpy": {
+      "backend": "numpy",
+      "elapsed_time_semantics_asserted_by_frozen_actual_verifier": true,
+      "fields": 22,
+      "history_shapes": [
+        [
+          70
+        ],
+        [
+          70,
+          3
+        ]
+      ],
+      "mode": "rehearse",
+      "n_nodes": 192,
+      "raw_stored_field_bytes_independently_verified": true,
+      "restored_max_event_seq": 19,
+      "retained_thermostat_rows_each": 48,
+      "stored_event_seq": 10,
+      "thermostat_layers": 3,
+      "thermostat_targets_after_floors": [
+        0.2,
+        0.24,
+        null
+      ],
+      "tick_count": 123
+    },
+    "qualification_shadow__lsm": {
+      "backend": "lsm_shadow",
+      "elapsed_time_semantics_asserted_by_frozen_actual_verifier": true,
+      "fields": 22,
+      "history_shapes": [
+        [
+          70
+        ],
+        [
+          70,
+          3
+        ]
+      ],
+      "mode": "hold",
+      "n_nodes": 192,
+      "raw_stored_field_bytes_independently_verified": true,
+      "restored_max_event_seq": 20,
+      "retained_thermostat_rows_each": 48,
+      "stored_event_seq": 11,
+      "thermostat_layers": 3,
+      "thermostat_targets_after_floors": [
+        0.2,
+        0.24,
+        null
+      ],
+      "tick_count": 124
+    }
+  },
+  "private_state_file_hash_checks": 97,
+  "process_closeout": {
+    "all_12_owned_pids_absent": true,
+    "argv": [
+      "/bin/ps",
+      "-ww",
+      "-p",
+      "63186,63309,63348,63467,63623,63828,63961,64217,64410,64513,64791,64890",
+      "-o",
+      "pid=",
+      "-o",
+      "lstart=",
+      "-o",
+      "command="
+    ],
+    "checked_after_final_monitor_completion": true,
+    "combined_output": "",
+    "controller_exit0": "Reported by root process-session completion; independently confirmed absent and bound completed qualification record.",
+    "returncode": 1,
+    "scope": "Single explicitly requested read-only lookup of observer, controller and ten recorded child PIDs; no signal or other runtime probe."
+  },
+  "production_qualified": false,
+  "qualification": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/qualification.json",
+    "sha256": "023ea4a004d64b841f8bc381b86cc62d24648e521dbb0c4832e4e85563209a2c"
+  },
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-release-01.json",
+    "sha256": "aea951252c7ace3477be4106abec05672c23888284a74bade24b1da44f541733"
+  },
+  "reviewer": "mlx_integration",
+  "reviewer_actions": {
+    "explicit_owned_pid_lookup_calls": 1,
+    "numerical_workloads": 0,
+    "production_probes": 0,
+    "retained_evidence_read_hash_and_raw_npz_decode_only": true,
+    "signals": 0,
+    "source_edits": 0,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "root_launch": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-launch-01.json",
+    "sha256": "6ce4da1537612b470153b6f7d97bc2e5504145d622f49c2754559170706ebde8"
+  },
+  "root_preclose": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-matrix-preclose-01.json",
+    "sha256": "ac300f1ed8c7e66c9637b8d4047a8c3f1a1026048a4e9494812ec8b046126e0a"
+  },
+  "schema": "reservoir_restore_qualification_independent_numerical_review_v1",
+  "scope": "Synthetic CPU NumPy and stored LSM-shadow public snapshot semantics, using exactly pinned installed interpreter/packages and private six-file source closure.",
+  "seed_plus_child_count": 10,
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/independent-source-review-01.json",
+    "sha256": "65c745f321c12ac2d88e50b45711c7437f49dac300f168a6905d92ae518cb89e"
+  },
+  "source_runtime_and_original_seed_unchanged": true,
+  "state": "accepted_completed_synthetic_cpu_matrix"
+}

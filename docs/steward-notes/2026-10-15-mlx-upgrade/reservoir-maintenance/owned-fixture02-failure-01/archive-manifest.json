@@ -1,0 +1,39 @@
+{
+  "abort_executed": false,
+  "entries": [
+    {
+      "copy": "owned-fixture02-failed-run-root-review-01.json",
+      "sha256": "b2b29e7880cca25812e436657ee42cd34ffd30aa8cadc2547c3a7428a427111d",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-failed-run-root-review-01.json"
+    },
+    {
+      "copy": "owned-fixture02-actual-failure-independent-review-01.json",
+      "sha256": "073610566bb9906bf3e8d076d08ed6e591932dc3bb8ac8ff6fef77285b7ac20e",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-actual-failure-independent-review-01.json"
+    },
+    {
+      "copy": "owned-fixture02-failure-recovery-design-01.json",
+      "sha256": "8a45bd55faed3e201d7af57d92c02e9499b68e10129c3e36d8cf5b2b4d52b3e7",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-failure-recovery-design-01.json"
+    },
+    {
+      "copy": "owned-fixture02-abort-design-independent-review-01.json",
+      "sha256": "a7c322610878e73414f2422dc729248fc7272c88eef2481719260dd0e5f81eb2",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-design-independent-review-01.json"
+    },
+    {
+      "copy": "owned-fixture02-abort-native-timeout-review-01.json",
+      "sha256": "b6cb72a60e7e81c23c5af348d243c31c7f975bdfec1262aa9091871ad2982ba1",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-native-timeout-review-01.json"
+    },
+    {
+      "copy": "owned-fixture-holder-scheduling-fix-design-01.json",
+      "sha256": "93277cedacf396c0e9c9bf0aa9eaca7f6ca5540c93c2d08271163e10b3d45ec6",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-holder-scheduling-fix-design-01.json"
+    }
+  ],
+  "original_fixture_passed": false,
+  "production_qualified": false,
+  "schema": "owned_fixture02_failure_review_archive_v1",
+  "scope": "failure_analysis_and_recovery_design_only"
+}

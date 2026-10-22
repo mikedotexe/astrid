@@ -1,0 +1,98 @@
+{
+  "approved_source": true,
+  "binding_checks": {
+    "coordination_equal07": true,
+    "exact_process_count": 7,
+    "exact_process_rows_equal07": true,
+    "identity_file_count": 237,
+    "identity_map_equal07": true,
+    "launchd_map_equal07": true,
+    "listener_map_equal07": true,
+    "pause_generation": 528,
+    "referenced_preparation_hashes_verified": true
+  },
+  "bindings": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-bindings.json",
+    "sha256": "49916f600b4414d41d91ce965051db60de862b9bce597efdccb7ddf43ad7cc06"
+  },
+  "changes_reviewed": [
+    "Fresh exclusive08 output and binding references; previous completed observation is07. Original08 draft, reviewed07 source and failed07 evidence remain unchanged.",
+    "All237 file-map entries, seven exact PID/PPID/start/argv rows, four launchd expectations, three listener expectations and current pause528 coordination equal07.",
+    "The original draft compared swap only against the first window sample, which would allow10\u21929\u21929.5GiB. Final08 tracks last_swap and resets the current window on every positive consecutive-sample increase as well as the original first-sample bound.",
+    "Every counted sample gap must be strictly positive and at most15seconds; nonpositive or long gaps reset the window.",
+    "All remaining code is byte-for-byte equivalent to reviewed07 after the explicit reference and rule substitutions. It retains pressure1, no detected Cargo/rustc/target-test process, readyz200/ready/reservoir-connected, exact identities and every-sample file binding checks.",
+    "Requires300 current consecutive eligible observed seconds. Retains nominal5second cadence,610second maximum loop duration with finite probe overhead, mandatory final identity check, read-only host/health commands, and no model/numerical imports or service mutations."
+  ],
+  "created_at": "2026-10-16T21:48:01.159110+00:00",
+  "historical_evidence": {
+    "completed07": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07.json",
+      "sha256": "4ca343f39773e3910b449facc632bc955471a6d5743e7457e20c2087b4106848"
+    },
+    "independent07_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-review.json",
+      "sha256": "a96263cf60758096d54379edd0b249c2eeaac8a2ee62df30d203b46a1c38a38b"
+    },
+    "root07_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-root-review.json",
+      "sha256": "dd35bd2266028f398e91961959184eef5ba718ef8b07c7d7a12028b9dac2ba4a"
+    }
+  },
+  "limits": [
+    "This accepts observer source only. Root must finish all test work and independently perform its fresh ownership/runtime preflight before launching. The referenced headroom spot is root evidence, not a measurement by this reviewer.",
+    "No08 output exists at review time. Actual completed evidence must be independently recomputed from raw samples using consecutive-sample swap nonincrease and0<gap<=15, with current endpoint identity/health acceptance.",
+    "Nominal610second loop duration can include final bounded probe overhead. Sampled admission evidence is not continuous monitoring or numerical workload authorization.",
+    "Older failed observations are preserved with their historical rule. This stricter08 approval does not silently qualify unchanged older gate consumers or monitoring implementations.",
+    "Build detection is scoped to observed Cargo/rustc/target-test executables; it does not prove zero other CPU work or absence of an active remote desktop session."
+  ],
+  "observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-observer.py",
+    "sha256": "114fcec2a3263e98646628189fdb0c1e40f8e3032cb5716e08f00713e3845a78"
+  },
+  "preparation_evidence": {
+    "headroom_spot": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/heartbeat-headroom-20261016T214441Z.json",
+      "sha256": "52885b457aa80fbd98524977ee99cd576730eedbc970038eb1ffc8c1e626c1eb"
+    },
+    "ownership_reaudit": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-ownership-reaudit.json",
+      "sha256": "da69b1504897dfacd26c2258ed3ac1cbffd469d98bb3748822dc2e54bec602db"
+    },
+    "previous_binding": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-bindings.json",
+      "sha256": "beae54c2362ea251c6b5a1fc9dbdf78532fa65b498796b97c7515c2c7cd5f629"
+    }
+  },
+  "preserved_pre_review_draft": {
+    "executed": false,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-pre-review-draft-01.txt",
+    "sha256": "867f67d26adc6ceaf639fa4c6998518aaee611630b76fb67fba448d64e973c55"
+  },
+  "prior_source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-observer.py",
+    "sha256": "005c5db21d9ff36dd2e867cb54a272cabdc2c1922f0a8bb0f0b5a7ddd5709d05"
+  },
+  "prior_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-source-review.json",
+    "sha256": "a09def3ca1fa618caf3a22061ac265927e7a8d80e65f25d4d83b34419582f5a5"
+  },
+  "reviewer": "mlx_integration",
+  "schema": "reservoir_host_window_source_review_v1",
+  "scope": {
+    "accepted_mlx_baseline": false,
+    "binding_reference_map_and_exact_source_verified": true,
+    "bound_file_contents_rehashed_by_reviewer": false,
+    "numeric_or_model_imports": false,
+    "numerical_work_authorized": false,
+    "observer_executed": false,
+    "production_mutations": false,
+    "qualifying_window_observed": false,
+    "review_only": true,
+    "runtime_probes_executed": false,
+    "source_edited_by_reviewer": false,
+    "target_source_imported": false,
+    "tests_executed": false
+  },
+  "status": "accepted_source_only_not_executed",
+  "unresolved_source_blockers": []
+}

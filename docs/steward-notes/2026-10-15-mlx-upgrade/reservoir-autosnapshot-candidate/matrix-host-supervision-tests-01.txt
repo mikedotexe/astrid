@@ -1,0 +1,16 @@
+test_bad_host_observations_fail_closed (test_matrix_host_supervision.EvidenceTests.test_bad_host_observations_fail_closed) ... ok
+test_case_requires_bracketing_samples (test_matrix_host_supervision.EvidenceTests.test_case_requires_bracketing_samples) ... ok
+test_invalid_time_gap_and_initial_swap_refuse (test_matrix_host_supervision.EvidenceTests.test_invalid_time_gap_and_initial_swap_refuse) ... ok
+test_invalidation_cannot_be_cleared_by_later_good_sample (test_matrix_host_supervision.EvidenceTests.test_invalidation_cannot_be_cleared_by_later_good_sample) ... ok
+test_next_release_requires_fresh_running_evidence (test_matrix_host_supervision.EvidenceTests.test_next_release_requires_fresh_running_evidence) ... ok
+test_no_or_single_sample_never_releases_case (test_matrix_host_supervision.EvidenceTests.test_no_or_single_sample_never_releases_case) ... ok
+test_finish_collects_final_health_and_retains_failure (test_matrix_host_supervision.StopTests.test_finish_collects_final_health_and_retains_failure) ... ok
+test_foreign_owner_and_writable_stop_refuse (test_matrix_host_supervision.StopTests.test_foreign_owner_and_writable_stop_refuse) ... ok
+test_immediate_stop_after_identity_refuses_zero_health (test_matrix_host_supervision.StopTests.test_immediate_stop_after_identity_refuses_zero_health) ... ok
+test_symlink_and_oversized_stop_refuse (test_matrix_host_supervision.StopTests.test_symlink_and_oversized_stop_refuse) ... ok
+test_valid_owned_finish (test_matrix_host_supervision.StopTests.test_valid_owned_finish) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.005s
+
+OK

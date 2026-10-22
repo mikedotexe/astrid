@@ -1,0 +1,145 @@
+{
+  "accepted_preparation": true,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/README.md": "e193b6a67dcf4559b6150ebc5655bcd132a219e1dab1a5f11d5b8122813a6db2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/child_admission.py": "21b13f54390bbb058a26749d84aad625cda6df7f2df2e8917782e432107aa99d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/inputs.json": "0e802f5798e721ef39064e5b7a4753e8e1a04def437adbb91bfb63e153c64430",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/original-copy-manifest.json": "b315fb9130c8848e924877dbd5e541602ee0e33b80ff59a51d88eca565915ac9",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/qualify_restore.py": "c1fde3f0e25ead1d417f74408571e3f95bc9b6a69f001f69256708fc0e0b8f6c",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/seed_fixture.py": "4a3507615ff5a8f25f9fcd8d0ca592beee14820c1a591045446fc0a8e190c7b8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/dual_ai_bridge.py": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/lsm_reservoir.py": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/persistence.py": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/rehearsal.py": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/reservoir_service.py": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/triple_reservoir_coreml.py": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/test_child_admission.py": "592fba08682715b868926759c2c18c1f3949ada49ed618c9f120a138325a672d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/test_qualification.py": "5b4075ae565b01c3b09c7f5369f7a46514bc8980f3639445f3b4df120d94aeb7"
+  },
+  "created_at": "2026-10-16T23:08:27.128398+00:00",
+  "external_reviewed_bindings": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-bindings.json": "beae54c2362ea251c6b5a1fc9dbdf78532fa65b498796b97c7515c2c7cd5f629",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-observer.py": "005c5db21d9ff36dd2e867cb54a272cabdc2c1922f0a8bb0f0b5a7ddd5709d05",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-bindings.json": "0d0de21af432a19c1f612840025238f6f2197452c3d5ea9d2a6c7207073045a2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-run03-source-review-01.json": "454b2242a39ca4b986ee17c296b923916d4b282e332c97b9929c8551d892e18e",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-source-review-01.json": "43e46880a67357488256c7210d5799f315567ea6a216bc110595d41beb3d6935",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2.py": "fbaea5a9132b6d1ed92262d70dfadbd5f3d2cc2c93c2b4bb90662ed41e5d687d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2_run03.py": "633adcb5f4ead6cec38b16bee98956ffb0005c2d111d17b104b60cc9c30a876a"
+  },
+  "limits": [
+    "This is source review plus verification of a recorded 17-test guarded fake suite; no actual seed, numerical restore case, monitor or service was run by this reviewer.",
+    "The adapted inherited qualification test suite was not rerun; its restore oracles, copied verifier/state and six service sources remain unchanged.",
+    "A fresh accepted host gate, exact frozen run release, live matching monitor and separate root permit for every child remain mandatory before numerical execution.",
+    "Sampling constrains observed intervals and does not guarantee unsampled host state. A full synthetic run is not production restore, maintenance or MLX promotion acceptance."
+  ],
+  "numerical_execution_accepted": false,
+  "preservation": {
+    "all_six_service_sources_unchanged": true,
+    "original_reference_count": 7,
+    "original_refs": [
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/README.md",
+        "sha256": "9945427d018d69a5183197907cb3dd70c7c4155fa2bb35aa049c1bd33579f645"
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/qualify_restore.py",
+        "sha256": "33bb2f958fc5ec1c6c2eee37d729447f603d68d0872e8bff4284829c1094f4d8"
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/reservoir_maintenance_state.py",
+        "sha256": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594"
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/restore_verifier.py",
+        "sha256": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3"
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/seed_fixture.py",
+        "sha256": "4a3507615ff5a8f25f9fcd8d0ca592beee14820c1a591045446fc0a8e190c7b8"
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/test_qualification.py",
+        "sha256": "a2fe486ee0d4b44140dcad23c570addd3eefc5910cfe9ccf1ad61ffc975f9b57"
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/inputs.json",
+        "sha256": "f830793317e866c30f02770581713ff171e5309c36362c4f2f44c069090ab6e7"
+      }
+    ],
+    "original_refs_hash_match": true,
+    "runtime_and_config_manifests_unchanged": true,
+    "superseded_test_closure": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/archive-manifest.json",
+      "sha256": "9b0b4e28ee1602562e2674f59ecf356680e76aa3502494bf38c4fd687bd810c1"
+    },
+    "unchanged_helper_copies": [
+      "restore_verifier.py",
+      "reservoir_maintenance_state.py",
+      "seed_fixture.py"
+    ],
+    "unchanged_oracle_and_environment_functions": [
+      "classify_case",
+      "prepare_case",
+      "child_environment",
+      "load_verifier"
+    ]
+  },
+  "production_qualified": false,
+  "recorded_tests": {
+    "errors": 0,
+    "failures": 0,
+    "forbidden_operations_or_imports": 0,
+    "original_qualification_suite_rerun": false,
+    "real_package_check_calls": 0,
+    "source_drift": false,
+    "tests": 17
+  },
+  "resolved_findings": [
+    {
+      "finding": "The entry release could be independently rehashed after validation, allowing inconsistent launch-guard, started-record and AdmissionRun bindings.",
+      "locations": [
+        "qualify_restore.py:384",
+        "child_admission.py:213",
+        "test_child_admission.py:287"
+      ],
+      "resolution": "One reference is captured before validation, then hash and decoded object are checked afterward and the same reference propagates to every startup record and AdmissionRun; two focused regressions are recorded."
+    },
+    {
+      "finding": "Previously accepted result dependencies need retention checks before later child admission.",
+      "locations": [
+        "child_admission.py:82",
+        "child_admission.py:100",
+        "child_admission.py:231"
+      ],
+      "resolution": "Raw request, claim, log, seed/witness and comparison references are rehashed before advancement and final acceptance."
+    }
+  ],
+  "reviewed_guards": [
+    "Exact run03 monitor identity/source/review/sampler/protected maps; AST permits only OUTPUT/STOP/TOKEN differences from reviewed v2.",
+    "Each seed plus nine ordered verifier children requires its own immutable root permit bound to request, release, prior acceptance and monitor snapshot.",
+    "After expensive input/package-source checks and a durable one-use launch claim, the monitor is read again immediately before Popen; no producer retry/resume/reset exists.",
+    "Natural reaped exit and unchanged strict positive/expected-negative classification precede acceptance; actual child intervals must have complete consecutive-nonincreasing-swap supervisor coverage.",
+    "Partial claims, expired permits, changed inputs, missing coverage or unresolved children stop progression; no signals, forced termination, service control or automatic child permit production is introduced."
+  ],
+  "reviewer": "/root/mlx_upstream",
+  "schema": "reservoir_restore_qualification_source_review_v1",
+  "scope": {
+    "child_or_monitor_started": false,
+    "read_only_source_and_hash_review": true,
+    "service_or_process_control": false,
+    "target_modules_imported": false,
+    "tests_run_by_reviewer": false
+  },
+  "status": "accepted_source_and_guarded_evidence_only",
+  "test_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/admission-cpu-tests-02.txt",
+    "sha256": "fec8edffac07cff39d762cb84edd279006fa2fd716e4ea175b9897176937060c"
+  },
+  "test_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/admission-cpu-tests-02.json",
+    "sha256": "df59c09f4be526a644c19998c68a0d41afd4d142c1a6710c2969de5b8008d588"
+  },
+  "unresolved_source_blockers": []
+}

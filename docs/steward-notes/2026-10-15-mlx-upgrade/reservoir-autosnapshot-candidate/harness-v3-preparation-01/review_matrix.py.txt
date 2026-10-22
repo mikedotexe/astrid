@@ -1,0 +1,74 @@
+"""Read-only final review of the complete private NumPy matrix; never run a service."""
+from __future__ import annotations
+
+import argparse
+from collections import Counter
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common import CASES, check_source, digest, harness_hashes, read_events, read_json, require, write_json
+from result_checks import verify_result, verify_retained_files, verify_process_evidence
+from driver import private_path
+
+
+def review(paths):
+    require(len(paths) == 14 and len({str(p.resolve()) for p in paths}) == 14,
+            "fourteen distinct retained case receipts required")
+    records, children, bindings = [], [], []
+    for path in paths:
+        record = read_json(path)
+        require(record.get("schema") == "reservoir_private_case_v1" and record.get("passed") is True
+                and record.get("child_exit_code") == 0 and not record.get("owned_child_left_alive"),
+                f"case not completed successfully: {path}")
+        require(record.get("harness_hashes") == harness_hashes(), "matrix uses a different harness")
+        require(digest(record["manifest"]) == record["manifest_sha256"], "source manifest changed")
+        check_source(record["manifest"], record["variant"])
+        for name in ("child.json", "events.jsonl", "service.log"):
+            require(record["artifacts"].get(name) == digest(path.parent / name), "raw case evidence changed")
+        child = read_json(path.parent / "child.json")
+        require(child["harness_hashes"] == record["harness_hashes"]
+                and child["manifest_sha256"] == record["manifest_sha256"]
+                and child["variant"] == record["variant"] and child["case"] == record["case"],
+                "child provenance differs from parent receipt")
+        verify_process_evidence(record, child)
+        verify_retained_files(child, path.parent)
+        verify_result(record["variant"], record["case"], record["probes"], child,
+                      read_events(path.parent / "events.jsonl"))
+        records.append(record)
+        children.append(child)
+        bindings.append({"path": str(path.resolve()), "sha256": digest(path)})
+    expected = Counter({(variant, case): 2 if case == "aggregate" else 1
+                        for variant in ("original", "candidate") for case in CASES})
+    require(Counter((r["variant"], r["case"]) for r in records) == expected, "matrix cases incomplete")
+    ordered = sorted(records, key=lambda r: r["started_wall"])
+    require(all(a["completed_wall"] <= b["started_wall"] for a, b in zip(ordered, ordered[1:])),
+            "private cases overlapped")
+    aggregate_order = [r["variant"] for r in ordered if r["case"] == "aggregate"]
+    require(aggregate_order == ["original", "candidate", "candidate", "original"],
+            "aggregate comparison did not retain original/candidate then reversed order")
+    require(len({c["fixture_sha256"] for c in children}) == 1, "matrix synthetic fixtures differ")
+    require(all(c["packages"] == children[0]["packages"] for c in children), "matrix package versions differ")
+    require(all(c["distribution_files"] == children[0]["distribution_files"] for c in children),
+            "matrix package provenance differs")
+    require(all(r["interpreter"] == records[0]["interpreter"] for r in records), "matrix interpreters differ")
+    require(len({r["manifest_sha256"] for r in records}) == 1, "matrix source preparations differ")
+    return {"schema": "reservoir_private_matrix_review_v1", "accepted_for_private_numpy_only": True,
+            "deployment_accepted": False, "mlx_upgrade_qualified": False, "receipts": bindings,
+            "fixture_sha256": children[0]["fixture_sha256"], "harness_hashes": harness_hashes(),
+            "limitations": ["No live state was restored or accepted.", "A single slow save still blocks.",
+                            "Original expected timeouts are characterization, not upgrade qualification."]}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--receipt", type=Path, action="append", required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    result = review(args.receipt)
+    write_json(private_path(args.output), result, exclusive=True)
+    print(args.output)
+
+
+if __name__ == "__main__":
+    main()

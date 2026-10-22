@@ -1,0 +1,23 @@
+{
+  "schema": "production_native_sink_design_v1",
+  "source_only": true,
+  "execution_authorized": false,
+  "ordinary_user": true,
+  "observation_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-native-observations/<explicit attempt name>",
+  "name": "Required CLI --native-attempt-name, lowercase alphanumeric/hyphen 1..64; no default/PID fallback. Exclusive directory+owner; never reattach or reuse.",
+  "owner": [
+    "exact preparation path/hash",
+    "invocation mode",
+    "complete runtime source closure",
+    "UID/PID and expected parent argv",
+    "planned host/boot binding explicitly unverified before queries"
+  ],
+  "verification": "Owned no-force query recorder first verifies exact current parent PID/start/argv and host/boot, then writes verification receipt. Host native mutation requires this receipt AND existing enabled flags, current shared session, plan/source/role guards.",
+  "query_commands": "Fixed ps/lsof/sysctl/sw_vers/launchctl print and exact existing read-only list_handles subprocess only; no mutation in query dispatcher.",
+  "mutating_commands": "Fixed debug/bootstrap/held-only bootout only. One invocation directory under transaction/native-commands/<attempt name>, owner binds verified observation attempt and exact active execution session. No generic command method.",
+  "records": "Exclusive per-command intent, direct-Popen-created, natural-exit or unresolved; stdout/stderr redirected to retained owned files for captured commands. No implicit context wait/kill/terminate/retry.",
+  "timeouts": "Existing20s query/bootstrap/bootout and180s Terminaldebug preserved. Failure retains intent, exact PID/argv if available, known natural reap vs unresolved; inability to publish created never means no child.",
+  "wiring": "production_entrypoint check/inspect/fresh/resume all take explicit attempt name. Legacy preflight/inspector CLIs delegate same query attempt constructor. ProductionHost gets injected verified query IO; defaults refuse native spawn without a bound recorder.",
+  "recovery": "Any incomplete native mutation attempt is a separate blocking uncertainty; do not use appearance of a holder to erase it or auto-rearm. Exact-phase core unchanged.",
+  "tests": "Focused inert Popen/file/clock fakes only; test timeout/interruption/publication failure no signals/no retry, fixed grammar, query-vs-effect split, explicit attempt reservation and identity verification. Tests unrun."
+}

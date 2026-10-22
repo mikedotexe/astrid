@@ -1,0 +1,68 @@
+{
+  "applied_files": {
+    "capsules/perception/camera_capture.py": {
+      "applied_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/patch-check-01/capsules/perception/camera_capture.py",
+      "applied_sha256": "4692f30fe56090490cc648b78447e993a368a5a148ef53a0b2e38d235caae34d",
+      "candidate_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py",
+      "candidate_sha256": "4692f30fe56090490cc648b78447e993a368a5a148ef53a0b2e38d235caae34d",
+      "exact_bytes_equal": true
+    },
+    "capsules/perception/perception.py": {
+      "applied_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/patch-check-01/capsules/perception/perception.py",
+      "applied_sha256": "d842d08aa505836451c64e0ad29158d7610efc6828e54a2988ccfe8f28c648a8",
+      "candidate_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/perception.py",
+      "candidate_sha256": "d842d08aa505836451c64e0ad29158d7610efc6828e54a2988ccfe8f28c648a8",
+      "exact_bytes_equal": true
+    }
+  },
+  "baseline_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/perception.py",
+  "baseline_sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a",
+  "candidate_review_manifest": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/staged-review-manifest.json",
+    "sha256": "b8fca98811a7d7ff975cfb0b6d08db2ba02496bde8d0c75557c3110eb2bbf546"
+  },
+  "commands": [
+    {
+      "command": [
+        "/usr/bin/patch",
+        "--dry-run",
+        "--batch",
+        "--forward",
+        "-p1",
+        "-i",
+        "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/camera-process-containment.patch"
+      ],
+      "mode": "dry-run",
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "patching file 'capsules/perception/perception.py'\npatching file 'capsules/perception/camera_capture.py'\n",
+      "working_directory": "/Users/v/other/astrid/.runtime/perception-memory-investigation/patch-check-01"
+    },
+    {
+      "command": [
+        "/usr/bin/patch",
+        "--batch",
+        "--forward",
+        "-p1",
+        "-i",
+        "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/camera-process-containment.patch"
+      ],
+      "mode": "apply",
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "patching file 'capsules/perception/perception.py'\npatching file 'capsules/perception/camera_capture.py'\n",
+      "working_directory": "/Users/v/other/astrid/.runtime/perception-memory-investigation/patch-check-01"
+    }
+  ],
+  "git_index_modified": false,
+  "passed": true,
+  "patch": {
+    "bytes": 7492,
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/camera-process-containment.patch",
+    "sha256": "a7f9a6396ecdac70fc91029baa027c37582d4dbdb2a2dc7ef86d77b7681a6976"
+  },
+  "production_files_modified": false,
+  "schema": "perception_containment_patch_application_verification_v1",
+  "source_tree_modified": "/Users/v/other/astrid/.runtime/perception-memory-investigation/patch-check-01",
+  "verified_at": "2026-10-16T01:45:42.447675+00:00"
+}

@@ -1,0 +1,157 @@
+{
+  "schema": "perception_recovery_independent_review_v1",
+  "reviewed_at": "2026-10-16T01:12:33.026421+00:00",
+  "passed": true,
+  "checks": {
+    "verified_transaction_status": true,
+    "script_sha256_matches_receipt": true,
+    "one_signal_no_force_recorded": true,
+    "one_sigint_only_in_reviewed_script": true,
+    "fixture_and_runtime_bindings_match": true,
+    "current_exact_replacement_identity_matches": true,
+    "old_pid_absent": true,
+    "launchd_running_exact_new_pid": true,
+    "last_exit_code_zero": true,
+    "all_five_protected_processes_unchanged": true,
+    "all_captured_old_descendants_absent": true,
+    "no_children_parented_to_old_pid": true,
+    "all_five_source_and_config_hashes_match": true,
+    "installed_plist_matches_source": true,
+    "loaded_configured_environment_matches": true,
+    "python_app_hash_matches": true,
+    "all_twenty_sampled_history_hashes_preserved": true,
+    "recorded_fresh_output_matches_and_is_valid": true,
+    "newer_valid_output_continues": true,
+    "stop_then_start_markers_present": true,
+    "fresh_baseline_required_recorded": true
+  },
+  "receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/maintenance/perception-recover-01.json",
+    "sha256": "5fdc6bdccfbaf5acf37e1bdf8e25f95e307a225f284428712bbcaf2a2e8bc6a6",
+    "completed_at": "2026-10-16T01:10:48.736169+00:00"
+  },
+  "script": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/maintenance/perception-recover-01.py",
+    "sha256": "8d8dc0ac341606243d8933a0f180a8a58aa565f6f5eff5abb30c8b09966c5aaa",
+    "guard_lines": [
+      74,
+      78,
+      81,
+      85,
+      88,
+      94,
+      119
+    ],
+    "signal_line": 128,
+    "bounded_wait_lines": [
+      132,
+      135,
+      168
+    ],
+    "no_escalation_failure_lines": [
+      196,
+      199
+    ]
+  },
+  "fixture_checks": {
+    "receipt_hash": true,
+    "passed_and_checks": true,
+    "python_hash": true,
+    "runners_hash": true,
+    "subprocess_hash": true,
+    "fixture_code_hash": true
+  },
+  "current_perception_process": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+  "protected_processes": {
+    "35486": "35486 35461 Thu Oct 15 13:14:29 2026     /Applications/Ollama.app/Contents/Resources/ollama serve",
+    "3888": "3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state",
+    "3893": "3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active",
+    "82314": "82314     1 Thu Oct 15 07:49:29 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60",
+    "82528": "82528     1 Thu Oct 15 07:49:42 2026     /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/writing-admission-guidance-20261014/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous"
+  },
+  "old_descendants": {
+    "22156": {
+      "current_identity": "",
+      "matches_old": false
+    },
+    "22325": {
+      "current_identity": "",
+      "matches_old": false
+    },
+    "22326": {
+      "current_identity": "",
+      "matches_old": false
+    }
+  },
+  "children_still_parented_to_old_pid": [],
+  "source_and_configuration_checks": {
+    "/Users/v/Library/LaunchAgents/com.astrid.perception-host-ascii.plist": true,
+    "/Users/v/other/astrid/capsules/perception/host_audio_fallback.py": true,
+    "/Users/v/other/astrid/capsules/perception/perception.py": true,
+    "/Users/v/other/astrid/launchd/com.astrid.perception-host-ascii.plist": true,
+    "/Users/v/other/astrid/scripts/launchd_astrid_perception_host_ascii.sh": true
+  },
+  "loaded_configured_environment_checks": {
+    "PATH": true,
+    "LOOK_SOURCE": true,
+    "ASTRID_CAMERA_INDEX": true,
+    "ASTRID_ENABLE_MIC": true,
+    "ASTRID_VISION_INTERVAL": true,
+    "ASTRID_AUDIO_INTERVAL": true,
+    "MINIME_WORKSPACE": true,
+    "ASTRID_HOST_ASCII_INTERVAL": true
+  },
+  "sampled_history_checked_count": 20,
+  "recorded_fresh_output_checks": {
+    "same_hash": true,
+    "valid_nonempty_json_object": true,
+    "after_replacement": true
+  },
+  "recent_valid_output_metadata": [
+    {
+      "path": "/Users/v/other/astrid/capsules/perception/workspace/perceptions/visual_ascii_2026-10-15T18-11-50.831918.json",
+      "sha256": "43a66af92deffa9391b307074c810f77ae0d13f99e90a249fad98b9ccf0cd249",
+      "size": 6063,
+      "mtime_utc": "2026-10-16T01:11:50.832315+00:00",
+      "age_seconds": 42.194
+    },
+    {
+      "path": "/Users/v/other/astrid/capsules/perception/workspace/perceptions/visual_2026-10-15T18-11-16.542070.json",
+      "sha256": "ea88d9ff498d4945e2f7ea637c5133f105f201a9f38aab04a07d9554f4974744",
+      "size": 1151,
+      "mtime_utc": "2026-10-16T01:11:21.152901+00:00",
+      "age_seconds": 71.874
+    },
+    {
+      "path": "/Users/v/other/astrid/capsules/perception/workspace/perceptions/visual_ascii_2026-10-15T18-11-07.063827.json",
+      "sha256": "706c070a986e35fa9e72cf78740c7e950db88b564c4daf992622feae4ceaf8ac",
+      "size": 6067,
+      "mtime_utc": "2026-10-16T01:11:07.064302+00:00",
+      "age_seconds": 85.962
+    }
+  ],
+  "retained_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/maintenance/perception-recover-01-new-log.txt",
+    "sha256": "3b378f5383b9712756c6bdfe5a3a5cf52477cf5a164d13e0e969c16bd38deb36",
+    "size": 880,
+    "markers_only": [
+      {
+        "line_number": 1,
+        "kind": "stopped",
+        "timestamp_prefix": "2026-10-15 18:10:13,387"
+      },
+      {
+        "line_number": 2,
+        "kind": "started",
+        "timestamp_prefix": "2026-10-15 18:10:13,759"
+      }
+    ]
+  },
+  "findings": [],
+  "limitations": [
+    "Descendant absence covers captured identities and current old-parent links, not proof about an unobserved short-lived subprocess. The captured rec, Whisper and resource-tracker processes are absent.",
+    "History validation checks the twenty retained samples; this is not a complete historical inventory.",
+    "Recovery success does not establish the host is ready for GPU qualification. Post-settle memory evidence and a new uninterrupted two-hour baseline remain required."
+  ],
+  "runtime_mutations_performed_by_reviewer": false
+}

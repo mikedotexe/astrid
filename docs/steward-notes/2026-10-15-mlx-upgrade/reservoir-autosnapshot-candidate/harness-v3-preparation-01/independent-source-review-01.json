@@ -1,0 +1,120 @@
+{
+  "actual_case_execution_authorized": false,
+  "byte_identical_v2_modules": [
+    "common.py",
+    "fixture.py",
+    "protocol_client.py",
+    "review_matrix.py",
+    "service_child.py",
+    "snapshot_oracle.py"
+  ],
+  "created_at": "2026-10-17T00:03:04.827924+00:00",
+  "deployment_accepted": false,
+  "limits": [
+    "Read-only static review; no tests, compilation, code imports, ps/process probes, child starts, signals, sockets, models or numerical work performed.",
+    "The2-second observation limit is fail-closed, not a guarantee that macOS will publish complete argv in time.",
+    "The existing60-second cooperative cleanup wait remains distinct from the300-second case deadline and adds no forced termination.",
+    "Test receipt and actual OS qualification are still pending. Earlier v2 natural exit does not turn its failed case into passed evidence.",
+    "Future production proof consumer must explicitly bind the final v3 reader and exact case closure; this source-only approval does not transfer through source changes."
+  ],
+  "production_qualified": false,
+  "retained_v2_parent": {
+    "created_at": "2026-10-16T23:58:28.915564+00:00",
+    "destination": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3",
+    "original_files": {
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/driver.py": "6575765ccd39fe0c3e1e329629b0a5a50e480811b66f1a613ffa95ecc9c2a074",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/process_identity.py": "0342641e028a65039d80c4bc6cba7e32e666ececb6aa0e29e1ac1dffbd66abbc",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/result_checks.py": "ceac5f6aefef5cac2621e194094803d427a469d64492f7ae6588f0c7ee7d47bc",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/test_harness.py": "ca64cb6b3be18e0414d54820ced60784527f5844653c132406d15d90a1336551"
+    },
+    "production_qualified": false,
+    "purpose": "Bounded read-only initial ps metadata publication wait; no case execution, identity acceptance weakening, timeout extension or lifecycle replay.",
+    "retained_failed_case": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/runs/01-original-normal/result.json",
+      "sha256": "82d99e0c74bfc9e9539bc346cc6c77538da3626d6912eb97326941fb76ac78a1"
+    },
+    "schema": "reservoir_private_harness_source_parent_v1",
+    "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2",
+    "source_only_copy": true
+  },
+  "reviewed_changes": {
+    "driver.py": [
+      "Publication observation replaces only the immediate initial child ps identity acceptance.",
+      "Case monotonic deadline is now established before Popen, with CLI maximum300 seconds.",
+      "Publication helper consumes this existing deadline; protocol requests, snapshot checks and graceful control-pipe cleanup remain unchanged."
+    ],
+    "process_identity.py": [
+      "Exact placeholder (python3.12) may cause another read only for the pinned python3.12 family; it is never a complete accepted identity.",
+      "Bounded2-second window,25ms intervals and81 observations; each ps timeout receives only remaining window/case budget.",
+      "Child poll checked before and after observation; error, exit, missing/malformed metadata, foreign argv, changed PID/start or expiry fails closed.",
+      "Initial full command must match exact submitted launcher argv or exact prepared framework runtime argv; full argument tail and file hashes remain required.",
+      "Raw stdout/timing/poll/error rows are persisted before refusal; accepted exact identity remains bound to subsequent steady-ready identity.",
+      "publication_proof reconstructs exact accepted identity from all raw rows and validates index/order/timing/count/poll status/command/family/continuity."
+    ],
+    "result_checks.py": [
+      "Final raw evidence review recomputes publication proof and requires it to match recorded proof and launch-transition input; later steady identities remain exact."
+    ],
+    "tests": [
+      "New focused fake cases cover placeholder progression, immediate full argv, unknown/malformed/changed identities, expiry, child exit, ps timeout/partial output, interpreter drift and raw-proof tampering.",
+      "Existing process-evidence test fixture includes mandatory publication data; copied behavioral tests remain otherwise unchanged."
+    ]
+  },
+  "reviewer": "/root/mlx_readiness",
+  "schema": "reservoir_private_harness_initial_publication_source_review_v1",
+  "source_approved": true,
+  "source_artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/README.md": "0550cfe1621ec7dc5557f9d872aead8708eaf8c6d9f4c5ee9ce8b9b45d91e44a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/driver.py": "f99dc8d0945cd23c62249b78a3a8a24fa5791f61c57b5ec37fb1bc90b1dbcf63",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/process_identity.py": "badc6dd3ddec6aa9bf0c3996aecfab0e40232acad9dae346d6302bbec16803c7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/result_checks.py": "047389e82d8a8e5109ff6c49d4af10dd1bd9b80e254c965e9dd94692529ae5cf",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/source-parent-01.json": "9432395c6c17fec75ab5813a9810a32a56a3d93f214e409748b3ebb72b6969e7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/test_harness.py": "05e35897981af399fde10ee4a7baabd9dc8f15988179cdd0e0ef3daa78928148",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/test_initial_publication.py": "54462505c1efac8080f6ef60608605d93182a5ef9c9b90f88c455cbd316f024b"
+  },
+  "source_refs": {
+    "await_and_raw_proof": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/process_identity.py",
+      "symbols": [
+        "await_initial_identity",
+        "publication_proof",
+        "launch_transition"
+      ]
+    },
+    "driver_boundary": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/driver.py",
+      "symbols": [
+        "run",
+        "main"
+      ]
+    },
+    "final_reader": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/result_checks.py",
+      "symbols": [
+        "verify_process_evidence"
+      ]
+    },
+    "publication_policy": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/process_identity.py",
+      "symbols": [
+        "PUBLICATION_LIMIT_S",
+        "PUBLICATION_INTERVAL_S",
+        "PUBLICATION_MAX_OBSERVATIONS",
+        "INCOMPLETE_COMMAND"
+      ]
+    }
+  },
+  "status": "accepted_frozen_source_preparation_only_tests_pending",
+  "unresolved_source_blockers": []
+}

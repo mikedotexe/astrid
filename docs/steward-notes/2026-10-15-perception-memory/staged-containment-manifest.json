@@ -1,0 +1,220 @@
+{
+  "acceptance_boundaries": [
+    "CPU/source/protocol containment is reviewed and tested with fake workers only.",
+    "Live perception source and all119 passive-baseline inputs remain unchanged.",
+    "No actual camera, TCC behavior, native backend timing or sustained-memory improvement has been qualified.",
+    "No timeout, forced termination or retry is introduced; a stuck camera can block the synchronous caller.",
+    "First asyncio SIGINT fixture passed; repeated/immediate interruption during wait remains outside the reaping guarantee.",
+    "The change contains possible native retention across captures and does not prove the earlier heap-growth cause."
+  ],
+  "archival_fixture_sources": {
+    "archive_map": {
+      "bytes": 3249,
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/archive-map.json",
+      "sha256": "f303a015e7529053db3b37aa339d9128b9b3dfe87bb1cb7014bed1d1709fc78b"
+    },
+    "copies": [
+      {
+        "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/test_camera_capture_containment.py",
+        "restore_relative_path": "capsules/perception/test_camera_capture_containment.py",
+        "sha256": "5e2fadc465407167aca5f7530b506870733c1c51ed8b6da193028909f76c87f7",
+        "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/test_camera_capture_containment.py"
+      },
+      {
+        "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/first_sigint_fixture.py",
+        "restore_relative_path": "capsules/perception/first_sigint_fixture.py",
+        "sha256": "95915edff8acc33a388aab212430b3de4d4d495940cda98f858a92467e3cb8c1",
+        "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/first_sigint_fixture.py"
+      },
+      {
+        "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/baseline/perception.py",
+        "restore_relative_path": "capsules/perception/baseline/perception.py",
+        "sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a",
+        "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/perception.py"
+      },
+      {
+        "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/baseline/host_audio_fallback.py",
+        "restore_relative_path": "capsules/perception/baseline/host_audio_fallback.py",
+        "sha256": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69",
+        "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/host_audio_fallback.py"
+      },
+      {
+        "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/baseline/test_capture_frame_lifecycle.py",
+        "restore_relative_path": "capsules/perception/baseline/test_capture_frame_lifecycle.py",
+        "sha256": "4a5d73ad58653ad250799860ae68be7697bccf97a93692ee0340fee1112d3c5b",
+        "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/test_capture_frame_lifecycle.py"
+      },
+      {
+        "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/baseline/provenance.json",
+        "restore_relative_path": "capsules/perception/baseline/provenance.json",
+        "sha256": "827671a9fc3301eda812acad4eefd2735eaf8371d25a6407a6806548d237c636",
+        "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/provenance.json"
+      },
+      {
+        "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/baseline/manifest.json",
+        "restore_relative_path": "capsules/perception/baseline/manifest.json",
+        "sha256": "e937059ed39934d6b83d4a255f273d23f3748e2c37c9ddaf07fb28552fcd6c04",
+        "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/manifest.json"
+      }
+    ],
+    "executed_in_archive": false,
+    "instructions": {
+      "bytes": 2004,
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/README.md",
+      "sha256": "412b606f5ea323cd619dce77b564c604698037bdf3f419f2adbfcdc5904120eb"
+    },
+    "reconstruction": "Restore archived baseline and fixture sources beneath a new isolated root/capsules/perception layout, copy the known original perception and audio helper beside baseline, apply the patch from that isolated root, then verify reviewed candidate hashes before executing any tests. Never import or execute perception.py itself for fixture tests."
+  },
+  "candidate_source_and_tests": {
+    "README.md": {
+      "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/README.md",
+      "sha256": "84c1f0f6de7b854e06b29122a8384db47ea6e552568cf28c21ef3ce63937f49d"
+    },
+    "camera_capture.py": {
+      "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py",
+      "sha256": "4692f30fe56090490cc648b78447e993a368a5a148ef53a0b2e38d235caae34d"
+    },
+    "host_audio_fallback.py": {
+      "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/host_audio_fallback.py",
+      "sha256": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69"
+    },
+    "perception.py": {
+      "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/perception.py",
+      "sha256": "d842d08aa505836451c64e0ad29158d7610efc6828e54a2988ccfe8f28c648a8"
+    },
+    "test_camera_capture_containment.py": {
+      "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/test_camera_capture_containment.py",
+      "sha256": "5e2fadc465407167aca5f7530b506870733c1c51ed8b6da193028909f76c87f7"
+    }
+  },
+  "created_at": "2026-10-16T01:49:23.883466+00:00",
+  "existing_frame_size_evidence": {
+    "bytes": 25061,
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/existing-frame-size-sample.json",
+    "sha256": "5a52da0caa43627b0718b28a85813bd94d1063e5154cce86cecdf0e1db7bd116"
+  },
+  "final_containment_tests": {
+    "all_owned_children_reaped": true,
+    "owned_fake_children": 18,
+    "passed": true,
+    "receipt": {
+      "bytes": 5627,
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/containment-tests-02.json",
+      "sha256": "c3b376539e8c51c3fb1a02aa95836b4a3650845afe2b69695c6ea823ce865b86"
+    },
+    "tests": 20
+  },
+  "first_sigint_fixture": {
+    "checks_passed": 8,
+    "passed": true,
+    "receipt": {
+      "bytes": 3357,
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/first-sigint-fixture-01.json",
+      "sha256": "b676151fda6aadfc0cac57244f0ebace2039e920adb10ad52aa092410a05ffb3"
+    },
+    "scope": "One owned asyncio parent and one finite fake worker; first SIGINT only; no camera/cv2/models/production signals.",
+    "signal_count": 1
+  },
+  "first_sigint_fixture_source": {
+    "bytes": 6728,
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/first_sigint_fixture.py",
+    "sha256": "95915edff8acc33a388aab212430b3de4d4d495940cda98f858a92467e3cb8c1"
+  },
+  "git_index_mutations": 0,
+  "historical_characterization_input_relocations": [
+    {
+      "exact_bytes_verified": true,
+      "original_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/host_audio_fallback.py",
+      "original_sha256": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69",
+      "preserved_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/host_audio_fallback.py",
+      "preserved_sha256": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69"
+    },
+    {
+      "exact_bytes_verified": true,
+      "original_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/perception.py",
+      "original_sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a",
+      "preserved_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/perception.py",
+      "preserved_sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a"
+    },
+    {
+      "exact_bytes_verified": true,
+      "original_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/provenance.json",
+      "original_sha256": "827671a9fc3301eda812acad4eefd2735eaf8371d25a6407a6806548d237c636",
+      "preserved_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/provenance.json",
+      "preserved_sha256": "827671a9fc3301eda812acad4eefd2735eaf8371d25a6407a6806548d237c636"
+    },
+    {
+      "exact_bytes_verified": true,
+      "original_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/test_capture_frame_lifecycle.py",
+      "original_sha256": "4a5d73ad58653ad250799860ae68be7697bccf97a93692ee0340fee1112d3c5b",
+      "preserved_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/test_capture_frame_lifecycle.py",
+      "preserved_sha256": "4a5d73ad58653ad250799860ae68be7697bccf97a93692ee0340fee1112d3c5b"
+    }
+  ],
+  "historical_evidence_preserved": {
+    "containment-tests-01.json": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/containment-tests-01.json",
+      "sha256": "86663285e098fe5e78be40ba22738dfd4dab04752cdb71df21555b46f25951ad"
+    },
+    "lifecycle-characterization.json": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/lifecycle-characterization.json",
+      "sha256": "acb4b1538063e54c4b14fb69986b2d284a2628a263823c1a517546f155890123"
+    },
+    "lifecycle-isolation-verification.json": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/lifecycle-isolation-verification.json",
+      "sha256": "52a883807fa08d89e437d3ef07562e8087dcfce90f6e9919b95d7c7578d0efe4"
+    }
+  },
+  "implementation_patch": {
+    "bytes": 7492,
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/camera-process-containment.patch",
+    "sha256": "a7f9a6396ecdac70fc91029baa027c37582d4dbdb2a2dc7ef86d77b7681a6976"
+  },
+  "independent_reviews": [
+    {
+      "bytes": 4601,
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/containment-review.json",
+      "sha256": "979845f86ccef00274823c8b93cbb443eb4bd85f277393d51586a424d77abdc5"
+    },
+    {
+      "bytes": 4508,
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/containment-readiness-review.json",
+      "sha256": "1e94a48f3ec9b39d54099959631ee44e991a7d6b6528176a9935da3ddadd4528"
+    }
+  ],
+  "isolation_evidence": [
+    {
+      "bytes": 4345,
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/containment-isolation-verification.json",
+      "sha256": "814bcd4e6c2214af9842659dc43ceca08852ef4727897c475eb37bdd41cef497"
+    },
+    {
+      "bytes": 40711,
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/root-isolation-verification.json",
+      "sha256": "b09ea911308c82b38d3e32841543f69d12f487618442b6bcb17eefcf5b9baa5e"
+    }
+  ],
+  "original_snapshot_manifest": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/manifest.json",
+    "sha256": "e937059ed39934d6b83d4a255f273d23f3748e2c37c9ddaf07fb28552fcd6c04"
+  },
+  "patch_application_verification": {
+    "bytes": 3214,
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/patch-application-verification.json",
+    "sha256": "7c7b56b71c07ee8723d7c93538dbd0f00eed733e96cc6d447a5a2df14e5e20a3"
+  },
+  "patch_scope": [
+    "capsules/perception/perception.py",
+    "capsules/perception/camera_capture.py"
+  ],
+  "production_mutations": 0,
+  "root_review_release": "Root reviewed frozen helper and both peer reviews; release formal patch generation. No live deployment authority is inferred.",
+  "schema": "perception_camera_containment_staged_manifest_v1",
+  "size_limit_bytes": 16777216,
+  "staged_review_manifest": {
+    "bytes": 5553,
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/staged-review-manifest.json",
+    "sha256": "b8fca98811a7d7ff975cfb0b6d08db2ba02496bde8d0c75557c3110eb2bbf546"
+  },
+  "status": "reviewed_staged_only_not_applied_to_live"
+}

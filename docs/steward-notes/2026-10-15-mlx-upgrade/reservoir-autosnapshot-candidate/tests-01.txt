@@ -1,0 +1,15 @@
+test_another_ready_task_runs_inside_batch (__main__.CooperativeTests.test_another_ready_task_runs_inside_batch) ... ok
+test_autosnapshot_awaits_new_path_with_original_interval (__main__.CooperativeTests.test_autosnapshot_awaits_new_path_with_original_interval) ... ok
+test_captured_names_match_sync_when_registration_changes (__main__.CooperativeTests.test_captured_names_match_sync_when_registration_changes) ... ok
+test_exact_call_order_and_error_equivalence (__main__.CooperativeTests.test_exact_call_order_and_error_equivalence) ... ok
+test_external_cancellation_propagates_at_batch_yield (__main__.CooperativeTests.test_external_cancellation_propagates_at_batch_yield) ... ok
+test_only_yields_between_handles_and_preserves_empty_batch (__main__.CooperativeTests.test_only_yields_between_handles_and_preserves_empty_batch) ... ok
+test_per_handle_cancellation_is_not_logged_or_swallowed (__main__.CooperativeTests.test_per_handle_cancellation_is_not_logged_or_swallowed) ... ok
+test_yields_after_error_before_next_handle (__main__.CooperativeTests.test_yields_after_error_before_next_handle) ... ok
+test_only_new_method_and_autosnapshot_await_differ (__main__.SourceBoundaryTests.test_only_new_method_and_autosnapshot_await_differ) ... ok
+test_writer_sync_batch_and_final_shutdown_are_byte_identical (__main__.SourceBoundaryTests.test_writer_sync_batch_and_final_shutdown_are_byte_identical) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.059s
+
+OK

@@ -1,0 +1,236 @@
+{
+  "build_test_processes": {
+    "25524": {
+      "cpu_percent": 0.8,
+      "executable": "/Users/v/.rustup/toolchains/1.94.1-aarch64-apple-darwin/bin/cargo",
+      "first_seen_utc": "2026-10-16T01:15:34.197232+00:00",
+      "last_seen_utc": "2026-10-16T01:17:19.204185+00:00",
+      "peak_cpu_percent": 0.8,
+      "peak_rss_bytes": 135315456,
+      "pid": 25524,
+      "ppid": 25249,
+      "rss_bytes": 135315456,
+      "started_local": "Thu Oct 15 18:15:33 2026"
+    },
+    "25620": {
+      "cpu_percent": 98.3,
+      "executable": "/Users/v/.rustup/toolchains/1.94.1-aarch64-apple-darwin/bin/rustc",
+      "first_seen_utc": "2026-10-16T01:15:39.204837+00:00",
+      "last_seen_utc": "2026-10-16T01:17:19.204185+00:00",
+      "peak_cpu_percent": 199.0,
+      "peak_rss_bytes": 2430500864,
+      "pid": 25620,
+      "ppid": 25524,
+      "rss_bytes": 482656256,
+      "started_local": "Thu Oct 15 18:15:36 2026"
+    }
+  },
+  "completed_at": "2026-10-16T01:18:15.893265+00:00",
+  "conclusion": "No five-minute GPU scheduling window. Perception PID22354, all five other protected processes, source and readiness remained stable. Parent explicitly authorized beginning a read-only passive baseline under ordinary host conditions; it adds no model load. A fresh completed baseline and settled-window/memory gates remain mandatory before additional GPU qualification.",
+  "duration_s": 311.69947054213844,
+  "final_cpu_receipt": {
+    "harness_files_reverified": 11,
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/focused-tests-final-07.json",
+    "sha256": "51652181168727dc08b4ddfe3764454e61ff84c723dd6a973c8377dd30ca8f84",
+    "source_files_reverified": 32
+  },
+  "longest_eligible_window": {
+    "duration_s": 75.00031614303589,
+    "passed": false,
+    "required_s": 300,
+    "rule": ">=300 consecutive observed seconds of pressure1, swap not above window's first sample, no cargo/rustc/target test process; sample gaps >15s invalidate"
+  },
+  "observer_source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/host-window-03-observer.py",
+    "sha256": "712c53cfa52bab5ca6d62244ed1525442632a91c8e6d38cbad6167c287abdaf6"
+  },
+  "perception_rss_bytes": {
+    "max": 188317696,
+    "min": 157450240
+  },
+  "pressure_sample_counts": {
+    "1": 40,
+    "2": 23
+  },
+  "process_detection_scope": "Cargo/rustc and target debug/release deps executables; not a claim of no other CPU activity.",
+  "production_identity_end": {
+    "astrid_perception": {
+      "executable": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python",
+      "pid": 22354,
+      "started_local": "Thu Oct 15 18:10:13 2026"
+    },
+    "astrid_provider": {
+      "pids": [
+        3893
+      ],
+      "port": 8090,
+      "processes": [
+        {
+          "executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+          "pid": 3893,
+          "started_local": "Wed Sep 30 14:29:07 2026"
+        }
+      ]
+    },
+    "astrid_reservoir": {
+      "pids": [
+        3888
+      ],
+      "port": 7881,
+      "processes": [
+        {
+          "executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+          "pid": 3888,
+          "started_local": "Wed Sep 30 14:29:07 2026"
+        }
+      ]
+    },
+    "ollama": {
+      "pids": [
+        35486
+      ],
+      "port": 11434,
+      "processes": [
+        {
+          "executable": "/Applications/Ollama.app/Contents/Resources/ollama",
+          "pid": 35486,
+          "started_local": "Thu Oct 15 13:14:29 2026"
+        }
+      ]
+    },
+    "spectral_bridge": {
+      "executable": "/Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server",
+      "pid": 82528,
+      "started_local": "Thu Oct 15 07:49:42 2026"
+    }
+  },
+  "production_identity_start": {
+    "astrid_perception": {
+      "executable": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python",
+      "pid": 22354,
+      "started_local": "Thu Oct 15 18:10:13 2026"
+    },
+    "astrid_provider": {
+      "pids": [
+        3893
+      ],
+      "port": 8090,
+      "processes": [
+        {
+          "executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+          "pid": 3893,
+          "started_local": "Wed Sep 30 14:29:07 2026"
+        }
+      ]
+    },
+    "astrid_reservoir": {
+      "pids": [
+        3888
+      ],
+      "port": 7881,
+      "processes": [
+        {
+          "executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+          "pid": 3888,
+          "started_local": "Wed Sep 30 14:29:07 2026"
+        }
+      ]
+    },
+    "ollama": {
+      "pids": [
+        35486
+      ],
+      "port": 11434,
+      "processes": [
+        {
+          "executable": "/Applications/Ollama.app/Contents/Resources/ollama",
+          "pid": 35486,
+          "started_local": "Thu Oct 15 13:14:29 2026"
+        }
+      ]
+    },
+    "spectral_bridge": {
+      "executable": "/Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server",
+      "pid": 82528,
+      "started_local": "Thu Oct 15 07:49:42 2026"
+    }
+  },
+  "production_identity_unchanged": true,
+  "production_mutations": 0,
+  "protected_processes_reverified": {
+    "22354": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+    "35486": "35486 35461 Thu Oct 15 13:14:29 2026     /Applications/Ollama.app/Contents/Resources/ollama serve",
+    "3888": "3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state",
+    "3893": "3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active",
+    "82314": "82314     1 Thu Oct 15 07:49:29 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60",
+    "82528": "82528     1 Thu Oct 15 07:49:42 2026     /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/writing-admission-guidance-20261014/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous"
+  },
+  "provider_health_failure_sample_indices": [],
+  "qualification_workloads_started": 0,
+  "raw_observation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/host-window-03.json",
+    "sha256": "f87bbef281639b6aa02db607a1c87d3a43ccc6e5790d01ee3ae1a8647872d4dc"
+  },
+  "reviewed_at": "2026-10-16T01:20:24.696137+00:00",
+  "sample_count": 63,
+  "sample_errors": [],
+  "schema": "mlx_host_qualification_window_review_v1",
+  "started_at": "2026-10-16T01:13:03.970899+00:00",
+  "steward_pause": {
+    "actor": "codex-mlx-upgrade",
+    "lease": null,
+    "pause_generation": 526,
+    "paused": true,
+    "reason": "User-approved MLX upgrade implementation and qualification; sole coordinator for this change; preserve paused automations",
+    "recorded_at": "2026-10-15T20:24:43.320066+00:00",
+    "schema": "steward_control_state_v1",
+    "schema_version": 1
+  },
+  "swap_bytes": {
+    "delta": 1065227386.8799992,
+    "final": 14007402496.0,
+    "initial": 12942175109.12,
+    "max": 14242283520.0,
+    "min": 12581464965.12
+  },
+  "system_cpu_percent": {
+    "idle_percent": {
+      "max": 76.89,
+      "min": 31.25
+    },
+    "system_percent": {
+      "max": 27.5,
+      "min": 6.88
+    },
+    "user_percent": {
+      "max": 49.47,
+      "min": 16.19
+    }
+  },
+  "vm_stat_bytes": {
+    "compressed_logical_bytes": {
+      "max": 33752711168,
+      "min": 23731470336
+    },
+    "compressor_bytes": {
+      "max": 25513574400,
+      "min": 16052387840
+    },
+    "free_bytes": {
+      "max": 6239125504,
+      "min": 89833472
+    },
+    "inactive_bytes": {
+      "max": 14273642496,
+      "min": 6650363904
+    },
+    "speculative_bytes": {
+      "max": 542605312,
+      "min": 75087872
+    },
+    "wired_bytes": {
+      "max": 32663126016,
+      "min": 22191865856
+    }
+  }
+}

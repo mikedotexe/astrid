@@ -1,0 +1,24 @@
+{
+  "acceptance_transferred": false,
+  "at": "2026-10-17T01:48:00.340961+00:00",
+  "next_action": "One corrected guarded combined pass with exact299 discovery and all local helper identities, local exec origin guard, fresh02 receipt; no production or numeric action.",
+  "observations": [
+    "All299 discovered unittest cases report success, with0failures/errors/skips and no action/import violations or bound-source drift.",
+    "The runner expected276 AST-declared methods, omitting23 imported LegacyFixtureTests, so its passed field correctly remainsfalse.",
+    "Runner before/after source map omitted the legacy fixture test module and two dynamically imported local pure reader helpers. This does not establish complete execution source provenance."
+  ],
+  "preserve_failure": true,
+  "raw_failed_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-01.json",
+    "sha256": "f4bb4eea1fadf2f5ee8b009b3cdb18da6d1bd0e6d09c4641a5cc774ab7d410fd"
+  },
+  "replacement_runner": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_production05_combined_tests_02.py",
+    "sha256": "5bb49cf440fb166bc01db1f30735f86191b154e53a0079d6870be1297f145697"
+  },
+  "runner": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_production05_combined_tests_01.py",
+    "sha256": "a27bb32ea9073c56585767661ce637f89beec555a50400a292cf9783ed93cef0"
+  },
+  "schema": "production05_combined_guarded_test_failure_review_v1"
+}

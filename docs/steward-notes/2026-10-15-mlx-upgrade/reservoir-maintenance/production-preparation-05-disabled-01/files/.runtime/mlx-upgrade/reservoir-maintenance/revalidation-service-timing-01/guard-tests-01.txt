@@ -1,0 +1,14 @@
+test_actual_pathlib_read_bytes_and_text_profile_accounting (test_timing_guard.GuardTests.test_actual_pathlib_read_bytes_and_text_profile_accounting) ... ok
+test_byte_visit_and_individual_file_budgets_refuse (test_timing_guard.GuardTests.test_byte_visit_and_individual_file_budgets_refuse) ... ok
+test_changed_file_metadata_is_refused (test_timing_guard.GuardTests.test_changed_file_metadata_is_refused) ... ok
+test_deadline_and_unexpected_import_and_enumeration_refused (test_timing_guard.GuardTests.test_deadline_and_unexpected_import_and_enumeration_refused) ... ok
+test_descriptor_identity_and_more_than_one_read_refused (test_timing_guard.GuardTests.test_descriptor_identity_and_more_than_one_read_refused) ... ok
+test_finished_stage_cannot_reopen_inputs (test_timing_guard.GuardTests.test_finished_stage_cannot_reopen_inputs) ... ok
+test_posix_descriptor_write_is_refused_without_calling_it (test_timing_guard.GuardTests.test_posix_descriptor_write_is_refused_without_calling_it) ... ok
+test_unknown_path_and_second_open_refused (test_timing_guard.GuardTests.test_unknown_path_and_second_open_refused) ... ok
+test_write_descriptor_open_and_control_are_refused (test_timing_guard.GuardTests.test_write_descriptor_open_and_control_are_refused) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.005s
+
+OK

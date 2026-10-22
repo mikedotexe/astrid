@@ -1,0 +1,437 @@
+{
+  "schema": "reservoir_service_harness_readonly_readiness_v1",
+  "created_at": "2026-10-16T18:13:50.987540+00:00",
+  "scope": "Read-only frozen source, AST ordering and installed distribution metadata inspection; no harness/service/numerical imports or execution.",
+  "execution_released": false,
+  "numerical_qualification_accepted": false,
+  "production_qualified": false,
+  "host_readiness": "blocked per root report: host06 has no passing current window and foreign build/test activity is active; not independently probed here",
+  "prepared_manifest": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/sources.json",
+    "sha256": "826e6eb869262de8769bea5f812986eddfb8d675a83875eab03db067e70751f1"
+  },
+  "observed_run_inventory": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/runs": {
+      "exists": false,
+      "is_symlink": false
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/active-run.json": {
+      "exists": false,
+      "is_symlink": false
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/run.lock": {
+      "exists": false,
+      "is_symlink": false
+    }
+  },
+  "retained_result_count": 0,
+  "verified_counts": {
+    "harness_python_files": 10,
+    "source_files": 12,
+    "interpreter_file_identities": 2,
+    "cpu_distribution_metadata_record_pairs": 4,
+    "all_file_hash_checks": 37
+  },
+  "file_checks": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/sources.json",
+      "sha256": "826e6eb869262de8769bea5f812986eddfb8d675a83875eab03db067e70751f1",
+      "bytes": 3159,
+      "stable": true,
+      "matches_expected": null
+    },
+    {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests-v2/original.json",
+      "sha256": "8c773b9bfc753ce6207883d71076441024f2f850bde31c17ca2fca5ae2aeabd0",
+      "bytes": 36339,
+      "stable": true,
+      "matches_expected": null
+    },
+    {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/preparation.json",
+      "sha256": "e656028cf9a9ec157cca78150edf6ee5020f5535e356b01a717b7d1e87452936",
+      "bytes": 11434,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/common.py",
+      "sha256": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+      "bytes": 4299,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/driver.py",
+      "sha256": "42dc76d5b90a7797ef89b88e1835661c851d85130d5df9d37dd72df6727da09d",
+      "bytes": 12046,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/fixture.py",
+      "sha256": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+      "bytes": 2659,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/process_identity.py",
+      "sha256": "068da901598ff9cf982314f1cc0f4381a6e6e878143be5e52def59270871d0f2",
+      "bytes": 2571,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/protocol_client.py",
+      "sha256": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+      "bytes": 2904,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/result_checks.py",
+      "sha256": "1242f173bd6c77fa1ed4f9bde9a9934845815aab9025aedf44c97f92117a3b86",
+      "bytes": 6627,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/review_matrix.py",
+      "sha256": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+      "bytes": 4401,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/service_child.py",
+      "sha256": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+      "bytes": 15760,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/snapshot_oracle.py",
+      "sha256": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+      "bytes": 5431,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/test_harness.py",
+      "sha256": "8b272aca672305744939d88b3e2599c7dedcf2405873c846289077b8c6283e47",
+      "bytes": 12091,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/candidate/dual_ai_bridge.py",
+      "sha256": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549",
+      "bytes": 27048,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/candidate/lsm_reservoir.py",
+      "sha256": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417",
+      "bytes": 8906,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/candidate/persistence.py",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+      "bytes": 7438,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/candidate/rehearsal.py",
+      "sha256": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093",
+      "bytes": 6448,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/candidate/reservoir_service.py",
+      "sha256": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da",
+      "bytes": 63345,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/candidate/triple_reservoir_coreml.py",
+      "sha256": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8",
+      "bytes": 17872,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/original/dual_ai_bridge.py",
+      "sha256": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549",
+      "bytes": 27048,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/original/lsm_reservoir.py",
+      "sha256": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417",
+      "bytes": 8906,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/original/persistence.py",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+      "bytes": 7438,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/original/rehearsal.py",
+      "sha256": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093",
+      "bytes": 6448,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/original/reservoir_service.py",
+      "sha256": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+      "bytes": 62641,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/original/triple_reservoir_coreml.py",
+      "sha256": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8",
+      "bytes": 17872,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+      "sha256": "31b9c9a8d50289f3a13f014b3efd8ea3534fc3eea7ca7d9809e166139910b805",
+      "bytes": 52448,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+      "sha256": "2cb7bcb114a9a92ac12d1072406261ac039bed938b25bfc70dd30ec5855a3353",
+      "bytes": 51392,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12",
+      "sha256": "31b9c9a8d50289f3a13f014b3efd8ea3534fc3eea7ca7d9809e166139910b805",
+      "bytes": 52448,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/pyvenv.cfg",
+      "sha256": "cd3963b5fd53962627c7bd5b03c628a2737b08a75421805bd17dd8ecaa5be8c3",
+      "bytes": 138,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/numpy-2.4.3.dist-info/METADATA",
+      "sha256": "621bf875d57eee8673f39344ea98ddc370e944e9c8c36b38b430e290f2b682cf",
+      "bytes": 6608,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/numpy-2.4.3.dist-info/RECORD",
+      "sha256": "de5a3ebd77db9fdad1be313f5e0dc0efde41a365bb9b85db0413228b906276dc",
+      "bytes": 84465,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scikit_learn-1.8.0.dist-info/METADATA",
+      "sha256": "95a8f42f4170fc940a71fedfed4fd9353723eb44126130a971a072fe5305d967",
+      "bytes": 11684,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scikit_learn-1.8.0.dist-info/RECORD",
+      "sha256": "67c2b20eced607115a1e4e0eb4d4884c6f2c5134f55fc6876865366b12ea6854",
+      "bytes": 95703,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/torch-2.11.0.dist-info/METADATA",
+      "sha256": "d65e0ab5a65ced0dce799a2f6f32bff57b3d3e9d050069f607ef71eb24dd9976",
+      "bytes": 29846,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/torch-2.11.0.dist-info/RECORD",
+      "sha256": "86a1a151360af9798a6fd303e327d9c006ddd46e31a8b2596ce8c488c20162ae",
+      "bytes": 1323516,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/websockets-16.0.dist-info/METADATA",
+      "sha256": "25c0ef5a8f03552c39ba80c015b93d37c7c95ee449be7adc2d7541172063c0df",
+      "bytes": 6799,
+      "stable": true,
+      "matches_expected": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/websockets-16.0.dist-info/RECORD",
+      "sha256": "0bef97bddb1426da52237d953406b7d563af9b274610ce2473779af1439ff186",
+      "bytes": 5047,
+      "stable": true,
+      "matches_expected": true
+    }
+  ],
+  "hash_or_stability_mismatches": [],
+  "runtime": {
+    "executable": "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+    "files": {
+      "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python": "2cb7bcb114a9a92ac12d1072406261ac039bed938b25bfc70dd30ec5855a3353",
+      "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12": "31b9c9a8d50289f3a13f014b3efd8ea3534fc3eea7ca7d9809e166139910b805"
+    },
+    "resolved": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12",
+    "sha256": "31b9c9a8d50289f3a13f014b3efd8ea3534fc3eea7ca7d9809e166139910b805"
+  },
+  "packages": {
+    "numpy": {
+      "version": "2.4.3",
+      "requires_python": ">=3.11",
+      "metadata": {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/numpy-2.4.3.dist-info/METADATA",
+        "sha256": "621bf875d57eee8673f39344ea98ddc370e944e9c8c36b38b430e290f2b682cf"
+      },
+      "record": {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/numpy-2.4.3.dist-info/RECORD",
+        "sha256": "de5a3ebd77db9fdad1be313f5e0dc0efde41a365bb9b85db0413228b906276dc",
+        "rows": 914
+      },
+      "installed_payload_files_rehashed": false
+    },
+    "scikit-learn": {
+      "version": "1.8.0",
+      "requires_python": ">=3.11",
+      "metadata": {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scikit_learn-1.8.0.dist-info/METADATA",
+        "sha256": "95a8f42f4170fc940a71fedfed4fd9353723eb44126130a971a072fe5305d967"
+      },
+      "record": {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scikit_learn-1.8.0.dist-info/RECORD",
+        "sha256": "67c2b20eced607115a1e4e0eb4d4884c6f2c5134f55fc6876865366b12ea6854",
+        "rows": 962
+      },
+      "installed_payload_files_rehashed": false
+    },
+    "torch": {
+      "version": "2.11.0",
+      "requires_python": ">=3.10",
+      "metadata": {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/torch-2.11.0.dist-info/METADATA",
+        "sha256": "d65e0ab5a65ced0dce799a2f6f32bff57b3d3e9d050069f607ef71eb24dd9976"
+      },
+      "record": {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/torch-2.11.0.dist-info/RECORD",
+        "sha256": "86a1a151360af9798a6fd303e327d9c006ddd46e31a8b2596ce8c488c20162ae",
+        "rows": 12414
+      },
+      "installed_payload_files_rehashed": false
+    },
+    "websockets": {
+      "version": "16.0",
+      "requires_python": ">=3.10",
+      "metadata": {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/websockets-16.0.dist-info/METADATA",
+        "sha256": "25c0ef5a8f03552c39ba80c015b93d37c7c95ee449be7adc2d7541172063c0df"
+      },
+      "record": {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/websockets-16.0.dist-info/RECORD",
+        "sha256": "0bef97bddb1426da52237d953406b7d563af9b274610ce2473779af1439ff186",
+        "rows": 61
+      },
+      "installed_payload_files_rehashed": false
+    }
+  },
+  "source_review": [
+    {
+      "finding": "Service import origin check follows actual ReservoirService construction, so lazy LSM import is available.",
+      "file": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/service_child.py",
+      "lines": [
+        164,
+        169
+      ]
+    },
+    {
+      "finding": "First original-normal case uses fixed32 input/192 nodes/NumPy,102 synthetic quiet handles; all origins checked after construction. Seed uses actual writer before run; fresh restore cycles start after asyncio loop closes.",
+      "file": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/service_child.py",
+      "lines": [
+        164,
+        239,
+        253,
+        307
+      ]
+    },
+    {
+      "finding": "Protocol matches production2s opening handshake and5s receive; sync websockets16 supports proxy=None. No timer weakened for acceptance.",
+      "file": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/protocol_client.py",
+      "lines": [
+        19,
+        24,
+        31,
+        44
+      ]
+    },
+    {
+      "finding": "Every complete case requires full stored NPZ/thermostat checks, final102 handles, two real restore cycles, event continuity and exact owned child identities; raw artifact hashes rechecked by matrix reviewer.",
+      "file": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/result_checks.py",
+      "lines": [
+        10,
+        84,
+        97
+      ]
+    },
+    {
+      "finding": "Matrix requires14 distinct nonoverlapping cases, exact coverage, same fixture/packages/interpreter/source/harness, aggregate order original/candidate/candidate/original. Original aggregate and both single-save handshake failures are expected characterization.",
+      "file": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/review_matrix.py",
+      "lines": [
+        15,
+        42,
+        47,
+        50
+      ]
+    },
+    {
+      "finding": "No actual runs/active-run/lock exist. First run still requires root release and fresh output; absence is filesystem evidence, not an OS process census.",
+      "file": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/driver.py",
+      "lines": [
+        73,
+        84,
+        91
+      ]
+    },
+    {
+      "finding": "Frozen driver run takes ~60s unchanged periodic timer before first snapshot plus initialization/preservation/restore; it is not passive and total package/allocator peak remains unmeasured.",
+      "file": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/README.md",
+      "lines": [
+        35,
+        63
+      ]
+    }
+  ],
+  "concrete_first_run_blockers_found": [],
+  "limits": [
+    "This audit cannot establish actual NumPy/Torch/websockets API behavior, timing alignment, memory footprint or round-trip success without released execution.",
+    "Installed METADATA and RECORD bytes match original pinned inventory; this finite metadata audit does not rehash every installed package payload/native library.",
+    "The host gate and explicit release remain blocking. Do not infer permission to execute from source/hash readiness.",
+    "No service request, listener, child, signal, test suite, Rust build or numerical import occurred. All old evidence and frozen sources were only read."
+  ]
+}

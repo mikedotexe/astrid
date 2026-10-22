@@ -1,0 +1,59 @@
+{
+  "api": {
+    "plan_resume(state, consumed_tokens=())": "One-step review proposal. No Host, file IO, CLI, callable action or recovery execution.",
+    "reconstruct(preparation, inspection)": "Pure JSON-only state; invalid evidence raises Refusal; ambiguous or unsupported evidence remains blocked.",
+    "validate_proposal(proposal, preparation, inspection, consumed_tokens=())": "Pure stale/replay binding check; rechecks reconstruction and proposal identity."
+  },
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_recovery.py": "970abaeb7eea7f23cd52d743da958021dafdf1a01bf72e70ac7e6768172ad5bc",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_recovery_inspect.py": "d1c40638b2ec12c87d55a25f619016978e272928b3bf8e4258e4feef99589bd4",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_production_recovery.py": "5331b9ca3ae00e01e2e010aef52705e48e9beea4cfafbd3cfb543eaf355198a8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_production_recovery_inspect.py": "a6a945d4160dec93a6be9d6c9057747a19db4ab9edc17c8680ac618a5f49c28f"
+  },
+  "blocked_cases": [
+    "Any unknown or incomplete debug, signal, holder removal, install, plist or bootstrap outcome.",
+    "Every nonzero interactive sudo/debug result, including a claimed auth refusal: this Host has no reviewed pre-exec refusal protocol.",
+    "Any private-restore request/launch/start/exit/unresolved state; clean exit is not an outer witness. No relaunch.",
+    "All install, provider pin and bootstrap recovery phases, including apparently completed later phases.",
+    "Foreign/PID-reused processes, missing guards/held receipts, changed ownership/protected identities, inconsistent listeners or disk phases.",
+    "Stale proposals and caller-recorded consumed tokens."
+  ],
+  "cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/evidence/recovery-cpu-tests-01.json",
+    "sha256": "c833ccdccbc02cc800cc76fd640ec1aee9ebc7bdf0313a7f968345430baf0206"
+  },
+  "created_at": "2026-10-16T17:57:34.661036+00:00",
+  "inspector_03_delta": [
+    "Separate apply_provider_restart/provider mapping; exact completion argv and plist hash.",
+    "Read-only fixed finite restore request/launch/start/exit/unresolved records, same transaction/request/backup/helper bindings; record absence retained.",
+    "No child process lookup, service probe, signal, write or retry. Original candidate02 inspector remains unchanged."
+  ],
+  "limitations": [
+    "This is not full exact-phase recovery, a resume executor, an authorization or an enabled controller.",
+    "A proposal token is an identity, not an execution ledger; a future reviewed executor must durably claim it and enforce at-most-once action.",
+    "Retained inspector reports must be freshly revalidated before execution; the pure planner cannot establish current filesystem/process state.",
+    "Log-prefix continuity and real check-in/final snapshot/restore semantics are not requalified by reconstruction.",
+    "No guessed acknowledgement, state rollback, rearm, resignal, rebootstrap or forced termination.",
+    "Controller.run remains fresh-only. Production Host and controller remain disabled; no resume entrypoint exists."
+  ],
+  "production_executed": false,
+  "production_recovery_qualified": false,
+  "reconstructed_values": [
+    "controller and host counters",
+    "guards",
+    "original capture offsets/prefix identities and positive idle anchor",
+    "receipts and chain bindings",
+    "successful arm and signal identities",
+    "durable signal wall time",
+    "parked roles/replacements",
+    "source/plist completion flags",
+    "bootstrap log anchors"
+  ],
+  "schema": "reservoir_production_recovery_interface_v1",
+  "scope": "Preparation only: finite retained-evidence reconstruction and nonexecuting proposals.",
+  "supported_checkpoints": {
+    "both_parked": "Both removals durably confirmed; source still original. Revalidate complete stopped inventory and backup only.",
+    "provider_held": "Durable exact provider holder plus unchanged original reservoir. Revalidate check-in; only with retained accepted check-in can propose verified-holder removal.",
+    "reservoir_held": "Provider durably parked with check-in; durable exact reservoir holder. Revalidate final snapshot, or propose holder removal after retained final witness."
+  }
+}

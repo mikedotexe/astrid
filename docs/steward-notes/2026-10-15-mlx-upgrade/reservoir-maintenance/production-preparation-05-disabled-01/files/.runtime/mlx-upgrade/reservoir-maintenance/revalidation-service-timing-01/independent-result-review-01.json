@@ -1,0 +1,142 @@
+{
+  "accepted_for_recorded_scope": true,
+  "accepted_matrix": {
+    "bytes": 5017,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/matrix-review-01.json",
+    "sha256": "42a63f52154aafca5b8502f667cd6af4679aee73d69281551e3c508801c9729d"
+  },
+  "fixture_test_count_clarification": {
+    "checkpoint": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-checkpoint-03.json",
+      "sha256": "8a2798806dd6524deb188bc64c531403652f65e07e53afdcef0f09900e00a68d"
+    },
+    "difference": "test75_needs_exact_manifest_match_and_original_boundary is selected by unittest default test prefix but excluded by a test_ only count",
+    "eventual_execution_receipt_authoritative": true,
+    "per_file": {
+      "test_owned_fixture_coordinator.py": {
+        "underscore_prefix": 16,
+        "unittest_default_test_prefix": 16
+      },
+      "test_owned_fixture_pin.py": {
+        "underscore_prefix": 8,
+        "unittest_default_test_prefix": 8
+      },
+      "test_owned_fixture_run.py": {
+        "underscore_prefix": 20,
+        "unittest_default_test_prefix": 21
+      },
+      "test_owned_recovery_host.py": {
+        "underscore_prefix": 17,
+        "unittest_default_test_prefix": 17
+      }
+    },
+    "tests_executed_by_reviewer": 0,
+    "total_default_prefix": 62,
+    "total_underscore_prefix": 61
+  },
+  "guard_test_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/guard-tests-01.json",
+    "sha256": "9c7e3ed6873adbe30b16cc9d6a08cf8915157229fd184b4cba2d2134792b3ee7"
+  },
+  "independent_guard_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/independent-guard-review-01.json",
+    "sha256": "0a416519c122200e69972e960978f88936d755df1f1164035aea6891e585df82"
+  },
+  "inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-inputs-01.json",
+    "sha256": "5bbabc9c88080f4fd4c79c6224bbfe0b00c1064a4f7908451a97273214f24a14"
+  },
+  "limitations": [
+    "Elapsed time includes tracing/profiling and reflects this one run with its existing cache state; it is not uninstrumented or cold-cache timing.",
+    "4,715,809,975 bytes are logical saved full-file charges, not measured physical disk traffic or unique memory use.",
+    "Deadline is cooperative and cannot preempt a blocked C/OS call; this recorded run remained within it.",
+    "This stage does not measure full05 admission, repeated admission cost, actual maintenance duration, production Host or MLX.",
+    "Historical design01 draft wrapper hash is preserved; current wrapper identity is bound by root-source-review, guard-test receipt and result.",
+    "Fixture test definitions remain unexecuted; counts are static discovery-prefix counts only."
+  ],
+  "recomputed": {
+    "all11123_per_path_open_and_read_counts_exact": true,
+    "all14_receipt_refs_retained": true,
+    "distinct_paths": 11123,
+    "full_returned_matrix_equal": true,
+    "logical_full_file_charges_bytes": 4715809975,
+    "maximum_single_file_bytes": 2180277,
+    "path_order_sha256_exact": true,
+    "read_opens_and_calls": 11569,
+    "recorded_source_and_test_log_hashes_verified": true,
+    "setup_logical_bytes": 17387933,
+    "setup_opens": 18,
+    "source_closure11_matches_accepted_matrix": true,
+    "stage_elapsed_s": 10.055310708004981,
+    "total_elapsed_s": 13.18111200002022,
+    "violations": [],
+    "within_cooperative_deadlines": true
+  },
+  "result": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-result-01.json",
+    "sha256": "0a0f5ffb85992ed6704234c6c6d02e87cffce25c7eb67ae6528bc7dff8fae151"
+  },
+  "review_actions": {
+    "live_probes": 0,
+    "numerical_or_service_work": 0,
+    "target_imports": 0,
+    "target_payload_rescans": 0,
+    "target_reviewer_reruns": 0,
+    "tests_run": 0
+  },
+  "reviewed_artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/revalidation-cost-metadata-02-root-assessment-01.json": "0691ddfae622d1e2f44b18f347b0d4b8bb5363ad47d547b25663b7d026f8c799",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/revalidation-cost-metadata-02-scope-correction-01.json": "9b0d67ca826d3605de33a611a8e5e02cffb39eda4b268ce8fd0c47f3dbaa54a2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/revalidation-cost-metadata-02.json": "d86d6932225abe231601e7f316242b688c818cb3c0b5f68fecac5d86943eedbd",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-checkpoint-03.json": "8a2798806dd6524deb188bc64c531403652f65e07e53afdcef0f09900e00a68d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/design-01.json": "645437257d8f12f85904306aaa4455ccd43861eef9f401ee094c065e4ae1f219",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/guard-tests-01.json": "9c7e3ed6873adbe30b16cc9d6a08cf8915157229fd184b4cba2d2134792b3ee7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/guard-tests-01.txt": "131a7e3adb35fc2fceaa052b1f68830758b0842a1600a7cd9e9aa46ca42cae11",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/independent-guard-review-01.json": "0a416519c122200e69972e960978f88936d755df1f1164035aea6891e585df82",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/root-source-review-01.json": "378df50574eb428a74a77adf001c4fce018c661bf2c3c4937798b3c6d2e0f49d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/run_guard_tests_01.py": "ab3f6ab52aecd91da80652c019f78b2898f4d603254b6716ebe724ef6c4e1e75",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/test_timing_guard.py": "86fd19609903cb077811920fd4ff88fbaf060fa2db2c6cd4accd17a2c214fbd2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review.py": "3acb70ced2ff9adef261897ec3d726a81646efdebe2b0943caa62beb464fe418",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-inputs-01.json": "5bbabc9c88080f4fd4c79c6224bbfe0b00c1064a4f7908451a97273214f24a14",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-result-01.json": "0a0f5ffb85992ed6704234c6c6d02e87cffce25c7eb67ae6528bc7dff8fae151",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/driver.py": "f99dc8d0945cd23c62249b78a3a8a24fa5791f61c57b5ec37fb1bc90b1dbcf63",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/matrix-review-01.json": "42a63f52154aafca5b8502f667cd6af4679aee73d69281551e3c508801c9729d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/process_identity.py": "badc6dd3ddec6aa9bf0c3996aecfab0e40232acad9dae346d6302bbec16803c7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/result_checks.py": "047389e82d8a8e5109ff6c49d4af10dd1bd9b80e254c965e9dd94692529ae5cf",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/test_harness.py": "05e35897981af399fde10ee4a7baabd9dc8f15988179cdd0e0ef3daa78928148",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/test_initial_publication.py": "54462505c1efac8080f6ef60608605d93182a5ef9c9b90f88c455cbd316f024b"
+  },
+  "reviewed_at": "2026-10-17T01:42:48.368167+00:00",
+  "reviewer": "mlx_integration",
+  "root_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/root-source-review-01.json",
+    "sha256": "378df50574eb428a74a77adf001c4fce018c661bf2c3c4937798b3c6d2e0f49d"
+  },
+  "saved_budget": {
+    "bytes": 17196470,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/revalidation-cost-metadata-02.json",
+    "sha256": "d86d6932225abe231601e7f316242b688c818cb3c0b5f68fecac5d86943eedbd"
+  },
+  "saved_root_budget_assessment": {
+    "bytes": 1319,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/revalidation-cost-metadata-02-root-assessment-01.json",
+    "sha256": "0691ddfae622d1e2f44b18f347b0d4b8bb5363ad47d547b25663b7d026f8c799"
+  },
+  "saved_scope_correction": {
+    "bytes": 11210,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/revalidation-cost-metadata-02-scope-correction-01.json",
+    "sha256": "9b0d67ca826d3605de33a611a8e5e02cffb39eda4b268ce8fd0c47f3dbaa54a2"
+  },
+  "schema": "reservoir_service_review_timing_independent_result_review_v1",
+  "scope": "one instrumented read-only frozen service-v3 review; no new execution authorization",
+  "wrapper": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review.py",
+    "sha256": "3acb70ced2ff9adef261897ec3d726a81646efdebe2b0943caa62beb464fe418"
+  }
+}

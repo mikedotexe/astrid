@@ -1,0 +1,123 @@
+{
+  "accounting": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-footprint-03.json",
+    "sha256": "97590a122fda3cca999ce57b9b5586bb95127ae2cc4d258781f5af131eaca635"
+  },
+  "accounting_source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-footprint-03-collect.py",
+    "sha256": "ec86ea48bfe5213bfc8622fa4becafba1d6a65e6e2ae1821fd9051e34682ff29"
+  },
+  "actions": {
+    "desktop_ui_action_attempt": "Read-only app selection refused by Computer Use for com.openai.codex; no workaround attempted.",
+    "headroom_reclaimed_and_verified": false,
+    "models_unloaded": 0,
+    "pause_generation": 528,
+    "pending_user_action": "Close unused Codex windows and browser/preview tabs, keeping this chat and active work open; awaiting confirmation.",
+    "production_mutations": 0,
+    "protected_exact_processes_unchanged": 7,
+    "qualification_cases_started": 0,
+    "runtime_files_unchanged": 237,
+    "settings_changed": 0,
+    "signals_sent": 0,
+    "tests_or_builds_started": 0
+  },
+  "consumer_dependency_audit": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/memory-headroom/consumer-dependency-audit-01.json",
+    "sha256": "79ed2c34f388c6829acb78cb12783c8e36e9a506a89fc101941b8e6d3fc9fb48"
+  },
+  "created_at": "2026-10-16T22:20:57.733584+00:00",
+  "findings": [
+    "Largest measured charges belong to the protected live AI stack; no unused resident Ollama model was identified.",
+    "Gemma4 serves Minime and Astrid fallback. LLaVA serves Astrid camera descriptions even with host ASCII.",
+    "Perception launches short-lived Whisper transcription subprocesses on its30-second audio schedule; the2.586GiB transient child is consistent with that path but exact argv was not captured before it exited naturally. Recurring bursts are a plausible pressure contributor, not a proven allocation diagnosis.",
+    "The current perception parent was0.757GiB at this single sample; no recurrence of the old10.7GiB parent footprint was observed here. This is not a lasting-stability claim.",
+    "Largest measured non-AI single process is a Codex renderer at3.235GiB. Safely reclaiming it requires identifying an unused window/tab; main app and other active work must remain intact.",
+    "Current task inventory includes other active Codex chats; do not quit/restart the whole Codex application or terminate tool processes blindly."
+  ],
+  "host": {
+    "at": "2026-10-16T22:17:49.390602+00:00",
+    "compressor_bytes": 15338078208,
+    "pressure_level": 1,
+    "swap_bytes": 15609563709.44,
+    "wired_bytes": 30903631872
+  },
+  "limits": [
+    "Sequential process footprints are not additive unique RAM and are not guaranteed reclaim amounts.",
+    "No allocator diagnosis established; no task attachment, heap dump or live profiler was used.",
+    "No supported in-place reclamation preserving all engine/provider/perception behavior was found in the reviewed paths.",
+    "One normal-pressure sample is not a passing qualification window; no gates were waived."
+  ],
+  "next_step": "After a concrete non-runtime memory reduction, remeasure pressure/swap and exact identities; use fresh preserved preflight and strict300-second observation08 only if conditions support it. Then independently review before any supervised numerical case. No automatic repeat of the footprint/perception observer.",
+  "physical_memory_gib": 64,
+  "process_accounting": [
+    {
+      "identity_stable": true,
+      "kernel_resident_bytes": 45137920,
+      "parent_pid": 1,
+      "physical_footprint_bytes": 16709726424,
+      "pid": 35303,
+      "role": "Minime native engine",
+      "started_at": "Thu Oct 1 11:16:53 2026"
+    },
+    {
+      "identity_stable": true,
+      "kernel_resident_bytes": 5057314816,
+      "parent_pid": 35486,
+      "physical_footprint_bytes": 11524373072,
+      "pid": 63351,
+      "role": "Ollama Gemma4 worker",
+      "started_at": "Fri Oct 16 11:46:43 2026"
+    },
+    {
+      "identity_stable": true,
+      "kernel_resident_bytes": 170016768,
+      "parent_pid": 1,
+      "physical_footprint_bytes": 11445509440,
+      "pid": 3893,
+      "role": "Astrid coupled model",
+      "started_at": "Wed Sep 30 14:29:07 2026"
+    },
+    {
+      "identity_stable": true,
+      "kernel_resident_bytes": 6045483008,
+      "parent_pid": 35486,
+      "physical_footprint_bytes": 10766332312,
+      "pid": 36054,
+      "role": "Ollama LLaVA worker",
+      "started_at": "Thu Oct 15 13:15:28 2026"
+    },
+    {
+      "identity_stable": true,
+      "kernel_resident_bytes": 2239283200,
+      "parent_pid": 7089,
+      "physical_footprint_bytes": 3474071520,
+      "pid": 48507,
+      "role": "Codex renderer",
+      "started_at": "Mon Oct 12 14:10:33 2026"
+    },
+    {
+      "identity_stable": true,
+      "kernel_resident_bytes": 475856896,
+      "parent_pid": 22354,
+      "physical_footprint_bytes": 2776320136,
+      "pid": 11065,
+      "role": "Transient child of perception; exact job unverified",
+      "started_at": "Fri Oct 16 15:15:03 2026"
+    },
+    {
+      "identity_stable": true,
+      "kernel_resident_bytes": 214351872,
+      "parent_pid": 1,
+      "physical_footprint_bytes": 813286816,
+      "pid": 22354,
+      "role": "Astrid perception parent",
+      "started_at": "Thu Oct 15 18:10:13 2026"
+    }
+  ],
+  "runtime_health_and_host_accounting": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/headroom-investigation-01.json",
+    "sha256": "106839a2c8b022e215ac346c3e9b0de73117d68fa667ae59a4420983a9cd9cce"
+  },
+  "schema": "mlx_headroom_investigation_review_v1",
+  "user_request": "Identify and safely reclaim headroom without disrupting Astrid or Minime."
+}

@@ -1,0 +1,82 @@
+{
+  "copies": [
+    {
+      "archive_path": "host-settle-08-observer.py",
+      "bytes": 11970,
+      "sha256": "114fcec2a3263e98646628189fdb0c1e40f8e3032cb5716e08f00713e3845a78",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-observer.py"
+    },
+    {
+      "archive_path": "host-settle-08-bindings.json",
+      "bytes": 39551,
+      "sha256": "49916f600b4414d41d91ce965051db60de862b9bce597efdccb7ddf43ad7cc06",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-bindings.json"
+    },
+    {
+      "archive_path": "host-settle-08-pre-review-draft-01.txt",
+      "bytes": 11787,
+      "sha256": "867f67d26adc6ceaf639fa4c6998518aaee611630b76fb67fba448d64e973c55",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-pre-review-draft-01.txt"
+    },
+    {
+      "archive_path": "host-settle-08-source-review.json",
+      "bytes": 6068,
+      "sha256": "d1bb2c3d96c864a689e26ca661cc6f35b9605d8961e7d704d0ec6c4c45eeabec",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-source-review.json"
+    },
+    {
+      "archive_path": "host-settle-08-ownership-reaudit.json",
+      "bytes": 2479,
+      "sha256": "da69b1504897dfacd26c2258ed3ac1cbffd469d98bb3748822dc2e54bec602db",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-ownership-reaudit.json"
+    },
+    {
+      "archive_path": "host-settle-08-preflight-01.json",
+      "bytes": 43683,
+      "sha256": "bb2aac4b002541b8e6bb9f064bf3d759b77813f02cb6e4ac726fb8b9301d3fc2",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-preflight-01.json"
+    },
+    {
+      "archive_path": "host-settle-08-preflight-01-root-review.json",
+      "bytes": 1896,
+      "sha256": "e189039367ef7c67a6adab8b5adbeb01ab9ab25a3f1083956f14ec0eca33b638",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-preflight-01-root-review.json"
+    },
+    {
+      "archive_path": "matrix_host_supervision_v2.py",
+      "bytes": 8718,
+      "sha256": "fbaea5a9132b6d1ed92262d70dfadbd5f3d2cc2c93c2b4bb90662ed41e5d687d",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2.py"
+    },
+    {
+      "archive_path": "test_matrix_host_supervision_v2.py",
+      "bytes": 8765,
+      "sha256": "66b3d257c1a36bcb02ca75a57d77e733d5f9f72ffd57890cf17bc16d9ec9e9ad",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/test_matrix_host_supervision_v2.py"
+    },
+    {
+      "archive_path": "matrix-host-supervision-v2-tests-01.json",
+      "bytes": 2592,
+      "sha256": "764dc1b547caff69fd9ce3861fdbb9ea1c2715ca5323a0019ddab2cad0c68027",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-tests-01.json"
+    },
+    {
+      "archive_path": "matrix-host-supervision-v2-tests-01.txt",
+      "bytes": 2704,
+      "sha256": "1dfa578e077d31e5cd8f8cba3e41ea9a3be02ea9f85c7e3589fe334ffceeca7c",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-tests-01.txt"
+    },
+    {
+      "archive_path": "matrix-host-supervision-v2-source-review-01.json",
+      "bytes": 6079,
+      "sha256": "43e46880a67357488256c7210d5799f315567ea6a216bc110595d41beb3d6935",
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-source-review-01.json"
+    }
+  ],
+  "created_at": "2026-10-16T21:50:57.173070+00:00",
+  "numerical_cases_started": 0,
+  "observer_started": false,
+  "production_mutations": 0,
+  "schema": "mlx_private_preparation_archive_v1",
+  "scope": "observer08_and_supervisor_v2_preparation_with_failed_preflight_no_observation"
+}

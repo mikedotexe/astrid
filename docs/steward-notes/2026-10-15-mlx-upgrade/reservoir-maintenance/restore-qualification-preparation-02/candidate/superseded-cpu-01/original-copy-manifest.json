@@ -1,0 +1,37 @@
+{
+  "copied_originals": {
+    "README.md": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/README.md",
+      "sha256": "9945427d018d69a5183197907cb3dd70c7c4155fa2bb35aa049c1bd33579f645"
+    },
+    "qualify_restore.py": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/qualify_restore.py",
+      "sha256": "33bb2f958fc5ec1c6c2eee37d729447f603d68d0872e8bff4284829c1094f4d8"
+    },
+    "reservoir_maintenance_state.py": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/reservoir_maintenance_state.py",
+      "sha256": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594"
+    },
+    "restore_verifier.py": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/restore_verifier.py",
+      "sha256": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3"
+    },
+    "seed_fixture.py": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/seed_fixture.py",
+      "sha256": "4a3507615ff5a8f25f9fcd8d0ca592beee14820c1a591045446fc0a8e190c7b8"
+    },
+    "test_qualification.py": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/test_qualification.py",
+      "sha256": "a2fe486ee0d4b44140dcad23c570addd3eefc5910cfe9ccf1ad61ffc975f9b57"
+    }
+  },
+  "destination": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02",
+  "original_inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/inputs.json",
+    "sha256": "f830793317e866c30f02770581713ff171e5309c36362c4f2f44c069090ab6e7"
+  },
+  "production_qualified": false,
+  "purpose": "Separate per-child admission repair; original frozen01 unchanged.",
+  "schema": "restore_qualification_version_copy_v1",
+  "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01"
+}

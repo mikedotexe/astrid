@@ -1,0 +1,17 @@
+{
+  "accepted": false,
+  "cleanup_reinspection": {
+    "launchctl_returncode": 113,
+    "launchctl_stderr": "Bad request.\nCould not find service \"com.codex.model-handoff-fixture.9ac62110dd5a482d9277592eb6f53cbb\" in domain for user gui: 501\n",
+    "original_pid_output": "",
+    "original_pid_returncode": 1
+  },
+  "debug_privilege_step_succeeded": true,
+  "diagnostic": "Python attempted to read the executable as a script; inspect launchctl debug argument construction.",
+  "failure": "fixture timed out: one-shot held replacement",
+  "fixture_record": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/launchd-handoff-fixture-admin-01.json",
+  "fixture_record_sha256": "1575754f9a0cbdc1c447614c3e72a89e149a81fa28799c8724bc9e7cca68f5a9",
+  "production_transition_attempted": false,
+  "reviewed_at": "2026-10-15T21:34:06.356087+00:00",
+  "schema": "model_handoff_fixture_review_v1"
+}

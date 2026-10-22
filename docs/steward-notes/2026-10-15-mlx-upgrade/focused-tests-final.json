@@ -1,0 +1,27 @@
+{
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "scripts/test_astrid_live_soak.py",
+    "scripts/test_astrid_mlx_soak_compare.py",
+    "scripts/test_astrid_soak_observer.py",
+    "scripts/test_astrid_mlx_candidate.py",
+    "scripts/test_model_environment.py",
+    "scripts/test_model_environment_activate.py",
+    "scripts/test_model_runtime_identity.py",
+    "scripts/test_prepare_mlx_environments.py",
+    "scripts/test_stage_mlx_manifests.py",
+    "scripts/test_qualify_mlx_packages.py",
+    "scripts/test_model_qualification.py"
+  ],
+  "returncode": 0,
+  "completed_at": "2026-10-15T21:01:44.350515+00:00",
+  "log": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/focused-tests-final.txt",
+  "log_sha256": "1d92734a2ce0a8cc6536811dea594a2f8ddc4e7af401497ad867a74bf48286e3",
+  "scope": "CPU/tooling tests only; no GPU qualification or live service changes"
+}

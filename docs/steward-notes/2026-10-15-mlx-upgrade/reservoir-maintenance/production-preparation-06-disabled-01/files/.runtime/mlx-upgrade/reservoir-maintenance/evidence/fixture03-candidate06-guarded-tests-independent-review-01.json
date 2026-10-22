@@ -1,0 +1,80 @@
+{
+  "actual_os_acceptance": false,
+  "candidate06_assessment": "327 tests passed with zero errors/failures/skips/guard violations;46 local executed sources include two exact allowlisted scratch modules and no fixture03 code. No source concern requiring production suite repetition was found.",
+  "candidate06_cpu_evidence_accepted": true,
+  "combined_cpu_acceptance": false,
+  "created_at": "2026-10-17T15:16:27.617093+00:00",
+  "fixture03_cpu_evidence_accepted": false,
+  "fixture03_failure_classification": [
+    "Two publication-failure mocks name their first parameter kind and collide with run(... kind=...) before the intended fault boundary.",
+    "All17 HostTests fail in setUp because their inherited h.HERE/runs mkdir targets the source tree. The reviewed audit guard rejects every attempt before mutation."
+  ],
+  "fixture03_required_followup": "Review separate two-file test-only correction and fresh checkpoint/plan, then root may admit one guarded fixture-only run. Preserve failure01 unchanged.",
+  "limitations": [
+    "This review validates retained guarded evidence, not actual OS, numeric or ProductionHost behavior.",
+    "Historical fixture03 failure is not relabeled; candidate06 success does not make the combined fixture qualification pass.",
+    "Fixture test-only edits alter its artifact hashes and require their own fresh receipt. Historical candidate06 success remains tied to its recorded original full source map.",
+    "Protected runtime payloads were not independently rescanned in this receipt review; their unchanged result is the reviewed runner evidence."
+  ],
+  "production_qualified": false,
+  "records": [
+    {
+      "approved_generated_sources": [],
+      "errors": 2,
+      "executed_local_sources": 29,
+      "failures": 17,
+      "log": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-guarded-tests-01.txt",
+        "sha256": "1683cf57752c3aba4274b428a0a1fa24a3fb27cb78ba68472bcefe82bd072ada"
+      },
+      "passed": false,
+      "plan": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-test-plan-01.json",
+        "sha256": "288ed7a358e923442ec46cce6d4350f46cf04263268c3f1dac4c8b45f461578a"
+      },
+      "receipt": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-guarded-tests-01.json",
+        "sha256": "f93017ad4e6dfaad6b8c4caf21d15facf30a6a66fbd9895ca0e6f078537ded3c"
+      },
+      "tests": 94
+    },
+    {
+      "approved_generated_sources": [
+        "first.py",
+        "second.py"
+      ],
+      "errors": 0,
+      "executed_local_sources": 46,
+      "failures": 0,
+      "log": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production06-guarded-tests-01.txt",
+        "sha256": "8403a156f09fd4c6282c931ae58ebc36eb6311fb2ed1662b3ee892c0f82647bd"
+      },
+      "passed": true,
+      "plan": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production06-test-plan-01.json",
+        "sha256": "4d5ed354140b836929d4d316cd5602a03d62d943c8eac92dca33c87fc0bcba4f"
+      },
+      "receipt": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production06-guarded-tests-01.json",
+        "sha256": "adbf198d57baafe4c74e4a7adeaa6ca059475ec5cf785b435a0f7ef163ad4d4d"
+      },
+      "tests": 327
+    }
+  ],
+  "reviewer": "mlx_upstream",
+  "reviewer_os_probes_or_actions_executed": false,
+  "reviewer_tests_or_target_imports_executed": false,
+  "runner04": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture03_candidate06_tests_04.py",
+    "sha256": "4644998d6314747939206fac56d7468761c88fc964c89189f49708960fca98a2"
+  },
+  "schema": "fixture03_candidate06_actual_test_review_v1",
+  "scope": "retained_guarded_stdlib_evidence_only",
+  "verified_invariants": [
+    "Both actual82-file before/after source maps match their immutable plans;69 artifact maps and module lists match.",
+    "All flags remained false, no new fixture runs appeared, and common protected bytes plus both historical run/abort inventories remained unchanged according to reviewed runner checks.",
+    "Current43 candidate06 checkpoint files and5 external dependencies still match; all26 preserved fixture03 checkpoint01 copies match.",
+    "Runner04 differs only by fresh02 plan/output/scratch paths; all guards and execution semantics unchanged."
+  ]
+}

@@ -1,0 +1,22 @@
+test_accepted_result_dependency_tamper_is_detected (test_child_admission.AdmissionTests.test_accepted_result_dependency_tamper_is_detected) ... ok
+test_actual_run03_review_schema_and_maps_are_required (test_child_admission.AdmissionTests.test_actual_run03_review_schema_and_maps_are_required) ... ok
+test_admission_initialization_uses_exact_entry_ref_and_object (test_child_admission.AdmissionTests.test_admission_initialization_uses_exact_entry_ref_and_object) ... ok
+test_all_ten_children_need_distinct_permits_claims_and_coverage (test_child_admission.AdmissionTests.test_all_ten_children_need_distinct_permits_claims_and_coverage) ... ok
+test_claim_is_one_use_even_if_no_child_start_result_exists (test_child_admission.AdmissionTests.test_claim_is_one_use_even_if_no_child_start_result_exists) ... ok
+test_edited_release_and_permit_never_extend_authority (test_child_admission.AdmissionTests.test_edited_release_and_permit_never_extend_authority) ... ok
+test_failed_result_missing_post_sample_and_rewritten_history_block (test_child_admission.AdmissionTests.test_failed_result_missing_post_sample_and_rewritten_history_block) ... ok
+test_final_recheck_catches_invalidation_after_durable_claim (test_child_admission.AdmissionTests.test_final_recheck_catches_invalidation_after_durable_claim) ... ok
+test_inflight_invalidation_does_not_signal_and_blocks_acceptance (test_child_admission.AdmissionTests.test_inflight_invalidation_does_not_signal_and_blocks_acceptance) ... ok
+test_missing_permit_waits_finitely_and_starts_no_child (test_child_admission.AdmissionTests.test_missing_permit_waits_finitely_and_starts_no_child) ... ok
+test_monitor_revision_allows_only_three_constants (test_child_admission.AdmissionTests.test_monitor_revision_allows_only_three_constants) ... ok
+test_permit_does_not_mask_changed_private_request_or_runtime (test_child_admission.AdmissionTests.test_permit_does_not_mask_changed_private_request_or_runtime) ... ok
+test_release_edit_during_initial_validation_refuses_before_guard_or_child (test_child_admission.AdmissionTests.test_release_edit_during_initial_validation_refuses_before_guard_or_child) ... ok
+test_source_inputs_request_argv_and_monitor_identity_are_bound (test_child_admission.AdmissionTests.test_source_inputs_request_argv_and_monitor_identity_are_bound) ... ok
+test_stale_monitor_or_consecutive_rebound_refuses_before_claim (test_child_admission.AdmissionTests.test_stale_monitor_or_consecutive_rebound_refuses_before_claim) ... ok
+test_timeout_or_interruption_keeps_claim_and_no_next_child (test_child_admission.AdmissionTests.test_timeout_or_interruption_keeps_claim_and_no_next_child) ... ok
+test_wrong_request_or_release_permit_is_rejected (test_child_admission.AdmissionTests.test_wrong_request_or_release_permit_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.147s
+
+OK

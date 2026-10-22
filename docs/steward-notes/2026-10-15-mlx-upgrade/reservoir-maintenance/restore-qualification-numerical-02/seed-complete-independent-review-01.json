@@ -1,0 +1,198 @@
+{
+  "cases": [
+    {
+      "acceptance": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-accepted.json",
+        "sha256": "9a471b134e58f356c3f73e83dc5c218dc3e582b5d69a7a930a52b08d592b57fc"
+      },
+      "after_margin_s": 2.886953353881836,
+      "before_margin_s": 4.098535060882568,
+      "case": "seed",
+      "child_interval_wall": [
+        1792198606.659439,
+        1792198614.6821818
+      ],
+      "claim": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-launch-claim.json",
+        "sha256": "556eb39f95fa61d1f4067a6dce3900895a0b8f6aeced6e1f924972290f7fb9d0"
+      },
+      "coverage": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-coverage.json",
+        "sha256": "487456c1dbc308cc4981ea596bbd7c22dbbed7a34ca3fb4cf4093b70dd8402d1"
+      },
+      "coverage_max_gap_s": 5.005648136138916,
+      "coverage_samples": 7,
+      "duration_s": 8.022742748260498,
+      "natural_exit0_reaped": true,
+      "ordinal": 0,
+      "passed": true,
+      "permit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-permit.json",
+        "sha256": "a206c84bd5ad94636464aaa3946d37724f7acdd0f312e4a122bb9b76c35ed541"
+      },
+      "pid": 63348,
+      "request": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-request.json",
+        "sha256": "ca36fb7dba9644a0f13309de3974cff20b2a171d4548eab98a0ff140e490d2e8"
+      },
+      "root_recorded_child_absent": true,
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-root-review.json",
+        "sha256": "3cf94834a34bbbadd9d9d9f045ba7519f63becc26a657002a5c2080f63806e31"
+      }
+    },
+    {
+      "acceptance": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-accepted.json",
+        "sha256": "5f24e3e302f40239c576f319223f7eaaa3a8df3f793d87ae710779030dd16185"
+      },
+      "after_margin_s": 2.099907159805298,
+      "before_margin_s": 4.155094146728516,
+      "case": "complete",
+      "child_interval_wall": [
+        1792198626.7242181,
+        1792198635.465921
+      ],
+      "claim": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-launch-claim.json",
+        "sha256": "fab3bd8ecd9d01af98935ec96b7c8d27293476605a63c623ab402cc391aa82e2"
+      },
+      "coverage": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-coverage.json",
+        "sha256": "a209ee1d6ef3c2d6e75a0b8c930fcd15f7ce7ec3461da0e16c311eb450da654a"
+      },
+      "coverage_max_gap_s": 5.005648136138916,
+      "coverage_samples": 11,
+      "duration_s": 8.741702795028687,
+      "natural_exit0_reaped": true,
+      "ordinal": 1,
+      "passed": true,
+      "permit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-permit.json",
+        "sha256": "967e0104b50ccfe2d286dcc2c81fbfef32dc2569586da564f7f34b221a6db1ac"
+      },
+      "pid": 63467,
+      "request": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-request.json",
+        "sha256": "81c4e5a57623a1afe4c09a2aebc38e22156c168e9cf5dbd65c9d05aaf72d71e2"
+      },
+      "root_recorded_child_absent": true,
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-root-review.json",
+        "sha256": "e96a5f55b0e0552f32220a13f057d96d8332e8f7775f70c49e4f4de42c5831ae"
+      }
+    }
+  ],
+  "comparison": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/restore-runs/fixture-cpu-qualification-01-complete/comparison.json",
+    "sha256": "95cf1c76b72595c2028e357f0b40e14adda53f10dc1691d3a44b2c4c7014845f"
+  },
+  "created_at": "2026-10-17T01:00:14.872105+00:00",
+  "full_matrix_accepted": false,
+  "host12_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12-review.json",
+    "sha256": "4575ff2c053bf9035bffba083dc747effae0fac42ac08bbbf6df98a8c812e342"
+  },
+  "independently_decoded_npz_fields": 44,
+  "limits": [
+    "Only completed seed00 and positive complete01 were reviewed; later negative controls and final continuous closeout require a separate full-matrix review. No mutable monitor or running case was used as final evidence.",
+    "This establishes the observed synthetic two-backend CPU restore behavior of the exact verifier and source closure, not equality with all102 production handles or unstored LSM internal trajectories.",
+    "Independent raw bytes reproduce all22 field descriptors per handle and expected thermostat/event/startup oracles; actual restored in-memory equality and elapsed-time assertions are evidenced by the reviewed frozen verifier result, not rerun by this reviewer.",
+    "Natural exits and child-absence claims are bound to the launcher/root receipts; the reviewer made no new OS process probe. Host sampling covers observed intervals, not every unsampled instant.",
+    "No production drain, service replacement, provider recovery, enabled release closure or MLX package/model acceptance is authorized by this partial review."
+  ],
+  "mlx_qualified": false,
+  "negative_controls_reviewed": 0,
+  "partial_only": true,
+  "passed": true,
+  "positive_witness": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/restore-runs/fixture-cpu-qualification-01-complete/restore-witness.json",
+    "sha256": "a7bba5fdc0cfb9a03bed3cd226b331f1588f88583ab2b7b0ef0af035619f3014"
+  },
+  "private_copy_files_rehashed": 20,
+  "production_qualified": false,
+  "restore_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/restore-runs/fixture-cpu-qualification-01-complete/restore.log",
+    "sha256": "da1f281aabebed9a4c578f40516b326ee1ecead432a956d0b4aad58feb4201f5"
+  },
+  "reviewer": "mlx_integration",
+  "reviewer_actions": {
+    "live_probes": 0,
+    "numerical_workloads": 0,
+    "read_only_retained_source_and_evidence": true,
+    "signals": 0,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "run_release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-release-01.json",
+    "sha256": "aea951252c7ace3477be4106abec05672c23888284a74bade24b1da44f541733"
+  },
+  "schema": "reservoir_restore_partial_independent_review_v1",
+  "seed": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/seed/seed-receipt.json",
+    "sha256": "b14b5c145988b5916f2870214251dfb73885538c48fc856c83710e55b4dfd980"
+  },
+  "source_and_runtime_binding_verified": true,
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/independent-source-review-01.json",
+    "sha256": "65c745f321c12ac2d88e50b45711c7437f49dac300f168a6905d92ae518cb89e"
+  },
+  "state": "accepted_seed_and_positive_case_only",
+  "stored_state": {
+    "qualification_numpy": {
+      "backend": "numpy",
+      "elapsed_time_semantics_asserted_by_frozen_actual_verifier": true,
+      "fields": 22,
+      "history_shapes": [
+        [
+          70
+        ],
+        [
+          70,
+          3
+        ]
+      ],
+      "mode": "rehearse",
+      "n_nodes": 192,
+      "raw_stored_field_bytes_independently_verified": true,
+      "restored_max_event_seq": 19,
+      "retained_thermostat_rows_each": 48,
+      "stored_event_seq": 10,
+      "thermostat_layers": 3,
+      "thermostat_targets_after_floors": [
+        0.2,
+        0.24,
+        null
+      ],
+      "tick_count": 123
+    },
+    "qualification_shadow__lsm": {
+      "backend": "lsm_shadow",
+      "elapsed_time_semantics_asserted_by_frozen_actual_verifier": true,
+      "fields": 22,
+      "history_shapes": [
+        [
+          70
+        ],
+        [
+          70,
+          3
+        ]
+      ],
+      "mode": "hold",
+      "n_nodes": 192,
+      "raw_stored_field_bytes_independently_verified": true,
+      "restored_max_event_seq": 20,
+      "retained_thermostat_rows_each": 48,
+      "stored_event_seq": 11,
+      "thermostat_layers": 3,
+      "thermostat_targets_after_floors": [
+        0.2,
+        0.24,
+        null
+      ],
+      "tick_count": 124
+    }
+  }
+}

@@ -1,0 +1,221 @@
+{
+  "cycle": 2,
+  "request_id": "provider-77883-1318342261972958",
+  "state_before": {
+    "fixture_astrid": {
+      "ticks": 11
+    },
+    "fixture_minime": {
+      "ticks": 7
+    }
+  },
+  "state_after": {
+    "fixture_astrid": {
+      "ticks": 22
+    },
+    "fixture_minime": {
+      "ticks": 7
+    }
+  },
+  "provider_events": [
+    {
+      "argv": [
+        "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/maintenance_fixture_worker.py",
+        "--root",
+        "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00",
+        "--token",
+        "6bc1283024024a53be0090debfaf4e00",
+        "--role",
+        "provider",
+        "--drain-seconds",
+        "6.0"
+      ],
+      "at": "2026-10-16T03:39:24.647904+00:00",
+      "cwd": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00",
+      "monotonic": 1318342.262012583,
+      "phase": "started",
+      "pid": 77883,
+      "role": "provider",
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    },
+    {
+      "at": "2026-10-16T03:39:24.648675+00:00",
+      "monotonic": 1318342.262785,
+      "phase": "idle",
+      "pid": 77883,
+      "role": "provider",
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    },
+    {
+      "at": "2026-10-16T03:39:24.706473+00:00",
+      "monotonic": 1318342.320581041,
+      "phase": "generation_admitted",
+      "pid": 77883,
+      "request_id": "provider-77883-1318342261972958",
+      "role": "provider",
+      "ticks": 11,
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    },
+    {
+      "at": "2026-10-16T03:39:24.706675+00:00",
+      "monotonic": 1318342.320785125,
+      "phase": "stop_received",
+      "pid": 77883,
+      "request_id": "provider-77883-1318342261972958",
+      "role": "provider",
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    },
+    {
+      "at": "2026-10-16T03:39:30.717397+00:00",
+      "monotonic": 1318348.331543458,
+      "phase": "checkin_sent",
+      "pid": 77883,
+      "request_id": "provider-77883-1318342261972958",
+      "role": "provider",
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    },
+    {
+      "at": "2026-10-16T03:39:30.752754+00:00",
+      "monotonic": 1318348.366903625,
+      "phase": "checkin_acknowledged",
+      "pid": 77883,
+      "request_id": "provider-77883-1318342261972958",
+      "role": "provider",
+      "ticks": 11,
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    },
+    {
+      "at": "2026-10-16T03:39:30.752899+00:00",
+      "monotonic": 1318348.367049875,
+      "phase": "drained",
+      "pid": 77883,
+      "request_id": "provider-77883-1318342261972958",
+      "role": "provider",
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    }
+  ],
+  "reservoir_events": [
+    {
+      "argv": [
+        "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/maintenance_fixture_worker.py",
+        "--root",
+        "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00",
+        "--token",
+        "6bc1283024024a53be0090debfaf4e00",
+        "--role",
+        "reservoir",
+        "--drain-seconds",
+        "6.0"
+      ],
+      "at": "2026-10-16T03:39:24.567935+00:00",
+      "cwd": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00",
+      "monotonic": 1318342.182044041,
+      "phase": "started",
+      "pid": 77876,
+      "role": "reservoir",
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    },
+    {
+      "at": "2026-10-16T03:39:24.568705+00:00",
+      "monotonic": 1318342.182814208,
+      "phase": "restored",
+      "pid": 77876,
+      "role": "reservoir",
+      "state": {
+        "fixture_astrid": {
+          "ticks": 11
+        },
+        "fixture_minime": {
+          "ticks": 7
+        }
+      },
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    },
+    {
+      "at": "2026-10-16T03:39:30.743237+00:00",
+      "monotonic": 1318348.357384083,
+      "phase": "checkin_applied",
+      "pid": 77876,
+      "request_id": "provider-77883-1318342261972958",
+      "role": "reservoir",
+      "state": {
+        "fixture_astrid": {
+          "ticks": 22
+        },
+        "fixture_minime": {
+          "ticks": 7
+        }
+      },
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    },
+    {
+      "at": "2026-10-16T03:39:30.812576+00:00",
+      "monotonic": 1318348.426725208,
+      "phase": "stop_received",
+      "pid": 77876,
+      "role": "reservoir",
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    },
+    {
+      "at": "2026-10-16T03:39:36.821706+00:00",
+      "handles": [
+        "fixture_astrid",
+        "fixture_minime"
+      ],
+      "monotonic": 1318354.435894125,
+      "phase": "final_snapshot_started",
+      "pid": 77876,
+      "role": "reservoir",
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    },
+    {
+      "at": "2026-10-16T03:39:36.824129+00:00",
+      "monotonic": 1318354.438318291,
+      "name": "fixture_astrid",
+      "phase": "handle_saved",
+      "pid": 77876,
+      "role": "reservoir",
+      "token": "6bc1283024024a53be0090debfaf4e00",
+      "value": {
+        "ticks": 22
+      }
+    },
+    {
+      "at": "2026-10-16T03:39:36.824558+00:00",
+      "monotonic": 1318354.438748583,
+      "name": "fixture_minime",
+      "phase": "handle_saved",
+      "pid": 77876,
+      "role": "reservoir",
+      "token": "6bc1283024024a53be0090debfaf4e00",
+      "value": {
+        "ticks": 7
+      }
+    },
+    {
+      "at": "2026-10-16T03:39:36.824679+00:00",
+      "monotonic": 1318354.438869125,
+      "phase": "final_snapshot_complete",
+      "pid": 77876,
+      "role": "reservoir",
+      "state": {
+        "fixture_astrid": {
+          "ticks": 22
+        },
+        "fixture_minime": {
+          "ticks": 7
+        }
+      },
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    },
+    {
+      "at": "2026-10-16T03:39:36.824802+00:00",
+      "monotonic": 1318354.4389925,
+      "phase": "drained",
+      "pid": 77876,
+      "role": "reservoir",
+      "token": "6bc1283024024a53be0090debfaf4e00"
+    }
+  ],
+  "state_sha256": "59ea9f4f2dd213f27a0933ebe125b631ece43d1dd4d8d2526503974f1723717c"
+}

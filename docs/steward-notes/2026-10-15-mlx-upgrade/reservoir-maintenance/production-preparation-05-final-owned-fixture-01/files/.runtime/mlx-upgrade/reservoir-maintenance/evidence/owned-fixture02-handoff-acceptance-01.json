@@ -1,0 +1,44 @@
+{
+  "accepted_preparation": true,
+  "actual_os_fixture_accepted": false,
+  "actual_os_fixture_executed": false,
+  "command": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-terminal-command-01.txt",
+    "sha256": "70bd0005916a558da28930efbbcc20f4362b6cea40524e8932eadabee72fc3f7"
+  },
+  "created_at": "2026-10-17T02:05:13.602979+00:00",
+  "exact_command_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-exact-command-independent-review-01.json",
+    "sha256": "4f277bfbc16dafc3cf07c8cd3e294231dad0bcaac7e7e5ec9f1c9ad16ac71232"
+  },
+  "production_qualified": false,
+  "read_only_validation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-validation-01.json",
+    "sha256": "56ccca1d03c45cee140bf2fd19f3bb71f9f648f9c88f7ff67a256620ed20e1b1"
+  },
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-01.json",
+    "sha256": "aa1273e375e376d51ea70be44b1bbb684f1a0a5c3fc96a7ca0bb5bc192ee215c"
+  },
+  "remaining_after_fixture": [
+    "Preserve all raw results and any failure; do not automatically rerun.",
+    "Collect independent actual parent absence and independently recompute full retained fixture proof.",
+    "Prepare and time full production admission and maintenance under fresh runtime/ownership bindings before any live service action.",
+    "Deploy only accepted reservoir repair; then replace failed baseline with a clean full2-hour passive baseline before MLX qualification."
+  ],
+  "retry_authorized": false,
+  "root_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-handoff-root-review-01.json",
+    "sha256": "f9f30edc6d1cce852fe484c2af7f54507320a49c97b8c673552ba20a335eeee4"
+  },
+  "schema": "owned_fixture02_handoff_acceptance_v1",
+  "scope": "owned_fixture_only",
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-source-review-01.json",
+    "sha256": "02c5e463adfef20776e7a50b012841ef624c48eb20d3afc173bd7c90b573ef14"
+  },
+  "status": "ready_for_one_user_interactive_owned_fixture_command",
+  "unused_result": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/evidence/owned-recovery-4327212894d64b31980b98bf3fbd7fc2-result.json",
+  "unused_run_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2",
+  "user_action_required": "One ordinary-user interactive Terminal invocation; only the guarded generated-target launchctl debug calls request administrator authentication."
+}

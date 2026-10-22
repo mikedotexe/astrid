@@ -1,0 +1,201 @@
+{
+  "schema": "perception_restart_readiness_review_v1",
+  "reviewed_at": "2026-10-16T01:07:34.769817+00:00",
+  "reviewer": "codex-mlx-upstream",
+  "mode": "read_only_review",
+  "runtime_mutations": [],
+  "conclusion": "A single targeted SIGINT followed by bounded observation is the existing cooperative shutdown path. Successful completion and released physical memory are not guaranteed; do not equate review with an executed or accepted recovery.",
+  "memory_evidence": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/memory-consumers-20261016T0057Z.json",
+    "sha256": "b28ffe55996c0e0223acafbaa5e1efc969654ed03e731eff91f63a3b3a24117b"
+  },
+  "identity_evidence": {
+    "process": {
+      "argv": [
+        "ps",
+        "-p",
+        "3895",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "returncode": 0,
+      "stdout": " 3895     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic\n",
+      "stderr": ""
+    },
+    "launchd": {
+      "argv": [
+        "launchctl",
+        "print",
+        "gui/501/com.astrid.perception-host-ascii"
+      ],
+      "returncode": 0,
+      "stdout": "state = running\nprogram = /bin/bash\nminimum runtime = 5\nexit timeout = 5\nruns = 1\npid = 3895\nlast exit code = (never exited)\nstate = active\nstate = active\nproperties = keepalive | runatload | inferred program | managed LWCR | has LWCR\n",
+      "stderr": ""
+    },
+    "direct_children_snapshot": [],
+    "child_snapshot_command": [
+      "ps",
+      "-axo",
+      "pid=,ppid=,lstart=,comm="
+    ],
+    "child_snapshot_returncode": 0,
+    "snapshot_is_not_future_child_exclusion": true
+  },
+  "bound_files": [
+    {
+      "path": "/Users/v/other/astrid/capsules/perception/perception.py",
+      "sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a",
+      "size_bytes": 64948,
+      "mtime_ns": 1778340939690641106
+    },
+    {
+      "path": "/Users/v/other/astrid/capsules/perception/host_audio_fallback.py",
+      "sha256": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69",
+      "size_bytes": 3017,
+      "mtime_ns": 1778340900826383616
+    },
+    {
+      "path": "/Users/v/other/astrid/scripts/launchd_astrid_perception_host_ascii.sh",
+      "sha256": "969323a229a50bb5fe3dda477d2672df198604b6c049480518061a079b06c9f2",
+      "size_bytes": 846,
+      "mtime_ns": 1778266187840257897
+    },
+    {
+      "path": "/Users/v/other/astrid/launchd/com.astrid.perception-host-ascii.plist",
+      "sha256": "76531cb3b17e20836081b320fc9cd51c34d29068457f5bf76c6b15997e4b1e4e",
+      "size_bytes": 1365,
+      "mtime_ns": 1778338943704598620
+    },
+    {
+      "path": "/Users/v/Library/LaunchAgents/com.astrid.perception-host-ascii.plist",
+      "sha256": "76531cb3b17e20836081b320fc9cd51c34d29068457f5bf76c6b15997e4b1e4e",
+      "size_bytes": 1365,
+      "mtime_ns": 1778339202892080589
+    },
+    {
+      "path": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py",
+      "sha256": "749f15c02d29ea7f79e779b92e066422f8267d3fa0afc7e08b497a56c703897c",
+      "size_bytes": 7487,
+      "mtime_ns": 1770132740000000000
+    },
+    {
+      "path": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py",
+      "sha256": "26b3db4e83c14b624f11907ee81f1fc76d54c3bb56617d6888af60c066d21dcd",
+      "size_bytes": 90781,
+      "mtime_ns": 1770132740000000000
+    },
+    {
+      "path": "/Users/v/.local/share/uv/tools/mlx-whisper/lib/python3.12/site-packages/mlx_whisper/audio.py",
+      "sha256": "1be84770852520df7c980376e133155b9a0b127ed59f28a297df0a96987b12eb",
+      "size_bytes": 5090,
+      "mtime_ns": 1773554748391993770
+    }
+  ],
+  "facts": [
+    {
+      "source": "/Users/v/other/astrid/scripts/launchd_astrid_perception_host_ascii.sh",
+      "lines": [
+        16,
+        31
+      ],
+      "finding": "Wrapper execs Python directly, with no wrapper signal trap; installed launchd KeepAlive is true and next launch retains current arguments/configuration."
+    },
+    {
+      "source": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py",
+      "lines": [
+        111,
+        123,
+        159,
+        166
+      ],
+      "finding": "asyncio Runner installs the deferred first-SIGINT handler only on the main thread if incoming SIGINT handler is default_int_handler. First signal cancels the task; second raises KeyboardInterrupt immediately. Static source cannot prove the live in-process handler."
+    },
+    {
+      "source": "/Users/v/other/astrid/capsules/perception/perception.py",
+      "lines": [
+        1642,
+        1707,
+        1746,
+        1757
+      ],
+      "finding": "One synchronous perception cycle completes before its only await. With normal Runner SIGINT handling, pending cancellation is delivered at that await, and main logs a cooperative stop."
+    },
+    {
+      "source": "/Users/v/other/astrid/capsules/perception/perception.py",
+      "lines": [
+        125,
+        138,
+        215,
+        585,
+        587,
+        694,
+        697,
+        1327,
+        1340,
+        1397,
+        1427
+      ],
+      "finding": "Camera native calls have no explicit deadline. Vision HTTP timeout 60s, RASCII timeout 30s, rec timeout 8s and Whisper timeout 60s bound ordinary child/request waits, but do not establish a hard 600s global shutdown deadline."
+    },
+    {
+      "source": "/Users/v/.local/share/uv/tools/mlx-whisper/lib/python3.12/site-packages/mlx_whisper/audio.py",
+      "lines": [
+        41,
+        59
+      ],
+      "finding": "Whisper can spawn ffmpeg without a subprocess timeout. This is a genuine possible descendant; normal operation decodes the five-second WAV then exits."
+    },
+    {
+      "source": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py",
+      "lines": [
+        554,
+        574
+      ],
+      "finding": "Existing subprocess.run timeout or immediate KeyboardInterrupt kills only its direct child and waits. A killed Whisper process does not by itself prove its ffmpeg descendant exited. Under normal first-SIGINT deferred cancellation the parent lets the synchronous subprocess finish."
+    },
+    {
+      "source": "/Users/v/other/astrid/capsules/perception/perception.py",
+      "lines": [
+        51,
+        110,
+        1452,
+        1458
+      ],
+      "finding": "Authored/persisted perceptions and frames are retained on disk. Startup can rename oldest perception files into archive; it does not delete their content."
+    },
+    {
+      "source": "/Users/v/other/astrid/capsules/perception/perception.py",
+      "lines": [
+        1625,
+        1640
+      ],
+      "finding": "Restart resets volatile host ASCII history(max 25), timing and crossfade state, and may immediately schedule fresh camera/vision/audio work. Legacy pause flags point at an absent consciousness-bridge directory, not a currently proven maintenance drain."
+    }
+  ],
+  "reviewed_bounded_plan": {
+    "preconditions": [
+      "Finish the independent host observation window first.",
+      "Recheck exact perception PID 3895 and process start, command arguments, source/launcher/plist hashes and interpreter resolution.",
+      "Create a durable maintenance receipt before signaling. Record unaffected provider/bridge/Minime/Ollama top-level process identities and perception descendants."
+    ],
+    "action": "Send exactly one SIGINT to the verified perception parent only. No process-group signal, bootout, forced kickstart, repeated SIGINT or escalation.",
+    "observation": "Wait at most 600 seconds for old parent exit and a stable KeepAlive replacement with expected interpreter/arguments. Track descendants during this interval and require no surviving old owned descendants; require fresh expected artifacts/status. Preserve any failure without further signals.",
+    "postconditions": [
+      "Provider, bridge, Minime and top-level Ollama PID/start identities remain unchanged.",
+      "No authored history/config/package changes; preserve archive moves produced by normal perception startup.",
+      "Measure actual memory-pressure/swap/footprint improvement after settling; no promise of 10.7 GiB physical memory release.",
+      "Start a fresh 2 hour passive baseline before MLX qualification because this relevant memory/serving consumer changed."
+    ],
+    "signal_handler_live_state_proven": false,
+    "guaranteed_completion": false,
+    "guaranteed_memory_reclaimed_bytes": null,
+    "external_runtime_actions_performed": false
+  },
+  "memory_interpretation": {
+    "observed_perception_footprint": "10.7G",
+    "observed_total_resident_mappings": "1.5G",
+    "observed_swapped_compressed_mappings": "9.8G",
+    "finding": "Large retained heap merits a bounded recovery attempt but does not establish a leak or sufficient capacity for another full model. Footprint, resident mappings and swap are overlapping accounting views and must not be summed."
+  },
+  "baseline_note": "Perception PID/source/plist are absent from the 105 bound identity files and sampled service labels in the initial passive observation; the relevant-service-change policy still requires a fresh baseline."
+}

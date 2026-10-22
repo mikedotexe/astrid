@@ -1,0 +1,57 @@
+{
+  "schema": "passive_proc_rusage_continuation_launch_v1",
+  "launched_at": "2026-10-16T01:49:59.640737+00:00",
+  "observer_pid": 37412,
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-I",
+    "-B",
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive_rusage_v2.py",
+    "--pid",
+    "22354",
+    "--expected-start",
+    "Thu Oct 15 18:10:13 2026",
+    "--expected-command",
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+    "--abi",
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/proc-rusage-abi.json",
+    "--output",
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive-rusage-02.json",
+    "--duration",
+    "5520",
+    "--interval",
+    "60"
+  ],
+  "script": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive_rusage_v2.py",
+    "sha256": "2da04fd5dcee82c805ddd1f1f68d6e2f2c99a11954fa1fafa4f955a2d87ca6fc"
+  },
+  "review": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/passive-rusage-v2-review.json",
+    "sha256": "6483c406243e97bd776453625716eadbd5441dfcdb542f7b3ba2bceef6a2013f"
+  },
+  "abi": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/proc-rusage-abi.json",
+    "sha256": "29ee554e75465dc05e042b0a7c5fc63ff975d021e64a148c61bbbc5de123a3bc"
+  },
+  "prior_completed_run": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive-rusage-01.json",
+    "sha256": "4772086301d19df5bcc2d94bad6420b383facea307a7af7a83ec4bca94bd05ff"
+  },
+  "output": "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive-rusage-02.json",
+  "duration_seconds": 5520,
+  "interval_seconds": 60,
+  "requested_end_not_before": "2026-10-16T03:21:00+00:00",
+  "estimated_end": "2026-10-16T03:21:59.640737+00:00",
+  "automatic_repeat": false,
+  "target_mutations": false,
+  "scope": "One finite public proc_pid_rusage accounting run with unchanged exact PID/start/command plus per-sample kernel UUID/start checks. No task attach/suspend/signal or API fallback. Heartbeat may read the final raw output after estimated_end.",
+  "launch_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive-rusage-02-launch.json",
+    "sha256": "7c6c0d727d5bc464f6b2d61666b45ecf10a9c187ce0ce3b822d2994bf726565b"
+  },
+  "first_sample_at": "2026-10-16T01:49:59.709910+00:00",
+  "first_footprint_bytes": 437322952,
+  "same_kernel_identity_as_prior_run": true,
+  "state_at_verification": "running"
+}

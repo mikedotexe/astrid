@@ -1,0 +1,408 @@
+{
+  "case06_read_or_reviewed": false,
+  "cases": [
+    {
+      "actual_end": 1792196465.563065,
+      "actual_start": 1792196365.785859,
+      "applied_pushes": 0,
+      "case_duration_s": 99.77720594406128,
+      "child": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/runs/03-original-aggregate/child.json",
+        "sha256": "17f8d1ba525d6925ed908dd429a24a86a0fbe7744197ed20e49e394e1209ace4"
+      },
+      "events": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/runs/03-original-aggregate/events.jsonl",
+        "sha256": "5a6d802874c197a896710c339afbbc3582b958e3e769428c2a764294c775b316"
+      },
+      "final_target_event_sequence": 111,
+      "final_target_tick": 1101,
+      "host": {
+        "build_health_identity_or_gap_failures": 0,
+        "coverage_margin_after_s": 4.717986822128296,
+        "coverage_margin_before_s": 220.18273830413818,
+        "coverage_passed": true,
+        "max_gap_s": 5.008164167404175,
+        "min_gap_s": 4.67984938621521,
+        "positive_consecutive_swap_increases": 0,
+        "pressure1_samples": 66,
+        "protected_files": 237,
+        "protected_processes": 7,
+        "release_snapshot_age_s": 5.455663204193115,
+        "snapshot_samples": 66
+      },
+      "host_snapshot": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-03-supervision.json",
+        "sha256": "4286261c5ed5fc3d3925007cec6953c153e49053f364bdb058ef2766f8b3570b"
+      },
+      "identity": {
+        "child_exit_code": 0,
+        "child_pid": 49835,
+        "driver_pid": 49800,
+        "later_pid_start_full_argv_equal": true,
+        "placeholder_observations": 0,
+        "publication_observations": 1,
+        "raw_publication_and_transition_proofs_independently_recomputed": true,
+        "reviewer_live_absence_probe": false,
+        "root_recorded_owned_absence": {
+          "49800": true,
+          "49835": true
+        }
+      },
+      "injected_per_save_minimum_s": 0.19607843137254902,
+      "negative_control_expected": true,
+      "ordinal": 3,
+      "passed_as_expected_case": true,
+      "periodic_batch_duration_s": 24.326032125158235,
+      "periodic_save_duration_range_s": [
+        0.22256479202769697,
+        0.23785291612148285
+      ],
+      "probe_timings": [
+        {
+          "attempt_duration_s": 2.007054208079353,
+          "outcome": "expected_opening_handshake_timeout",
+          "sequence": 1,
+          "trigger_lag_s": 0.01907075010240078,
+          "writer_index": 1
+        },
+        {
+          "attempt_duration_s": 2.0017430421430618,
+          "outcome": "expected_opening_handshake_timeout",
+          "sequence": 2,
+          "trigger_lag_s": 0.025010667042806745,
+          "writer_index": 34
+        },
+        {
+          "attempt_duration_s": 2.0103096668608487,
+          "outcome": "expected_opening_handshake_timeout",
+          "sequence": 3,
+          "trigger_lag_s": 0.021456541027873755,
+          "writer_index": 68
+        }
+      ],
+      "release": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-release-03.json",
+        "sha256": "34c78c49dc1ecd49a6b745e0ff3720d9566c59f1fb224b832429ed80c619da36"
+      },
+      "release_supervision": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-release-03-supervision.json",
+        "sha256": "9a87981792cdcb942a5a699efcfe5b7d483df40db0fd480c7fd44df8c8fccc17"
+      },
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/runs/03-original-aggregate/result.json",
+        "sha256": "8329631d059faf78852202799f160bf27383163fa4c1248b723070aeed35e90e"
+      },
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-03-root-review.json",
+        "sha256": "9daa8b2626d14329203275d5628d65500e6d15f7a8328004d1421bb796820892"
+      },
+      "run": "03-original-aggregate",
+      "saved_state": {
+        "backend": "numpy",
+        "event_sequence_continuation_recorded": true,
+        "full_thermostat_signatures_verified": 408,
+        "handles": 102,
+        "nodes": 192,
+        "raw_npz_descriptor_payloads_and_clock_fields_verified": 408,
+        "restore_sequences_match_saved_final_fields": true,
+        "retained_file_hashes_verified": 816,
+        "roundtrip_snapshots": 102,
+        "seed_periodic_final_snapshots": 306,
+        "two_actual_child_restore_receipts_complete": true
+      },
+      "variant": "original"
+    },
+    {
+      "actual_end": 1792196581.888227,
+      "actual_start": 1792196480.594054,
+      "applied_pushes": 3,
+      "case_duration_s": 101.29417300224304,
+      "child": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/runs/04-candidate-aggregate/child.json",
+        "sha256": "4462971a759a7c14cb0ff6bd45ae2a4f5079e2617ada48dba971e38e386a20d5"
+      },
+      "events": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/runs/04-candidate-aggregate/events.jsonl",
+        "sha256": "c31e2d704befda58229f98a55bcc5d1acd638ca65052b9449fa69ebdb26994b3"
+      },
+      "final_target_event_sequence": 114,
+      "final_target_tick": 1122,
+      "host": {
+        "build_health_identity_or_gap_failures": 0,
+        "coverage_margin_after_s": 8.392070055007935,
+        "coverage_margin_before_s": 334.99093317985535,
+        "coverage_passed": true,
+        "max_gap_s": 5.008164167404175,
+        "min_gap_s": 4.67984938621521,
+        "positive_consecutive_swap_increases": 0,
+        "pressure1_samples": 90,
+        "protected_files": 237,
+        "protected_processes": 7,
+        "release_snapshot_age_s": 5.2622551918029785,
+        "snapshot_samples": 90
+      },
+      "host_snapshot": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-04-supervision.json",
+        "sha256": "1d2b980ce19112980c5ffa8ab914185bf770ce17be6e0cb061d1bfeb8b6076f0"
+      },
+      "identity": {
+        "child_exit_code": 0,
+        "child_pid": 50726,
+        "driver_pid": 50694,
+        "later_pid_start_full_argv_equal": true,
+        "placeholder_observations": 0,
+        "publication_observations": 1,
+        "raw_publication_and_transition_proofs_independently_recomputed": true,
+        "reviewer_live_absence_probe": false,
+        "root_recorded_owned_absence": {
+          "50694": true,
+          "50726": true
+        }
+      },
+      "injected_per_save_minimum_s": 0.19607843137254902,
+      "negative_control_expected": false,
+      "ordinal": 4,
+      "passed_as_expected_case": true,
+      "periodic_batch_duration_s": 24.543637374881655,
+      "periodic_save_duration_range_s": [
+        0.22286791703663766,
+        0.24125204095616937
+      ],
+      "probe_timings": [
+        {
+          "ack_before_batch_end_s": 22.139898624969646,
+          "attempt_duration_s": 3.577304207952693,
+          "opening_s": 1.6621120409108698,
+          "outcome": "acknowledged_and_exact_state_pulled",
+          "pull_receive_s": 0.7130347909405828,
+          "push_ack_s": 0.7217320420313627,
+          "sequence": 1,
+          "trigger_lag_s": 0.010716292075812817,
+          "writer_index": 1
+        },
+        {
+          "ack_before_batch_end_s": 14.267516792053357,
+          "attempt_duration_s": 3.6069380422122777,
+          "opening_s": 1.6696324171498418,
+          "outcome": "acknowledged_and_exact_state_pulled",
+          "pull_receive_s": 0.7155938751529902,
+          "push_ack_s": 0.735098792007193,
+          "sequence": 2,
+          "trigger_lag_s": 0.012513457797467709,
+          "writer_index": 34
+        },
+        {
+          "ack_before_batch_end_s": 6.072594542056322,
+          "attempt_duration_s": 3.5880616668146104,
+          "opening_s": 1.6533017919864506,
+          "outcome": "acknowledged_and_exact_state_pulled",
+          "pull_receive_s": 0.7230700831860304,
+          "push_ack_s": 0.7263500420376658,
+          "sequence": 3,
+          "trigger_lag_s": 0.036936708027496934,
+          "writer_index": 68
+        }
+      ],
+      "release": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-release-04.json",
+        "sha256": "cc67075cc9b93d6f2167ea8d366ddd9ea23447ffa1332b3a5ef6a1a0509f0fca"
+      },
+      "release_supervision": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-release-04-supervision.json",
+        "sha256": "71a2a64cdb10bb7bd558f5f326be964fdbd3907c3532ed234bb0204f7e07d805"
+      },
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/runs/04-candidate-aggregate/result.json",
+        "sha256": "ed7ff1a5630c2340603dc7e607abbbb9627fc5253c835448b0fc3a5509a79ced"
+      },
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-04-root-review.json",
+        "sha256": "8fd7d34ab18e7a3bc1c908b028b5059a1c4dc703956141cfb3c85a185e8ca0e4"
+      },
+      "run": "04-candidate-aggregate",
+      "saved_state": {
+        "backend": "numpy",
+        "event_sequence_continuation_recorded": true,
+        "full_thermostat_signatures_verified": 408,
+        "handles": 102,
+        "nodes": 192,
+        "raw_npz_descriptor_payloads_and_clock_fields_verified": 408,
+        "restore_sequences_match_saved_final_fields": true,
+        "retained_file_hashes_verified": 816,
+        "roundtrip_snapshots": 102,
+        "seed_periodic_final_snapshots": 306,
+        "two_actual_child_restore_receipts_complete": true
+      },
+      "variant": "candidate"
+    },
+    {
+      "actual_end": 1792196699.437551,
+      "actual_start": 1792196599.9781618,
+      "applied_pushes": 3,
+      "case_duration_s": 99.45938920974731,
+      "child": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/runs/05-candidate-aggregate-reverse/child.json",
+        "sha256": "7b717d0637a2e8112651b1292c70ab6e6464fba04e76dd1a64d5a746db27693a"
+      },
+      "events": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/runs/05-candidate-aggregate-reverse/events.jsonl",
+        "sha256": "a9cc7f6dcc932706bc3a5f818ee769e554a7b42c20e0b93330b3c8866112637c"
+      },
+      "final_target_event_sequence": 114,
+      "final_target_tick": 1122,
+      "host": {
+        "build_health_identity_or_gap_failures": 0,
+        "coverage_margin_after_s": 15.842006921768188,
+        "coverage_margin_before_s": 454.3750410079956,
+        "coverage_passed": true,
+        "max_gap_s": 5.008303880691528,
+        "min_gap_s": 4.67984938621521,
+        "positive_consecutive_swap_increases": 0,
+        "pressure1_samples": 115,
+        "protected_files": 237,
+        "protected_processes": 7,
+        "release_snapshot_age_s": 4.642815828323364,
+        "snapshot_samples": 115
+      },
+      "host_snapshot": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-05-supervision.json",
+        "sha256": "e946bf1071bfc166ad2c729a1eaf7844f10b72271702e94a7db9ce0593d45000"
+      },
+      "identity": {
+        "child_exit_code": 0,
+        "child_pid": 51580,
+        "driver_pid": 51550,
+        "later_pid_start_full_argv_equal": true,
+        "placeholder_observations": 0,
+        "publication_observations": 1,
+        "raw_publication_and_transition_proofs_independently_recomputed": true,
+        "reviewer_live_absence_probe": false,
+        "root_recorded_owned_absence": {
+          "51550": true,
+          "51580": true
+        }
+      },
+      "injected_per_save_minimum_s": 0.19607843137254902,
+      "negative_control_expected": false,
+      "ordinal": 5,
+      "passed_as_expected_case": true,
+      "periodic_batch_duration_s": 24.45875525008887,
+      "periodic_save_duration_range_s": [
+        0.22356312489137053,
+        0.24331854190677404
+      ],
+      "probe_timings": [
+        {
+          "ack_before_batch_end_s": 22.054327083053067,
+          "attempt_duration_s": 3.5868142088875175,
+          "opening_s": 1.6742604169994593,
+          "outcome": "acknowledged_and_exact_state_pulled",
+          "pull_receive_s": 0.7135665828827769,
+          "push_ack_s": 0.7182576251216233,
+          "sequence": 1,
+          "trigger_lag_s": 0.004436083137989044,
+          "writer_index": 1
+        },
+        {
+          "ack_before_batch_end_s": 14.160715457983315,
+          "attempt_duration_s": 3.5609427499584854,
+          "opening_s": 1.6419389580842108,
+          "outcome": "acknowledged_and_exact_state_pulled",
+          "pull_receive_s": 0.7293545408174396,
+          "push_ack_s": 0.715161917032674,
+          "sequence": 2,
+          "trigger_lag_s": 0.020221458049491048,
+          "writer_index": 34
+        },
+        {
+          "ack_before_batch_end_s": 6.005443042144179,
+          "attempt_duration_s": 3.556419749977067,
+          "opening_s": 1.6490298749413341,
+          "outcome": "acknowledged_and_exact_state_pulled",
+          "pull_receive_s": 0.7106928750872612,
+          "push_ack_s": 0.7144064998719841,
+          "sequence": 3,
+          "trigger_lag_s": 0.016224124934524298,
+          "writer_index": 68
+        }
+      ],
+      "release": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-release-05.json",
+        "sha256": "4081325a5e30a787ee3d204b17446ffb97d7cedccac4a43481d6930d4df91e10"
+      },
+      "release_supervision": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-release-05-supervision.json",
+        "sha256": "d95988092973ba291655282af304b080b1f78882a29151f3c5e2b5b034d8c0c6"
+      },
+      "result": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/runs/05-candidate-aggregate-reverse/result.json",
+        "sha256": "5f33e672536a564e96e19c0e034d1681af4947fd838a7c50e682eaf3d1e97f81"
+      },
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-05-root-review.json",
+        "sha256": "7f71b8ca5f6ef5715b4faabf012f44cabaca4529858e3130cb1813f2633836fd"
+      },
+      "run": "05-candidate-aggregate-reverse",
+      "saved_state": {
+        "backend": "numpy",
+        "event_sequence_continuation_recorded": true,
+        "full_thermostat_signatures_verified": 408,
+        "handles": 102,
+        "nodes": 192,
+        "raw_npz_descriptor_payloads_and_clock_fields_verified": 408,
+        "restore_sequences_match_saved_final_fields": true,
+        "retained_file_hashes_verified": 816,
+        "roundtrip_snapshots": 102,
+        "seed_periodic_final_snapshots": 306,
+        "two_actual_child_restore_receipts_complete": true
+      },
+      "variant": "candidate"
+    }
+  ],
+  "cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/cpu-tests-01.json",
+    "sha256": "591282f935267edd983ac9fbf07e9844c3bcc3383b1a82f61e30a426a1ecca35"
+  },
+  "created_at": "2026-10-17T00:27:23.058590+00:00",
+  "finding": "In these three completed private aggregate cases, original service reproduced all3 expected opening-handshake timeouts without application sends. Candidate completed all3 opens, pushes and exact-state pulls in each of two runs, with every acknowledgement before its periodic batch ended. Every case preserved all102 synthetic NumPy handles through saves and two recorded fresh-object restores.",
+  "full_14_case_matrix_complete": false,
+  "full_aggregate_reverse_pair_complete": false,
+  "future_execution_authorized": false,
+  "harness_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/independent-review-02.json",
+    "sha256": "ecebb8c28f55fc6601bccc6f407408cf4ea02622fa3c0f91f7c83b79d0f37454"
+  },
+  "host_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-run05-source-review-01.json",
+    "sha256": "c4ce99ec02a8b334a8e834bd9521ad1d2aee9aaffc9b07e6e278afff63a87904"
+  },
+  "limits": [
+    "This is a partial03/04/05 review only. Running06 was not read or probed; reverse-order original confirmation and full14-case review remain required.",
+    "Original aggregate protocol failure is the expected negative control, not a successful request. Its case acceptance does not erase the timeouts. Candidate successes here do not prove arbitrary single-save latency, LSM-shadow histories or production readiness.",
+    "All408 saved NPZ envelopes/raw payload hashes and thermostat JSON signatures per case were independently read with stdlib only. Actual service restore computations were not reexecuted; exact child oracle receipts are the recorded semantic evidence.",
+    "Fixed supervision snapshots were reviewed; no mutable running monitor, live process, socket, model, test or target module was invoked. Root-owned absence results were read as evidence, not reprobed.",
+    "No failed prior window or actual v1/v2 case is relabeled. Numerical/performance results from this synthetic service matrix are not MLX package/model qualification."
+  ],
+  "manifest": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/sources.json",
+    "sha256": "dc6183624da3c5beec22ae1ff78bbed9d0df12850e413612305ac21f500cef2e"
+  },
+  "mlx_qualified": false,
+  "prepared_input_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-inputs-review-01.json",
+    "sha256": "97198f9617fdee2e4232058b6d4cc24c6798072bffcfebaf9335ad896ad94996"
+  },
+  "production_qualified": false,
+  "review_completed": true,
+  "reviewed_cases_passed": true,
+  "reviewer": "mlx_integration",
+  "reviewer_actions": {
+    "live_probes": 0,
+    "numeric_workloads": 0,
+    "private_receipt_source_and_saved_artifact_reads_only": true,
+    "signals_or_production_changes": 0,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "schema": "reservoir_private_aggregate_partial_independent_review_v1"
+}

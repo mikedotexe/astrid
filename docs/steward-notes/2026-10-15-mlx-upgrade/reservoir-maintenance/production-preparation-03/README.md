@@ -1,0 +1,11 @@
+# Disabled production integration 03
+
+This immutable archive preserves 19 Python sources, their interfaces, retained test evidence and independent review. All 183 combined stdlib test executions passed with child creation, signals, socket activity and real numerical imports denied. The combined receipt binds the final complete source set; earlier component receipts retain their narrower scope. Both production execution flags remain false. No numerical service case, model load, live maintenance or recovery action occurred.
+
+The integration reads the actual fourteen-case service-matrix and nine-case restore-proof schemas, journals the exact provider model-path substitution separately, and runs at most one owned stopped-backup verifier child. The finite runner recognizes the real stopped-backup/state envelope, requires natural exit and a complete witness, and retains uncertain outcomes without retry or termination. Fresh preparation separately protects the native Minime engine and its seven binary/configuration inputs.
+
+Recovery remains limited to read-only inspection and nonexecuting proposals at verified provider-held, reservoir-held or both-parked checkpoints. There is no resume executor. Started restores, ambiguous command outcomes, missing outer witnesses and later install/pin/bootstrap phases remain blocked. This is not qualified operational recovery.
+
+Before production, obtain fresh host acceptance and actual fourteen-case plus nine-case numerical evidence, qualify an owned launchd fixture using the exact integrated controller, review current runtime/preparation alignment, and complete operational interruption recovery qualification. The accepted admin02 fixture remains historical primitive evidence; do not relabel it or rerun its old command. Any enabling source change needs new exact review and evidence alignment. Full proof/snapshot/package revalidation cost is still unmeasured and must be included in the maintenance assessment.
+
+During eventual maintenance, verification of an actual stable stopped-production backup and complete startup acceptance remain mandatory. Synthetic qualification cannot replace that second restore check. Versions01/02 and every failed observation remain preserved. The archive does not authorize execution.

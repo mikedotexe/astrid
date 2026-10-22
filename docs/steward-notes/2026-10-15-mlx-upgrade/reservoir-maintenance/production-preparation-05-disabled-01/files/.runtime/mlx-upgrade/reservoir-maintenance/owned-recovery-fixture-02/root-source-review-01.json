@@ -1,0 +1,39 @@
+{
+  "accepted_for_guarded_fake_tests": true,
+  "actual_os_execution_accepted": false,
+  "all_source_bytes_match": true,
+  "at": "2026-10-17T01:37:49.205712+00:00",
+  "checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-checkpoint-03.json",
+    "sha256": "8a2798806dd6524deb188bc64c531403652f65e07e53afdcef0f09900e00a68d"
+  },
+  "findings_resolved": [
+    "Finite parent follows exact71 executor steps/74 phases with only adjacent nonmutating lock pair concurrent; result or exact75/76 natural reaps gate advancement.",
+    "NativeOperations claim/error/expected-head paths now have focused inert tests. No producer retry, service force or automatic failure cleanup.",
+    "Fixed pause528 actor and absent lease record are checked before setup/bootstrap and each released executor; no steward mutation/expiry assumptions.",
+    "Final observation pin query now records time; raw parent records explicitly defer parent absence to independent post-Terminal check."
+  ],
+  "limitations": [
+    "Both production flags and fixture flag remain false; final enabling source delta must be independently reviewed and all final bytes frozen before actual OS fixture.",
+    "Final pure reader and producer cross-contract acceptance is pending its frozen checkpoint and guarded tests.",
+    "ProductionHost and production pin ordering have not executed; actual OS recovery and live persistence remain unqualified.",
+    "No fake tests were executed by this source review."
+  ],
+  "reviewed_deltas": [
+    "coordinator final05 release/interpreter/complete source/coordination closure and parent self-start evidence",
+    "owned_recovery_core fixed05 loader with unchanged common lifecycle modules",
+    "finite parent/result producer and proposed schedule crosscheck",
+    "native adapter disabled boundaries and stricter ps absence",
+    "source-bound injection acknowledgements with original boundary references",
+    "private pin timestamp, no bytecode cache",
+    "tests and README/raw interface02"
+  ],
+  "reviewer": "root",
+  "schema": "owned_fixture02_root_source_review_v1",
+  "test_declarations": {
+    "test_owned_fixture_coordinator.py": 16,
+    "test_owned_fixture_pin.py": 8,
+    "test_owned_fixture_run.py": 20,
+    "test_owned_recovery_host.py": 17
+  }
+}

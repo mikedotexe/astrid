@@ -1,0 +1,67 @@
+{
+  "acceptance_gate_waived": false,
+  "accepted": false,
+  "artifact_count": 0,
+  "completed_at": "2026-10-16T03:20:57.762172+00:00",
+  "duration_s": 7200.476,
+  "failure_reasons": [
+    "health_endpoint_failed"
+  ],
+  "fallback_count": 0,
+  "generated_outputs_scanned": 74,
+  "generations": 97,
+  "health_errors": 1,
+  "incident": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/post-perception-baseline-incident-01.json",
+    "sha256": "b17e523c1d165b195e76c361b19cfba8956df8682d4783a60bae5ff52c62dc3f"
+  },
+  "malformed_next_count": 0,
+  "production_mutations": 0,
+  "protected_processes": [
+    {
+      "actual": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+      "match": true,
+      "pid": 22354
+    },
+    {
+      "actual": "35486 35461 Thu Oct 15 13:14:29 2026     /Applications/Ollama.app/Contents/Resources/ollama serve",
+      "match": true,
+      "pid": 35486
+    },
+    {
+      "actual": "3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state",
+      "match": true,
+      "pid": 3888
+    },
+    {
+      "actual": "3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active",
+      "match": true,
+      "pid": 3893
+    },
+    {
+      "actual": "82314     1 Thu Oct 15 07:49:29 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60",
+      "match": true,
+      "pid": 82314
+    },
+    {
+      "actual": "82528     1 Thu Oct 15 07:49:42 2026     /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/writing-admission-guidance-20261014/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous",
+      "match": true,
+      "pid": 82528
+    }
+  ],
+  "provenance_review": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/post-perception-baseline-completed-provenance.json",
+    "sha256": "d6010a600d97c41e70c74eae254fc614fcc585935b7b69fe7ec2807beb649642"
+  },
+  "reviewed_at": "2026-10-16T03:22:04.444944+00:00",
+  "samples": 240,
+  "schema": "mlx_failed_baseline_completed_review_v1",
+  "source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observations-post-perception-01/20261016T012057Z/soak_result.json",
+    "sha256": "0163de7a88bc7c5b75a44077660a6f4790dfa187ea293ba192f6fc6b8a1cc7f1"
+  },
+  "source_identities_unchanged": true,
+  "source_identity_files": 119,
+  "started_at": "2026-10-16T01:20:57.616782+00:00",
+  "state": "completed"
+}

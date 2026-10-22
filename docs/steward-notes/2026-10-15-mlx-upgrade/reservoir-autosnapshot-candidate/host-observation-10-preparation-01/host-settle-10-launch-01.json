@@ -1,0 +1,18 @@
+{
+  "all_agent_tests_held": true,
+  "argv": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-I",
+    "-B",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-observer.py"
+  ],
+  "numerical_cases_started": 0,
+  "observer_pid": 40516,
+  "preflight": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-preflight-01.json",
+    "sha256": "bf5113041ea875f67dda8365b196fd57ba6c9a8accf70b62534aaddf2839b6c3"
+  },
+  "production_mutations": 0,
+  "schema": "reservoir_host_window_launch_v1",
+  "started_at": "2026-10-16T23:48:34.251516+00:00"
+}

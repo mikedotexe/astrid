@@ -1,0 +1,152 @@
+{
+  "actual_case_execution_authorized": false,
+  "checks": {
+    "all_eleven_harness_files_match_reviewed_and_tested_hashes": true,
+    "all_twelve_readonly_source_copies_match_original_source_preparation": true,
+    "exact_launcher_and_framework_binary_hashes_match_original_model_manifest": true,
+    "four_current_metadata_and_record_files_match_retained_child_and_original_manifest": true,
+    "four_package_version_map_matches_preparation_and_original_model_manifest": true,
+    "installed_record_payloads_reverified": false,
+    "only_manifest_differences_from_original_source_manifest": [
+      "created_wall",
+      "harness_hashes"
+    ],
+    "prepared_manifest_and_source_files_readonly": true
+  },
+  "cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/cpu-tests-01.json",
+    "sha256": "591282f935267edd983ac9fbf07e9844c3bcc3383b1a82f61e30a426a1ecca35"
+  },
+  "created_at": "2026-10-17T00:04:58.311976+00:00",
+  "harness_hashes": {
+    "common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+    "driver.py": "f99dc8d0945cd23c62249b78a3a8a24fa5791f61c57b5ec37fb1bc90b1dbcf63",
+    "fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+    "process_identity.py": "badc6dd3ddec6aa9bf0c3996aecfab0e40232acad9dae346d6302bbec16803c7",
+    "protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+    "result_checks.py": "047389e82d8a8e5109ff6c49d4af10dd1bd9b80e254c965e9dd94692529ae5cf",
+    "review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+    "service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+    "snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+    "test_harness.py": "05e35897981af399fde10ee4a7baabd9dc8f15988179cdd0e0ef3daa78928148",
+    "test_initial_publication.py": "54462505c1efac8080f6ef60608605d93182a5ef9c9b90f88c455cbd316f024b"
+  },
+  "interpreter": {
+    "executable": "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+    "files": {
+      "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python": "2cb7bcb114a9a92ac12d1072406261ac039bed938b25bfc70dd30ec5855a3353",
+      "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12": "31b9c9a8d50289f3a13f014b3efd8ea3534fc3eea7ca7d9809e166139910b805"
+    },
+    "resolved": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12",
+    "sha256": "31b9c9a8d50289f3a13f014b3efd8ea3534fc3eea7ca7d9809e166139910b805"
+  },
+  "limits": [
+    "Read/hash-only review; no reviewed-code imports, tests, reprepare, child starts, ps, signals, model/numerical work or service calls.",
+    "Package metadata and RECORD bytes were checked; full installed payloads were not rehashed in this bounded review.",
+    "Historical README/source-only review test-pending language is superseded for source-test status by the31-test receipt and independent-review-02; original bytes remain unchanged.",
+    "No prior failed case is accepted or reused. Fresh root-reviewed host admission and continuous supervision are required before any actual v3 case."
+  ],
+  "original_model_manifest": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests-v2/original.json",
+    "sha256": "8c773b9bfc753ce6207883d71076441024f2f850bde31c17ca2fca5ae2aeabd0"
+  },
+  "original_preparation": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/preparation.json",
+    "sha256": "e656028cf9a9ec157cca78150edf6ee5020f5535e356b01a717b7d1e87452936"
+  },
+  "original_source_manifest": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/sources.json",
+    "sha256": "826e6eb869262de8769bea5f812986eddfb8d675a83875eab03db067e70751f1"
+  },
+  "package_metadata_and_record_hashes": {
+    "numpy": {
+      "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/numpy-2.4.3.dist-info/METADATA": "621bf875d57eee8673f39344ea98ddc370e944e9c8c36b38b430e290f2b682cf",
+      "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/numpy-2.4.3.dist-info/RECORD": "de5a3ebd77db9fdad1be313f5e0dc0efde41a365bb9b85db0413228b906276dc"
+    },
+    "scikit-learn": {
+      "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scikit_learn-1.8.0.dist-info/METADATA": "95a8f42f4170fc940a71fedfed4fd9353723eb44126130a971a072fe5305d967",
+      "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scikit_learn-1.8.0.dist-info/RECORD": "67c2b20eced607115a1e4e0eb4d4884c6f2c5134f55fc6876865366b12ea6854"
+    },
+    "torch": {
+      "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/torch-2.11.0.dist-info/METADATA": "d65e0ab5a65ced0dce799a2f6f32bff57b3d3e9d050069f607ef71eb24dd9976",
+      "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/torch-2.11.0.dist-info/RECORD": "86a1a151360af9798a6fd303e327d9c006ddd46e31a8b2596ce8c488c20162ae"
+    },
+    "websockets": {
+      "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/websockets-16.0.dist-info/METADATA": "25c0ef5a8f03552c39ba80c015b93d37c7c95ee449be7adc2d7541172063c0df",
+      "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/websockets-16.0.dist-info/RECORD": "0bef97bddb1426da52237d953406b7d563af9b274610ce2473779af1439ff186"
+    }
+  },
+  "packages": {
+    "numpy": "2.4.3",
+    "scikit-learn": "1.8.0",
+    "torch": "2.11.0",
+    "websockets": "16.0"
+  },
+  "passed": true,
+  "prepared_manifest": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/sources.json",
+    "sha256": "dc6183624da3c5beec22ae1ff78bbed9d0df12850e413612305ac21f500cef2e"
+  },
+  "prepared_source_copies": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/candidate/dual_ai_bridge.py",
+      "sha256": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/candidate/lsm_reservoir.py",
+      "sha256": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/candidate/persistence.py",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/candidate/rehearsal.py",
+      "sha256": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/candidate/reservoir_service.py",
+      "sha256": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/candidate/triple_reservoir_coreml.py",
+      "sha256": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/original/dual_ai_bridge.py",
+      "sha256": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/original/lsm_reservoir.py",
+      "sha256": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/original/persistence.py",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/original/rehearsal.py",
+      "sha256": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/original/reservoir_service.py",
+      "sha256": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/original/triple_reservoir_coreml.py",
+      "sha256": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8"
+    }
+  ],
+  "production_qualified": false,
+  "retained_v2_child_metadata_source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/runs/01-original-normal/child.json",
+    "sha256": "b4f2d08a864110c043fe2ad8480f9cce0f5af424ccaa9b249e8b684cdbbe54f9"
+  },
+  "reviewer": "/root/mlx_readiness",
+  "schema": "reservoir_harness_v3_prepared_input_review_v1",
+  "source_and_test_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/independent-review-02.json",
+    "sha256": "ecebb8c28f55fc6601bccc6f407408cf4ea02622fa3c0f91f7c83b79d0f37454"
+  },
+  "status": "prepared_source_inputs_verified_not_executed"
+}

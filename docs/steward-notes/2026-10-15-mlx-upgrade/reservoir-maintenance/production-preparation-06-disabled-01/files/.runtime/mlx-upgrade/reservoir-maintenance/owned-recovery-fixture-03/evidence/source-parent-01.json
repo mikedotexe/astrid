@@ -1,0 +1,140 @@
+{
+  "copied": [
+    {
+      "bytes": 5589,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/README.md",
+      "sha256": "043ead2c0a701f4ead564393b8845b19dd73a1fa5444943721b7858e711493c9",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/README.md"
+    },
+    {
+      "bytes": 12682,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_cleanup.py",
+      "sha256": "5637d6269990e70b9ec0dbc6505173d891171f7dfbeca4c543ca4364c4097a66",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_cleanup.py"
+    },
+    {
+      "bytes": 10401,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_cleanup_host.py",
+      "sha256": "3aa97ac474aa77d67d2617435823c802a5e725526967af3d7b98a26f489f6ace",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_cleanup_host.py"
+    },
+    {
+      "bytes": 30327,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_coordinator.py",
+      "sha256": "8244b61c4fa980b67528f8ebeaa20b7ebe6c7ca45e8039e1493977c2ab5a07ba",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_coordinator.py"
+    },
+    {
+      "bytes": 8571,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_injection.py",
+      "sha256": "fb4fac96f776fb615ad26fef3db43856f70e7f7ea0c348a76100021a3a714fc0",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_injection.py"
+    },
+    {
+      "bytes": 11743,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_pin.py",
+      "sha256": "99f2522f163ba303fd28b71d802dc5bcf749447b29a3f6449e9bccf5da0d2eca",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_pin.py"
+    },
+    {
+      "bytes": 4532,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_plan.py",
+      "sha256": "6f49c5f5d7f9154e0a1b9e0a69171aa04a1125f8522ed63725087fbea6303c69",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_plan.py"
+    },
+    {
+      "bytes": 8014,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_records.py",
+      "sha256": "728c1f178cb3a6f8e1a88f0229d8a691fb11d11bd8b090e07c480c0ec5b88300",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_records.py"
+    },
+    {
+      "bytes": 14615,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_result.py",
+      "sha256": "823ce8eb4a036711d8c5b46b6458402a6f2bce6f1af59a4c6a1920edf08e46b2",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_result.py"
+    },
+    {
+      "bytes": 24975,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_retained.py",
+      "sha256": "d1b09bc4eae7f41593557fc028ee03289953c8a5b7c8f5cdb205d8807bfc70a2",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_retained.py"
+    },
+    {
+      "bytes": 10139,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_run.py",
+      "sha256": "c5c7117abce79963d22aed713f9d3fee388b6d4d060eda71357ac29f52ac775d",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_run.py"
+    },
+    {
+      "bytes": 14476,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_setup.py",
+      "sha256": "731d9243f9e6afc8c019edaf2c13b700d6c896a91e68678d183d50e81e48d28b",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_setup.py"
+    },
+    {
+      "bytes": 7283,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_system.py",
+      "sha256": "96a95258ae81652f5ad3e1bf222f9159163ad134e6dd7113d16fbabeb6576817",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_system.py"
+    },
+    {
+      "bytes": 11441,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_fixture_witnesses.py",
+      "sha256": "3530284ed90730b5c78f277c195d10b20103924806c5d0ca6091f1e20789acd8",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_witnesses.py"
+    },
+    {
+      "bytes": 1789,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_pin_sentinel.py",
+      "sha256": "1e8008dfb6f2d245232d229e30bd41d3765615ed6f13123993c0776bafdb6829",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_pin_sentinel.py"
+    },
+    {
+      "bytes": 3554,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_pin_system.py",
+      "sha256": "60897105636e29b6a986f7983e2d6514c7237243e45c34f3c0dd3d00c20493da",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_pin_system.py"
+    },
+    {
+      "bytes": 4304,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_recovery_core.py",
+      "sha256": "111041830169d70bafa98ab54bd2a6f4c76f7d26a7910dc3a68a984d53f2ab15",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_core.py"
+    },
+    {
+      "bytes": 31198,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/owned_recovery_host.py",
+      "sha256": "0fa54ce45e72452fb01108360dc0c48aade212cfc47de77fdf0167a45aba286a",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_host.py"
+    },
+    {
+      "bytes": 17728,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/test_owned_fixture_coordinator.py",
+      "sha256": "06051d8ec4f62cd4c6a53aa995b4512d62c746b29efa9cd01942ecee1f247aa3",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_coordinator.py"
+    },
+    {
+      "bytes": 7626,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/test_owned_fixture_pin.py",
+      "sha256": "b3be3df73d2c6f998a6e09ea2ce293314fd8f42b487419728ffb138b163108f9",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_pin.py"
+    },
+    {
+      "bytes": 22084,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/test_owned_fixture_run.py",
+      "sha256": "a49a0f9fce2cb31cf5e4c7811409ba8cc24eda3e7446825df8f9917e9fd03f26",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_run.py"
+    },
+    {
+      "bytes": 23485,
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/test_owned_recovery_host.py",
+      "sha256": "e3e43d76d3ceb0b01188fc0f2f6b5b3d0c9acb04a6de83738aa3047708da77ef",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_recovery_host.py"
+    }
+  ],
+  "old_source_changed": false,
+  "runs_or_evidence_copied": false,
+  "schema": "owned_fixture03_source_parent_v1",
+  "source_only_copy": true
+}

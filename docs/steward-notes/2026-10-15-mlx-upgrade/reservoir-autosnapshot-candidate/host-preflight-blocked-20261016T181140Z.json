@@ -1,0 +1,47 @@
+{
+  "actual_numeric_cases_started": false,
+  "at": "2026-10-16T18:11:40.688424+00:00",
+  "build_test_processes": [
+    "37441  7512   0.0 113040 Fri Oct 16 11:06:06 2026     /Users/v/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+    "40138 37441   0.0   5712 Fri Oct 16 11:08:34 2026     /Users/v/.codex/worktrees/truthful-return-20261016/astrid/capsules/spectral-bridge/target/debug/deps/llm_facade_contract-770b33a7abd5d2c1",
+    "40965 40936   0.1 117136 Fri Oct 16 11:10:23 2026     /Users/v/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+    "42263 40138   0.0 108080 Fri Oct 16 11:11:20 2026     /Users/v/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+    "42330 42263  99.0 2069184 Fri Oct 16 11:11:21 2026     /Users/v/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc",
+    "42664 40965  82.3 210720 Fri Oct 16 11:11:40 2026     /Users/v/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc"
+  ],
+  "host": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 14336.00M  used = 13336.62M  free = 999.38M  (encrypted)",
+  "memory_pressure": "The system has 68719476736 (4194304 pages with a page size of 16384).\nSystem-wide memory free percentage: 57%",
+  "observer_started": false,
+  "protected_exact_identity_unchanged": {
+    "22354": true,
+    "35303": true,
+    "35486": true,
+    "3888": true,
+    "3893": true,
+    "82314": true,
+    "82528": true
+  },
+  "readyz": {
+    "body": {
+      "model": "coupled-astrid",
+      "ready": true,
+      "reservoir": {
+        "last_sync_unix_ms": 1792174296069,
+        "operation": "push_state",
+        "status": "connected"
+      },
+      "status": "ready",
+      "worker": {
+        "heartbeat_age_ms": 141.366,
+        "last_generation_error": null,
+        "phase": "ready",
+        "queue_capacity": 4,
+        "queue_depth": 0
+      }
+    },
+    "status": 200
+  },
+  "reason": "Foreign Cargo/compiler/test processes are active; root will not start a clean settling clock or numerical work while this known blocker remains. Prepared06 source and binding are retained.",
+  "schema": "reservoir_host_observation_preflight_v1",
+  "services_changed": false
+}

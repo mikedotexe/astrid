@@ -1,0 +1,30 @@
+{
+  "schema": "reservoir_fixture_host_settle_review_v1",
+  "reviewed_at": "2026-10-16T03:29:09.419569+00:00",
+  "raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-01.json",
+    "sha256": "7ea1c1864d1ff6d8d2f0199ebf17ea85b18f09df02f1fccb6237dd75c1b2ded4"
+  },
+  "observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-01-observer.py",
+    "sha256": "d76aa9277c9fe4a81b277359266ad5835bab3a1d18d85ce52da2caf486018be8"
+  },
+  "passed": false,
+  "samples": 63,
+  "duration_s": 311.72352600004524,
+  "longest_eligible_window_s": 54.99964714050293,
+  "pressure_sample_counts": {
+    "1": 22,
+    "2": 41
+  },
+  "swap_bytes_first": 10852635770.88,
+  "swap_bytes_last": 14122620026.88,
+  "swap_endpoint_growth_bytes": 3269984256.0,
+  "swap_bytes_max": 14223283322.88,
+  "detected_build_process_samples": 0,
+  "max_sample_gap_s": 5.007428884506226,
+  "production_identity_unchanged": true,
+  "real_numeric_fixture_started": false,
+  "production_mutations": false,
+  "acceptance": "No300-secondquietwindow. Preserve failure; no package/model inference. Continue lightweight implementation/review; any actual numeric case requires a fresh passing settling observation."
+}

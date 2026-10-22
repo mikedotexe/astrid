@@ -1,0 +1,757 @@
+{
+  "all_identity_files_unchanged": true,
+  "all_six_protected_processes_unchanged": true,
+  "baseline_record": "/Users/v/other/astrid/.runtime/mlx-upgrade/observations-post-perception-01/20261016T012057Z/soak_result.json",
+  "baseline_state": "running",
+  "hardware_or_model_probes": false,
+  "health_failure_samples": 0,
+  "identity_file_count": 119,
+  "identity_files": [
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/live-inventory.json"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/aperture_drive_experiment.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/astrid_feeder.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/attractor_garden.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/collab_feeder.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/contextual_capture.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/contextual_feedback_study.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/contextual_integrity.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/contextual_raw_parity.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/coupled_http_gateway.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/dual_ai_bridge.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/experiment_same_prompt_different_state.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/generation_controls.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/lsm_reservoir.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/mcp_reservoir.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/metrics_snapshot.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/minime_feeder.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/mlx_reservoir.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/model_qos.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/offline_coupling_replay.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/persistence.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/real_model_coupling_study.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/rehearsal.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_attractor_garden.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_contextual_capture.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_contextual_resume.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_coupled_astrid_token_policy.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_coupled_http_gateway.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_feeder_policies.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_generation_completion.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_generation_controls.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_lsm_shadow.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_multi_headed.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_offline_coupling_replay.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_real_model_coupling_study.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_reservoir_metadata.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_same_prompt_experiment.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_slow_coupling.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_triadic_chamber.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_wide_coupling_offline.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/test_wide_processor.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/triadic_chamber.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/triple_reservoir_coreml.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/watch_reservoir.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/wide_coupling.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/aiohappyeyeballs-2.6.1.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/aiohttp-3.13.3.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/aiosignal-1.4.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/anyio-4.13.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/attrs-26.1.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/cattrs-26.1.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/certifi-2026.2.25.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/click-8.3.1.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/coremltools-9.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/filelock-3.25.2.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/frozenlist-1.8.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/fsspec-2026.3.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/h11-0.16.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/hf_xet-1.4.2.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/httpcore-1.0.9.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/httpx-0.28.1.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/huggingface_hub-1.8.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/idna-3.11.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/jinja2-3.1.6.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/joblib-1.5.3.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/markdown_it_py-4.0.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/markupsafe-3.0.3.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mdurl-0.1.2.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx-0.32.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx_lm-0.31.3.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx_metal-0.32.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mpmath-1.3.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/multidict-6.7.1.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/networkx-3.6.1.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/numpy-2.4.3.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/packaging-26.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pip-26.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/propcache-0.4.1.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/protobuf-7.34.1.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pyaml-26.2.1.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pygments-2.19.2.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pyyaml-6.0.3.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/regex-2026.2.28.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/rich-14.3.3.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/safetensors-0.7.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scikit_learn-1.8.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scipy-1.17.1.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/sentencepiece-0.2.1.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/setuptools-81.0.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/shellingham-1.5.4.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/sympy-1.14.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/threadpoolctl-3.6.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/tokenizers-0.22.2.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/torch-2.11.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/tqdm-4.67.3.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/transformers-5.4.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/typer-0.24.1.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/typing_extensions-4.15.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/websockets-16.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/yarl-1.23.0.dist-info/METADATA"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/Library/LaunchAgents/com.reservoir.coupled-astrid.plist"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/coupled-model.json"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/capsules/perception/perception.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/capsules/perception/host_audio_fallback.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/scripts/launchd_astrid_perception_host_ascii.sh"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/launchd/com.astrid.perception-host-ascii.plist"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/Library/LaunchAgents/com.astrid.perception-host-ascii.plist"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_live_soak.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_soak_observer.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_soak_performance.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_model_canary.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_mlx_candidate.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_mlx_fixture.py"
+    },
+    {
+      "matches_mtime_ns": true,
+      "matches_sha256": true,
+      "matches_size": true,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/manifest.json"
+    }
+  ],
+  "live_mutations": [],
+  "live_perception_source_applied": false,
+  "observer": "27294     1 Thu Oct 15 18:20:57 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -B /Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_live_soak.py --observe-only --candidate-port 8090 --candidate-model mlx-community/gemma-4-12B-it-5bit --duration-secs 7200 --sample-interval-secs 30 --reservoir-root /Users/v/other/neural-triple-reservoir --bridge-log /tmp/bridge.log --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --existing-server-log /Users/v/other/neural-triple-reservoir/logs/coupled-astrid.log --observe-label com.astrid.perception-host-ascii --max-fallback-incidents 0 --output-dir /Users/v/other/astrid/.runtime/mlx-upgrade/observations-post-perception-01 --identity-file /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/live-inventory.json --identity-file /Users/v/other/neural-triple-reservoir/aperture_drive_experiment.py --identity-file /Users/v/other/neural-triple-reservoir/astrid_feeder.py --identity-file /Users/v/other/neural-triple-reservoir/attractor_garden.py --identity-file /Users/v/other/neural-triple-reservoir/collab_feeder.py --identity-file /Users/v/other/neural-triple-reservoir/contextual_capture.py --identity-file /Users/v/other/neural-triple-reservoir/contextual_feedback_study.py --identity-file /Users/v/other/neural-triple-reservoir/contextual_integrity.py --identity-file /Users/v/other/neural-triple-reservoir/contextual_raw_parity.py --identity-file /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --identity-file /Users/v/other/neural-triple-reservoir/coupled_http_gateway.py --identity-file /Users/v/other/neural-triple-reservoir/dual_ai_bridge.py --identity-file /Users/v/other/neural-triple-reservoir/experiment_same_prompt_different_state.py --identity-file /Users/v/other/neural-triple-reservoir/generation_controls.py --identity-file /Users/v/other/neural-triple-reservoir/lsm_reservoir.py --identity-file /Users/v/other/neural-triple-reservoir/mcp_reservoir.py --identity-file /Users/v/other/neural-triple-reservoir/metrics_snapshot.py --identity-file /Users/v/other/neural-triple-reservoir/minime_feeder.py --identity-file /Users/v/other/neural-triple-reservoir/mlx_reservoir.py --identity-file /Users/v/other/neural-triple-reservoir/model_qos.py --identity-file /Users/v/other/neural-triple-reservoir/offline_coupling_replay.py --identity-file /Users/v/other/neural-triple-reservoir/persistence.py --identity-file /Users/v/other/neural-triple-reservoir/real_model_coupling_study.py --identity-file /Users/v/other/neural-triple-reservoir/rehearsal.py --identity-file /Users/v/other/neural-triple-reservoir/reservoir_service.py --identity-file /Users/v/other/neural-triple-reservoir/test_attractor_garden.py --identity-file /Users/v/other/neural-triple-reservoir/test_contextual_capture.py --identity-file /Users/v/other/neural-triple-reservoir/test_contextual_resume.py --identity-file /Users/v/other/neural-triple-reservoir/test_coupled_astrid_token_policy.py --identity-file /Users/v/other/neural-triple-reservoir/test_coupled_http_gateway.py --identity-file /Users/v/other/neural-triple-reservoir/test_feeder_policies.py --identity-file /Users/v/other/neural-triple-reservoir/test_generation_completion.py --identity-file /Users/v/other/neural-triple-reservoir/test_generation_controls.py --identity-file /Users/v/other/neural-triple-reservoir/test_lsm_shadow.py --identity-file /Users/v/other/neural-triple-reservoir/test_multi_headed.py --identity-file /Users/v/other/neural-triple-reservoir/test_offline_coupling_replay.py --identity-file /Users/v/other/neural-triple-reservoir/test_real_model_coupling_study.py --identity-file /Users/v/other/neural-triple-reservoir/test_reservoir_metadata.py --identity-file /Users/v/other/neural-triple-reservoir/test_same_prompt_experiment.py --identity-file /Users/v/other/neural-triple-reservoir/test_slow_coupling.py --identity-file /Users/v/other/neural-triple-reservoir/test_triadic_chamber.py --identity-file /Users/v/other/neural-triple-reservoir/test_wide_coupling_offline.py --identity-file /Users/v/other/neural-triple-reservoir/test_wide_processor.py --identity-file /Users/v/other/neural-triple-reservoir/triadic_chamber.py --identity-file /Users/v/other/neural-triple-reservoir/triple_reservoir_coreml.py --identity-file /Users/v/other/neural-triple-reservoir/watch_reservoir.py --identity-file /Users/v/other/neural-triple-reservoir/wide_coupling.py --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/aiohappyeyeballs-2.6.1.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/aiohttp-3.13.3.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/aiosignal-1.4.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/anyio-4.13.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/attrs-26.1.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/cattrs-26.1.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/certifi-2026.2.25.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/click-8.3.1.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/coremltools-9.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/filelock-3.25.2.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/frozenlist-1.8.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/fsspec-2026.3.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/h11-0.16.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/hf_xet-1.4.2.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/httpcore-1.0.9.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/httpx-0.28.1.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/huggingface_hub-1.8.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/idna-3.11.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/jinja2-3.1.6.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/joblib-1.5.3.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/markdown_it_py-4.0.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/markupsafe-3.0.3.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mdurl-0.1.2.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx-0.32.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx_lm-0.31.3.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx_metal-0.32.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mpmath-1.3.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/multidict-6.7.1.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/networkx-3.6.1.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/numpy-2.4.3.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/packaging-26.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pip-26.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/propcache-0.4.1.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/protobuf-7.34.1.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pyaml-26.2.1.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pygments-2.19.2.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pyyaml-6.0.3.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/regex-2026.2.28.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/rich-14.3.3.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/safetensors-0.7.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scikit_learn-1.8.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scipy-1.17.1.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/sentencepiece-0.2.1.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/setuptools-81.0.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/shellingham-1.5.4.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/sympy-1.14.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/threadpoolctl-3.6.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/tokenizers-0.22.2.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/torch-2.11.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/tqdm-4.67.3.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/transformers-5.4.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/typer-0.24.1.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/typing_extensions-4.15.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/websockets-16.0.dist-info/METADATA --identity-file /Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/yarl-1.23.0.dist-info/METADATA --identity-file /Users/v/Library/LaunchAgents/com.reservoir.coupled-astrid.plist --identity-file /Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/coupled-model.json --identity-file /Users/v/other/astrid/capsules/perception/perception.py --identity-file /Users/v/other/astrid/capsules/perception/host_audio_fallback.py --identity-file /Users/v/other/astrid/scripts/launchd_astrid_perception_host_ascii.sh --identity-file /Users/v/other/astrid/launchd/com.astrid.perception-host-ascii.plist --identity-file /Users/v/Library/LaunchAgents/com.astrid.perception-host-ascii.plist --identity-file /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python --identity-file /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14 --identity-file /Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_live_soak.py --identity-file /Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_soak_observer.py --identity-file /Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_soak_performance.py --identity-file /Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_model_canary.py --identity-file /Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_mlx_candidate.py --identity-file /Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_mlx_fixture.py --identity-file /Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/manifest.json",
+  "protected_processes": {
+    "22354": {
+      "actual": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+      "matches_pid_ppid_start_command": true
+    },
+    "35486": {
+      "actual": "35486 35461 Thu Oct 15 13:14:29 2026     /Applications/Ollama.app/Contents/Resources/ollama serve",
+      "matches_pid_ppid_start_command": true
+    },
+    "3888": {
+      "actual": "3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state",
+      "matches_pid_ppid_start_command": true
+    },
+    "3893": {
+      "actual": "3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active",
+      "matches_pid_ppid_start_command": true
+    },
+    "82314": {
+      "actual": "82314     1 Thu Oct 15 07:49:29 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60",
+      "matches_pid_ppid_start_command": true
+    },
+    "82528": {
+      "actual": "82528     1 Thu Oct 15 07:49:42 2026     /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/writing-admission-guidance-20261014/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous",
+      "matches_pid_ppid_start_command": true
+    }
+  },
+  "samples": 53,
+  "schema": "perception_investigation_root_isolation_v1",
+  "verified_at": "2026-10-16T01:47:21.202054+00:00"
+}

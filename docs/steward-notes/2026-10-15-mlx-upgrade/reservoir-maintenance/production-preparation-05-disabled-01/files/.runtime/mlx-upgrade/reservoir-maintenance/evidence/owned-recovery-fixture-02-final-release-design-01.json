@@ -1,0 +1,318 @@
+{
+  "created_at": "2026-10-17T01:11:26.409394+00:00",
+  "execution_authorized": false,
+  "findings": [
+    {
+      "detail": "The existing CLI accepts only --executor-request. No current entrypoint performs initial setup, the complete schedule, cleanup.begin, pin.initialize and final raw-reference aggregation as one ordinary-user invocation.",
+      "finding": "The lifecycle primitives exist; a finite parent CLI and complete aggregate proof producer are missing.",
+      "refs": {
+        "owned_fixture_cleanup.py": [
+          23
+        ],
+        "owned_fixture_coordinator.py": [
+          139,
+          172,
+          225,
+          270,
+          345
+        ],
+        "owned_fixture_pin.py": [
+          32
+        ]
+      }
+    },
+    {
+      "detail": "New fixture02 must replace the frozen04-only loader and preparatory release contract in its own copied sources. Do not edit01, monkeypatch flags or transfer its CPU result to changed enabled bytes.",
+      "finding": "Fixture01 is deliberately incompatible with an enabled final release.",
+      "refs": {
+        "owned_fixture_coordinator.py": [
+          47,
+          55
+        ],
+        "owned_recovery_core.py": [
+          8,
+          21,
+          46
+        ]
+      }
+    },
+    {
+      "detail": "Existing legacy schema/controller-only checks and direct python_executables access must consume the normalized validated new contract. A passed legacy-shaped wrapper is not evidence.",
+      "finding": "Both production admission and preflight need the same new raw-fixture reader.",
+      "refs": {
+        "production_admission.py": [
+          263,
+          280,
+          296
+        ],
+        "production_preflight.py": [
+          329,
+          403
+        ]
+      }
+    },
+    {
+      "detail": "Retain eight unaffected production roles (bridge, astrid_feeder, minime_feeder, collab_feeder, perception, ollama, minime, minime_engine), plus provider/reservoir plan.roles. The completed host windows sampled seven whole-stack identities including provider/reservoir; they do not establish ten-role coverage. Fresh production preparation must inventory all eight protected plus two managed roles.",
+      "finding": "Production protected inventory and host sampling have different scopes.",
+      "refs": {
+        "production_preflight.py": [
+          38,
+          297,
+          300
+        ]
+      }
+    }
+  ],
+  "implementation_authorized_by_this_receipt": false,
+  "independent_final_review_contract": {
+    "acceptance": "accepted=true only after actual ordinary-user OS fixture execution and independent raw recomputation of the entire fixed schedule, identities, chains, check-ins, preservation, cleanup and private pin. Exact final closure equality is mandatory; false-flag preparatory01/04 evidence cannot be relabeled.",
+    "limits": [
+      "ProductionHost not executed; its file may be source-bound only.",
+      "Production-only provider pin schedule not executed; separate pin primitive is explicit.",
+      "Synthetic JSON fixture, not numerical restore, production history, MLX qualification or permission to drain.",
+      "Every changed enabling/helper/reader/entrypoint byte requires a new final closure and corresponding accepted fixture; no silent proof transfer."
+    ],
+    "parent_closeout": "Bind actual parent identity and a separate post-return read-only absence observation; never claim the parent reaped itself.",
+    "required_fields": [
+      "schema",
+      "accepted",
+      "scope",
+      "reviewer",
+      "reviewed_at",
+      "fixture",
+      "release",
+      "final_release_closure",
+      "host_binding",
+      "python_executables",
+      "raw_artifacts",
+      "recomputed_checks",
+      "closure_matches_final_release",
+      "parent_closeout",
+      "limitations"
+    ],
+    "schema": "reservoir_owned_recovery_fixture_review_v2"
+  },
+  "inputs": {
+    "core04_guarded_cpu": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/combined-stdlib-tests-01.json",
+      "sha256": "c978657bfd1ec5a00178fa445d02cd1b3bb66b661e2832f1cd9c2c2f8e70dabd"
+    },
+    "fixture01_guarded_cpu": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/combined-cpu-tests-02.json",
+      "sha256": "1340194973c2360003a01dc0e4a9926f3357486ade280917e6ace8b7d47dd566"
+    },
+    "restore02_independent_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/independent-numerical-review-01.json",
+      "sha256": "73778c536e034a59f7eed2b9bd9a3ba27b9edbe12834348c38eeed86e4d74e19"
+    },
+    "restore02_root_acceptance": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-numerical-acceptance-01.json",
+      "sha256": "4c22bf6ae2efad5334d95e7162da34a86362ce79576b54de1c13973f8baa27b9"
+    },
+    "upstream_design02": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-candidate-05-consumer-alignment-design-02.json",
+      "sha256": "75ede60f27c6aee89ba3879cd4c01f964cd5ff9a0ee3e82dc89e34b80442080f"
+    }
+  },
+  "minimal_implementation_split": {
+    "fixture02_loader": "Bind one explicit final release root and complete immutable module/helper closure, actual loaded origins, shared controller identity and exact interpreter family. Remain Host.scope=owned_fixture. Never construct ProductionHost or exercise production scope with synthetic evidence.",
+    "fixture02_parent": "Add owned_fixture_run.py (proposed name) in a new source-only fixture02 copy. Reuse its exact coordinator, setup, cleanup, pin and lock primitives; no general service manager or dynamic plugin/command API.",
+    "production_entrypoint": "Add a bounded ordinary-user entrypoint in the same final closure. Preserve existing fixed targets, production admission, shared lock and one-step recovery APIs.",
+    "pure_consumer": "Add production_fixture_admission.py plus focused stdlib tests in a versioned final production candidate; include it in the final helper closure before OS rehearsal.",
+    "source_freeze": "Disabled development and source qualification precede a separately reviewed enabling delta. Freeze all final enabled source bytes, including entrypoints/readers and fixture helper changes, before actual owned fixture execution. Any later bound source change invalidates transfer of that fixture result."
+  },
+  "minimal_production_entrypoint_outline": {
+    "errors": "Retain journal, witnesses, holds, state and original history; report exact failed boundary. Do not force cleanup or roll back newly admitted provider history.",
+    "fresh": "Validate exact final source/interpreter closure and all raw numerical/owned fixture proofs, current stewardship and complete eight-protected/two-managed inventory. Bind preparation_path for later retained inspection, then construct ProductionHost and exact Journal and invoke Controller.run once. Existing controller shared ExecutionSession performs authoritative under-lock checks and rejects any retained fresh history.",
+    "mode": "Default check/inspect only; explicit fresh execution selects one exact immutable preparation/execution-review under ordinary UID. A separate explicit one-step resume/reconcile mode binds exact retained root and expected heads; no automatic retry loop.",
+    "not_supplied": "No executable production CLI implementation, actual Terminal command or live release is provided here.",
+    "privilege": "Retain only the existing narrowly scoped exact production-label debug boundary after ownership/admission checks. Do not run the whole entrypoint as root or prewarm credentials.",
+    "release_order": "Include this entrypoint and reader in final hashes before final enabled fixture02. After the fixture passes, create fresh production preparation with its actual raw result/review and accepted14+9 proofs, then seal execution review using the existing noncircular preparation digest. Current ownership revalidation/safe handoff follows existing user authorization; this design adds no new user-approval requirement.",
+    "resume": "Use ProductionHost.from_verified_recovery plus unchanged recovery driver once, explicit execute/reconcile mode and exact expected heads. Reconstruct retained artifacts/current readiness; uncertain debug/signal/bootstrap remains a stop unless actual owned effect is proven. Never replay fresh Controller.run."
+  },
+  "parent_orchestration_contract": {
+    "cleanup": "SIGTERM only against exact stateful original/replacement identities; bootout only against verified owned held replacements, or the already naturally exited stateless pin job. No force, SIGKILL, stateful-worker bootout or automatic failure cleanup.",
+    "cli": "One future ordinary-user Terminal invocation selects an immutable reviewed release manifest; exact executable/script/release paths are generated only after the final closure and real preflight exist. No live command is supplied by this design.",
+    "concurrency": "Only the two explicitly planned nonmutating lock-probe children may overlap. All mutation-capable executors are serial and naturally reaped. Record actual parent and child PID/start/argv and exact expected interpreter wrapper/framework family.",
+    "default": "No implicit execution on import/default/check. An explicit execution mode requires exact release, ordinary UID, TTY, host boot, owned fresh root, source/interpreter hashes and current coordination checks. CLI exposes no arbitrary target, script, shell command, source override or injected test Host.",
+    "exit_rules": {
+      "0": "Required natural success for ordinary steps. Validate result and exact process/start/argv, logs and natural reap before advancing.",
+      "75": "Accepted only at the specifically planned injected boundary with exact raw acknowledgement, executor identity, source-bound injection point and durable original boundary. Follow only the separately planned reconcile step in a new executor; never repeat the producer.",
+      "76": "Accepted only for the adjacent nonmutating lock-refusal executor with exact contention evidence and no action.",
+      "other": "Stop and retain all state, workers/holds and failed evidence. Timeout, missing reap/result, malformed receipt or uncertain command outcome never triggers automatic retry, signal escalation or cleanup."
+    },
+    "parent_exit_reporting": "The parent can reap its executor children, not itself. Its aggregate must not claim self-reaping. Independent post-Terminal closeout records the parent PID/start absence separately.",
+    "parent_phase_records": "Use a small exclusive parent phase journal tying release, owner, source and current heads to initializer intents/results. A restarted parent does not replay the whole schedule. Incomplete setup or an interrupted initializer is retained for inspection; any separately reviewed continuation must adopt proven effects or perform only an exact never-attempted action.",
+    "plan": "The current proposed schedule is 71 executor steps, capped by the existing finite maximum96; fixture02 must seal and compare the exact complete plan and injection manifest, not merely accept any list shorter than the cap. Initial setup, cleanup.begin and pin.initialize are explicit phase prerequisites outside that list.",
+    "sequence": [
+      "Create original owner and exclusive layout before the first bootstrap; retain exact private generated provider/reservoir/pin targets, workers, plists and original coordinator identity.",
+      "Complete reservoir then provider setup exactly once and derive the maintenance plan from actual original identities, never invented initial PIDs.",
+      "Execute the adjacent nonmutating lock-hold/refusal pair and naturally reap both before any mutation-capable step.",
+      "Execute each sealed fresh/resume step, calculating current validated heads immediately before its immutable request and verifying exact planned action under the shared ExecutionSession.",
+      "After accepted main completion, initialize separate cleanup exactly once and follow all cleanup steps; preserve main history and immutable11/7 backup.",
+      "Only after cleanup acceptance, initialize the separate private pin primitive and execute its sealed steps.",
+      "Verify complete cleanup, pin, owner, interpreter and final source closure; write exclusive aggregate references. Root independent review then verifies completion and parent absence after Terminal returns."
+    ],
+    "setup_failure": "No cleanup/delete/recreate on partial or uncertain initial setup. A missing valid ownership layout remains a manual stop. The existing narrow setup-successor seam may be used only by a separately reviewed exact-head continuation, not a generic absence-based takeover loop.",
+    "sudo": "Parent and executors remain ordinary user. Existing OwnedSystem.debug alone may invoke /usr/bin/sudo -- /bin/launchctl debug against the exact guarded generated target and hold argv, with inherited Terminal interaction. No whole-controller sudo, sudo credential prewarm, broad root helper or blind auth/launchctl retry."
+  },
+  "preservation": {
+    "all_hashes_match_retained_cpu_receipts": true,
+    "candidate05_in_progress_not_hashed_or_reviewed": true,
+    "core04_source_files": 28,
+    "existing_evidence_unchanged": true,
+    "fixture01_source_files": 18,
+    "new_design_receipt_only": true,
+    "os_probes": 0,
+    "service_or_numerical_actions": 0,
+    "target_imports": 0,
+    "tests_run": 0
+  },
+  "production_qualified": false,
+  "pure_admission_api": {
+    "freshness_limit": "A pure reader proves recorded observations only. Fresh production preflight and current ownership/runtime/source/host validation remain separate; historical fixture absence cannot assert current OS state. Measure repeated raw-read cost before live drain without adding a validation cache or weaker checks.",
+    "implementation_boundary": "Pure retained-file reader: stdlib JSON/hash/plist and bounded file reads only. No ProductionHost/FixtureHost construction, target module side effects, imports of numeric libraries, processes, launchctl, sockets, signal calls or current OS sampling. Existing pure chain functions may be reused only through a reviewed fixed import closure that cannot execute action-capable Host methods.",
+    "inputs": "Retain spec.fixture and spec.fixture_review as hash-bound references. Derive expected exact final release/helper closure from independently validated spec immutable/helper artifacts and current final source, not exclusively from fixture self-claims. Require plan.input_hashes.fixture and plan.host_binding equality; validate selected release, review and same host boot/user/interpreter family.",
+    "integration": "Versioned production_admission and production_preflight both consume this result. Preflight uses the validated holder interpreter map instead of directly trusting raw legacy fields. Preserve the existing five-reference controller admission payload; any extra closure fields remain in spec/execution-review/raw proof. No passed legacy wrapper or monkeypatched reader.",
+    "module": "production_fixture_admission.py",
+    "output": {
+      "cleanup_state": {
+        "fixture_astrid": {
+          "ticks": 22
+        },
+        "fixture_minime": {
+          "ticks": 7
+        }
+      },
+      "exact_release_fixture_passed": true,
+      "exercised_modules": "actual executed core/adapter origins distinguished from merely source-bound ProductionHost/helper files",
+      "final_release_closure": "validated full closure",
+      "fixture": "exact spec.fixture ref",
+      "host_binding": "validated boot/user/host",
+      "main_state": {
+        "fixture_astrid": {
+          "ticks": 11
+        },
+        "fixture_minime": {
+          "ticks": 7
+        }
+      },
+      "production_host_executed": false,
+      "production_pin_schedule_executed": false,
+      "production_qualified": false,
+      "python_executables": "validated exact wrapper/runtime map",
+      "release": "validated release ref",
+      "review": "exact spec.fixture_review ref",
+      "schema": "reservoir_owned_recovery_fixture_validation_v2"
+    },
+    "raw_validation": "Independently reconstruct all raw_result_contract checks against the sealed schedule. Review accepted=true is necessary but insufficient. Reject legacy fixture schemas, controller-only equality, truncated/missing raw inputs, unrelated interpreter family, changed helper/module origins, skipped planned interruptions, action replay, unresolved history and wrong final/backup states.",
+    "signature": "validate_fixture(spec: dict, plan: dict) -> dict"
+  },
+  "raw_result_contract": {
+    "cleanup_history": "Second distinct request/check-in applied once; final22/7 state, two unique applied check-ins total, main backup still11/7 byte-identical, separate completed cleanup ledger, unchanged main history and guards removed.",
+    "core": "Complete original controller journal, separate recovery ledger, all session begin/end records, executor identities, Host operation prefixes/spans, expected-head/action bindings and all witnessed adoption results. Recompute their actual hash-chain rules; summaries or duplicated synthetic success rows cannot substitute.",
+    "executors": "Every sealed step exactly once in order with request, launch, child-created, actual self-start, exit/reap, result or precise injection acknowledgement, and retained stdout/stderr refs. No extra mutation executor, unresolved timeout, unexplained gap or unknown exit. Exceptions only the specified two-child lock overlap and recorded75/76.",
+    "final_observations": "Complete exact identity inventory from every setup/bootstrap/holder/executor/sentinel record. All service/holder/sentinel/executor PIDs absent, all three generated jobs absent, all actual private ports unowned and both guards removed. The aggregate records actual read-only absence outputs and times; independent review checks parent absence separately. No copied production state or production target controls.",
+    "main_history": "One exact request/check-in/ACK applied once, cooperative drain timing and owned holder evidence, final stopped11/7 state and immutable11/7 backup/private synthetic restore/startup evidence. Holder effect alone is not a provider check-in witness.",
+    "pin": "Separate private sentinel ledger: atomic sole --model argument replacement, original/applied plist hashes, exact natural successful sentinel exit, model_opened=false/numeric_imported=false/no listener, one bootstrap, absent pin job. This is a primitive proof, never production pin ordering.",
+    "references": "All raw references use absolute path and SHA256 and belong to the exact released fixture run or explicitly named immutable source/interpreter/release roots. Hash-bound complete inventories, record-set limits, safe file types, stable pre/post reads and no unlisted history growth are required. Hash inventories stream bytes with bounded buffers; bounded JSON parsing retains existing reviewed limits.",
+    "required_top_level": [
+      "schema",
+      "scope",
+      "release",
+      "root",
+      "transaction_id",
+      "host_binding",
+      "python",
+      "python_executables",
+      "final_release_closure",
+      "fixture_artifacts",
+      "plan",
+      "injections",
+      "parent",
+      "setup",
+      "executor_schedule",
+      "main",
+      "recovery",
+      "cleanup",
+      "pin",
+      "final_observations",
+      "artifacts",
+      "started_at",
+      "completed_at",
+      "exact_release_fixture_passed",
+      "production_qualified",
+      "production_host_executed",
+      "production_pin_schedule_executed"
+    ],
+    "schema": "reservoir_owned_recovery_fixture_result_v2",
+    "scope": "owned_fixture_only; production_qualified=false, production_host_executed=false, production_pin_schedule_executed=false",
+    "setup": "Complete owner/boot/user/target/source binding, setup lock/ledger/plists, original coordinator and exact launch intent/result/ready identities; no unknown attempt or unproved setup adoption."
+  },
+  "remaining_acceptance_gates": [
+    "Implement and independently review the bounded parent/raw consumer/entrypoint and final enablement delta.",
+    "Run serialized guarded stdlib source/contract tests under root release; none ran in this design task.",
+    "Freeze exact final release, then execute and independently accept the actual owned fixture once under current ownership and host preflight.",
+    "Create fresh complete production preparation/runtime alignment, preserve full state and validate actual pre-drain raw-proof read cost; no current receipt authorizes production execution."
+  ],
+  "required_focused_future_tests": [
+    "Parent follows actual 71-step baseline plan; rejects arbitrary release plans, extra/skipped/out-of-order actions, wrong75/76, absent/foreign injection acknowledgements and advance before natural reap; only exact nonmutating lock pair overlaps.",
+    "Partial setup/initializer/launch/result publication and parent interruption retain evidence and cannot replay a producer. Bound timeouts never signal or force cleanup. Raw closeout distinguishes parent from reaped children.",
+    "Pure consumer rejects hash-valid but semantically altered setup/session/Host/ledger chains, wrong executed origins or interpreter aliases, missing history, duplicated check-in,22 backup,11 final state, remaining jobs/ports/guards and absent pin raw evidence.",
+    "Consumer rejects legacy/current04 bytes presented as final05, changed enabling delta and review/closure mismatch; verifies same exact final release in all imports and future admission.",
+    "No action-capable imports/calls in reader/default modes; only generated targets and exact debug argv permit sudo. Test actual parent-to-core/driver/ledger contracts using inert fakes before the separately released real OS fixture."
+  ],
+  "reviewed_source_hashes": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/README.md": "120e920a8bfcbdbb05dd7839920f04e819387e3e4e33de11abee0233b903c537",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_cleanup.py": "5637d6269990e70b9ec0dbc6505173d891171f7dfbeca4c543ca4364c4097a66",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_cleanup_host.py": "3aa97ac474aa77d67d2617435823c802a5e725526967af3d7b98a26f489f6ace",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_coordinator.py": "f164d777a8866abce3d4d322c0f3283e017681b971e5fe06844a003af50c306e",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_injection.py": "e5272b25d734753b2049d95bf271097735a2cc7785b3909c4de8e16c63308123",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_pin.py": "99f2522f163ba303fd28b71d802dc5bcf749447b29a3f6449e9bccf5da0d2eca",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_plan.py": "6f49c5f5d7f9154e0a1b9e0a69171aa04a1125f8522ed63725087fbea6303c69",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_records.py": "728c1f178cb3a6f8e1a88f0229d8a691fb11d11bd8b090e07c480c0ec5b88300",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_retained.py": "d1b09bc4eae7f41593557fc028ee03289953c8a5b7c8f5cdb205d8807bfc70a2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_setup.py": "d38a8559710f67ba8cae32ee997d4e867d8a518856b02181d60a4ea891a925fe",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_system.py": "bfc620d4a5432ad818e19e20e61dda94fc1d52a6a902c48f3fa01bec6db5dbbd",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_witnesses.py": "3530284ed90730b5c78f277c195d10b20103924806c5d0ca6091f1e20789acd8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_pin_sentinel.py": "137a98436b58c29d6d28749d3e4857a1bfb7d0be729e249703922ca33e2712eb",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_pin_system.py": "d405265534ce65b14a7d062a2d722c43fca8d0a844791be4e65d9a9034eb30ca",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_recovery_core.py": "422b5e7438fad31c944af501d34bee52ad72a287dd180f19ba15233951bc49f2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_recovery_host.py": "58fdae455d5151a2f9694b67bf2fc5904cbf35aa7614ce2b319018bcc9768782",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/test_owned_fixture_coordinator.py": "eb5ddc43dbbb23f0c2844ac82eb792db804df8c8aa62307acfd5f320817b3c75",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/test_owned_fixture_pin.py": "b3be3df73d2c6f998a6e09ea2ce293314fd8f42b487419728ffb138b163108f9",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/test_owned_recovery_host.py": "fad4c04716ec311922fbbdaa61ba0840ab41e77a0d9de1a0ead73802ced293d5",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/metadata_preflight.py": "3c2bce47648596f8988e0884081625f729d77856526c1b062f5078b68684d318",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_admission.py": "b2b67eb8941471eacffd44b2149e0e7b6aeb6e9df91c2e8be4adfc1c28580be9",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_host.py": "18bf34c606df39da65c4d7b392d51e88d7285b0048c032bf7a7877df9da9dfae",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_preflight.py": "0671c054eb6f37f122e1c61e26a91cf7e3e9e311266029008e87d7db11adef1b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery.py": "893f70d91a8955df5e60cbacc3caf22dc08f2c1c8863677180a5cfc37a5f14d7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_driver.py": "a092c51499c353b53ddf4c09a43cf2d308ce951a535274f652cf755fb815d904",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_inspect.py": "eaafdbbd0521c8a25468d0d40613fcc5e8d2be105b73a511089228dfbde5cdc3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_restore_runner.py": "f7c9be6dffc8161af2d678bfd804e0642e31611b7877d55b98a71429e4bd903e",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_retained.py": "5c287b8757dfd7e8eb876fa8064edba7e4d51d11c179a0c3ed7274effe331a9b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_ledger.py": "fd855cd1613e9fbab1a8e5ae8df4a144fc936bdb7fa5525f3bee0a4e8b03ee84",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_phases.py": "df6e3e959f79e560dfbe8904cbf9546b79e27b2819f7f5b8ab1aa89bb6917389",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance.py": "55e53b84d8caae818fc29fb997761c160cb296e2512207d4d9dbe48da15c5536",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_admission.py": "ff2b7fb1e8b62ddb7f4e1175cff462600a86447cc245b22cbb3acd4cc3c55d2c",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_controller.py": "6d7b05f415d033c164f85abdc22fbcbb7303f9fc2022f4fc03de6f68b4b7ba40",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_host.py": "37f234156c1eabd902faf26ce9ee5409841d5332b12218ba407a6b45658d8d61",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_preflight.py": "9be1f7c899493a64e8e324ae06947a26a82a73f0ea72bac45ab27792ba98b67d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery.py": "5331b9ca3ae00e01e2e010aef52705e48e9beea4cfafbd3cfb543eaf355198a8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_driver.py": "0a948bbce5d3f6dc77b82254ab5a5858db9626a9a6cd80d2f7569347fd6c6355",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_inspect.py": "5b5af27039762aa4527d89d16bce29005d434dc1da11db37e28eb560311f8fca",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_restore_runner.py": "82986ef70d485f73a11cbd8d02c074b6f910e39b6101bc20b79ab57c2b48b804",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_retained.py": "e9dea40dcd0ba6baeb5e67142dfcc605625cb15449588dc903632e5460a5dde7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_recovery_phases.py": "3a4c17fc8ec0caaa61424028c28a208fac681c70a367e6bcd91cb48c1ee69d03",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_reservoir_maintenance_state.py": "5c896092de2a2da6351c7a05ffe78a080fcfd49e91630fd5764b6110a9075834",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_restore_verifier.py": "0494a6570245cfc2e6a76cd18188789130c7cedf3b1eb80743522e0e5e3f7522",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_transaction_execution.py": "996d4a57be06ff2055a292f06e83c38247685db8b3c6dc6fc2ace44dda91d44a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/transaction_execution.py": "2b4e5ad98f4e920ceb67a161480afaffde9e6a44e3c9007645dc9e9445ccc4cb"
+  },
+  "reviewer": "mlx_integration",
+  "schema": "owned_recovery_fixture_final_release_design_review_v1",
+  "scope": "bounded fixture02 orchestrator, raw-proof consumer and production entrypoint design only",
+  "status": "source_only_design_accepted_with_explicit_implementation_requirements"
+}

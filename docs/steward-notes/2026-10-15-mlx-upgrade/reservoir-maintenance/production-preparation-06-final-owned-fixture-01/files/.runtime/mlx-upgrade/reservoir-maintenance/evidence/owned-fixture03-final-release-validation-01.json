@@ -1,0 +1,28 @@
+{
+  "actual_os_fixture_executed": false,
+  "completed_at": "2026-10-17T15:32:38.117534+00:00",
+  "elapsed_s": 0.019887374946847558,
+  "error": "read-only guard refused unbound_local_bytecode",
+  "error_type": "RuntimeError",
+  "executed_local_sources": {},
+  "guard_violations": [
+    "unbound_local_bytecode"
+  ],
+  "inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-source-inputs-01.json",
+    "sha256": "a2af3f3f32c121ab2d010bc6ee3c4cbd7f3f24b36888d34d2d77ffef9b6226b1"
+  },
+  "native_entrypoints_called": false,
+  "passed": false,
+  "production_qualified": false,
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-release-01.json",
+    "sha256": "1ee094f1a0d71f9df05114a12b0350b2aaebc403371d4dbbbf7e6cc688a1396d"
+  },
+  "runner": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/validate_fixture03_final_release_01.py",
+    "sha256": "db96f8365ce37ca547b45032c01e7711513fd25be9336c1558e0e76b528a40db"
+  },
+  "schema": "owned_fixture03_read_only_release_validation_v1",
+  "started_at": "2026-10-17T15:32:38.117055+00:00"
+}

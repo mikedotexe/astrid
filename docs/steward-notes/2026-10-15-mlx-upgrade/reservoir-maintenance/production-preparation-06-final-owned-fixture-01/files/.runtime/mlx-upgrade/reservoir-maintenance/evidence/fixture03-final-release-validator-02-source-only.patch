@@ -1,0 +1,69 @@
+--- /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/validate_fixture03_final_release_01.py
++++ /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/validate_fixture03_final_release_02.py
+@@ -8,6 +8,9 @@
+ import datetime
+ import hashlib
+ import importlib
++import importlib.abc
++import importlib.machinery
++import importlib.util
+ import json
+ import os
+ from pathlib import Path
+@@ -22,7 +25,7 @@
+ CORE=ROOT/'production-candidate-06'
+ INPUTS=EVIDENCE/'owned-fixture03-final-source-inputs-01.json'
+ RELEASE=EVIDENCE/'owned-fixture03-final-release-01.json'
+-OUTPUT=EVIDENCE/'owned-fixture03-final-release-validation-01.json'
++OUTPUT=EVIDENCE/'owned-fixture03-final-release-validation-02.json'
+ WORKER=ROOT/'candidate-v2/maintenance_fixture_worker.py'
+ HOLD=Path('/Users/v/other/astrid/scripts/model_environment.py')
+ 
+@@ -67,6 +70,38 @@
+     return value,bindings
+ 
+ 
++class PinnedFixtureSourceLoader(importlib.machinery.SourceFileLoader):
++    """Load only the manifest-bound source; never consult or publish bytecode."""
++    def __init__(self,fullname,filename,wanted):
++        super().__init__(fullname,filename)
++        self.wanted=wanted
++
++    def get_code(self,fullname):
++        require(fullname==self.name,'source loader module identity differs')
++        data=raw(Path(self.path))
++        require(hashlib.sha256(data).hexdigest()==self.wanted,'pinned fixture source changed before compile')
++        return compile(data,self.path,'exec',dont_inherit=True)
++
++    def set_data(self,path,data,*,_mode=0o666):
++        raise RuntimeError('source-only fixture loader cannot publish bytecode')
++
++
++class PinnedFixtureSourceFinder(importlib.abc.MetaPathFinder):
++    """The exact25 direct fixture names; no directory/path fallback is added."""
++    def __init__(self,bindings):
++        self.sources={Path(path).stem:(path,wanted) for path,wanted in bindings.items()
++                      if Path(path).parent==FIXTURE and Path(path).suffix=='.py'}
++        require(len(self.sources)==25 and all('.' not in name for name in self.sources),
++                'exact25 pinned fixture modules required')
++
++    def find_spec(self,fullname,path=None,target=None):
++        if fullname not in self.sources:return None
++        require(path is None and target is None,'fixture package/reload import refused')
++        filename,wanted=self.sources[fullname]
++        loader=PinnedFixtureSourceLoader(fullname,filename,wanted)
++        return importlib.util.spec_from_file_location(fullname,filename,loader=loader)
++
++
+ def main(argv=None):
+     started=time.monotonic()
+     parser=argparse.ArgumentParser(description=__doc__)
+@@ -99,7 +134,7 @@
+                     executed[filename]=bindings[filename]
+         sys.addaudithook(audit)
+         try:
+-            sys.path.insert(0,str(FIXTURE))
++            sys.meta_path.insert(0,PinnedFixtureSourceFinder(bindings))
+             coordinator=importlib.import_module('owned_fixture_coordinator')
+             require(Path(coordinator.__file__)==FIXTURE/'owned_fixture_coordinator.py','validator imported alternate coordinator')
+             release=coordinator.validate_release(RELEASE)

@@ -1,0 +1,11 @@
+{
+  "files": {
+    "host_audio_fallback.py": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69",
+    "perception.py": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a",
+    "provenance.json": "827671a9fc3301eda812acad4eefd2735eaf8371d25a6407a6806548d237c636",
+    "test_capture_frame_lifecycle.py": "4a5d73ad58653ad250799860ae68be7697bccf97a93692ee0340fee1112d3c5b"
+  },
+  "preserved_at": "2026-10-16T01:32:37.742918+00:00",
+  "reason": "Preserve exact pre-containment source and characterization harness bytes referenced by historical evidence before staged candidate edits.",
+  "schema": "perception_lifecycle_original_snapshot_v1"
+}

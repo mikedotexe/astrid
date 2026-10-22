@@ -1,0 +1,178 @@
+{
+  "accepted_mlx_baseline": false,
+  "all_health_samples_passed": true,
+  "all_source_and_process_identities_matched": true,
+  "automatic_repeat": false,
+  "build_test_activity_samples": 0,
+  "completed_at": "2026-10-17T00:10:57.577937+00:00",
+  "created_at": "2026-10-17T00:15:40.207489+00:00",
+  "current_eligible_window_s": 300.0078670978546,
+  "current_eligible_window_sample_indices": [
+    0,
+    60
+  ],
+  "duration_s": 302.06362899998203,
+  "final_sample_to_completion_s": 2.0539438724517822,
+  "first_sample_after_start_s": 0.275709867477417,
+  "five_minute_eligible_window_observed": true,
+  "health_failure_samples": 0,
+  "host_cpu_idle_percent_range": [
+    56.2,
+    87.33
+  ],
+  "independent_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-review.json",
+    "sha256": "808060e241f3fe4823429a5410c781d28141683df83e28978e959e805735a86c"
+  },
+  "input_binding": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-bindings.json",
+    "sha256": "6b92de441dac3730c047c0111a850527dfff0739048d0db6b23f50d16054d2f6"
+  },
+  "invalid_sample_gaps": 0,
+  "launch": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-launch-01.json",
+    "sha256": "21e69dc6be047a94a7d9c35b23a8fbca41c99c7ac449e2e913d1170805cf8640"
+  },
+  "limits": [
+    "Acceptance is only for this completed sampled host window, not MLX baseline/package/model qualification, production operation or assurance of future host conditions.",
+    "Root must separately validate each exact private numerical release and fresh ongoing run05 coverage. All agents continue to hold tests; later contention or stale admission must not be waived.",
+    "No causal memory recovery or remote-session closure claim. No detected Cargo/rustc/target-test process does not mean zero other CPU activity.",
+    "Reviewer compared recorded237file/sevenprocess maps and source/evidence hashes, without reprobing production or rehashing237live files. The only OS query was the expressly requested absence check for observer45314.",
+    "Priorfailed windows and both failed real cases remain immutable; no case acceptance or retry is inferred."
+  ],
+  "longest_eligible_window_s": 300.0078670978546,
+  "longest_eligible_window_sample_indices": [
+    0,
+    60
+  ],
+  "max_sample_gap_s": 5.008145093917847,
+  "min_sample_gap_s": 4.99180006980896,
+  "numeric_cases_authorized": false,
+  "numeric_cases_executed": 0,
+  "observation_errors": [],
+  "observer_absence": {
+    "absent": true,
+    "argv": [
+      "/bin/ps",
+      "-ww",
+      "-p",
+      "45314",
+      "-o",
+      "pid=",
+      "-o",
+      "lstart=",
+      "-o",
+      "command="
+    ],
+    "checked_after_completion": true,
+    "combined_output": "",
+    "pid": 45314,
+    "returncode": 1,
+    "scope": "One expressly requested read-only PID lookup; no signal or broader process sampling."
+  },
+  "passed": true,
+  "per_sample_identity_checks_passed": 61,
+  "positive_consecutive_swap_increases": 0,
+  "preflight": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-preflight-01.json",
+    "sha256": "91a7a9792edb64e5d014247f2152f2720b494720cf8789bf5102ca2e77691a9a"
+  },
+  "pressure_level_counts": {
+    "1": 61
+  },
+  "production_mutations": 0,
+  "protected_exact_processes": 7,
+  "protected_files": 237,
+  "provenance": {
+    "all_agent_tests_reported_held": true,
+    "all_preflight_artifact_hashes_verified": true,
+    "future_supervisor_source_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-run05-source-review-01.json",
+      "sha256": "c4ce99ec02a8b334a8e834bd9521ad1d2aee9aaffc9b07e6e278afff63a87904"
+    },
+    "historical_ownership_reaudit": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-ownership-reaudit.json",
+      "sha256": "a7e066c1af8b28ed6b1a48e3cb512652fa67692faf2ebc38a4b13b240984bd11"
+    },
+    "observer_pid": 45314,
+    "perception_restart_receipt": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/maintenance/perception-recover-01.json",
+      "sha256": "5fdc6bdccfbaf5acf37e1bdf8e25f95e307a225f284428712bbcaf2a2e8bc6a6"
+    },
+    "preceding_accepted10": {
+      "independent_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-review.json",
+        "sha256": "576a4ab3b5c2b2151169823dc4eac5069aa142a809c9a334275b941482c8241e"
+      },
+      "raw": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10.json",
+        "sha256": "1ae9817de06591336cbfa3eb266217168d69ec9c73cb73092e881543ae51da9b"
+      },
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-root-review.json",
+        "sha256": "14d520242fa771f69968647d8b66d07da74ff899ac836a985c699e0bcf9cb61c"
+      }
+    },
+    "retained_cpu_receipt": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/focused-tests-final-07.json",
+      "sha256": "51652181168727dc08b4ddfe3764454e61ff84c723dd6a973c8377dd30ca8f84"
+    },
+    "source_binding_preflight_launch_and_endpoint_consistent": true,
+    "steward_pause_generation": 528
+  },
+  "raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11.json",
+    "sha256": "c80c7f34ddb58cad86d9c9f5aa397347e105c2b723d8d1c0cc87f72faadb61d2"
+  },
+  "reason": "Root raw recomputation and independent review agree on strict ending300.007867 seconds. Accept completed host admission only; root release and current continuousv2 run05 case coverage remain mandatory.",
+  "reviewer": "root",
+  "reviewer_actions": {
+    "observer_pid_read_only_lookups": 1,
+    "production_probes_or_samplers": 0,
+    "receipt_source_read_and_hash_only_except_requested_observer_absence": true,
+    "signals_or_service_changes": 0,
+    "target_imports": 0,
+    "tests_builds_numerical_work": 0
+  },
+  "root_raw_assessment": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-root-raw-assessment-01.json",
+    "sha256": "ae9bc064424c9982a687afdbaba02a1ecb3bf03a0ee49d58956445c9c4dc4b58"
+  },
+  "samples": 61,
+  "schema": "reservoir_fixture_host_settle_review_v1",
+  "source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-observer.py",
+    "sha256": "ea290b954f4d888a3f8ec18e8762b747983a5b41af03d5be83576d552619a663"
+  },
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-source-review.json",
+    "sha256": "eea9e12f1fa86ddaa7677be7f99a8a132cae092956d7d5e6d2f51b7bd496f55b"
+  },
+  "started_at": "2026-10-17T00:05:55.240416+00:00",
+  "state": "completed_passed",
+  "swap_end_bytes": 11598236221.44,
+  "swap_net_change_bytes": -25165824.0,
+  "swap_start_bytes": 11623402045.44,
+  "vm_byte_ranges": {
+    "compressor_bytes": {
+      "max": 6248792064,
+      "min": 5721341952
+    },
+    "free_bytes": {
+      "max": 8322547712,
+      "min": 96698368
+    },
+    "inactive_bytes": {
+      "max": 21949382656,
+      "min": 13235093504
+    },
+    "speculative_bytes": {
+      "max": 2000928768,
+      "min": 59408384
+    },
+    "wired_bytes": {
+      "max": 31576080384,
+      "min": 11184930816
+    }
+  }
+}

@@ -1,0 +1,217 @@
+#!/usr/bin/env python3
+"""Prepare private sources or run ONE explicitly released case. No implicit matrix/retries."""
+from __future__ import annotations
+
+import argparse
+import fcntl
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common import (CASES, CANDIDATE, HARNESS, PINNED, SOURCE_FILES, THREAD_ENV, check_source,
+                    digest, harness_hashes, read_events, read_json, require, write_json)
+from result_checks import verify_result, verify_retained_files, verify_process_evidence
+from process_identity import identity, interpreter, same_identity, validate_launched_identity, launch_transition
+
+
+def private_path(path):
+    path = Path(path).resolve()
+    require(path.is_relative_to(HARNESS) and path != HARNESS, "output must stay inside qualification-harness")
+    return path
+
+
+def prepare(args):
+    output = private_path(args.output)
+    require(not output.exists(), "preserve existing prepared sources")
+    preparation = read_json(args.preparation)
+    required = preparation["source_hashes"]
+    expected_interpreter = interpreter(preparation["baseline_python"])
+    require(expected_interpreter["sha256"] == preparation["baseline_python_sha256"], "prepared interpreter changed")
+    source_map = {}
+    for variant in ("original", "candidate"):
+        source_map[variant] = {}
+        for name in SOURCE_FILES:
+            path = (CANDIDATE / ("baseline" if variant == "original" else "") / name
+                    if name == "reservoir_service.py" else args.dependency_root / name)
+            data = path.read_bytes()
+            import hashlib
+            actual = hashlib.sha256(data).hexdigest()
+            expected = PINNED[variant] if name == "reservoir_service.py" else required[name]
+            require(actual == expected, f"unreviewed dependency/source: {path}")
+            if name == "persistence.py":
+                require(actual == PINNED["persistence"], "persistence changed")
+            source_map[variant][name] = data
+    output.mkdir(parents=True, mode=0o700)
+    manifest = {"schema": "reservoir_private_sources_v1", "created_wall": time.time(),
+                "preparation_sha256": digest(args.preparation), "harness_hashes": harness_hashes(), "variants": {},
+                "expected_interpreter": expected_interpreter,
+                "expected_packages": {name: preparation["stages"]["baseline"]["packages"][name]
+                                      for name in ("numpy", "torch", "scikit-learn", "websockets")}}
+    for variant, files in source_map.items():
+        directory = output / variant
+        directory.mkdir()
+        manifest["variants"][variant] = {}
+        for name, data in files.items():
+            target = directory / name
+            target.write_bytes(data)
+            target.chmod(0o444)
+            manifest["variants"][variant][name] = digest(target)
+        directory.chmod(0o555)
+    write_json(output / "sources.json", manifest, exclusive=True)
+    (output / "sources.json").chmod(0o444)
+    print(json.dumps({"prepared": str(output / "sources.json"), "sha256": digest(output / "sources.json")}))
+    return 0
+
+
+def run(args):
+    require(args.execute_real_cpu, "real case requires explicit --execute-real-cpu after root release")
+    require(sys.version_info[:3] == (3, 12, 13), "run driver with pinned reservoir Python 3.12.13")
+    output = private_path(args.output)
+    require(not output.exists(), "preserve previous evidence; choose a fresh output")
+    source, _ = check_source(args.manifest, args.variant)
+    require(interpreter() == read_json(args.manifest)["expected_interpreter"], "pinned interpreter changed")
+    before = harness_hashes()
+    require(read_json(args.manifest)["harness_hashes"] == before, "harness changed since source preparation")
+    active_path = HARNESS / "active-run.json"
+    with (HARNESS / "run.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        if active_path.exists():
+            require(read_json(active_path).get("state") == "finished", "prior private child unresolved; inspect before another run")
+        output.mkdir(parents=True, mode=0o700)
+        record = {"schema": "reservoir_private_case_v1", "variant": args.variant, "case": args.case,
+                  "started_wall": time.time(), "passed": False, "probes": [],
+                  "manifest": str(args.manifest.resolve()), "manifest_sha256": digest(args.manifest),
+                  "harness_hashes": before, "thread_environment": THREAD_ENV,
+                  "client_identity_before": identity(os.getpid()), "interpreter": interpreter()}
+        receipt = output / "result.json"
+        write_json(receipt, record)
+        child = None
+        control_read, control_write = os.pipe()
+        log = (output / "service.log").open("x")
+        try:
+            # Import only on this real-case path, before the timing trigger.
+            from protocol_client import probe
+            import websockets.sync.client  # cache import before timed attempts
+            command = [sys.executable, "-I", "-B", str(HARNESS / "service_child.py"),
+                       "--manifest", str(args.manifest.resolve()), "--variant", args.variant,
+                       "--case", args.case, "--output", str(output), "--control-fd", str(control_read)]
+            record["command"] = command
+            env = {**os.environ, **THREAD_ENV, "PYTHONDONTWRITEBYTECODE": "1",
+                   "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1"}
+            write_json(active_path, {"state": "launch_pending", "output": str(output),
+                                     "started_wall": time.time(), "command": command})
+            child = subprocess.Popen(command, cwd=output, env=env, stdin=subprocess.DEVNULL,
+                                     stdout=log, stderr=subprocess.STDOUT, pass_fds=(control_read,))
+            os.close(control_read)
+            control_read = None
+            write_json(active_path, {"state": "active", "pid": child.pid, "started_wall": time.time(),
+                                     "output": str(output), "command": command})
+            record["child_pid"] = child.pid
+            record["child_identity_launched"] = identity(child.pid)
+            validate_launched_identity(record["child_identity_launched"], command, record["interpreter"])
+            deadline = time.monotonic() + args.timeout
+            seen, triggered, port, expected_tick = 0, set(), None, 1101
+            shutdown = False
+            while child.poll() is None:
+                require(time.monotonic() < deadline, "private case watchdog expired")
+                events = read_events(output / "events.jsonl")
+                for event in events[seen:]:
+                    if event["event"] == "ready":
+                        require("child_identity_ready" not in record, "duplicate ready identity boundary")
+                        record["child_identity_ready"] = identity(child.pid)
+                        record["child_interpreter_transition"] = launch_transition(
+                            record["child_identity_launched"], record["child_identity_ready"], command, record["interpreter"])
+                        port = event["address"][1]
+                        record["address"] = event["address"]
+                        trigger = args.case not in ("aggregate", "single")
+                    else:
+                        trigger = (event["event"] == "writer_start" and event.get("phase") == "periodic"
+                                   and event.get("index") in ((1, 34, 68) if args.case == "aggregate" else (1,))
+                                   and args.case in ("aggregate", "single"))
+                    if trigger:
+                        key = (event["event"], event.get("index"))
+                        require(key not in triggered and port is not None, "duplicate or unbound client trigger")
+                        triggered.add(key)
+                        result = probe(port, len(record["probes"]) + 1, expected_tick)
+                        result["trigger"] = event
+                        record["probes"].append(result)
+                        if result["acknowledged"]:
+                            expected_tick += 7
+                        write_json(receipt, record)
+                    if event["event"] == "batch_end" and event.get("phase") == "periodic" and not shutdown:
+                        record["child_identity_before_shutdown"] = identity(child.pid)
+                        same_identity(record["child_identity_ready"], record["child_identity_before_shutdown"])
+                        os.write(control_write, b"shutdown\n")
+                        shutdown = True
+                seen = len(events)
+                time.sleep(.025)
+            record["child_exit_code"] = child.wait()
+            require(record["child_exit_code"] == 0, "private service child failed")
+            child_result = read_json(output / "child.json")
+            same_identity(record["child_identity_ready"], child_result["process_identity_before"])
+            require(record["interpreter"] == child_result["interpreter"], "child interpreter changed")
+            record["client_identity_after"] = identity(os.getpid())
+            same_identity(record["client_identity_before"], record["client_identity_after"])
+            require(record["client_identity_before"]["pid"] != child.pid, "client must be external to service")
+            verify_process_evidence(record, child_result)
+            verify_retained_files(child_result, output)
+            record["assessment"] = verify_result(args.variant, args.case, record["probes"], child_result,
+                                                  read_events(output / "events.jsonl"))
+            require(harness_hashes() == before, "harness changed during case")
+            check_source(args.manifest, args.variant)
+            record["passed"] = True
+        except BaseException as error:
+            record["error"] = f"{type(error).__name__}: {error}"
+        finally:
+            if child is not None and child.poll() is None:
+                try:
+                    os.write(control_write, b"shutdown\n")
+                except OSError:
+                    pass
+                try:
+                    child.wait(timeout=60)
+                except subprocess.TimeoutExpired:
+                    record["owned_child_left_alive"] = True
+                    record["passed"] = False
+            if child is not None:
+                record["child_exit_code"] = child.poll()
+                write_json(active_path, {"state": "finished" if child.poll() is not None else "left_alive",
+                                         "pid": child.pid, "output": str(output), "exit_code": child.poll()})
+            if control_read is not None:
+                os.close(control_read)
+            os.close(control_write)
+            log.close()
+            record["completed_wall"] = time.time()
+            record["artifacts"] = {p.name: digest(p) for p in (output / "child.json", output / "events.jsonl", output / "service.log") if p.is_file()}
+            write_json(receipt, record)
+        print(json.dumps({"result": str(receipt), "passed": record["passed"], "error": record.get("error")}))
+        return 0 if record["passed"] else 1
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    item = commands.add_parser("prepare")
+    item.add_argument("--dependency-root", type=Path, required=True)
+    item.add_argument("--preparation", type=Path, required=True)
+    item.add_argument("--output", type=Path, required=True)
+    item = commands.add_parser("run")
+    item.add_argument("--manifest", type=Path, required=True)
+    item.add_argument("--variant", choices=("original", "candidate"), required=True)
+    item.add_argument("--case", choices=CASES, required=True)
+    item.add_argument("--output", type=Path, required=True)
+    item.add_argument("--execute-real-cpu", action="store_true")
+    item.add_argument("--timeout", type=int, default=300)
+    args = parser.parse_args()
+    if args.command == "run":
+        require(180 <= args.timeout <= 600, "watchdog must be 180..600 seconds")
+        return run(args)
+    return prepare(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

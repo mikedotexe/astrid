@@ -1,0 +1,129 @@
+{
+  "acceptance": {
+    "later_recovery_cannot_rehabilitate_record": true,
+    "observer_rejects_any_failed_health_sample": true,
+    "proof_rechecks_all_samples": true,
+    "required": "Retain failed complete observation; diagnose and qualify a preservation-safe remedy, then collect a new clean full two-hour baseline. No trimming or relabeling."
+  },
+  "baseline_run_id": "20261016T012057Z",
+  "baseline_state_at_review": "running",
+  "candidate_status": "Separate cooperative autosnapshot prototype requested; no live source change, timeout increase, handle deletion or replay.",
+  "current_observation_stopped": false,
+  "gate_waived": false,
+  "incident": {
+    "health_failures": [
+      "reservoir_disconnected"
+    ],
+    "model_log_error": "push_state failed for 'astrid': timed out while waiting for handshake response",
+    "model_log_local_time": "19:38:33 America/Los_Angeles",
+    "provider_http_status": 200,
+    "provider_ready": true,
+    "reservoir": {
+      "detail": "timed out while waiting for handshake response",
+      "last_sync_unix_ms": 1792118313977,
+      "operation": "push_state",
+      "status": "degraded"
+    },
+    "sample_index": 155,
+    "sample_ordinal": 156,
+    "sample_utc": "2026-10-16T02:38:58.048315+00:00",
+    "worker": {
+      "heartbeat_age_ms": 90.505,
+      "last_generation_error": null,
+      "phase": "ready",
+      "queue_capacity": 4,
+      "queue_depth": 0
+    }
+  },
+  "independent_reviewers": [
+    "mlx_readiness: baseline rejection and recovery",
+    "mlx_upstream: transport ordering and synchronous snapshot mechanism"
+  ],
+  "mechanism": {
+    "application_state_sent_on_failed_attempt": false,
+    "autosnapshot_handles": 102,
+    "client_open_timeout_s": 2,
+    "inference": "Strong evidence of aggregate snapshot work starving connection handling during the failed handshake. Exact cause of I/O slowdown and per-socket traceback correlation remain unproven.",
+    "missed_state_replayed": false,
+    "neighboring_batches_logged_span_s": [
+      2,
+      1,
+      2,
+      1,
+      1,
+      2
+    ],
+    "same_asyncio_loop_calls_synchronous_snapshot_all": true,
+    "send_after_successful_handshake": true,
+    "slow_batch_local_end": "19:38:44",
+    "slow_batch_local_start": "19:38:24",
+    "slow_batch_logged_span_s": 20
+  },
+  "new_model_workloads": 0,
+  "production_mutations": 0,
+  "protected_inputs": {
+    "changed_files": [],
+    "changed_processes": [],
+    "files_checked_at_discovery": 119,
+    "processes_checked_at_discovery": 6
+  },
+  "qualification_allowed": false,
+  "recorded_at": "2026-10-16T02:50:01.600042+00:00",
+  "recovery": {
+    "does_not_recover_missed_push": true,
+    "next_sample_reservoir": {
+      "last_sync_unix_ms": 1792118358259,
+      "operation": "pull_state",
+      "status": "connected"
+    },
+    "next_sample_utc": "2026-10-16T02:39:28.229293+00:00",
+    "subsequent_successful_push_local": "19:40:14"
+  },
+  "retained_evidence": {
+    "model_log_copy": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/baseline-incident-01/model-observed-range.log",
+      "sha256": "627a86b189c6223367fc214d5add24ec041656ac50fd3f50735d4bcd4311319c"
+    },
+    "model_original_range": {
+      "bytes": 58402,
+      "offset": 191566136,
+      "path": "/Users/v/other/neural-triple-reservoir/logs/coupled-astrid.log",
+      "sha256": "627a86b189c6223367fc214d5add24ec041656ac50fd3f50735d4bcd4311319c"
+    },
+    "reservoir_log_copy": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/baseline-incident-01/reservoir-tail.log",
+      "sha256": "792288588d21629b6a99bb316ab7d9302f8ded2d67ee5a0d8f254b046d0cdaa7"
+    },
+    "reservoir_range": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/baseline-incident-01/reservoir-range.json",
+      "sha256": "1c4453dd8764822eba6f8e8359af730abad23483a60a8826fdd4d885100ff9aa"
+    },
+    "soak_snapshot": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/baseline-incident-01/soak-during-investigation.json",
+      "sha256": "ff2618454d3e1639f811319ec8299df25cfdd43cd21c1d8aff96c210aeb8b12b"
+    }
+  },
+  "schema": "mlx_baseline_reservoir_incident_v1",
+  "sources": [
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+      "sha256": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0"
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+      "sha256": "d67a0704c7498c49ed0ac36ea5b3d161f74753419f823327f1b1572d9203610f"
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/persistence.py",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_soak_observer.py",
+      "sha256": "1fea36cfd32c4ab51e8761b11fac878155661c6ff55c5ae1bedb8e861bccabdb"
+    },
+    {
+      "path": "/Users/v/other/astrid/scripts/model_qualification.py",
+      "sha256": "9155fe5fa0dc3d4b253f2532318dc38e3adf0764b08f2dcd32878abc21b452da"
+    }
+  ]
+}

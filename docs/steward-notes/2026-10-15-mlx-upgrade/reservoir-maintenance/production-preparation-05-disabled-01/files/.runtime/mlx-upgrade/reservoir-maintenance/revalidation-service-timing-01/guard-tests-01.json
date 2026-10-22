@@ -1,0 +1,34 @@
+{
+  "actual_timing": false,
+  "completed_at": "2026-10-17T01:35:28.402375+00:00",
+  "elapsed_s": 0.04183795815333724,
+  "errors": 0,
+  "failures": 0,
+  "forbidden_modules": [],
+  "log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/guard-tests-01.txt",
+    "sha256": "131a7e3adb35fc2fceaa052b1f68830758b0842a1600a7cd9e9aa46ca42cae11"
+  },
+  "passed": true,
+  "production_qualified": false,
+  "schema": "reservoir_timing_guard_cpu_tests_v1",
+  "skipped": 0,
+  "source_hashes_after": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/design-01.json": "645437257d8f12f85904306aaa4455ccd43861eef9f401ee094c065e4ae1f219",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/run_guard_tests_01.py": "ab3f6ab52aecd91da80652c019f78b2898f4d603254b6716ebe724ef6c4e1e75",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/test_timing_guard.py": "86fd19609903cb077811920fd4ff88fbaf060fa2db2c6cd4accd17a2c214fbd2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review.py": "3acb70ced2ff9adef261897ec3d726a81646efdebe2b0943caa62beb464fe418",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-inputs-01.json": "5bbabc9c88080f4fd4c79c6224bbfe0b00c1064a4f7908451a97273214f24a14"
+  },
+  "source_hashes_before": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/design-01.json": "645437257d8f12f85904306aaa4455ccd43861eef9f401ee094c065e4ae1f219",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/run_guard_tests_01.py": "ab3f6ab52aecd91da80652c019f78b2898f4d603254b6716ebe724ef6c4e1e75",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/test_timing_guard.py": "86fd19609903cb077811920fd4ff88fbaf060fa2db2c6cd4accd17a2c214fbd2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review.py": "3acb70ced2ff9adef261897ec3d726a81646efdebe2b0943caa62beb464fe418",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-inputs-01.json": "5bbabc9c88080f4fd4c79c6224bbfe0b00c1064a4f7908451a97273214f24a14"
+  },
+  "started_at": "2026-10-17T01:35:28.360393+00:00",
+  "target_modules": [],
+  "tests": 9,
+  "violations": []
+}

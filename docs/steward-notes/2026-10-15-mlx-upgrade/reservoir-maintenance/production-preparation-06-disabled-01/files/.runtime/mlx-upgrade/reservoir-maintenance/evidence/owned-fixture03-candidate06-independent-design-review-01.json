@@ -1,0 +1,179 @@
+{
+  "actual_fixture_qualified": false,
+  "concrete_requirements": [
+    {
+      "finding": "The current parent captures full inspection/expected heads before a sealed held_verified reconciliation child exists. The child correctly refuses an early original worker or a changed inspection.",
+      "id": "readiness-before-sealing",
+      "minimal_change": "In fixture03 only, for the two fixed resume_one held_verified reconciliation steps, after the one-use parent phase claim acquire the same ExecutionSession, validate original parent/release/phase/history, then perform finite read-only readiness. Capture the authoritative full inspection/checkpoint/heads and create the one immutable request only after complete readiness, under that lock. Release the parent session before launching the child. Preserve child recomputation, expected-head equality and reconciliation without retries.",
+      "sources": {
+        "owned_fixture_run.py": [
+          89,
+          96,
+          129,
+          134
+        ],
+        "production_recovery_driver.py": [
+          123,
+          140,
+          144
+        ]
+      }
+    },
+    {
+      "finding": "Fresh attach initializes signalled empty. inspect_role tolerates the exact original worker with a closed listener only when the retained signal has been hydrated. Calling the full authoritative inspection early just to hydrate it recreates the timing seam.",
+      "id": "retained-drain-basis",
+      "minimal_change": "Derive only the exact retained successful debug/signal, guard, original identity and fixed phase from validated raw history/ledger first. Reserve the durable attempt in memory without inventing delivery. The readiness observer may wait through the exact draining original, corroborated loaded/no-PID gap, and exact pending holder receipt. It must reject reused PID/start, unknown argv, unexpected listener, wrong guard or unloaded job, and require old-process absence plus complete exact holder receipt/no listener before success.",
+      "sources": {
+        "owned_fixture_retained.py": [
+          174,
+          184,
+          245,
+          256
+        ],
+        "owned_recovery_host.py": [
+          41,
+          48,
+          158,
+          188
+        ]
+      }
+    },
+    {
+      "finding": "Adding a parent90-second wait ahead of a fresh300-second child watchdog would silently enlarge the phase budget. The existing generic FixtureHost.wait also accepts a truthy predicate after its deadline.",
+      "id": "deadline-acceptance",
+      "minimal_change": "Define the original phase deadline before the readiness stage. Bound readiness by the unchanged90-second drain allowance and remaining existing phase budget; pass remaining time to the one child wait rather than grant another full budget. Check time before and after observation and clamp sleeps. A final bounded native query may overrun only if its result is rejected; do not claim hard interruption. Do not reuse the permissive wait helper unchanged for the new acceptance boundary.",
+      "sources": {
+        "owned_fixture_coordinator.py": [
+          308,
+          328
+        ],
+        "owned_recovery_host.py": [
+          126,
+          132
+        ]
+      }
+    },
+    {
+      "finding": "OwnedSystem._run is not the only subprocess.run(timeout) path: private pin bootstrap/bootout/print and initial parent identity queries also use it. That helper kills a child on timeout or KeyboardInterrupt. The old immutable source remains evidence, not a behavior to reuse.",
+      "id": "complete-no-force-fixture-paths",
+      "minimal_change": "Use one cohesive narrowly allowlisted fixture03 no-force command boundary across these paths. Record exact launch intent/argv/owner/phase and child creation before relying on its result. Popen wait/communicate has no kill/terminate/context-manager cleanup or retry. Record natural reap only after an actual return; preserve uncertain child/effect on timeout or interruption, even if later evidence publication fails. Preserve inherited Terminal stdin for the existing narrow sudo debug call. No repeated action is permitted.",
+      "sources": {
+        "owned_fixture_run.py": [
+          55,
+          59
+        ],
+        "owned_fixture_system.py": [
+          33,
+          42,
+          103,
+          133
+        ],
+        "owned_pin_system.py": [
+          25,
+          31,
+          53,
+          69
+        ]
+      }
+    },
+    {
+      "finding": "Production05 debug directly uses subprocess.run(timeout=180), while its ReadOnlySystem.command uses subprocess.run(timeout=20) and is also used for held bootout and production bootstrap. Fixing fixture03 alone does not repair those actual production paths.",
+      "id": "production-native-blocker-is-separate",
+      "minimal_change": "Candidate06 must either explicitly include the separately reviewed no-force native correction and its exact raw result/intent grammar, or retain a clear live-drain blocker. Do not label the read-only-named command method harmless when production mutators invoke it. The owned fixture does not execute ProductionHost and cannot by itself qualify that correction.",
+      "sources": {
+        "production_host.py": [
+          249,
+          265,
+          290,
+          302,
+          447,
+          453
+        ],
+        "production_preflight.py": [
+          208,
+          212
+        ]
+      }
+    },
+    {
+      "finding": "The frozen reader accepts exactly three parent sessions, exact command/Host record grammar and complete raw inventory. New readiness sessions or native-child records cannot be silently ignored or accepted by loosening counts.",
+      "id": "exact-new-evidence-consumer",
+      "minimal_change": "Version the consumer in06. Require exactly the existing three parent sessions plus the two named readiness sessions, each tied to the original parent phase claim/result, same root/plan/boot/executor, complete begin/end and readiness records, and ending before that child launch. Bind retained ordered samples, exact final held proof, authoritative inspection/head/request and prior signal/debug references. Validate any added native command records against the precise owning phase and accepted natural return; incomplete or unknown command records block successful fixture acceptance. Keep complete5000-file/64MiB private inventory bounds, raw final absence,71 ordered executors, two check-ins, immutable11/7 backup and final22/7 state unchanged. Budget sampling/evidence to these bounds rather than waive or silently enlarge them.",
+      "sources": {
+        "owned_fixture_result.py": [
+          115,
+          169
+        ],
+        "production_fixture_admission.py": [
+          283,
+          301,
+          470,
+          497
+        ],
+        "production_fixture_history.py": [
+          108,
+          170,
+          196,
+          312
+        ]
+      }
+    }
+  ],
+  "design": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-holder-scheduling-fix-design-01.json",
+    "sha256": "93277cedacf396c0e9c9bf0aa9eaca7f6ca5540c93c2d08271163e10b3d45ec6"
+  },
+  "design_direction_accepted": true,
+  "execution_authorized": false,
+  "focused_fake_acceptance_needed": [
+    "Delayed original drain, loaded/no-PID, exact holder before receipt, already-held and both role sequences; prove no full authoritative inspection/request/child occurs before readiness and no extra signal/debug.",
+    "Foreign replacement, wrong guard, old PID reuse, extra listener, lost job, source/history drift, deadline reached before observation and truthy-after-deadline all refuse before a sealed request.",
+    "After-readiness stale heads still refuse in the unchanged child; no post-claim wait bypass or refresh/retry.",
+    "No-force TimeoutExpired and KeyboardInterrupt for action and query paths, spawn failure, natural nonzero return and receipt-write failure; preserve known reap separately from unknown effect and never launch again.",
+    "Exact extra parent sessions/raw readiness/command evidence present once and within ordered phase times; absent, extra, reordered, drifted or unclosed records reject in the new consumer."
+  ],
+  "implementation_accepted": false,
+  "no_force_prior_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-native-timeout-review-01.json",
+    "sha256": "b6cb72a60e7e81c23c5af348d243c31c7f975bdfec1262aa9091871ad2982ba1"
+  },
+  "precision_correction": {
+    "source": "owned_fixture_retained.py:166-171,232-253,352",
+    "text": "The fixture snapshot at line166 contains host/protected/stewardship, not role identities. Line352 alone is not the role-transition guard. Actual stale-role protection comes from full inspection roles and inspection_sha256 expected_heads, per-role repeat observations, and revalidate current==inspection. Keep all of those; do not justify the new wait with an inaccurate claim about snapshot contents."
+  },
+  "production_qualified": false,
+  "reviewed_at": "2026-10-17T14:37:47.120346+00:00",
+  "reviewer": "codex-mlx-upstream",
+  "reviewer_operations": {
+    "process_queries": 0,
+    "service_calls": 0,
+    "signals": 0,
+    "source_edits": 0,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "schema": "owned_fixture03_candidate06_bounded_design_review_v1",
+  "scope": "source_only_smallest_coherent_versioned_fix_design",
+  "sources": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_coordinator.py": "8244b61c4fa980b67528f8ebeaa20b7ebe6c7ca45e8039e1493977c2ab5a07ba",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_plan.py": "6f49c5f5d7f9154e0a1b9e0a69171aa04a1125f8522ed63725087fbea6303c69",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_result.py": "823ce8eb4a036711d8c5b46b6458402a6f2bce6f1af59a4c6a1920edf08e46b2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_retained.py": "d1b09bc4eae7f41593557fc028ee03289953c8a5b7c8f5cdb205d8807bfc70a2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_run.py": "c5c7117abce79963d22aed713f9d3fee388b6d4d060eda71357ac29f52ac775d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_system.py": "96a95258ae81652f5ad3e1bf222f9159163ad134e6dd7113d16fbabeb6576817",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_pin_system.py": "60897105636e29b6a986f7983e2d6514c7237243e45c34f3c0dd3d00c20493da",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_host.py": "0fa54ce45e72452fb01108360dc0c48aade212cfc47de77fdf0167a45aba286a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_fixture_admission.py": "69f85904322db994707432d9f288df8e485607b6a1a6cc1a1ee7253a2bbd961a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_fixture_history.py": "506bd5cfeeda0dcb2315ec601aaa29e54eae58fa117310f5d60ffc66b83e8013",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_host.py": "7b162da2a92c6cce0156fd83e3162b2decbc5cc2ffafb7b4bdc4570d43736945",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_preflight.py": "01aed915bee64829b2c579e2be4124eb7738d25ccb20d41a7666d3bccfe63534",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery_driver.py": "a092c51499c353b53ddf4c09a43cf2d308ce951a535274f652cf755fb815d904"
+  },
+  "versioning_and_limits": [
+    "Preserve fixture02/candidate05, releases, failed main run and successful cleanup as immutable independent facts. New03/06 source/test closure and later exact final release require their own review and actual owned fixture.",
+    "The worker,6-second drain, persistence/oracles, core adoption/controller/one-step semantics and protocol/deadlines remain unchanged unless a separately identified concrete blocker is assigned.",
+    "No broad recovery, automatic parent restart, credential prewarm, producer replay, force, unowned labels or runtime state rollback is introduced.",
+    "This source review neither imports code nor executes tests, processes, probes, locks, services or signals. The new implementation and its future evidence remain unreviewed."
+  ]
+}

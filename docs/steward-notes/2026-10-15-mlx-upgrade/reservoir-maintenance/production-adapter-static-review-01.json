@@ -1,0 +1,25 @@
+{
+  "schema": "reservoir_production_adapter_static_review_v1",
+  "created_at": "2026-10-16T15:15:36.875770+00:00",
+  "status": "corrected_to_reviewed_simplification_no_production_qualification",
+  "controlling_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/design-review-readiness-01.json",
+    "sha256": "e4850ea80861346d0115b0f55cfa1ba739184c88cadd459590dfd1ef662ad7f7"
+  },
+  "correction": "Withdraw the earlier mandatory production restore hook/wrapper recommendation. The explicitly reviewed deterministic-path inference is sufficient; direct in-process production byte equality is not a requirement.",
+  "minimum_missing_implementation": [
+    "Fixed-two-label production Host adapter with current ownership/provenance, real log-window capture, safe held-only transitions, complete witnesses, and no generic service management.",
+    "Actual isolated restore verifier against a disposable independent copy of exclusive stopped backup, using exact production interpreter/packages/source/config, with all top-level NPZ and sidecar semantic comparisons before any private tasks/listener.",
+    "Production startup log witness: recheck unchanged production input/state hashes immediately before bootstrap; capture complete new-PID-bound startup; require each expected restored handle exactly once, correct backend/config, and zero restore errors or thermostat warnings before provider bootstrap."
+  ],
+  "required_restore_semantics": "Include historical top-level NPZ names that list_snapshots enumerates. Require complete three-thermostat sidecars and finite valid fields. Model event_seq maxima, bounded rings, elapsed monotonic age, and documented thermostat conversions explicitly. Preserve invalid/quarantined/history files. Do not require naive whole-object equality or silently accept omissions.",
+  "evidence_limit": "Acceptance is deterministic-path inference from identical inputs and implementation plus actual startup logs, not direct equality measured within production before admission.",
+  "remaining_blockers": "No production Host, real stopped-state restore acceptance, startup witness, or fully accepted current-host lifecycle/cleanup proof exists yet. Ownership/host settling and runtime source alignment remain parent responsibilities.",
+  "qos_note": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/qos-late-waiter-review-01.json",
+    "sha256": "12ce32ee7d7d128265cd0b163889ed003351a47829c0bfe88cf7fea0f9aa5f31"
+  },
+  "source_mutations": 0,
+  "live_calls": 0,
+  "service_or_model_imports": 0
+}

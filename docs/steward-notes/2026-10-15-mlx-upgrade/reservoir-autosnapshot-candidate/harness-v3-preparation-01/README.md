@@ -1,0 +1,15 @@
+# Private service harness v3 — initial process metadata publication
+
+Source preparation only. No numerical case, service, probe, monitor or test has been run for this revision. Version2, its accepted source review and its failed original/normal case remain unchanged. `source-parent-01.json` binds the ten copied source files and retained failure.
+
+The observed failure was an initial `ps` command value of exactly `(python3.12)`. The child later published its complete pinned framework command with the same PID and OS start time. This revision treats that single string as incomplete metadata, never as accepted process identity.
+
+Before any protocol probe, the driver may poll the owned child's `poll()` status and read `/bin/ps -ww` for at most two seconds, with 25 ms spacing and at most 81 observations. This publication window is capped by the case watchdog, which starts before `Popen`; the default remains 300 seconds and the CLI cannot request more than 300. Each `ps` timeout is limited to the remaining publication and case budget. The deadline is checked again after each observation and before acceptance. Existing graceful cleanup remains unchanged.
+
+Only the exact placeholder for the pinned `python3.12` family may cause another read. Missing/malformed PID/start, changed PID/start, any unknown complete command, any other placeholder, child exit, `ps` failure or expiry refuses the case. The first complete command must be the exact submitted launcher argv or exact pinned framework argv, including its unchanged argument tail. Both interpreter files are rehashed. The ready boundary still requires the exact framework command; every later process identity remains strictly equal to that ready identity.
+
+The result retains every raw initial `ps` output before validation, monotonic read boundaries, the actual bounded `ps` timeout, observed child exit status and parsed identity. Failures retain these observations. Final receipt validation recomputes the publication proof from the raw observations and exact prepared interpreter, rejects missing/reordered/invalid rows, and requires the accepted identity to equal the existing launch-transition input. Claimed elapsed time or a success flag alone is insufficient.
+
+The original service child, fixture, snapshot/thermostat oracle, protocol client, matrix reviewer and common provenance helper are copied without change. The protocol deadlines remain `open_timeout=2` and `recv(timeout=5)`. No launch, control command, probe or numerical producer is retried by the new helper. It adds no signal or termination mechanism.
+
+`test_initial_publication.py` contains stdlib fake-clock/child/reader tests. `test_harness.py` retains the earlier checks and adds the publication evidence to its process fixture. Tests and preparation/execution commands require the parent coordinator's separately serialized release; do not run during an observation or actual case. A new exact-source preparation and fresh root-approved case output are required. Earlier failures are not retroactively accepted, and passing this private harness would not qualify production maintenance or an MLX promotion.

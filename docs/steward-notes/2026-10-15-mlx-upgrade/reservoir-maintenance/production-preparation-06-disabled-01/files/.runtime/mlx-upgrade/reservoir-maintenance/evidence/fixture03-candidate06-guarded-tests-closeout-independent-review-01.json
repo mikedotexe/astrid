@@ -1,0 +1,118 @@
+{
+  "accepted": true,
+  "actual_os_acceptance": false,
+  "blockers": [],
+  "candidate06_retained": {
+    "bound_original_origins": 44,
+    "elapsed_s": 25.541959750000387,
+    "errors": 0,
+    "executed_origins": 46,
+    "explicit_generated_origins": 2,
+    "failures": 0,
+    "fixture03_modules_executed": 0,
+    "forbidden_actions_or_imports": 0,
+    "log_and_result_agree": true,
+    "no_rerun_needed_for_two_unexecuted_fixture_test_only_corrections": true,
+    "skips": 0,
+    "tests": 327
+  },
+  "closure": {
+    "candidate06_43_artifact_bytes_unchanged_since_327_test_run": true,
+    "current_69_artifact_hashes_equal_exact_final_disabled_checkpoints": true,
+    "current_88_plan_source_hashes_verified": true,
+    "current_flags": {
+      "FIXTURE_EXECUTION_ENABLED": false,
+      "PRODUCTION_CONTROLLER_ENABLED": false,
+      "PRODUCTION_EXECUTION_ENABLED": false
+    },
+    "historical_failed_fixture140_and_abort31_records_retained": true,
+    "only_two_fixture_test_paths_differ_between_historical_candidate_plan_and_final_fixture_plan": [
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/test_owned_fixture_commands.py",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/test_owned_recovery_host.py"
+    ],
+    "protected305_and_preserved171_maps_unchanged_per_guarded_evidence": true,
+    "real_fixture03_runs_directory_absent": true,
+    "source_before_after_maps_exact": true
+  },
+  "created_at": "2026-10-17T15:23:45.569848+00:00",
+  "execution_authority_created": false,
+  "fixture03": {
+    "bound_original_origins": 33,
+    "copied_helper_sha256": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+    "elapsed_s": 27.495482416125014,
+    "errors": 0,
+    "exact_copied_helper_origins": 17,
+    "executed_origins": 50,
+    "failures": 0,
+    "forbidden_actions_or_imports": 0,
+    "log_and_result_agree": true,
+    "plan_source_entries": 88,
+    "skips": 0,
+    "tests": 94
+  },
+  "limits": [
+    "This independent review used only stdlib file reads, hashes and AST; no target import, test, native query, fixture, numerical workload or live action was performed.",
+    "The prior failed 94-test runs remain failed and separately retained; their results are not relabeled.",
+    "Temporary helper copies have been cleaned by the fake tests; their exact path/hash evidence and ownership/canonical checks come from the pinned guarded runner, not a claim of current copied-file existence.",
+    "Large protected runtime payloads and original run trees were not newly traversed; this review compares their retained before/after maps and the already-reviewed guarded evidence.",
+    "This accepts the final disabled source and fake-test closure only. Later enabled bytes require exact delta review; an actual OS recovery fixture and production acceptance do not follow from these fake tests."
+  ],
+  "production_qualified": false,
+  "references": {
+    "candidate06_checkpoint01": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-06/evidence/source-checkpoint-01.json",
+      "sha256": "fe9af826301bf00127c799dff5b75dcc7e10f30e2a84cf8cd0d7b9cc72b94e74"
+    },
+    "candidate06_log": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production06-guarded-tests-01.txt",
+      "sha256": "8403a156f09fd4c6282c931ae58ebc36eb6311fb2ed1662b3ee892c0f82647bd"
+    },
+    "candidate06_plan": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production06-test-plan-01.json",
+      "sha256": "4d5ed354140b836929d4d316cd5602a03d62d943c8eac92dca33c87fc0bcba4f"
+    },
+    "candidate06_result": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production06-guarded-tests-01.json",
+      "sha256": "adbf198d57baafe4c74e4a7adeaa6ca059475ec5cf785b435a0f7ef163ad4d4d"
+    },
+    "copied_helper_guard_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-copied-helper-guard-independent-review-01.json",
+      "sha256": "93efc11eea3d69d6f797dca027cf19d6752d2e4a4b973a1cf19d02b188e510dc"
+    },
+    "fixture03_checkpoint02": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/evidence/source-checkpoint-02.json",
+      "sha256": "112a921274f7933cd64b3c285b39e1d976b0b8714f601317704620e22f6b9776"
+    },
+    "fixture03_log": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-guarded-tests-03.txt",
+      "sha256": "b55c6d5bfe07f62a6e93c200ffc5de7eabae57c19d1931ebfbc3d20d71941fde"
+    },
+    "fixture03_plan": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-test-plan-03.json",
+      "sha256": "8ae1749f729fcd3a29bff8a3a52f132726dc39d8ab5bc487bfca13da8bca5654"
+    },
+    "fixture03_result": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-guarded-tests-03.json",
+      "sha256": "8667c96e00c775230321dcaf451c42513643d426cc701e53221800513a9a6138"
+    },
+    "prior_failure01": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-guarded-tests-01.json",
+      "sha256": "f93017ad4e6dfaad6b8c4caf21d15facf30a6a66fbd9895ca0e6f078537ded3c"
+    },
+    "prior_failure02": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-guarded-tests-02.json",
+      "sha256": "059dcbc16754461f578678c0f97f7faaed3aba11a80bbcffb4585086bf9be297"
+    },
+    "prior_source_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-candidate06-independent-source-review-01.json",
+      "sha256": "141f209c593a983c40f6847133b8ada5384f14816079e9abce0d7d2352017e15"
+    },
+    "test_only_delta_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-source-checkpoint-02-independent-review-01.json",
+      "sha256": "eea1556dc1edc768053fddee52fbbfbacca479efc0d09be2bc7029ccb09be430"
+    }
+  },
+  "reviewer": "/root/mlx_upstream",
+  "schema": "fixture03_candidate06_guarded_test_closeout_review_v1",
+  "scope": "disabled_source_and_guarded_stdlib_fake_tests_only"
+}

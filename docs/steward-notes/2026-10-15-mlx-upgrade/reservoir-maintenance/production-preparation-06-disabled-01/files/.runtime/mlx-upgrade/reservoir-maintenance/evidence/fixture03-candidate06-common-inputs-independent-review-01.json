@@ -1,0 +1,64 @@
+{
+  "accepted_cleanup": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-root-acceptance-01.json",
+    "sha256": "f6e339ae02a69df8fe720b56800b665dae679a3e51f8fb8b850fdaa1539de98d"
+  },
+  "accepted_cleanup_archive": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-accepted-01/archive-manifest.json",
+    "sha256": "b7d0a3de5706632f5913108b4ec2eaf220ac69f2e6bf1aa414f12ff435e4d8ec"
+  },
+  "accepted_for_future_immutable_test_plans": true,
+  "actual_os_acceptance": false,
+  "cleanup_independent_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-actual-independent-review-01.json",
+    "sha256": "742259e4e1d3917501f87a1e2292526259d745820c9466dacf786184724d0426"
+  },
+  "control_actions": false,
+  "execution_authorized": false,
+  "findings": [],
+  "inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-candidate06-test-common-inputs-01.json",
+    "sha256": "0213c79d71af36ed057b694373abc5c819723b48bb49e6a6ab0206a2e04244c7"
+  },
+  "limits": [
+    "305 protected hashes were checked as the exact union of the accepted297-file postexit map and current8-file abort helper closure; unrelated large protected payloads were not rehashed in this static review. The final guarded runner must perform its own before/after checks.",
+    "Current171 preserved source files and171 accepted archive copies, all reference hashes, the8 helper artifacts and2 pinned interpreter binaries were independently hashed; complete current preserved inventories match.",
+    "This verifies common inputs only. Final new03/06 source/test closure, exact external dependencies, test counts and per-scope immutable plans still require review.",
+    "No current process/port/guard observation or live readiness is inferred. Accepted cleanup remains cleanup only; failed fixture02 is not qualified."
+  ],
+  "native_queries": false,
+  "postexit_observation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-postexit-observation-01.json",
+    "sha256": "76e572221c44eb45a598ebf149a854d478d1713c7c5a78beda07abcf9a1aadc5"
+  },
+  "production_qualified": false,
+  "reviewed_at": "2026-10-17T14:49:24.091474+00:00",
+  "reviewer": "codex-mlx-upstream",
+  "schema": "fixture03_candidate06_common_inputs_independent_review_v1",
+  "scope": "static_common_guard_input_provenance_only",
+  "target_imports": false,
+  "tests_run": false,
+  "verified": {
+    "additional_abort_helper_artifacts": 8,
+    "archive_source_copy_pairs_hash_verified": 171,
+    "authorized_added_files": 1,
+    "authorized_appended_files": 1,
+    "authorized_removed_files": 2,
+    "failed_run_files": 140,
+    "identical_preabort_files": 138,
+    "pinned_interpreter_files": 2,
+    "preserved_roots": 2,
+    "protected_map_entries": 305,
+    "protected_postexit_entries": 297,
+    "references": 6,
+    "state": {
+      "fixture_astrid": {
+        "ticks": 11
+      },
+      "fixture_minime": {
+        "ticks": 7
+      }
+    },
+    "successful_abort_files": 31
+  }
+}

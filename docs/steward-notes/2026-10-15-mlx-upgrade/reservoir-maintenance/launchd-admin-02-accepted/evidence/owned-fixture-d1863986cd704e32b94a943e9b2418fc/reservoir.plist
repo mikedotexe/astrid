@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ExitTimeOut</key>
+	<integer>5</integer>
+	<key>KeepAlive</key>
+	<true/>
+	<key>Label</key>
+	<string>com.codex.reservoir-maintenance-fixture.d1863986cd704e32b94a943e9b2418fc.reservoir</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14</string>
+		<string>/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/maintenance_fixture_worker.py</string>
+		<string>--root</string>
+		<string>/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc</string>
+		<string>--token</string>
+		<string>d1863986cd704e32b94a943e9b2418fc</string>
+		<string>--role</string>
+		<string>reservoir</string>
+		<string>--drain-seconds</string>
+		<string>6.0</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir.stderr</string>
+	<key>StandardOutPath</key>
+	<string>/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir.stdout</string>
+	<key>ThrottleInterval</key>
+	<integer>1</integer>
+	<key>WorkingDirectory</key>
+	<string>/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc</string>
+</dict>
+</plist>

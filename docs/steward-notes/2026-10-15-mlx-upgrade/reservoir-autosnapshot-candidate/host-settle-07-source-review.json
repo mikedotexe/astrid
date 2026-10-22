@@ -1,0 +1,55 @@
+{
+  "approved_source": true,
+  "bindings": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-bindings.json",
+    "sha256": "beae54c2362ea251c6b5a1fc9dbdf78532fa65b498796b97c7515c2c7cd5f629"
+  },
+  "changes_reviewed": [
+    "Fresh exclusive07 output; retains05 as last completed historical observation because06 never ran.",
+    "Seven exact PID/PPID/start/argv rows, including accepted new Minime60407 and bridge61069; five unchanged process rows and all seven engine file bindings from06 retained.",
+    "Expands binding map to237 files, including prior baseline closure, reconciled Minime inputs, new bridge release/helper/manifests, native engine and current steward control528. Binding bytes and file contents are checked on every identity sample.",
+    "Requires exact provider8090/reservoir7881/Ollama11434 listener PIDs and refuses failed/stderr listener observations; checks current engine, Minime agent, bridge and perception launchd PIDs.",
+    "Missing bridge launchdPID now refuses rather than accepting a stable error object; previous draft is retained.",
+    "Preserves300 consecutive observed seconds of pressure1, swap at or below the first sample of current window, no detected Cargo/rustc/target tests, sample gap no more than15s, unchanged identity and readyz200 ready true reservoir connected.",
+    "Retains5s nominal cadence, early exit only after current300s eligible window, otherwise610s nominal observation limit with finite per-command timeout overhead; final identity check remains mandatory."
+  ],
+  "created_at": "2026-10-16T18:59:30.669992+00:00",
+  "limits": [
+    "This approves observer source and input-map construction only. Root current ownership/runtime re-audit supplied the bound identities; this review did not independently run any process, health, listener or launchd query.",
+    "The reported60MB/0.067s preparation scan is root measurement, not reviewer benchmark. Observation itself rehashes current bound files and refuses changes.",
+    "Nominal610s loop limit may be exceeded by the final bounded sampling/probe work. Evidence is sampled admission evidence, not a continuous monitor or an authorization to begin numerical work.",
+    "Completed passive inputs are historical prerequisites only, not accepted MLX baseline. Current host result must be separately reviewed for freshness, health, identity and runtime contention before any additional workload.",
+    "Build detection is scoped to observed Cargo/rustc/target test executables; it is not proof of zero CPU work or zero remote desktop activity."
+  ],
+  "observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-observer.py",
+    "sha256": "005c5db21d9ff36dd2e867cb54a272cabdc2c1922f0a8bb0f0b5a7ddd5709d05"
+  },
+  "preserved_pre_review_draft": {
+    "executed": false,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-pre-review-draft-01.txt",
+    "sha256": "04725a40076e09920b46193652c64e6815f056443cd39418ff8cadd0ff505dd2"
+  },
+  "prior_source": {
+    "executed": false,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-06-observer.py",
+    "sha256": "63464bfd2f7f82ccdce13d8c1a3a959093dcb28d9a334b8430dcf5b81fe4f169"
+  },
+  "reviewer": "mlx_integration",
+  "schema": "reservoir_host_window_source_review_v1",
+  "scope": {
+    "accepted_mlx_baseline": false,
+    "binding_reference_map_and_exact_source_verified": true,
+    "bound_file_contents_rehashed_by_reviewer": false,
+    "numeric_or_model_imports": false,
+    "observer_executed": false,
+    "production_mutations": false,
+    "qualifying_window_observed": false,
+    "review_only": true,
+    "runtime_probes_executed": false,
+    "source_edited_by_reviewer": false,
+    "tests_executed": false
+  },
+  "status": "accepted_source_only_not_executed",
+  "unresolved_source_blockers": []
+}

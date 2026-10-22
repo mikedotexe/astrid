@@ -1,0 +1,259 @@
+{
+  "actual_numerical_cases_executed": 0,
+  "archive_notes": {
+    "path": "README.md",
+    "sha256": "cb153e47dd34c657a7877d57a826b42e6c16bff68fb2052cb520a07d44c4513e"
+  },
+  "archive_root": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-maintenance/restore-qualification-preparation-02",
+  "copy_verification": "Every copied byte hash matched its original before and after copying; no payload imports, tests, q.check, live probes or source changes.",
+  "files": [
+    {
+      "archive_path": "candidate/child_admission.py.txt",
+      "bytes": 20390,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/child_admission.py",
+      "sha256": "21b13f54390bbb058a26749d84aad625cda6df7f2df2e8917782e432107aa99d"
+    },
+    {
+      "archive_path": "candidate/qualify_restore.py.txt",
+      "bytes": 29791,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/qualify_restore.py",
+      "sha256": "c1fde3f0e25ead1d417f74408571e3f95bc9b6a69f001f69256708fc0e0b8f6c"
+    },
+    {
+      "archive_path": "candidate/reservoir_maintenance_state.py.txt",
+      "bytes": 20175,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/reservoir_maintenance_state.py",
+      "sha256": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594"
+    },
+    {
+      "archive_path": "candidate/restore_verifier.py.txt",
+      "bytes": 31763,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/restore_verifier.py",
+      "sha256": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3"
+    },
+    {
+      "archive_path": "candidate/seed_fixture.py.txt",
+      "bytes": 8587,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/seed_fixture.py",
+      "sha256": "4a3507615ff5a8f25f9fcd8d0ca592beee14820c1a591045446fc0a8e190c7b8"
+    },
+    {
+      "archive_path": "candidate/source/dual_ai_bridge.py.txt",
+      "bytes": 27048,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/dual_ai_bridge.py",
+      "sha256": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549"
+    },
+    {
+      "archive_path": "candidate/source/lsm_reservoir.py.txt",
+      "bytes": 8906,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/lsm_reservoir.py",
+      "sha256": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417"
+    },
+    {
+      "archive_path": "candidate/source/persistence.py.txt",
+      "bytes": 7438,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/persistence.py",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f"
+    },
+    {
+      "archive_path": "candidate/source/rehearsal.py.txt",
+      "bytes": 6448,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/rehearsal.py",
+      "sha256": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093"
+    },
+    {
+      "archive_path": "candidate/source/reservoir_service.py.txt",
+      "bytes": 63345,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/reservoir_service.py",
+      "sha256": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da"
+    },
+    {
+      "archive_path": "candidate/source/triple_reservoir_coreml.py.txt",
+      "bytes": 17872,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/triple_reservoir_coreml.py",
+      "sha256": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8"
+    },
+    {
+      "archive_path": "candidate/test_child_admission.py.txt",
+      "bytes": 19373,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/test_child_admission.py",
+      "sha256": "592fba08682715b868926759c2c18c1f3949ada49ed618c9f120a138325a672d"
+    },
+    {
+      "archive_path": "candidate/test_qualification.py.txt",
+      "bytes": 17473,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/test_qualification.py",
+      "sha256": "5b4075ae565b01c3b09c7f5369f7a46514bc8980f3639445f3b4df120d94aeb7"
+    },
+    {
+      "archive_path": "candidate/README.md",
+      "bytes": 8070,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/README.md",
+      "sha256": "e193b6a67dcf4559b6150ebc5655bcd132a219e1dab1a5f11d5b8122813a6db2"
+    },
+    {
+      "archive_path": "candidate/inputs.json",
+      "bytes": 53290,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/inputs.json",
+      "sha256": "0e802f5798e721ef39064e5b7a4753e8e1a04def437adbb91bfb63e153c64430"
+    },
+    {
+      "archive_path": "candidate/original-copy-manifest.json",
+      "bytes": 2112,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/original-copy-manifest.json",
+      "sha256": "b315fb9130c8848e924877dbd5e541602ee0e33b80ff59a51d88eca565915ac9"
+    },
+    {
+      "archive_path": "candidate/admission-cpu-tests-01.json",
+      "bytes": 3940,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/admission-cpu-tests-01.json",
+      "sha256": "86b51df0b4e73f9fe35ba788640973c8fb8fdfe01476407d2b83e2a19b85112a"
+    },
+    {
+      "archive_path": "candidate/admission-cpu-tests-01.txt",
+      "bytes": 2522,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/admission-cpu-tests-01.txt",
+      "sha256": "351df1e2a54933aee22eac11ecfdbf8d156c116ab7c45745420633aa3c116df7"
+    },
+    {
+      "archive_path": "candidate/admission-cpu-tests-02.json",
+      "bytes": 8528,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/admission-cpu-tests-02.json",
+      "sha256": "df59c09f4be526a644c19998c68a0d41afd4d142c1a6710c2969de5b8008d588"
+    },
+    {
+      "archive_path": "candidate/admission-cpu-tests-02.txt",
+      "bytes": 2884,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/admission-cpu-tests-02.txt",
+      "sha256": "fec8edffac07cff39d762cb84edd279006fa2fd716e4ea175b9897176937060c"
+    },
+    {
+      "archive_path": "candidate/independent-source-review-01.json",
+      "bytes": 10587,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/independent-source-review-01.json",
+      "sha256": "65c745f321c12ac2d88e50b45711c7437f49dac300f168a6905d92ae518cb89e"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/README.md",
+      "bytes": 8070,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/README.md",
+      "sha256": "e193b6a67dcf4559b6150ebc5655bcd132a219e1dab1a5f11d5b8122813a6db2"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/admission-cpu-tests-01.json",
+      "bytes": 3940,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/admission-cpu-tests-01.json",
+      "sha256": "86b51df0b4e73f9fe35ba788640973c8fb8fdfe01476407d2b83e2a19b85112a"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/admission-cpu-tests-01.txt",
+      "bytes": 2522,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/admission-cpu-tests-01.txt",
+      "sha256": "351df1e2a54933aee22eac11ecfdbf8d156c116ab7c45745420633aa3c116df7"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/archive-manifest.json",
+      "bytes": 6985,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/archive-manifest.json",
+      "sha256": "9b0b4e28ee1602562e2674f59ecf356680e76aa3502494bf38c4fd687bd810c1"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/child_admission.py.txt",
+      "bytes": 20280,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/child_admission.py",
+      "sha256": "08cea644200ccce6dfa6b8330ea65893ec077cbac8d845c9d8f5a5a0e6f5b1b2"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/inputs.json",
+      "bytes": 53290,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/inputs.json",
+      "sha256": "0e802f5798e721ef39064e5b7a4753e8e1a04def437adbb91bfb63e153c64430"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/original-copy-manifest.json",
+      "bytes": 2112,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/original-copy-manifest.json",
+      "sha256": "b315fb9130c8848e924877dbd5e541602ee0e33b80ff59a51d88eca565915ac9"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/qualify_restore.py.txt",
+      "bytes": 29597,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/qualify_restore.py",
+      "sha256": "3a92d16d1486c34128d3c203df8461e4874398e7119d89a0461047d0a68a1561"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/reservoir_maintenance_state.py.txt",
+      "bytes": 20175,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/reservoir_maintenance_state.py",
+      "sha256": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/restore_verifier.py.txt",
+      "bytes": 31763,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/restore_verifier.py",
+      "sha256": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/seed_fixture.py.txt",
+      "bytes": 8587,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/seed_fixture.py",
+      "sha256": "4a3507615ff5a8f25f9fcd8d0ca592beee14820c1a591045446fc0a8e190c7b8"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/source/dual_ai_bridge.py.txt",
+      "bytes": 27048,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/source/dual_ai_bridge.py",
+      "sha256": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/source/lsm_reservoir.py.txt",
+      "bytes": 8906,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/source/lsm_reservoir.py",
+      "sha256": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/source/persistence.py.txt",
+      "bytes": 7438,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/source/persistence.py",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/source/rehearsal.py.txt",
+      "bytes": 6448,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/source/rehearsal.py",
+      "sha256": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/source/reservoir_service.py.txt",
+      "bytes": 63345,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/source/reservoir_service.py",
+      "sha256": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/source/triple_reservoir_coreml.py.txt",
+      "bytes": 17872,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/source/triple_reservoir_coreml.py",
+      "sha256": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/test_child_admission.py.txt",
+      "bytes": 17796,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/test_child_admission.py",
+      "sha256": "b67f3a0fc161066814cf9968aa27aaa0b805f15cf01398830bd7ceb2c7c6cf4f"
+    },
+    {
+      "archive_path": "candidate/superseded-cpu-01/test_qualification.py.txt",
+      "bytes": 17324,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/test_qualification.py",
+      "sha256": "703ef72e01b3526671b0c11babda84e4537facd2c0085441514afde23648d5e0"
+    }
+  ],
+  "production_qualified": false,
+  "review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/independent-source-review-01.json",
+    "sha256": "65c745f321c12ac2d88e50b45711c7437f49dac300f168a6905d92ae518cb89e"
+  },
+  "schema": "reservoir_restore_qualification_preparation_archive_v2",
+  "source_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02",
+  "status": "reviewed_preparation_only_not_executed"
+}

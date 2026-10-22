@@ -1,0 +1,150 @@
+{
+  "schema": "perception_identity_and_sigint_review_v1",
+  "created_at": "2026-10-16T01:07:57.432552+00:00",
+  "scope": "Read-only production inspection, plus one explicitly authorized private stdlib CPU signal fixture. No production signal, configuration change, model or GPU operation.",
+  "baseline": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observations/20261015T203041Z/soak_result.json",
+    "sha256": "760021391ee08584d6416b324e671a950cbb523b7cb57091562a4c09031361c4",
+    "started_at": "2026-10-15T20:30:41.308385+00:00",
+    "completed_at": "2026-10-15T22:30:41.464454+00:00",
+    "identity_file_count": 105,
+    "perception_identity_files": [],
+    "services_in_samples": [
+      "com.astrid.spectral-bridge"
+    ],
+    "perception_process_covered": false,
+    "existing_validator_automatically_invalidates_perception_restart": false,
+    "fresh_baseline_required_by_plan_after_restart": true,
+    "rule_reference": "/Users/v/other/astrid/docs/astrid-mlx-upgrade-runbook.md:80-83",
+    "interpretation": "Perception writes bridge inputs and calls Ollama/Whisper; a restart intended to change host memory residency is a relevant service change despite missing automated baseline identity coverage."
+  },
+  "perception": {
+    "process_at_review": "3895     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+    "process_inspection_returncode": 0,
+    "source_files": [
+      {
+        "path": "/Users/v/other/astrid/capsules/perception/perception.py",
+        "sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a",
+        "size": 64948,
+        "mtime_utc": "2026-05-09T15:35:39.690641+00:00",
+        "matches_HEAD": true
+      },
+      {
+        "path": "/Users/v/other/astrid/capsules/perception/host_audio_fallback.py",
+        "sha256": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69",
+        "size": 3017,
+        "mtime_utc": "2026-05-09T15:35:00.826384+00:00",
+        "matches_HEAD": true
+      },
+      {
+        "path": "/Users/v/other/astrid/scripts/launchd_astrid_perception_host_ascii.sh",
+        "sha256": "969323a229a50bb5fe3dda477d2672df198604b6c049480518061a079b06c9f2",
+        "size": 846,
+        "mtime_utc": "2026-05-08T18:49:47.840258+00:00",
+        "matches_HEAD": true
+      },
+      {
+        "path": "/Users/v/other/astrid/launchd/com.astrid.perception-host-ascii.plist",
+        "sha256": "76531cb3b17e20836081b320fc9cd51c34d29068457f5bf76c6b15997e4b1e4e",
+        "size": 1365,
+        "mtime_utc": "2026-05-09T15:02:23.704599+00:00",
+        "matches_HEAD": true
+      }
+    ],
+    "installed_plist": {
+      "path": "/Users/v/Library/LaunchAgents/com.astrid.perception-host-ascii.plist",
+      "sha256": "76531cb3b17e20836081b320fc9cd51c34d29068457f5bf76c6b15997e4b1e4e",
+      "matches_source": true
+    },
+    "configured_program_arguments": [
+      "/bin/bash",
+      "/Users/v/other/astrid/scripts/launchd_astrid_perception_host_ascii.sh"
+    ],
+    "configured_environment": {
+      "PATH": "/Users/v/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+      "LOOK_SOURCE": "active",
+      "ASTRID_CAMERA_INDEX": "0",
+      "ASTRID_ENABLE_MIC": "1",
+      "ASTRID_VISION_INTERVAL": "60",
+      "ASTRID_AUDIO_INTERVAL": "30",
+      "MINIME_WORKSPACE": "/Users/v/other/minime/workspace",
+      "ASTRID_HOST_ASCII_INTERVAL": "45"
+    },
+    "keep_alive": true,
+    "loaded_job_mentions_pid_3895": true,
+    "source_drift_observed": false,
+    "loaded_source_hash_attested": false,
+    "identity_limit": "Source files match HEAD and predate process start, but this legacy service does not attest loaded Python source bytes or its current SIGINT handler."
+  },
+  "owned_fixture": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/perception-sigint-owned-fixture-01.json",
+    "sha256": "994e1f602c5353fde963fe6b5b1c4826040bb1295cfa5b62057475b60bf6a8d8",
+    "code_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/perception-sigint-owned-fixture.py",
+    "code_sha256": "3671bea6a1536098a3919c516bf45c5c34c2dd977ff794c9feb612614b002a6b",
+    "passed": true,
+    "checks": {
+      "exact_event_order": true,
+      "complete_single_iteration_write": true,
+      "runner_handler_installed": true,
+      "normal_exit": true,
+      "synchronous_worker_reaped": true
+    },
+    "signal_count": 1,
+    "temporary_directory_removed": true,
+    "python": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "runners_path": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py",
+    "runners_sha256": "749f15c02d29ea7f79e779b92e066422f8267d3fa0afc7e08b497a56c703897c"
+  },
+  "boundary": {
+    "supported_attempt": "One SIGINT addressed only to the verified perception parent PID. Under the normal asyncio Runner handler it sets cancellation, returns, and allows the current complete synchronous iteration to reach its sole await before exit.",
+    "source_references": [
+      "capsules/perception/perception.py:1604-1707",
+      "capsules/perception/perception.py:1746-1757",
+      "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py:111-138",
+      "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py:159-166"
+    ],
+    "child_behavior": "subprocess.run is synchronous. First cooperative SIGINT does not raise inside it; its direct child finishes and is reaped before the await. Existing timeout handling kills and waits its own direct child. This is not a guarantee about arbitrary grandchildren or changed live signal handlers.",
+    "child_references": [
+      "capsules/perception/perception.py:585",
+      "capsules/perception/perception.py:694",
+      "capsules/perception/perception.py:1331-1339",
+      "capsules/perception/perception.py:1401-1427",
+      "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py:554-578"
+    ],
+    "write_behavior": "Perception write_bytes/write_text and archive renames are synchronous and precede the cancellation await. No new durability or atomic-write guarantee is claimed.",
+    "write_references": [
+      "capsules/perception/perception.py:68-110",
+      "capsules/perception/perception.py:238",
+      "capsules/perception/perception.py:274",
+      "capsules/perception/perception.py:668",
+      "capsules/perception/perception.py:691",
+      "capsules/perception/perception.py:1447",
+      "capsules/perception/perception.py:1452-1458"
+    ],
+    "completion_deadline_guaranteed": false,
+    "unbounded_operation_reference": "capsules/perception/perception.py:125-138",
+    "recommended_observation_timeout_seconds": 300,
+    "timeout_action": "If the original exact process remains after the bounded observation, leave it running and investigate. Do not send a second SIGINT, SIGTERM, kill, kickstart, bootout, or descendant signal as part of this attempt.",
+    "restart_effects": "Durable outputs remain. Startup can archive old live perception JSON files. In-memory host ASCII history/crossfade and scheduling counters reset; the replacement can immediately run a new sensing cycle. A sensory gap and transient resource work are possible."
+  },
+  "pre_signal_receipt_fields": [
+    "Exact PID/start/argv and launchd PID/label",
+    "Source, helper, source/installed plist and Python/stdlib hashes",
+    "Configured loaded environment and next-launch interpreter resolution",
+    "Current direct-child and descendant PID/start/argv, preferably observe a child-free instant",
+    "Log offset and recent output metadata without private content",
+    "Protected provider/bridge/Minime/Ollama and reservoir/sensory PID/start identities",
+    "Observed host memory/pressure/swap state and baseline disqualification decision"
+  ],
+  "success_receipt_fields": [
+    "Original PID/start is gone; launchd replacement is running with expected argv/config",
+    "Exactly one signal was sent to parent PID only",
+    "Captured direct children/descendants no longer survive, accounting for PID reuse",
+    "Stopped/startup log markers and new valid output JSON advances",
+    "Retained output/history evidence, accounting for existing archive movement",
+    "Source/config hashes and protected service identities unchanged",
+    "Post-settle host memory/pressure/swap evidence",
+    "A new uninterrupted two-hour baseline begins only after stable recovery"
+  ],
+  "finding": "A guarded, non-escalating cooperative restart attempt is justified by current source identity evidence and exact-Python fixture. Completion is not guaranteed; no claim of live signal-handler attestation or zero sensory-state reset is made."
+}

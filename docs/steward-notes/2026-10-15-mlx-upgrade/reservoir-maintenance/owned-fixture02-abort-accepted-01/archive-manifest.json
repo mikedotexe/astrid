@@ -1,0 +1,46 @@
+{
+  "entries": [
+    {
+      "archive": "owned-fixture02-abort-root-acceptance-01.json",
+      "bytes": 2141,
+      "sha256": "f6e339ae02a69df8fe720b56800b665dae679a3e51f8fb8b850fdaa1539de98d",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-root-acceptance-01.json"
+    },
+    {
+      "archive": "owned-fixture02-abort-actual-independent-review-01.json",
+      "bytes": 14673,
+      "sha256": "742259e4e1d3917501f87a1e2292526259d745820c9466dacf786184724d0426",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-actual-independent-review-01.json"
+    },
+    {
+      "archive": "owned-fixture02-abort-actual-root-review-01.json",
+      "bytes": 2659,
+      "sha256": "146c734bfb36eefbcd2390ebbf16401cb591b3f988ba2aa277a1f5949fe7129b",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-actual-root-review-01.json"
+    },
+    {
+      "archive": "owned-fixture02-abort-postexit-observation-01.json",
+      "bytes": 68759,
+      "sha256": "76e572221c44eb45a598ebf149a854d478d1713c7c5a78beda07abcf9a1aadc5",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-postexit-observation-01.json"
+    },
+    {
+      "archive": "owned-fixture02-abort-old-executor-absence-01.json",
+      "bytes": 4547,
+      "sha256": "515b05c2bd3e6d75637cfa3cd4f86746c05ee72aae12fec269eab9048b751d1d",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-old-executor-absence-01.json"
+    }
+  ],
+  "original_fixture_passed": false,
+  "private_stopped_state_archive": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-accepted-01/archive-manifest.json",
+    "sha256": "b7d0a3de5706632f5913108b4ec2eaf220ac69f2e6bf1aa414f12ff435e4d8ec"
+  },
+  "production_qualified": false,
+  "root_acceptance": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-root-acceptance-01.json",
+    "sha256": "f6e339ae02a69df8fe720b56800b665dae679a3e51f8fb8b850fdaa1539de98d"
+  },
+  "schema": "owned_fixture02_abort_public_closeout_v1",
+  "scope": "accepted_synthetic_cleanup_only"
+}

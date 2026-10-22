@@ -1,0 +1,24 @@
+{
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/README.md": "6baba4dd5e679aaf8b857098e86392694548af58a51b6a5afa92213a69a772ab",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/inputs.json": "f830793317e866c30f02770581713ff171e5309c36362c4f2f44c069090ab6e7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/qualify_restore.py": "12db8c1f5feddb30df279863b016f727e98c5f7a3961c1d47a6517219f0f55af",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/seed_fixture.py": "d7cad8c071b646862a469a3dffb27844b249e7c8b8ff0b80f1cd14022551c71f",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/test_qualification.py": "a6be8c150d940d8a2332b25cc3ceb346a8269d9147d2134aec4a6c9c6523db06"
+  },
+  "child_processes_started": 0,
+  "input_artifacts_verified": 129,
+  "inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/inputs.json",
+    "sha256": "f830793317e866c30f02770581713ff171e5309c36362c4f2f44c069090ab6e7"
+  },
+  "numeric_imports": [],
+  "passed": false,
+  "production_qualified": false,
+  "schema": "restore_qualification_default_check_v1",
+  "status": "not_executed"
+}

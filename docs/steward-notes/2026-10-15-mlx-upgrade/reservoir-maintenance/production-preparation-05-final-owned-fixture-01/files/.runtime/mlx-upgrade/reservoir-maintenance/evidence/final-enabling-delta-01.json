@@ -1,0 +1,45 @@
+{
+  "actual_os_fixture_executed": false,
+  "all_other_python_unchanged": true,
+  "created_at": "2026-10-17T01:56:53.504577+00:00",
+  "diff": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/final-enabling-delta-01.diff",
+    "sha256": "b9478d2349be76e7f29a04c2358e2ce7bc0560f0252f0dce5e83bbc956592b6c"
+  },
+  "disabled_archive": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-preparation-05-disabled-01/archive-manifest.json",
+    "sha256": "bfc83756db0d0e8920f9d2e71b68a4e06f602a52cb8db6246678d3c6b8a6d552"
+  },
+  "literal_changes": [
+    {
+      "after_sha256": "8244b61c4fa980b67528f8ebeaa20b7ebe6c7ca45e8039e1493977c2ab5a07ba",
+      "before_sha256": "8916fab1874d6790e3e222b06353e3776fd83c1765500e7e2f64df03f9b1cd8f",
+      "exact_literal_only": true,
+      "flag": "FIXTURE_EXECUTION_ENABLED",
+      "normalized_ast_equal": true,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_coordinator.py"
+    },
+    {
+      "after_sha256": "7b162da2a92c6cce0156fd83e3162b2decbc5cc2ffafb7b4bdc4570d43736945",
+      "before_sha256": "18bf34c606df39da65c4d7b392d51e88d7285b0048c032bf7a7877df9da9dfae",
+      "exact_literal_only": true,
+      "flag": "PRODUCTION_EXECUTION_ENABLED",
+      "normalized_ast_equal": true,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_host.py"
+    },
+    {
+      "after_sha256": "b8be135139bc53e5d46d124d778f83daacaff0e0957dc9bf18cc88efe86b17d3",
+      "before_sha256": "55e53b84d8caae818fc29fb997761c160cb296e2512207d4d9dbe48da15c5536",
+      "exact_literal_only": true,
+      "flag": "PRODUCTION_CONTROLLER_ENABLED",
+      "normalized_ast_equal": true,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/reservoir_maintenance.py"
+    }
+  ],
+  "production_qualified": false,
+  "python_files_checked": 57,
+  "readme_after": "043ead2c0a701f4ead564393b8845b19dd73a1fa5444943721b7858e711493c9",
+  "readme_before": "77a23e0d16a782c165d513e616b64556a3c192820f5f83445790e44874631a41",
+  "schema": "reservoir_final_enabling_delta_v1",
+  "tests_on_final_enabled_bytes": false
+}

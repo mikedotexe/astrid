@@ -1,0 +1,76 @@
+{
+  "receipt": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-integration-01.json",
+  "sha256": "288ce021a4d61e2b30f1dc7e7f0ee1a82961dca6b5903c855fd7666c3a7dad91",
+  "passed": true,
+  "started_at": "2026-10-16T03:39:12.228306+00:00",
+  "completed_at": "2026-10-16T03:39:36.879960+00:00",
+  "children": [
+    {
+      "cycle": 1,
+      "role": "reservoir",
+      "pid": 77796,
+      "started_at": "Thu Oct 15 20:39:12 2026",
+      "signal_sent_at": "2026-10-16T03:39:18.483710+00:00",
+      "exited_at": "2026-10-16T03:39:24.529606+00:00",
+      "exit_code": 0,
+      "drain_seconds": 6.045952833024785
+    },
+    {
+      "cycle": 1,
+      "role": "provider",
+      "pid": 77803,
+      "started_at": "Thu Oct 15 20:39:12 2026",
+      "signal_sent_at": "2026-10-16T03:39:12.402977+00:00",
+      "exited_at": "2026-10-16T03:39:18.468231+00:00",
+      "exit_code": 0,
+      "drain_seconds": 6.065306790871546
+    },
+    {
+      "cycle": 2,
+      "role": "reservoir",
+      "pid": 77876,
+      "started_at": "Thu Oct 15 20:39:24 2026",
+      "signal_sent_at": "2026-10-16T03:39:30.812531+00:00",
+      "exited_at": "2026-10-16T03:39:36.876697+00:00",
+      "exit_code": 0,
+      "drain_seconds": 6.0642376251053065
+    },
+    {
+      "cycle": 2,
+      "role": "provider",
+      "pid": 77883,
+      "started_at": "Thu Oct 15 20:39:24 2026",
+      "signal_sent_at": "2026-10-16T03:39:24.700804+00:00",
+      "exited_at": "2026-10-16T03:39:30.799614+00:00",
+      "exit_code": 0,
+      "drain_seconds": 6.09887129208073
+    }
+  ],
+  "states": [
+    {
+      "fixture_astrid": {
+        "ticks": 11
+      },
+      "fixture_minime": {
+        "ticks": 7
+      }
+    },
+    {
+      "fixture_astrid": {
+        "ticks": 22
+      },
+      "fixture_minime": {
+        "ticks": 7
+      }
+    }
+  ],
+  "distinct_requests": true,
+  "unresolved_children": [],
+  "active_guard_exists": false,
+  "exact_child_pid_inspection": {
+    "returncode": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "frozen_worker_matches": true
+}

@@ -1,0 +1,51 @@
+{
+  "created_wall": 1792195432.0345001,
+  "expected_interpreter": {
+    "executable": "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+    "files": {
+      "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python": "2cb7bcb114a9a92ac12d1072406261ac039bed938b25bfc70dd30ec5855a3353",
+      "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12": "31b9c9a8d50289f3a13f014b3efd8ea3534fc3eea7ca7d9809e166139910b805"
+    },
+    "resolved": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12",
+    "sha256": "31b9c9a8d50289f3a13f014b3efd8ea3534fc3eea7ca7d9809e166139910b805"
+  },
+  "expected_packages": {
+    "numpy": "2.4.3",
+    "scikit-learn": "1.8.0",
+    "torch": "2.11.0",
+    "websockets": "16.0"
+  },
+  "harness_hashes": {
+    "common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+    "driver.py": "f99dc8d0945cd23c62249b78a3a8a24fa5791f61c57b5ec37fb1bc90b1dbcf63",
+    "fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+    "process_identity.py": "badc6dd3ddec6aa9bf0c3996aecfab0e40232acad9dae346d6302bbec16803c7",
+    "protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+    "result_checks.py": "047389e82d8a8e5109ff6c49d4af10dd1bd9b80e254c965e9dd94692529ae5cf",
+    "review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+    "service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+    "snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+    "test_harness.py": "05e35897981af399fde10ee4a7baabd9dc8f15988179cdd0e0ef3daa78928148",
+    "test_initial_publication.py": "54462505c1efac8080f6ef60608605d93182a5ef9c9b90f88c455cbd316f024b"
+  },
+  "preparation_sha256": "e656028cf9a9ec157cca78150edf6ee5020f5535e356b01a717b7d1e87452936",
+  "schema": "reservoir_private_sources_v1",
+  "variants": {
+    "candidate": {
+      "dual_ai_bridge.py": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549",
+      "lsm_reservoir.py": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417",
+      "persistence.py": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+      "rehearsal.py": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093",
+      "reservoir_service.py": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da",
+      "triple_reservoir_coreml.py": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8"
+    },
+    "original": {
+      "dual_ai_bridge.py": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549",
+      "lsm_reservoir.py": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417",
+      "persistence.py": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+      "rehearsal.py": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093",
+      "reservoir_service.py": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+      "triple_reservoir_coreml.py": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8"
+    }
+  }
+}

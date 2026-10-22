@@ -1,0 +1,34 @@
+{
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-bindings.json": "beae54c2362ea251c6b5a1fc9dbdf78532fa65b498796b97c7515c2c7cd5f629",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-observer.py": "005c5db21d9ff36dd2e867cb54a272cabdc2c1922f0a8bb0f0b5a7ddd5709d05",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-source-review-01.json": "133fe97efae840972f75f4b9a0a7f5d51cc2fe7d2d51e2b080c4fa7ab2f6bd93",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-tests-01.json": "2ebbeb7b7e6dd7b3814e4ed438f97d5854ca4c1052e26a575f5251607dd8bb35",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-tests-01.txt": "151cbc39658a6dd91aafd7323ace94426437ab42ac2d3d06f7f6568021624a4c",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision.py": "371a5fb7b4a94773b8e73f87df4d2fcf2b510dd049fcd6520f9d1395a6791483",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2.py": "fbaea5a9132b6d1ed92262d70dfadbd5f3d2cc2c93c2b4bb90662ed41e5d687d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/test_matrix_host_supervision.py": "41416812f873c9481dddeea0b2e2cc98b7093cd60419390294ebb9fc53aa7dd5",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/test_matrix_host_supervision_v2.py": "66b3d257c1a36bcb02ca75a57d77e733d5f9f72ffd57890cf17bc16d9ec9e9ad"
+  },
+  "audit_violations": [],
+  "completed_at": "2026-10-16T21:48:39.825864+00:00",
+  "errors": 0,
+  "failures": 0,
+  "forbidden_imports_loaded": [],
+  "log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-tests-01.txt",
+    "sha256": "1dfa578e077d31e5cd8f8cba3e41ea9a3be02ea9f85c7e3589fe334ffceeca7c"
+  },
+  "monitor_executed": false,
+  "numerical_cases_executed": 0,
+  "passed": true,
+  "policy": "Every consecutive swap increase invalidates, independently rechecked by coverage and next-case consumers. Initial-swap bound remains an extra check.",
+  "production_mutations": 0,
+  "python": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+  "schema": "reservoir_matrix_supervision_v2_cpu_tests_v1",
+  "scope": "guarded_stdlib_fakes_no_monitor_or_host_observation",
+  "skipped": 0,
+  "source_unchanged": true,
+  "started_at": "2026-10-16T21:48:39.772429+00:00",
+  "tests_run": 17
+}

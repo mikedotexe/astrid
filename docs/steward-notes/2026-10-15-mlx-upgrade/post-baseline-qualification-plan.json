@@ -1,0 +1,97 @@
+{
+  "after_pair": "Review complete accepted receipts before preparing matched generation; offline acceptance does not authorize production handoff.",
+  "between_stages": "Require previous process exit0, complete five-group passed receipt, accepted memory result, no residual owned process and a new five-minute window. Stop on failure/refusal; no automatic retry.",
+  "bindings": [
+    {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/focused-tests-final-07.json",
+      "sha256": "51652181168727dc08b4ddfe3764454e61ff84c723dd6a973c8377dd30ca8f84"
+    },
+    {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/preparation.json",
+      "sha256": "e656028cf9a9ec157cca78150edf6ee5020f5535e356b01a717b7d1e87452936"
+    },
+    {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests-v2/core.json",
+      "sha256": "e0d907b12007e44489209311aef3eeba91cb456623ce51b7a4d787b75434709c"
+    },
+    {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests-v2/baseline.json",
+      "sha256": "934b7d2c470a82f75a26748201d09f53edee5d912a549135eafd4ba012cacf79"
+    },
+    {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/post-perception-baseline-preflight.json",
+      "sha256": "5c249bcd39c1df9a7da1a08cbfef96c58019d929e301a518e8dfa712be88b047"
+    }
+  ],
+  "closure_check": {
+    "harness_files": 11,
+    "log_sha256_matches": true,
+    "source_files": 32,
+    "source_hashes_match": true
+  },
+  "command_review": "mlx_integration; read-only review, no execution",
+  "commands": [
+    {
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/Users/v/other/astrid/scripts/qualify_mlx_offline.py",
+        "--preparation",
+        "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/preparation.json",
+        "--manifest",
+        "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests-v2/core.json",
+        "--baseline-soak",
+        "/Users/v/other/astrid/.runtime/mlx-upgrade/observations-post-perception-01/20261016T012057Z/soak_result.json",
+        "--stage",
+        "core",
+        "--output-dir",
+        "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/core/offline-post-perception-01"
+      ],
+      "fresh_host_window": "host-window-04",
+      "output_directory": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/core/offline-post-perception-01",
+      "stage": "core"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/Users/v/other/astrid/scripts/qualify_mlx_offline.py",
+        "--preparation",
+        "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/preparation.json",
+        "--manifest",
+        "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests-v2/baseline.json",
+        "--baseline-soak",
+        "/Users/v/other/astrid/.runtime/mlx-upgrade/observations-post-perception-01/20261016T012057Z/soak_result.json",
+        "--stage",
+        "baseline",
+        "--output-dir",
+        "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/baseline/offline-post-perception-01"
+      ],
+      "fresh_host_window": "host-window-05",
+      "output_directory": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/baseline/offline-post-perception-01",
+      "stage": "baseline"
+    }
+  ],
+  "commands_executed": false,
+  "created_at": "2026-10-16T01:58:04.176578+00:00",
+  "independent_gate_review": "mlx_upstream: no CLI/schema or order blocker for future core then baseline offline runs. Full-stage evidence must follow accepted live-core observation, using fresh core/full offline and matched receipts.",
+  "independent_review_scope": "Read-only source/CLI/proof/prior-receipt review; no qualification workload or process mutation.",
+  "order_rationale": "Core first checks the latest unresolved failure before spending resources on another baseline GPU run. Both require fresh complete five-group receipts; preserve historical failures.",
+  "preconditions": [
+    "Actually completed accepted passive baseline of at least7200 seconds, representative generations, health and provenance review; elapsed wall time alone is insufficient.",
+    "All119 bound file SHA/size/mtime values and all six exact protected PID/start/command identities match; separately verify reservoir and Minime.",
+    "Steward pause526 owned by codex-mlx-upgrade, no lease or foreign overlapping edits; no other qualification model.",
+    "Verify retained final07 tests/log/source/harness, preparation, current package inventories and full manifest bindings before execution.",
+    "New reviewed host-window observer copy/output before each environment: at least300 continuous observed seconds pressure1, swap not exceeding the window first sample, no detected Cargo/rustc/target-test process, gaps no greater than15 seconds. Never rerun hard-coded host-window03.",
+    "Each output directory must remain absent. Qualifier also enforces baseline/stage/provenance and normal-pressure startup checks."
+  ],
+  "production_mutations": 0,
+  "schema": "mlx_post_perception_qualification_preparation_v1",
+  "state": "prepared_only_baseline_still_running",
+  "unresolved_gates": [
+    "Current passive baseline is still running; no acceptance is implied by prepared argv.",
+    "Every new offline run must pass the unchanged wide-coupling default-k16 latency limit of1.5ms; production wide coupling disabled does not waive its test. Prior core timings varied from0.289ms to5.184ms under different host conditions; preserve failures.",
+    "Matched actual Gemma generation, complete memory/performance evidence and sampled output quality review remain mandatory after the offline pair.",
+    "Stage2 requires fresh core/full offline and matched results after the accepted live-core observation period."
+  ]
+}

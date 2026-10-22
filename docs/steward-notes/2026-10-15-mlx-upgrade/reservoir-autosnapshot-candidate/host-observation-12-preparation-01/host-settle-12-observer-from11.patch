@@ -1,0 +1,31 @@
+--- /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-observer.py
++++ /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12-observer.py
+@@ -5,7 +5,7 @@
+ for completed_input in (".runtime/mlx-upgrade/observations-post-perception-01/20261016T012057Z/soak_result.json", ".runtime/perception-memory-investigation/passive-rusage-02.json"):
+  if json.loads(Path(completed_input).read_text()).get("state") != "completed":
+   raise RuntimeError("Both retained passive observations must be completed first")
+-output=Path(".runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11.json")
++output=Path(".runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12.json")
+ fd=os.open(output,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600);os.close(fd)
+ def run(args,timeout=5):
+  r=subprocess.run(args,capture_output=True,text=True,timeout=timeout,check=False)
+@@ -21,8 +21,8 @@
+  return rows
+ def identities():
+  rows={r["pid"]:r for r in process_rows()}
+- bindings_path=Path('/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-bindings.json')
+- if hashlib.sha256(bindings_path.read_bytes()).hexdigest()!='6b92de441dac3730c047c0111a850527dfff0739048d0db6b23f50d16054d2f6':raise RuntimeError("host-window input binding changed")
++ bindings_path=Path('/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12-bindings.json')
++ if hashlib.sha256(bindings_path.read_bytes()).hexdigest()!='de4de22a0fd0db8d0e1496a8c198af6f4ac38025ba506c2d84358ee7fa478888':raise RuntimeError("host-window input binding changed")
+  bindings=json.loads(bindings_path.read_text())
+  expected=bindings["protected_processes"]
+  for path,digest in bindings["identity_files"].items():
+@@ -91,7 +91,7 @@
+    row["readyz"]={"http_status":response.status,"body":json.load(response)}
+  except Exception as e:row["readyz"]={"error":str(e)}
+  return row
+-record={"schema":"reservoir_cpu_fixture_host_window_v1","input_binding_path":'/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-bindings.json',"input_binding_sha256":'6b92de441dac3730c047c0111a850527dfff0739048d0db6b23f50d16054d2f6',"protected_file_count":237,"steward_pause_generation":528,"purpose":"Private real-service CPU fixture settling; not MLX upgrade qualification","accepted_mlx_baseline":False,"observer_pid":os.getpid(),"expected_perception_pid":22354,"perception_restart_receipt":{"path":"/Users/v/other/astrid/.runtime/mlx-upgrade/maintenance/perception-recover-01.json","sha256":"5fdc6bdccfbaf5acf37e1bdf8e25f95e307a225f284428712bbcaf2a2e8bc6a6"},"previous_observation":"/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10.json","observer_source_sha256":hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),"final_cpu_receipt_sha256":hashlib.sha256(Path("docs/steward-notes/2026-10-15-mlx-upgrade/focused-tests-final-07.json").read_bytes()).hexdigest(),"screen_sharing_scope":"Matching process identity, CPU and RSS only; process presence or absence does not conclusively establish whether a remote session is active.","started_at":datetime.now(timezone.utc).isoformat(),"duration_requested_s":610,"interval_s":5,"state":"running","production_identity_start":identities(),"samples":[],"window_rule":">=300 consecutive observed seconds of pressure1, swap not above window's first sample and no positive consecutive-sample increase, no cargo/rustc/target test process; nonpositive sample gaps or gaps >15s invalidate","cpu_method":"second sample of top -l2 -s1 -n0; percentages across host; process ps %cpu is OS lifetime estimate","production_mutations":0,"gpu_workloads_started":0}
++record={"schema":"reservoir_cpu_fixture_host_window_v1","input_binding_path":'/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12-bindings.json',"input_binding_sha256":'de4de22a0fd0db8d0e1496a8c198af6f4ac38025ba506c2d84358ee7fa478888',"protected_file_count":237,"steward_pause_generation":528,"purpose":"Private real-service CPU fixture settling; not MLX upgrade qualification","accepted_mlx_baseline":False,"observer_pid":os.getpid(),"expected_perception_pid":22354,"perception_restart_receipt":{"path":"/Users/v/other/astrid/.runtime/mlx-upgrade/maintenance/perception-recover-01.json","sha256":"5fdc6bdccfbaf5acf37e1bdf8e25f95e307a225f284428712bbcaf2a2e8bc6a6"},"previous_observation":"/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11.json","observer_source_sha256":hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),"final_cpu_receipt_sha256":hashlib.sha256(Path("docs/steward-notes/2026-10-15-mlx-upgrade/focused-tests-final-07.json").read_bytes()).hexdigest(),"screen_sharing_scope":"Matching process identity, CPU and RSS only; process presence or absence does not conclusively establish whether a remote session is active.","started_at":datetime.now(timezone.utc).isoformat(),"duration_requested_s":610,"interval_s":5,"state":"running","production_identity_start":identities(),"samples":[],"window_rule":">=300 consecutive observed seconds of pressure1, swap not above window's first sample and no positive consecutive-sample increase, no cargo/rustc/target test process; nonpositive sample gaps or gaps >15s invalidate","cpu_method":"second sample of top -l2 -s1 -n0; percentages across host; process ps %cpu is OS lifetime estimate","production_mutations":0,"gpu_workloads_started":0}
+ def save():
+  descriptor,name=tempfile.mkstemp(prefix=".host-window-",dir=output.parent)
+  try:

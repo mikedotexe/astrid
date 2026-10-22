@@ -1,0 +1,450 @@
+Collecting aiohappyeyeballs==2.6.1
+  Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl.metadata (5.9 kB)
+Collecting aiohttp==3.13.3
+  Downloading aiohttp-3.13.3-cp312-cp312-macosx_11_0_arm64.whl.metadata (8.1 kB)
+Collecting aiosignal==1.4.0
+  Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+Collecting annotated-doc==0.0.4
+  Downloading annotated_doc-0.0.4-py3-none-any.whl.metadata (6.6 kB)
+Collecting anyio==4.13.0
+  Downloading anyio-4.13.0-py3-none-any.whl.metadata (4.5 kB)
+Collecting attrs==26.1.0
+  Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+Collecting cattrs==26.1.0
+  Downloading cattrs-26.1.0-py3-none-any.whl.metadata (8.5 kB)
+Collecting certifi==2026.2.25
+  Downloading certifi-2026.2.25-py3-none-any.whl.metadata (2.5 kB)
+Collecting click==8.3.1
+  Downloading click-8.3.1-py3-none-any.whl.metadata (2.6 kB)
+Collecting coremltools==9.0
+  Downloading coremltools-9.0-cp312-none-macosx_11_0_arm64.whl.metadata (2.7 kB)
+Collecting filelock==3.25.2
+  Downloading filelock-3.25.2-py3-none-any.whl.metadata (2.0 kB)
+Collecting frozenlist==1.8.0
+  Downloading frozenlist-1.8.0-cp312-cp312-macosx_11_0_arm64.whl.metadata (20 kB)
+Collecting fsspec==2026.3.0
+  Downloading fsspec-2026.3.0-py3-none-any.whl.metadata (10 kB)
+Collecting h11==0.16.0
+  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting hf-xet==1.4.2
+  Downloading hf_xet-1.4.2-cp37-abi3-macosx_11_0_arm64.whl.metadata (4.9 kB)
+Collecting httpcore==1.0.9
+  Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting httpx==0.28.1
+  Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Collecting huggingface-hub==1.8.0
+  Downloading huggingface_hub-1.8.0-py3-none-any.whl.metadata (13 kB)
+Collecting idna==3.11
+  Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Collecting jinja2==3.1.6
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting joblib==1.5.3
+  Downloading joblib-1.5.3-py3-none-any.whl.metadata (5.5 kB)
+Collecting markdown-it-py==4.0.0
+  Downloading markdown_it_py-4.0.0-py3-none-any.whl.metadata (7.3 kB)
+Collecting markupsafe==3.0.3
+  Downloading markupsafe-3.0.3-cp312-cp312-macosx_11_0_arm64.whl.metadata (2.7 kB)
+Collecting mdurl==0.1.2
+  Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+Collecting mlx==0.32.0
+  Downloading mlx-0.32.0-cp312-cp312-macosx_26_0_arm64.whl.metadata (5.9 kB)
+Collecting mlx-lm==0.31.3
+  Downloading mlx_lm-0.31.3-py3-none-any.whl.metadata (9.5 kB)
+Collecting mlx-metal==0.32.0
+  Downloading mlx_metal-0.32.0-py3-none-macosx_26_0_arm64.whl.metadata (5.1 kB)
+Collecting mpmath==1.3.0
+  Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+Collecting multidict==6.7.1
+  Downloading multidict-6.7.1-cp312-cp312-macosx_11_0_arm64.whl.metadata (5.3 kB)
+Collecting networkx==3.6.1
+  Downloading networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+Collecting numpy==2.4.3
+  Downloading numpy-2.4.3-cp312-cp312-macosx_14_0_arm64.whl.metadata (6.6 kB)
+Collecting packaging==26.0
+  Downloading packaging-26.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting pip==26.0
+  Downloading pip-26.0-py3-none-any.whl.metadata (4.7 kB)
+Collecting propcache==0.4.1
+  Downloading propcache-0.4.1-cp312-cp312-macosx_11_0_arm64.whl.metadata (13 kB)
+Collecting protobuf==7.34.1
+  Downloading protobuf-7.34.1-cp310-abi3-macosx_10_9_universal2.whl.metadata (595 bytes)
+Collecting pyaml==26.2.1
+  Downloading pyaml-26.2.1-py3-none-any.whl.metadata (12 kB)
+Collecting pygments==2.19.2
+  Downloading pygments-2.19.2-py3-none-any.whl.metadata (2.5 kB)
+Collecting pyyaml==6.0.3
+  Downloading pyyaml-6.0.3-cp312-cp312-macosx_11_0_arm64.whl.metadata (2.4 kB)
+Collecting regex==2026.2.28
+  Downloading regex-2026.2.28-cp312-cp312-macosx_11_0_arm64.whl.metadata (40 kB)
+Collecting rich==14.3.3
+  Downloading rich-14.3.3-py3-none-any.whl.metadata (18 kB)
+Collecting safetensors==0.7.0
+  Downloading safetensors-0.7.0-cp38-abi3-macosx_11_0_arm64.whl.metadata (4.1 kB)
+Collecting scikit-learn==1.8.0
+  Downloading scikit_learn-1.8.0-cp312-cp312-macosx_12_0_arm64.whl.metadata (11 kB)
+Collecting scipy==1.17.1
+  Downloading scipy-1.17.1-cp312-cp312-macosx_14_0_arm64.whl.metadata (62 kB)
+Collecting sentencepiece==0.2.1
+  Downloading sentencepiece-0.2.1-cp312-cp312-macosx_11_0_arm64.whl.metadata (10 kB)
+Collecting setuptools==81.0.0
+  Downloading setuptools-81.0.0-py3-none-any.whl.metadata (6.6 kB)
+Collecting shellingham==1.5.4
+  Downloading shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+Collecting sympy==1.14.0
+  Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+Collecting threadpoolctl==3.6.0
+  Downloading threadpoolctl-3.6.0-py3-none-any.whl.metadata (13 kB)
+Collecting tokenizers==0.22.2
+  Downloading tokenizers-0.22.2-cp39-abi3-macosx_11_0_arm64.whl.metadata (7.3 kB)
+Collecting torch==2.11.0
+  Downloading torch-2.11.0-cp312-cp312-macosx_11_0_arm64.whl.metadata (29 kB)
+Collecting tqdm==4.67.3
+  Downloading tqdm-4.67.3-py3-none-any.whl.metadata (57 kB)
+Collecting transformers==5.4.0
+  Downloading transformers-5.4.0-py3-none-any.whl.metadata (32 kB)
+Collecting typer==0.24.1
+  Downloading typer-0.24.1-py3-none-any.whl.metadata (16 kB)
+Collecting typing-extensions==4.15.0
+  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting websockets==16.0
+  Downloading websockets-16.0-cp312-cp312-macosx_11_0_arm64.whl.metadata (6.8 kB)
+Collecting yarl==1.23.0
+  Downloading yarl-1.23.0-cp312-cp312-macosx_11_0_arm64.whl.metadata (79 kB)
+Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
+Downloading aiohttp-3.13.3-cp312-cp312-macosx_11_0_arm64.whl (493 kB)
+Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+Downloading annotated_doc-0.0.4-py3-none-any.whl (5.3 kB)
+Downloading anyio-4.13.0-py3-none-any.whl (114 kB)
+Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+Downloading cattrs-26.1.0-py3-none-any.whl (73 kB)
+Downloading certifi-2026.2.25-py3-none-any.whl (153 kB)
+Downloading click-8.3.1-py3-none-any.whl (108 kB)
+Downloading coremltools-9.0-cp312-none-macosx_11_0_arm64.whl (2.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.8/2.8 MB 23.1 MB/s  0:00:00
+Downloading filelock-3.25.2-py3-none-any.whl (26 kB)
+Downloading frozenlist-1.8.0-cp312-cp312-macosx_11_0_arm64.whl (50 kB)
+Downloading fsspec-2026.3.0-py3-none-any.whl (202 kB)
+Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Downloading hf_xet-1.4.2-cp37-abi3-macosx_11_0_arm64.whl (3.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.6/3.6 MB 82.3 MB/s  0:00:00
+Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+Downloading huggingface_hub-1.8.0-py3-none-any.whl (625 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 625.2/625.2 kB 94.6 MB/s  0:00:00
+Downloading idna-3.11-py3-none-any.whl (71 kB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading joblib-1.5.3-py3-none-any.whl (309 kB)
+Downloading markdown_it_py-4.0.0-py3-none-any.whl (87 kB)
+Downloading markupsafe-3.0.3-cp312-cp312-macosx_11_0_arm64.whl (12 kB)
+Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+Downloading mlx-0.32.0-cp312-cp312-macosx_26_0_arm64.whl (558 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 558.9/558.9 kB 89.3 MB/s  0:00:00
+Downloading mlx_lm-0.31.3-py3-none-any.whl (408 kB)
+Downloading mlx_metal-0.32.0-py3-none-macosx_26_0_arm64.whl (56.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.5/56.5 MB 11.5 MB/s  0:00:04
+Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 80.2 MB/s  0:00:00
+Downloading multidict-6.7.1-cp312-cp312-macosx_11_0_arm64.whl (43 kB)
+Downloading networkx-3.6.1-py3-none-any.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 84.1 MB/s  0:00:00
+Downloading numpy-2.4.3-cp312-cp312-macosx_14_0_arm64.whl (5.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 17.8 MB/s  0:00:00
+Downloading packaging-26.0-py3-none-any.whl (74 kB)
+Downloading pip-26.0-py3-none-any.whl (1.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 67.6 MB/s  0:00:00
+Downloading propcache-0.4.1-cp312-cp312-macosx_11_0_arm64.whl (47 kB)
+Downloading protobuf-7.34.1-cp310-abi3-macosx_10_9_universal2.whl (429 kB)
+Downloading pyaml-26.2.1-py3-none-any.whl (27 kB)
+Downloading pygments-2.19.2-py3-none-any.whl (1.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 73.2 MB/s  0:00:00
+Downloading pyyaml-6.0.3-cp312-cp312-macosx_11_0_arm64.whl (173 kB)
+Downloading regex-2026.2.28-cp312-cp312-macosx_11_0_arm64.whl (289 kB)
+Downloading rich-14.3.3-py3-none-any.whl (310 kB)
+Downloading safetensors-0.7.0-cp38-abi3-macosx_11_0_arm64.whl (447 kB)
+Downloading scikit_learn-1.8.0-cp312-cp312-macosx_12_0_arm64.whl (8.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.1/8.1 MB 15.9 MB/s  0:00:00
+Downloading scipy-1.17.1-cp312-cp312-macosx_14_0_arm64.whl (20.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 20.3/20.3 MB 82.6 MB/s  0:00:00
+Downloading sentencepiece-0.2.1-cp312-cp312-macosx_11_0_arm64.whl (1.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 83.4 MB/s  0:00:00
+Downloading setuptools-81.0.0-py3-none-any.whl (1.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 84.4 MB/s  0:00:00
+Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 82.0 MB/s  0:00:00
+Downloading threadpoolctl-3.6.0-py3-none-any.whl (18 kB)
+Downloading tokenizers-0.22.2-cp39-abi3-macosx_11_0_arm64.whl (3.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.0/3.0 MB 81.0 MB/s  0:00:00
+Downloading torch-2.11.0-cp312-cp312-macosx_11_0_arm64.whl (80.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 80.6/80.6 MB 12.7 MB/s  0:00:06
+Downloading tqdm-4.67.3-py3-none-any.whl (78 kB)
+Downloading transformers-5.4.0-py3-none-any.whl (10.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.1/10.1 MB 81.8 MB/s  0:00:00
+Downloading typer-0.24.1-py3-none-any.whl (56 kB)
+Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Downloading websockets-16.0-cp312-cp312-macosx_11_0_arm64.whl (175 kB)
+Downloading yarl-1.23.0-cp312-cp312-macosx_11_0_arm64.whl (86 kB)
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/aiohappyeyeballs-2.6.1-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/aiohttp-3.13.3-cp312-cp312-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/aiosignal-1.4.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/annotated_doc-0.0.4-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/anyio-4.13.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/attrs-26.1.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/cattrs-26.1.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/certifi-2026.2.25-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/click-8.3.1-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/coremltools-9.0-cp312-none-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/filelock-3.25.2-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/frozenlist-1.8.0-cp312-cp312-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/fsspec-2026.3.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/h11-0.16.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/hf_xet-1.4.2-cp37-abi3-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/httpcore-1.0.9-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/httpx-0.28.1-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/huggingface_hub-1.8.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/idna-3.11-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/jinja2-3.1.6-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/joblib-1.5.3-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/markdown_it_py-4.0.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/markupsafe-3.0.3-cp312-cp312-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mdurl-0.1.2-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx-0.32.0-cp312-cp312-macosx_26_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx_lm-0.31.3-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx_metal-0.32.0-py3-none-macosx_26_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mpmath-1.3.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/multidict-6.7.1-cp312-cp312-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/networkx-3.6.1-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/numpy-2.4.3-cp312-cp312-macosx_14_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/packaging-26.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pip-26.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/propcache-0.4.1-cp312-cp312-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/protobuf-7.34.1-cp310-abi3-macosx_10_9_universal2.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pyaml-26.2.1-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pygments-2.19.2-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pyyaml-6.0.3-cp312-cp312-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/regex-2026.2.28-cp312-cp312-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/rich-14.3.3-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/safetensors-0.7.0-cp38-abi3-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/scikit_learn-1.8.0-cp312-cp312-macosx_12_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/scipy-1.17.1-cp312-cp312-macosx_14_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/sentencepiece-0.2.1-cp312-cp312-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/setuptools-81.0.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/shellingham-1.5.4-py2.py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/sympy-1.14.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/threadpoolctl-3.6.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/tokenizers-0.22.2-cp39-abi3-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/torch-2.11.0-cp312-cp312-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/tqdm-4.67.3-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/transformers-5.4.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/typer-0.24.1-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/typing_extensions-4.15.0-py3-none-any.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/websockets-16.0-cp312-cp312-macosx_11_0_arm64.whl
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/yarl-1.23.0-cp312-cp312-macosx_11_0_arm64.whl
+Successfully downloaded aiohappyeyeballs aiohttp aiosignal annotated-doc anyio attrs cattrs certifi click coremltools filelock frozenlist fsspec h11 hf-xet httpcore httpx huggingface-hub idna jinja2 joblib markdown-it-py markupsafe mdurl mlx mlx-lm mlx-metal mpmath multidict networkx numpy packaging pip propcache protobuf pyaml pygments pyyaml regex rich safetensors scikit-learn scipy sentencepiece setuptools shellingham sympy threadpoolctl tokenizers torch tqdm transformers typer typing-extensions websockets yarl
+Collecting mlx-lm==0.32.0
+  Downloading mlx_lm-0.32.0-py3-none-any.whl.metadata (10 kB)
+Downloading mlx_lm-0.32.0-py3-none-any.whl (513 kB)
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx_lm-0.32.0-py3-none-any.whl
+Successfully downloaded mlx-lm
+Collecting mlx-metal==0.32.4
+  Downloading mlx_metal-0.32.4-py3-none-macosx_26_0_arm64.whl.metadata (5.1 kB)
+Downloading mlx_metal-0.32.4-py3-none-macosx_26_0_arm64.whl (78.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.1/78.1 MB 81.1 MB/s  0:00:00
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx_metal-0.32.4-py3-none-macosx_26_0_arm64.whl
+Successfully downloaded mlx-metal
+Collecting mlx==0.32.4
+  Downloading mlx-0.32.4-cp312-cp312-macosx_26_0_arm64.whl.metadata (5.9 kB)
+Downloading mlx-0.32.4-cp312-cp312-macosx_26_0_arm64.whl (667 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 667.6/667.6 kB 88.9 MB/s  0:00:00
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx-0.32.4-cp312-cp312-macosx_26_0_arm64.whl
+Successfully downloaded mlx
+Collecting transformers==5.7.0
+  Downloading transformers-5.7.0-py3-none-any.whl.metadata (33 kB)
+Downloading transformers-5.7.0-py3-none-any.whl (10.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.5/10.5 MB 73.3 MB/s  0:00:00
+Saved /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/transformers-5.7.0-py3-none-any.whl
+Successfully downloaded transformers
+Looking in links: /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/aiohappyeyeballs-2.6.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 1))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/aiohttp-3.13.3-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 2))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/aiosignal-1.4.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 3))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/annotated_doc-0.0.4-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 4))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/anyio-4.13.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 5))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/attrs-26.1.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 6))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/cattrs-26.1.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 7))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/certifi-2026.2.25-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 8))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/click-8.3.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 9))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/coremltools-9.0-cp312-none-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 10))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/filelock-3.25.2-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 11))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/frozenlist-1.8.0-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 12))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/fsspec-2026.3.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 13))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/h11-0.16.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 14))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/hf_xet-1.4.2-cp37-abi3-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 15))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/httpcore-1.0.9-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 16))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/httpx-0.28.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 17))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/huggingface_hub-1.8.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 18))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/idna-3.11-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 19))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/jinja2-3.1.6-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 20))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/joblib-1.5.3-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 21))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/markdown_it_py-4.0.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 22))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/markupsafe-3.0.3-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 23))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mdurl-0.1.2-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 24))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx-0.32.0-cp312-cp312-macosx_26_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 25))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx_lm-0.31.3-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 26))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx_metal-0.32.0-py3-none-macosx_26_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 27))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mpmath-1.3.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 28))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/multidict-6.7.1-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 29))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/networkx-3.6.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 30))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/numpy-2.4.3-cp312-cp312-macosx_14_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 31))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/packaging-26.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 32))
+Requirement already satisfied: pip==26.0 in /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/baseline/.venv/lib/python3.12/site-packages (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 33)) (26.0)
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/propcache-0.4.1-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 34))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/protobuf-7.34.1-cp310-abi3-macosx_10_9_universal2.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 35))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pyaml-26.2.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 36))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pygments-2.19.2-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 37))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pyyaml-6.0.3-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 38))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/regex-2026.2.28-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 39))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/rich-14.3.3-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 40))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/safetensors-0.7.0-cp38-abi3-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 41))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/scikit_learn-1.8.0-cp312-cp312-macosx_12_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 42))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/scipy-1.17.1-cp312-cp312-macosx_14_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 43))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/sentencepiece-0.2.1-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 44))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/setuptools-81.0.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 45))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/shellingham-1.5.4-py2.py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 46))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/sympy-1.14.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 47))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/threadpoolctl-3.6.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 48))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/tokenizers-0.22.2-cp39-abi3-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 49))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/torch-2.11.0-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 50))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/tqdm-4.67.3-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 51))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/transformers-5.4.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 52))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/typer-0.24.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 53))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/typing_extensions-4.15.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 54))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/websockets-16.0-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 55))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/yarl-1.23.0-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/baseline.requirements.lock (line 56))
+Installing collected packages: mpmath, coremltools, yarl, websockets, typing-extensions, typer, transformers, tqdm, torch, tokenizers, threadpoolctl, sympy, shellingham, setuptools, sentencepiece, scipy, scikit-learn, safetensors, rich, regex, pyyaml, pygments, pyaml, protobuf, propcache, packaging, numpy, networkx, multidict, mlx-metal, mlx-lm, mlx, mdurl, markupsafe, markdown-it-py, joblib, jinja2, idna, huggingface-hub, httpx, httpcore, hf-xet, h11, fsspec, frozenlist, filelock, click, certifi, cattrs, attrs, anyio, annotated-doc, aiosignal, aiohttp, aiohappyeyeballs
+
+Successfully installed aiohappyeyeballs-2.6.1 aiohttp-3.13.3 aiosignal-1.4.0 annotated-doc-0.0.4 anyio-4.13.0 attrs-26.1.0 cattrs-26.1.0 certifi-2026.2.25 click-8.3.1 coremltools-9.0 filelock-3.25.2 frozenlist-1.8.0 fsspec-2026.3.0 h11-0.16.0 hf-xet-1.4.2 httpcore-1.0.9 httpx-0.28.1 huggingface-hub-1.8.0 idna-3.11 jinja2-3.1.6 joblib-1.5.3 markdown-it-py-4.0.0 markupsafe-3.0.3 mdurl-0.1.2 mlx-0.32.0 mlx-lm-0.31.3 mlx-metal-0.32.0 mpmath-1.3.0 multidict-6.7.1 networkx-3.6.1 numpy-2.4.3 packaging-26.0 propcache-0.4.1 protobuf-7.34.1 pyaml-26.2.1 pygments-2.19.2 pyyaml-6.0.3 regex-2026.2.28 rich-14.3.3 safetensors-0.7.0 scikit-learn-1.8.0 scipy-1.17.1 sentencepiece-0.2.1 setuptools-81.0.0 shellingham-1.5.4 sympy-1.14.0 threadpoolctl-3.6.0 tokenizers-0.22.2 torch-2.11.0 tqdm-4.67.3 transformers-5.4.0 typer-0.24.1 typing-extensions-4.15.0 websockets-16.0 yarl-1.23.0
+No broken requirements found.
+Looking in links: /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/aiohappyeyeballs-2.6.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 1))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/aiohttp-3.13.3-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 2))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/aiosignal-1.4.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 3))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/annotated_doc-0.0.4-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 4))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/anyio-4.13.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 5))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/attrs-26.1.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 6))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/cattrs-26.1.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 7))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/certifi-2026.2.25-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 8))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/click-8.3.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 9))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/coremltools-9.0-cp312-none-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 10))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/filelock-3.25.2-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 11))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/frozenlist-1.8.0-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 12))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/fsspec-2026.3.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 13))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/h11-0.16.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 14))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/hf_xet-1.4.2-cp37-abi3-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 15))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/httpcore-1.0.9-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 16))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/httpx-0.28.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 17))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/huggingface_hub-1.8.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 18))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/idna-3.11-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 19))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/jinja2-3.1.6-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 20))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/joblib-1.5.3-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 21))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/markdown_it_py-4.0.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 22))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/markupsafe-3.0.3-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 23))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mdurl-0.1.2-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 24))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx-0.32.4-cp312-cp312-macosx_26_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 25))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx_lm-0.31.3-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 26))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx_metal-0.32.4-py3-none-macosx_26_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 27))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mpmath-1.3.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 28))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/multidict-6.7.1-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 29))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/networkx-3.6.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 30))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/numpy-2.4.3-cp312-cp312-macosx_14_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 31))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/packaging-26.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 32))
+Requirement already satisfied: pip==26.0 in /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/core/.venv/lib/python3.12/site-packages (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 33)) (26.0)
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/propcache-0.4.1-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 34))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/protobuf-7.34.1-cp310-abi3-macosx_10_9_universal2.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 35))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pyaml-26.2.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 36))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pygments-2.19.2-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 37))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pyyaml-6.0.3-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 38))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/regex-2026.2.28-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 39))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/rich-14.3.3-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 40))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/safetensors-0.7.0-cp38-abi3-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 41))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/scikit_learn-1.8.0-cp312-cp312-macosx_12_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 42))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/scipy-1.17.1-cp312-cp312-macosx_14_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 43))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/sentencepiece-0.2.1-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 44))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/setuptools-81.0.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 45))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/shellingham-1.5.4-py2.py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 46))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/sympy-1.14.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 47))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/threadpoolctl-3.6.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 48))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/tokenizers-0.22.2-cp39-abi3-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 49))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/torch-2.11.0-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 50))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/tqdm-4.67.3-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 51))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/transformers-5.4.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 52))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/typer-0.24.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 53))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/typing_extensions-4.15.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 54))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/websockets-16.0-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 55))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/yarl-1.23.0-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/core.requirements.lock (line 56))
+Installing collected packages: mpmath, coremltools, yarl, websockets, typing-extensions, typer, transformers, tqdm, torch, tokenizers, threadpoolctl, sympy, shellingham, setuptools, sentencepiece, scipy, scikit-learn, safetensors, rich, regex, pyyaml, pygments, pyaml, protobuf, propcache, packaging, numpy, networkx, multidict, mlx-metal, mlx-lm, mlx, mdurl, markupsafe, markdown-it-py, joblib, jinja2, idna, huggingface-hub, httpx, httpcore, hf-xet, h11, fsspec, frozenlist, filelock, click, certifi, cattrs, attrs, anyio, annotated-doc, aiosignal, aiohttp, aiohappyeyeballs
+
+Successfully installed aiohappyeyeballs-2.6.1 aiohttp-3.13.3 aiosignal-1.4.0 annotated-doc-0.0.4 anyio-4.13.0 attrs-26.1.0 cattrs-26.1.0 certifi-2026.2.25 click-8.3.1 coremltools-9.0 filelock-3.25.2 frozenlist-1.8.0 fsspec-2026.3.0 h11-0.16.0 hf-xet-1.4.2 httpcore-1.0.9 httpx-0.28.1 huggingface-hub-1.8.0 idna-3.11 jinja2-3.1.6 joblib-1.5.3 markdown-it-py-4.0.0 markupsafe-3.0.3 mdurl-0.1.2 mlx-0.32.4 mlx-lm-0.31.3 mlx-metal-0.32.4 mpmath-1.3.0 multidict-6.7.1 networkx-3.6.1 numpy-2.4.3 packaging-26.0 propcache-0.4.1 protobuf-7.34.1 pyaml-26.2.1 pygments-2.19.2 pyyaml-6.0.3 regex-2026.2.28 rich-14.3.3 safetensors-0.7.0 scikit-learn-1.8.0 scipy-1.17.1 sentencepiece-0.2.1 setuptools-81.0.0 shellingham-1.5.4 sympy-1.14.0 threadpoolctl-3.6.0 tokenizers-0.22.2 torch-2.11.0 tqdm-4.67.3 transformers-5.4.0 typer-0.24.1 typing-extensions-4.15.0 websockets-16.0 yarl-1.23.0
+No broken requirements found.
+Looking in links: /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/aiohappyeyeballs-2.6.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 1))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/aiohttp-3.13.3-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 2))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/aiosignal-1.4.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 3))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/annotated_doc-0.0.4-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 4))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/anyio-4.13.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 5))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/attrs-26.1.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 6))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/cattrs-26.1.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 7))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/certifi-2026.2.25-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 8))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/click-8.3.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 9))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/coremltools-9.0-cp312-none-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 10))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/filelock-3.25.2-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 11))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/frozenlist-1.8.0-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 12))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/fsspec-2026.3.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 13))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/h11-0.16.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 14))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/hf_xet-1.4.2-cp37-abi3-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 15))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/httpcore-1.0.9-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 16))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/httpx-0.28.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 17))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/huggingface_hub-1.8.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 18))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/idna-3.11-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 19))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/jinja2-3.1.6-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 20))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/joblib-1.5.3-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 21))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/markdown_it_py-4.0.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 22))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/markupsafe-3.0.3-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 23))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mdurl-0.1.2-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 24))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx-0.32.4-cp312-cp312-macosx_26_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 25))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx_lm-0.32.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 26))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mlx_metal-0.32.4-py3-none-macosx_26_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 27))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/mpmath-1.3.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 28))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/multidict-6.7.1-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 29))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/networkx-3.6.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 30))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/numpy-2.4.3-cp312-cp312-macosx_14_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 31))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/packaging-26.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 32))
+Requirement already satisfied: pip==26.0 in /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/full/.venv/lib/python3.12/site-packages (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 33)) (26.0)
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/propcache-0.4.1-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 34))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/protobuf-7.34.1-cp310-abi3-macosx_10_9_universal2.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 35))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pyaml-26.2.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 36))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pygments-2.19.2-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 37))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/pyyaml-6.0.3-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 38))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/regex-2026.2.28-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 39))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/rich-14.3.3-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 40))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/safetensors-0.7.0-cp38-abi3-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 41))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/scikit_learn-1.8.0-cp312-cp312-macosx_12_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 42))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/scipy-1.17.1-cp312-cp312-macosx_14_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 43))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/sentencepiece-0.2.1-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 44))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/setuptools-81.0.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 45))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/shellingham-1.5.4-py2.py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 46))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/sympy-1.14.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 47))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/threadpoolctl-3.6.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 48))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/tokenizers-0.22.2-cp39-abi3-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 49))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/torch-2.11.0-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 50))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/tqdm-4.67.3-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 51))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/transformers-5.7.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 52))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/typer-0.24.1-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 53))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/typing_extensions-4.15.0-py3-none-any.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 54))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/websockets-16.0-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 55))
+Processing /Users/v/other/neural-triple-reservoir/workspace/model-environments/20261015-mlx-upgrade/wheelhouse/yarl-1.23.0-cp312-cp312-macosx_11_0_arm64.whl (from -r /Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/full.requirements.lock (line 56))
+Installing collected packages: mpmath, coremltools, yarl, websockets, typing-extensions, typer, transformers, tqdm, torch, tokenizers, threadpoolctl, sympy, shellingham, setuptools, sentencepiece, scipy, scikit-learn, safetensors, rich, regex, pyyaml, pygments, pyaml, protobuf, propcache, packaging, numpy, networkx, multidict, mlx-metal, mlx-lm, mlx, mdurl, markupsafe, markdown-it-py, joblib, jinja2, idna, huggingface-hub, httpx, httpcore, hf-xet, h11, fsspec, frozenlist, filelock, click, certifi, cattrs, attrs, anyio, annotated-doc, aiosignal, aiohttp, aiohappyeyeballs
+
+Successfully installed aiohappyeyeballs-2.6.1 aiohttp-3.13.3 aiosignal-1.4.0 annotated-doc-0.0.4 anyio-4.13.0 attrs-26.1.0 cattrs-26.1.0 certifi-2026.2.25 click-8.3.1 coremltools-9.0 filelock-3.25.2 frozenlist-1.8.0 fsspec-2026.3.0 h11-0.16.0 hf-xet-1.4.2 httpcore-1.0.9 httpx-0.28.1 huggingface-hub-1.8.0 idna-3.11 jinja2-3.1.6 joblib-1.5.3 markdown-it-py-4.0.0 markupsafe-3.0.3 mdurl-0.1.2 mlx-0.32.4 mlx-lm-0.32.0 mlx-metal-0.32.4 mpmath-1.3.0 multidict-6.7.1 networkx-3.6.1 numpy-2.4.3 packaging-26.0 propcache-0.4.1 protobuf-7.34.1 pyaml-26.2.1 pygments-2.19.2 pyyaml-6.0.3 regex-2026.2.28 rich-14.3.3 safetensors-0.7.0 scikit-learn-1.8.0 scipy-1.17.1 sentencepiece-0.2.1 setuptools-81.0.0 shellingham-1.5.4 sympy-1.14.0 threadpoolctl-3.6.0 tokenizers-0.22.2 torch-2.11.0 tqdm-4.67.3 transformers-5.7.0 typer-0.24.1 typing-extensions-4.15.0 websockets-16.0 yarl-1.23.0
+No broken requirements found.
+{"completed_at": "2026-10-15T20:29:04.098028+00:00", "stages": ["baseline", "core", "full"]}

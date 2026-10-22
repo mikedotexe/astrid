@@ -1,0 +1,26 @@
+{
+  "schema": "provider_model_policy_ast_tests_v1",
+  "created_at": "2026-10-16T17:14:54.969783+00:00",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/test_provider_model_policy_ast_01.py"
+  ],
+  "returncode": 0,
+  "test_count": 7,
+  "input_hashes": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/test_provider_model_policy_ast_01.py": "6b0403c18a53c4c4012432ac9606c66d4ea3f620e8ebb4a2fc5bcc04b4338bd5",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/provider-model-resolution-policy-01.json": "c4bc585c2a6d691e89193ea1cc9c71b4449499def98e4ae373c9fea9a7629e97",
+    "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py": "d67a0704c7498c49ed0ac36ea5b3d161f74753419f823327f1b1572d9203610f",
+    "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx_lm/utils.py": "ba0371e9c88d52b34d71271945c2394005fbcb2bfb2ee9f6f82d627a33b72422",
+    "/Users/v/other/astrid/scripts/model_environment.py": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_preflight.py": "3ded53f71a6d134640cb89a00ed9cf9c392a9709a8ac39eae67e2737250de1e5",
+    "/Users/v/Library/LaunchAgents/com.reservoir.coupled-astrid.plist": "4d4bb17099f48b85e2cdcee7d343b4238253edb982fde67d3d9b1e5cad0152ec"
+  },
+  "inputs_unchanged": true,
+  "log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/provider-model-policy-ast-tests-01.log",
+    "sha256": "d94a22fb4a0ee96deaf8cdb4202fa18a7ad1a62d0b8d7916f6a5eb9239cbd0f8"
+  },
+  "scope": "AST-extracted frozen loader/config/interpreter functions and staged pure preflight checks; private tiny fake files only; no production modules, numeric runtime, network, service APIs or models imported/executed."
+}

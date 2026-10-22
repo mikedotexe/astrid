@@ -1,0 +1,267 @@
+{
+  "actual_os_fixture_executed": false,
+  "aggregate": {
+    "artifact_inventory": "all regular retained run files path->SHA256, stable reads; excludes exactly existing empty root/setup.lock and root/execution.lock; aggregate outside root; no automatic skip for logs or unknown files",
+    "executor_count": 71,
+    "executor_fields": [
+      "step",
+      "request",
+      "launch",
+      "created",
+      "self_start",
+      "exit",
+      "result",
+      "injection_ack",
+      "lock_held",
+      "lock_refusal",
+      "release_lock"
+    ],
+    "flags": {
+      "exact_release_fixture_passed": true,
+      "numeric_restore_executed": false,
+      "production_host_executed": false,
+      "production_pin_schedule_executed": false,
+      "production_qualified": false
+    },
+    "optional_executor_refs": "Unused outcome fields are null. All request/launch/created/self_start/exit refs mandatory; exact sealed kind determines remaining required fields.",
+    "parent": {
+      "events": "all ordered refs",
+      "head_sha256": "canonical ledger head",
+      "header": "root/parent/header.json ref",
+      "identity": "exact PID/start/argv",
+      "parent_reaped": false,
+      "post_terminal_closeout_required": true,
+      "start": "root/parent-start.json ref"
+    },
+    "parent_action_count": 74,
+    "parent_action_order": "setup; lock_pair; remaining69 executor:<sealed-id>, cleanup_initialize immediately before first cleanup, pin_initialize immediately before first pin; finalize",
+    "producer": "owned_fixture_result.produce",
+    "schema": "reservoir_owned_recovery_fixture_result_v2",
+    "sections": [
+      "release",
+      "root",
+      "transaction_id",
+      "host_binding",
+      "python",
+      "python_executables",
+      "final_release_closure",
+      "fixture_artifacts",
+      "plan",
+      "injections",
+      "parent",
+      "setup",
+      "executors",
+      "main",
+      "recovery",
+      "cleanup",
+      "pin",
+      "final_observations",
+      "artifacts",
+      "excluded_lock_paths",
+      "core_loaded_origins",
+      "fixture_loaded_origins",
+      "started_wall_time_ns",
+      "completed_wall_time_ns"
+    ]
+  },
+  "coordination_check": {
+    "behavior": "fixed reference rehashed, exact paused generation/actor; any present or symlink lease refuses without expiry interpretation, deletion or takeover",
+    "limitation": "read-only cooperative pre-action guard, not a new atomic lease or authority; synthetic fixture plan remains separate",
+    "locations": [
+      "release validation before setup and every parent/executor entry/launch",
+      "each of two initial worker bootstraps",
+      "parent-start publication",
+      "executor self-start publication"
+    ],
+    "observation": {
+      "coordination": "exact release.coordination",
+      "observed_wall_time_ns": "int observed during that process lifetime"
+    },
+    "producer": "owned_fixture_coordinator.validate_coordination"
+  },
+  "execution_enabled": false,
+  "executor_self_start": {
+    "coordination_observation": "same exact shape as coordination_check.observation; observed after started_wall_time_ns and before executor completion",
+    "required_additional_fields": [
+      "coordination_observation",
+      "core_loaded_origins",
+      "fixture_loaded_origins"
+    ]
+  },
+  "final_observations": {
+    "fields": [
+      "host_binding",
+      "observed_wall_time_ns",
+      "observer_identity",
+      "roles",
+      "known_identities",
+      "pid_observations",
+      "sentinel",
+      "ports",
+      "guards",
+      "state",
+      "main_backup",
+      "checkin_requests",
+      "checkin_acks",
+      "raw_queries",
+      "parent_absence_claimed",
+      "force_used"
+    ],
+    "force_used": false,
+    "guards": "provider/reservoir hold file existence booleans both false",
+    "known_identities": "PID-string->full identity, excludes only exact parent",
+    "parent_absence_claimed": false,
+    "pid_observations": "same PID-string keys, all null on acceptance",
+    "ports": "every historical private sentinel port string->empty owner list",
+    "roles": "exact actual provider/reservoir inspect_role outputs",
+    "schema": "owned_fixture_final_observations_v2",
+    "sentinel": "receipt ref + PID + process null + exact pin_observation including raw launchctl print"
+  },
+  "independent_parent_closeout": {
+    "fields": [
+      "fixture",
+      "release",
+      "host_binding",
+      "parent_identity",
+      "observer_identity",
+      "observed_at",
+      "parent_absent",
+      "observation",
+      "raw_observation"
+    ],
+    "observation": {
+      "process": null,
+      "queried_pid": "exact parent PID"
+    },
+    "observer": "actual identity distinct from parent and every fixture-owned PID; never parent-authored",
+    "parent_absent": true,
+    "raw_observation": "independently saved exact ps -p PID -o pid= row, rc1 empty stdout/stderr, observed_wall_time_ns after aggregate completion",
+    "schema": "reservoir_owned_recovery_fixture_parent_closeout_v2",
+    "time": "observed_at parseable ISO UTC after aggregate.completed_wall_time_ns"
+  },
+  "independent_review": {
+    "accepted": true,
+    "closure_matches_final_release": true,
+    "parent_closeout": "exact separate closeout ref",
+    "raw_artifacts": "must equal aggregate.artifacts",
+    "recomputed_checks": "all explicitly named mandatory checks true; raw revalidation remains required",
+    "schema": "reservoir_owned_recovery_fixture_review_v2",
+    "scope": "owned_fixture_only"
+  },
+  "parent_ledger": {
+    "binding": [
+      "release_sha256",
+      "parent_identity_sha256"
+    ],
+    "chain": "existing sequence/previous canonical digest; claim/result/failed only; complete acceptance has no failed row and exact74 completed actions",
+    "name": "parent",
+    "schema": "owned_fixture_ledger_v1"
+  },
+  "parent_start": {
+    "fields": [
+      "identity",
+      "host_binding",
+      "release",
+      "started_wall_time_ns",
+      "parent_reaped",
+      "raw_queries",
+      "coordination_observation"
+    ],
+    "parent_reaped": false,
+    "schema": "owned_fixture_parent_start_v2"
+  },
+  "raw_queries": {
+    "fields": [
+      "host_binding",
+      "observer_identity",
+      "queries",
+      "pin_query"
+    ],
+    "known_absence_outcome": {
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    "known_absence_query": [
+      "/bin/ps",
+      "-p",
+      "PID",
+      "-o",
+      "lstart="
+    ],
+    "pin_query": "raw fixed generated-target launchctl print result",
+    "row_fields": [
+      "argv",
+      "returncode",
+      "stdout",
+      "stderr",
+      "observed_wall_time_ns"
+    ],
+    "schema": "owned_fixture_raw_queries_v2"
+  },
+  "release": {
+    "coordination": {
+      "actor": "codex-mlx-upgrade",
+      "control": {
+        "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/steward_control_v1/control.json",
+        "sha256": "exact current pause record"
+      },
+      "lease_absent": true,
+      "lease_path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/steward_control_v1/lease.json",
+      "pause_generation": 528,
+      "paused": true
+    },
+    "core": {
+      "artifacts": "all direct05 .py path->SHA256",
+      "flags": {
+        "PRODUCTION_CONTROLLER_ENABLED": true,
+        "PRODUCTION_EXECUTION_ENABLED": true
+      },
+      "root": "exact production-candidate-05 canonical path"
+    },
+    "qualification_meaning": "owned_fixture_exact_final_release_only",
+    "release_stage": "final_enabled",
+    "required": [
+      "approved",
+      "scope",
+      "production_qualified",
+      "final_release_acceptance",
+      "qualification_meaning",
+      "release_stage",
+      "core",
+      "artifacts",
+      "python",
+      "python_files",
+      "host_binding",
+      "fixture",
+      "result_path",
+      "sudo_debug",
+      "setup_plan",
+      "executor_plan",
+      "injections",
+      "source_review",
+      "coordination"
+    ],
+    "result_path": "fixture02/evidence/owned-recovery-<token>-result.json; outside run root",
+    "schema": "owned_recovery_fixture_release_v2",
+    "source_review_fields": [
+      "approved",
+      "scope",
+      "reviewer",
+      "release_stage",
+      "core_artifacts",
+      "core_flags",
+      "fixture_artifacts",
+      "python",
+      "python_files",
+      "executor_plan_sha256",
+      "injections_sha256",
+      "coordination"
+    ],
+    "source_review_schema": "owned_recovery_fixture_final_release_source_review_v2"
+  },
+  "schema": "owned_fixture_raw_interface_v2",
+  "status": "source_only_draft_no_execution",
+  "supersedes_source_draft": "raw-proof-interface-01.json preserved unchanged",
+  "tests_executed": false
+}

@@ -1,0 +1,61 @@
+{
+  "approved": true,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/qualify_reservoir_maintenance.py": "0b0017649c2974eb7d64e91d6719a5e87b8367c1dc148f3c54dd704673bc6c36",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/recover_owned_fixture.py": "f88247e4e611f9bb1291af4b805511cead8477e4dac5277de18d80655ba85b5e",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/recovery-target.json": "dc7feaef1c7b983fb283049793aca3c941ca26db764a33e146727919cfa2e92b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/reservoir_maintenance.py": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/test_maintenance_fixture_worker.py": "d7be17da230ccbe5a1852a30d0d72e2149d4a79993a7d08e78ff058018d563be",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/test_qualify_reservoir_maintenance.py": "efae01a20ef28da4115d2e34ea545124138c2b20a0fabbc45576617f12961c7b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/test_recover_owned_fixture.py": "da8e8387bc6f9e3a54507e902659053c14433f55924a24cfacf3c1d4b31fcc5d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/test_reservoir_maintenance.py": "67275c384b058c2f90977d3ec8b60e29c1788d47f08cfa1f983c6dc31bfd0a15",
+    "/Users/v/other/astrid/scripts/model_environment.py": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587"
+  },
+  "blocking_findings": [],
+  "checks": [
+    "Fixed root/token, exact UID/host/boot/Python identities, original plists, copied source, 38-event completed controller journal, 91 immutable inputs and original reservoir log prefix are verified before recovery. Original failed receipt is never overwritten.",
+    "Existing provider 76512 second unique check-in is already acknowledged/applied; only its exact holder 77047/start/argv/guard may be removed. No provider re-arm, re-signal, restart or request replay.",
+    "New durable operations append strictly after original 27 under exclusive recovery lock. Known prior absence requires exact owned removal evidence and actual old PID/listener absence.",
+    "Reservoir worker 76424/start/full argv remains exact. Owned guard is established before scoped sudo -n launchctl debug. Bin Python invocation binds both launcher and framework runtime bytes; command_matches allows only the exact known argv[0] re-exec alias.",
+    "Only exact sudo -n password-required refusal with empty stdout is retryable. A confirmed successful arm is not repeated. Generic nonzero, timeout/interruption or unmatched debug intent is uncertain and cannot authorize blind re-arm or signal.",
+    "A prior exact signal intent is never repeated. Loaded/no-PID launchd publication gaps wait boundedly; foreign worker/replacement and unexpected unloaded jobs refuse.",
+    "Reservoir must produce exact six-second drain and both handle saves at state22/7, original worker PID/listener must be absent, and only then may its verified owned holder be removed.",
+    "Final durable state must include both unique check-ins (22/7), immutable preserved backup remains11/7, original inputs/prefix are reverified, and both owned jobs/processes/listeners must be absent.",
+    "Any failure retains remaining owned jobs/guards/evidence. Result explicitly keeps original_fixture_passed=false and production_qualified=false."
+  ],
+  "cpu_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-v2-recovery-tests-02.txt",
+    "sha256": "332c72c04799012c948018e3c7abb8cdb49ac30825e034c81d90b163dccaafc6"
+  },
+  "cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-v2-recovery-tests-02.json",
+    "sha256": "f0336d123698341d8af4fdba9b4a0ffb3b1813fd8998659ac567ee552ab474f3"
+  },
+  "cpu_tests": 88,
+  "executed_by_reviewer": false,
+  "limits": [
+    "This review does not itself confirm current OS process identities; the executor must perform the exact runtime checks embedded in the reviewed helper.",
+    "A successful recovery establishes cleanup only and cannot turn admin-01 into a passing fixture.",
+    "No production adapter, production state restore or MLX qualification is accepted."
+  ],
+  "production_qualified": false,
+  "resolved_review_findings": [
+    "Added durable debug-state classification to prevent repeating an uncertain or already successful one-shot override.",
+    "Restricted retryable privilege refusal to exact pre-command noninteractive sudo auth refusal, not arbitrary nonzero launchctl status.",
+    "Handled prior-signalled no-PID publication gap without weakening identity checks or repeating signals."
+  ],
+  "review_method": "Static source review and independent verification of all CPU receipt/source/log hashes; no tests, launchd, signals, privileged calls, sockets, service or model execution by reviewer.",
+  "reviewed_at": "2026-10-16T15:17:30.002685+00:00",
+  "reviewer": "mlx_integration",
+  "schema": "owned_fixture_cleanup_review_v1",
+  "scope": "Exact retained admin-01 owned fixture cleanup only, token 3b6d224c3c42468c8033890d2c535662; separate fresh output receipt required.",
+  "target": {
+    "immutable_file_count": 91,
+    "original_operations_verified": 27,
+    "original_receipt": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/launchd-fixture-admin-01.json",
+    "original_receipt_sha256": "9c37ee486cf38c860b63301ea6d287752644750b34f37f4088a8438aefd24dca",
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/recovery-target.json",
+    "sha256": "dc7feaef1c7b983fb283049793aca3c941ca26db764a33e146727919cfa2e92b"
+  }
+}

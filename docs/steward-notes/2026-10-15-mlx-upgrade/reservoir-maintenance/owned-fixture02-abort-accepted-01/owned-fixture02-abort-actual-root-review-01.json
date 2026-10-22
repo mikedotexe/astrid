@@ -1,0 +1,64 @@
+{
+  "at": "2026-10-17T14:35:42.876956+00:00",
+  "bootout_child_metadata_limit": "Both bootout children were already defunct when process metadata was captured. Their exact Popen argv, PID and natural wait return0 are retained; no full live argv proof is inferred.",
+  "failed_histories_preserved": true,
+  "independent_acceptance_pending": true,
+  "ledger_rows": 26,
+  "mlx_qualified": false,
+  "natural_action_exits": 3,
+  "natural_query_reaps": 763,
+  "observed_absent_participants": 16,
+  "old_executor_absence": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-old-executor-absence-01.json",
+    "sha256": "515b05c2bd3e6d75637cfa3cd4f86746c05ee72aae12fec269eab9048b751d1d"
+  },
+  "one_use_intents": 7,
+  "original_file_deltas": {
+    "added": [
+      "state.json"
+    ],
+    "changed": [
+      "reservoir.events.jsonl"
+    ],
+    "identical": 138,
+    "removed": [
+      "hold-provider/hold.json",
+      "reservoir.ready.json"
+    ]
+  },
+  "original_fixture_passed": false,
+  "original_snapshot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-failed-run-snapshot-01/manifest.json",
+    "sha256": "c6c11df7fb4bc18d4ead51df32c8eeae6635da187cd2e127f1a62d053c8a36a2"
+  },
+  "owner": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-4327212894d64b31980b98bf3fbd7fc2-01/owner.json",
+    "sha256": "cc066e85d4340ad4a13281627f545a9c2d13c4bbd4206e16b1c832131b43db2b"
+  },
+  "postexit": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-postexit-observation-01.json",
+    "sha256": "76e572221c44eb45a598ebf149a854d478d1713c7c5a78beda07abcf9a1aadc5"
+  },
+  "production_qualified": false,
+  "raw_queries": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-4327212894d64b31980b98bf3fbd7fc2-01/raw-queries.json",
+    "sha256": "157a2252a45f06714d3951dcc4dd8556608dd86c534db72d1704125c9cff6a7f"
+  },
+  "result": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-4327212894d64b31980b98bf3fbd7fc2-01/result.json",
+    "sha256": "166a9b0b8cf5923ba6d65a7985c4da7623897d527827e6fe1cf865b5a6a48789"
+  },
+  "root_review_passed": true,
+  "root_service_actions": false,
+  "save_delay_seconds": 6.07144408300519,
+  "schema": "owned_fixture02_abort_actual_root_review_v1",
+  "scope": "cleanup_only",
+  "state": {
+    "fixture_astrid": {
+      "ticks": 11
+    },
+    "fixture_minime": {
+      "ticks": 7
+    }
+  }
+}

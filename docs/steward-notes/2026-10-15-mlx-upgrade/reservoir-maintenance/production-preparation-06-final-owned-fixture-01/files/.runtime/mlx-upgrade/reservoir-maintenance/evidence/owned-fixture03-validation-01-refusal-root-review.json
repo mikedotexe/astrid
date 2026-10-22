@@ -1,0 +1,28 @@
+{
+  "actual_os_fixture_executed": false,
+  "blind_retry_permitted": false,
+  "conclusion": "Guard refused Python import bytecode probe before any target local code executed. Preserve refusal; no release or OS acceptance. A separately reviewed source-only import loader is required before another read-only validation at a fresh output path.",
+  "created_at": "2026-10-17T15:33:52.492630+00:00",
+  "exit_code": 1,
+  "fixture_code_executed": false,
+  "frozen_release_mutated": false,
+  "inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-source-inputs-01.json",
+    "sha256": "a2af3f3f32c121ab2d010bc6ee3c4cbd7f3f24b36888d34d2d77ffef9b6226b1"
+  },
+  "production_qualified": false,
+  "receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-release-validation-01.json",
+    "sha256": "80820187faef66f98c69fa253c0df1e843fca51b47e0f3090773d6dc46e0585c"
+  },
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-release-01.json",
+    "sha256": "1ee094f1a0d71f9df05114a12b0350b2aaebc403371d4dbbbf7e6cc688a1396d"
+  },
+  "runner": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/validate_fixture03_final_release_01.py",
+    "sha256": "db96f8365ce37ca547b45032c01e7711513fd25be9336c1558e0e76b528a40db"
+  },
+  "schema": "owned_fixture03_validator_initial_refusal_root_review_v1",
+  "source_loading_problem_only": true
+}

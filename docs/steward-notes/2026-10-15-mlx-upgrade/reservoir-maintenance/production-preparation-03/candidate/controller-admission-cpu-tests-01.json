@@ -1,0 +1,74 @@
+{
+  "schema": "reservoir_controller_admission_cpu_tests_v1",
+  "created_at": "2026-10-16T17:59:13.872560+00:00",
+  "scope": "inert stdlib state-machine and temporary fake-file proof tests only; no real qualification accepted",
+  "command": [
+    "python3",
+    "-B",
+    "-m",
+    "unittest",
+    "-v",
+    "test_production_controller",
+    "test_production_admission"
+  ],
+  "execution_method": "Same named unittest suites invoked in-process with captured TextTestRunner output",
+  "result": {
+    "passed": true,
+    "tests_run": 62,
+    "legacy_fixture_tests": 23,
+    "production_controller_tests": 9,
+    "admission_tests": 30,
+    "errors": 0,
+    "failures": 0,
+    "elapsed_s": 0.4667772080283612
+  },
+  "log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/controller-admission-cpu-tests-01.log",
+    "sha256": "6ae4e0da1ea1199c18365dcd8160cfe11be8c21b6936e0bbd397b4728bd1657d"
+  },
+  "files": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/reservoir_maintenance.py": "09631605fcb28a6e9f8649980b729557a75a1c6c039775ff3c77f14f2c6487e8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_admission.py": "5cdd190c7ff23eca45e7a4f86054463e120b6921c5ef154618bb5f1f1e3b308d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_production_controller.py": "abf198d3027dae327ae43097a98ecc8cb2805d3002f4c0ca266368541d5e1073",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_production_admission.py": "ff2b7fb1e8b62ddb7f4e1175cff462600a86447cc245b22cbb3acd4cc3c55d2c"
+  },
+  "dependencies": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_preflight.py": "48c81c1b60d8c49b3c6de5738c3e114f5173ec438ea2d5de1fd42cd21916baef",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3"
+  },
+  "legacy_fake_dependency": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/test_reservoir_maintenance.py",
+    "sha256": "67275c384b058c2f90977d3ec8b60e29c1788d47f08cfa1f983c6dc31bfd0a15"
+  },
+  "preserved_original_controllers": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance.py": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/reservoir_maintenance.py": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b"
+  },
+  "interpreter": {
+    "path": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "version": "3.14.3 (main, Feb  3 2026, 15:32:20) [Clang 17.0.0 (clang-1700.6.3.2)]",
+    "resolved": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43"
+  },
+  "compile_check": {
+    "passed": true,
+    "method": "stdlib AST and in-memory compile, no bytecode",
+    "files": 4
+  },
+  "production_controller_enabled": false,
+  "production_host_enabled": false,
+  "actual_service_executed": false,
+  "actual_restore_executed": false,
+  "production_qualified": false,
+  "prior_local_test_findings": [
+    "Initial command used a redundant working-directory prefix, so file creation failed and discovery reported missing test module; corrected command only.",
+    "Three fake-tree tests initially used macOS temporary aliases; canonicalizing their test root fixed the expected no-symlink input rejection. No production guard was loosened."
+  ],
+  "limits": [
+    "No successful actual fourteen-case or nine-case proof exists or was manufactured by these tests.",
+    "Raw-reader semantic calls are mocked only in synthetic shape tests; separate fake-file tests check retained bytes, hashes, module cleanup, child receipts and exact scopes.",
+    "Production remains disabled and needs actual matrix, actual restore qualification, fresh integrated-controller owned fixture, current host/preparation/runtime alignment and exact execution review.",
+    "Controller.run remains fresh-only; no recovery mutation/resume or live CLI exists."
+  ]
+}

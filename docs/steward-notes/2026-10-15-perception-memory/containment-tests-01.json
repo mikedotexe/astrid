@@ -1,0 +1,108 @@
+{
+  "all_owned_children_reaped": true,
+  "children_cpu_s": {
+    "system": 0.136374,
+    "user": 0.442899
+  },
+  "completed_at": "2026-10-16T01:38:37.519657+00:00",
+  "elapsed_s": 0.7043955831322819,
+  "invocation": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-I",
+    "-B",
+    ".runtime/perception-memory-investigation/candidate/test_camera_capture_containment.py",
+    "--evidence-output",
+    "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/containment-tests-01.json"
+  ],
+  "limitations": "No actual camera/TCC/backend timing validation. No camera timeout is introduced: a blocked camera can still block the synchronous caller indefinitely.",
+  "model_modules_imported": [],
+  "owned_children": [
+    {
+      "pid": 34725,
+      "returncode": 0
+    },
+    {
+      "pid": 34726,
+      "returncode": 0
+    },
+    {
+      "pid": 34728,
+      "returncode": 1
+    },
+    {
+      "pid": 34730,
+      "returncode": 1
+    },
+    {
+      "pid": 34731,
+      "returncode": 1
+    },
+    {
+      "pid": 34732,
+      "returncode": 1
+    },
+    {
+      "pid": 34733,
+      "returncode": 1
+    },
+    {
+      "pid": 34734,
+      "returncode": 1
+    },
+    {
+      "pid": 34735,
+      "returncode": 1
+    },
+    {
+      "pid": 34737,
+      "returncode": 1
+    },
+    {
+      "pid": 34739,
+      "returncode": 1
+    },
+    {
+      "pid": 34740,
+      "returncode": 0
+    },
+    {
+      "pid": 34741,
+      "returncode": 0
+    },
+    {
+      "pid": 34742,
+      "returncode": 0
+    },
+    {
+      "pid": 34743,
+      "returncode": 0
+    },
+    {
+      "pid": 34744,
+      "returncode": 0
+    },
+    {
+      "pid": 34745,
+      "returncode": 3
+    }
+  ],
+  "parent_cpu_s": {
+    "system": 0.054010999999999997,
+    "user": 0.11622099999999999
+  },
+  "passed": true,
+  "production_mutations": 0,
+  "python_version": "3.14.3 (main, Feb  3 2026, 15:32:20) [Clang 17.0.0 (clang-1700.6.3.2)]",
+  "real_cv2_imported_in_parent": false,
+  "schema": "perception_camera_process_containment_tests_v1",
+  "scope": "Candidate-only mock resource tests and tiny owned stdlib processes; worker cases install fake cv2 before helper execution. No real camera, microphone, native OpenCV or model access; no stress or large-allocation tests.",
+  "source_hashes": {
+    "camera_capture.py": "4692f30fe56090490cc648b78447e993a368a5a148ef53a0b2e38d235caae34d",
+    "host_audio_fallback.py": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69",
+    "perception.py": "d842d08aa505836451c64e0ad29158d7610efc6828e54a2988ccfe8f28c648a8",
+    "test_camera_capture_containment.py": "4dff0a76fb7d728b9035d2a5e7cd2c1ab4927475989dcc9c0fce3fa43e9cf024"
+  },
+  "started_at": "2026-10-16T01:38:36.815062+00:00",
+  "test_output": "test_fake_cv2_worker_releases_on_all_paths_and_preserves_defaults (__main__.OwnedSubprocessTests.test_fake_cv2_worker_releases_on_all_paths_and_preserves_defaults) ... ok\ntest_finite_output_larger_than_pipe_buffer_is_drained (__main__.OwnedSubprocessTests.test_finite_output_larger_than_pipe_buffer_is_drained) ... ok\ntest_small_real_empty_and_malformed_outputs (__main__.OwnedSubprocessTests.test_small_real_empty_and_malformed_outputs) ... ok\ntest_small_real_oversized_output_is_fully_drained (__main__.OwnedSubprocessTests.test_small_real_oversized_output_is_fully_drained) ... ok\ntest_small_real_process_success_and_nonzero_are_reaped (__main__.OwnedSubprocessTests.test_small_real_process_success_and_nonzero_are_reaped) ... ok\ntest_allocation_cap_and_no_timeout_or_forced_termination (__main__.ParentBoundaryTests.test_allocation_cap_and_no_timeout_or_forced_termination) ... ok\ntest_close_error_still_reaps_and_rejects (__main__.ParentBoundaryTests.test_close_error_still_reaps_and_rejects) ... ok\ntest_exact_limit_is_accepted (__main__.ParentBoundaryTests.test_exact_limit_is_accepted) ... ok\ntest_interruption_reaps_then_propagates (__main__.ParentBoundaryTests.test_interruption_reaps_then_propagates) ... ok\ntest_malformed_and_empty_outputs_are_rejected (__main__.ParentBoundaryTests.test_malformed_and_empty_outputs_are_rejected) ... ok\ntest_nonzero_exit_rejects_valid_jpeg (__main__.ParentBoundaryTests.test_nonzero_exit_rejects_valid_jpeg) ... ok\ntest_overflow_is_drained_and_discarded_before_reaping (__main__.ParentBoundaryTests.test_overflow_is_drained_and_discarded_before_reaping) ... ok\ntest_parent_imports_no_native_or_model_modules (__main__.ParentBoundaryTests.test_parent_imports_no_native_or_model_modules) ... ok\ntest_public_entry_uses_exact_interpreter_and_index (__main__.ParentBoundaryTests.test_public_entry_uses_exact_interpreter_and_index) ... ok\ntest_read_error_still_closes_and_reaps (__main__.ParentBoundaryTests.test_read_error_still_closes_and_reaps) ... ok\ntest_spawn_error_is_static_log_without_exception_payload (__main__.ParentBoundaryTests.test_spawn_error_is_static_log_without_exception_payload) ... ok\ntest_success_returns_bytes_after_reaping (__main__.ParentBoundaryTests.test_success_returns_bytes_after_reaping) ... ok\ntest_audio_helper_unchanged_and_no_candidate_workspace_created (__main__.SourceIsolationTests.test_audio_helper_unchanged_and_no_candidate_workspace_created) ... ok\ntest_capture_frame_delegates_index_and_logger (__main__.SourceIsolationTests.test_capture_frame_delegates_index_and_logger) ... ok\ntest_only_capture_frame_body_changed_in_perception (__main__.SourceIsolationTests.test_only_capture_frame_body_changed_in_perception) ... ok\n\n----------------------------------------------------------------------\nRan 20 tests in 0.704s\n\nOK\n",
+  "tests_run": 20
+}

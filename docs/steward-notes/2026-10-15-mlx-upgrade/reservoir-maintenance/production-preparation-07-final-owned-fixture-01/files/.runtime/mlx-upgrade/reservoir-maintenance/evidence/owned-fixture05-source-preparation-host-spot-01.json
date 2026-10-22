@@ -1,0 +1,42 @@
+{
+  "actual_os_fixture_executed": false,
+  "control": {
+    "lease_absent": true,
+    "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/steward_control_v1/control.json",
+    "sha256": "d722df02a823393130dfb31c402c1600754ef887cda04da2b272adf6099478e3"
+  },
+  "control_match": true,
+  "created_at": "2026-10-17T16:51:25.166993+00:00",
+  "file_mismatches": [],
+  "health": {
+    "error": "HTTP Error 404: Not Found",
+    "error_type": "HTTPError"
+  },
+  "historical_comparison": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-precommand-host-spot-01.json",
+    "sha256": "734693f3be1269fe2961bf97c67ee47e2335d44982193593583b70ac398d2881"
+  },
+  "host": {
+    "boot_uuid": "A86C8146-975D-4935-85A6-A7879EC7BBE3",
+    "hostname": "m3-volya",
+    "os_version": "27.0.1",
+    "uid": 501
+  },
+  "host_match": true,
+  "passed_source_preparation_spot": false,
+  "process_mismatches": [
+    "35486"
+  ],
+  "production_qualified": false,
+  "protected_exact": {
+    "22354": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+    "35303": "35303     1 Thu Oct  1 11:16:53 2026     /Users/v/other/minime/minime/target/release/minime run --log-homeostat --eigenfill-target 0.6800 --warm-start-blend 0.55 --reg-tick-secs 0.5 --legacy-audio-synth-enabled false --legacy-video-synth-enabled false --ws-addr 127.0.0.1:7900 --sensory-ws-addr 127.0.0.1:7901 --av-ws-addr 127.0.0.1:7902 --enable-gpu-av",
+    "35486": "",
+    "3888": "3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state",
+    "3893": "3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active",
+    "60407": "60407     1 Fri Oct 16 11:43:16 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60",
+    "61069": "61069     1 Fri Oct 16 11:44:08 2026     /Users/v/other/worktrees/truthful-return-20261016/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/truthful-return-20261016/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/truthful-return-20261016/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous"
+  },
+  "protected_file_count": 305,
+  "schema": "owned_fixture05_source_preparation_host_spot_v1"
+}

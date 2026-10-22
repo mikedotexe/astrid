@@ -1,0 +1,26 @@
+{
+  "artifacts": [
+    {
+      "bytes": 44228,
+      "preserved": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-source-checkpoint-01/production_fixture_admission.py.txt",
+      "sha256": "d86f58e54c73f09c2a48c94adde637915300c3158fa0f3c09d3ee6f9e4d6c5fe",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_fixture_admission.py"
+    },
+    {
+      "bytes": 51395,
+      "preserved": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-source-checkpoint-01/production_fixture_history.py.txt",
+      "sha256": "2454597e2746df37e82ef6668a523d202e366a491bdda926d3e37f9731f541b1",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_fixture_history.py"
+    },
+    {
+      "bytes": 33398,
+      "preserved": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-source-checkpoint-01/test_production_fixture_admission.py.txt",
+      "sha256": "fde5aab52567253224944d35f5079fb719de5bbc54e05bd9261cc2db82e64fa8",
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_fixture_admission.py"
+    }
+  ],
+  "reason": "Two worker-source references point to candidate instead of the exact fixture02 candidate-v2 dependency. Preserved before the narrow correction.",
+  "schema": "fixture_reader_source_checkpoint_v1",
+  "status": "superseded_before_reader_tests",
+  "tests_executed": false
+}

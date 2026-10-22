@@ -1,0 +1,89 @@
+{
+  "actual_os_acceptance": false,
+  "approved": false,
+  "approved_for_guarded_stdlib_tests": true,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/README.md": "d3f3b08a85a79773eb4fa187cfa832d3c4731784822c78bc596a760558856830",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_driver.py": "947e6ddde47f913c1f796b0171e6609d7befa817cdfe376f01815306e4b25d54",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_evidence.py": "7bbc9ce8d2154d5b4b732b18174ffba68e897457d869240232764c9d301b6c38",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_native.py": "4cbdefe3dc4795699d2ad1255f37c2b0cbba797ec32a2f86484728ccd1ba6405",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/target.json": "159cafb1804114dec016dbbfdccd425ba7aa2ebb76a2999c83f6b3e6e5cb57e6",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_driver.py": "5f1fdfdf8ad3c69a3f8f28471bf9c497f6d3ca0fb52a1deef219dcf4ec2384ce",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_evidence.py": "bea2755ccc298db9b0426f6ef5720ade8224f94491b856113a0bc65dcc7e4b9f",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_native.py": "2ffb9df3166e7c430cf2dda1c0a164faee3f24b0387da5217827901567b865db"
+  },
+  "authored_tests": 53,
+  "checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/evidence/source-checkpoint-03.json",
+    "sha256": "d9606685415a990a135d2400db912a921e3d6692bb2073f660676bed6edd4137"
+  },
+  "execution_authorized": false,
+  "findings": [],
+  "limits": [
+    "No target module import, test, process query, lock acquisition, network/service call, signal or native action occurred in this review.",
+    "The90s/15s limits are acceptance deadlines, not hard OS-interruption limits. Each query has its separate5s bound; a final observation overrun is rejected without force.",
+    "The audit hook guards this reviewed fake-test path, not arbitrary hostile Python. Deliberate fail-closed treatment of unknown process metadata may leave a manual-review stop.",
+    "No previous primitive, disabled fixture or failed actual fixture acceptance transfers to this new driver."
+  ],
+  "operations_by_reviewer": {
+    "frozen_source_edits": 0,
+    "process_queries": 0,
+    "service_calls": 0,
+    "signals": 0,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "preserved_initial_checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/evidence/source-checkpoint-01.json",
+    "sha256": "0816ef906e83174b728344dbc002fee7348a065f1de9beac43bd0635cffc4a7d"
+  },
+  "production_qualified": false,
+  "remaining_gates": [
+    "Root-owned final test plan must bind this exact8-file artifacts map, all six Python sources, exact interpreter family, runner, protected files and frozen original inventory, with expected53 tests. The guarded suite has not run.",
+    "After the guarded test receipt, an independent final evidence review must bind its exact log/count/zero-forbidden-actions and source preservation before any abort release is authored.",
+    "A separately authorized fresh read-only native preflight must prove current PID/start/argv/guard/listener/coordination/source conditions. Historical evidence and mock tests do not establish present live readiness.",
+    "An accepted actual abort result still requires independent later executor/command-child absence closeout; cleanup cannot qualify the failed71-step fixture, production maintenance, numerical restore or MLX upgrade."
+  ],
+  "resolved_findings": [
+    {
+      "finding": "subprocess.run(timeout) in the prior frozen adapter could kill command children on timeout or interruption.",
+      "resolution": "New query and action paths use Popen without context-manager exit; bounded communicate/wait errors retain unresolved child evidence and never call kill/terminate or retry. No old adapter code was changed."
+    },
+    {
+      "finding": "Action exception receipt could claim a naturally reaped nonzero child might still be alive.",
+      "resolution": "Explicit wait-return state now separates known natural reap/returncode from uncertain command effect; command_exit publication failure retains known reap."
+    },
+    {
+      "finding": "wait_for could accept a positive final observation after its90s/15s deadline.",
+      "resolution": "Checkpoint02 checks time before and after each predicate and clamps sleep; checkpoint03 states that a bounded read-only observation can overrun but cannot be accepted afterward. Three direct regressions are authored."
+    },
+    {
+      "finding": "Root runner allowed output symlink destinations and initially rejected legitimate scratch fdopen writes.",
+      "resolution": "Output opens are exclusive and post-test only; filesystem mutation paths are scratch-only. Writable integer FDs require a unique regular nlink1 nonsymlink scratch-file inode. Artifact metadata now carries the exact author map needed by driver release validation."
+    }
+  ],
+  "reviewed_at": "2026-10-17T06:29:47.403508+00:00",
+  "reviewer": "codex-mlx-upstream",
+  "schema": "owned_fixture02_abort_independent_source_review_v1",
+  "scope": "exact_failed_fixture_abort_only",
+  "test_inventory": {
+    "test_abort_driver": 16,
+    "test_abort_evidence": 11,
+    "test_abort_native": 26
+  },
+  "test_runner": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture02_abort_tests_01.py",
+    "sha256": "068317478ce4e737ae875faeb9a0bd9e5d3e2990ca466da89162f7e00437a52f"
+  },
+  "tests_run": false,
+  "validated_source_contract": [
+    "Default CLI performs no query/write. Check mode is read-only under the existing exact private execution.lock; execute requires ordinary UID501, selected pinned interpreter family, Terminal stdin, fixed release path and independently reviewed exact source/test artifacts. Any existing abort root refuses use; no resume path exists.",
+    "A separate fsynced attempt/owner/hash-chained ledger reserves each action before effect; original main/recovery/parent/Host histories are neither rewritten nor appended. The original141-file snapshot records and fixed generated role labels remain separately bound.",
+    "Before effects, native allow rechecks abort owner, authorization, executor, lock inode, coordination, host, new source closure, old source/protected inputs and original retained bytes/check-in. Debug/bootout final preconditions repeat role identity/guard/listener checks after the hash pass.",
+    "The only stateful-worker signal is one direct SIGTERM to exact original reservoir9217. It requires a durable unique successful naturally reaped debug result matching this process confirmation, exact live reservoir sentinel, unchanged provider holder and matching new reservoir guard.",
+    "Settling tolerates only exact old worker, corroborated old/no-PID launchd publication gaps and fixed pinned holder-family/full-tail receipt publication. Stable holder PID/start and final exact framework argv/receipt/no listeners are required. Unknown or parenthesized commands fail closed.",
+    "Full original provider lifecycle/unique request+ACK and reservoir applied11/7 are retained. Save acceptance requires exact original log prefix/inode plus six ordered finite lifecycle rows, sorted per-handle state, configured delay, new state.json11/7 and signal-time boundary. Exact final state/log bytes are embedded in durable abort evidence before any removal.",
+    "Only verified quiescent holders can be booted out. Each role must then be absent with no old holder PID/private listener before its exact guard is released. Complete original state/history remains; final result remains cleanup-only, original_fixture_passed false and production_qualified false.",
+    "Authored tests use only mock process/signal/lock boundaries and private scratch files. They cover delayed old-worker/no-PID/receipt publication, failed state/signal boundary, unknown controls without retry, deadline refusal, timeout/interrupt no-force evidence, exact guards/identities, snapshot extra-file rejection and fixed Python-family drift."
+  ]
+}

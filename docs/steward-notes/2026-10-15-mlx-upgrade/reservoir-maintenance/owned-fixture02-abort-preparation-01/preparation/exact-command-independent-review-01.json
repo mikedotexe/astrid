@@ -1,0 +1,74 @@
+{
+  "actual_abort_executed": false,
+  "approved": true,
+  "argv": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_driver.py",
+    "--execute",
+    "--reviewed-release",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/evidence/abort-release-01.json"
+  ],
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/README.md": "d3f3b08a85a79773eb4fa187cfa832d3c4731784822c78bc596a760558856830",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_driver.py": "947e6ddde47f913c1f796b0171e6609d7befa817cdfe376f01815306e4b25d54",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_evidence.py": "7bbc9ce8d2154d5b4b732b18174ffba68e897457d869240232764c9d301b6c38",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_native.py": "4cbdefe3dc4795699d2ad1255f37c2b0cbba797ec32a2f86484728ccd1ba6405",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/target.json": "159cafb1804114dec016dbbfdccd425ba7aa2ebb76a2999c83f6b3e6e5cb57e6",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_driver.py": "5f1fdfdf8ad3c69a3f8f28471bf9c497f6d3ca0fb52a1deef219dcf4ec2384ce",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_evidence.py": "bea2755ccc298db9b0426f6ef5720ade8224f94491b856113a0bc65dcc7e4b9f",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_native.py": "2ffb9df3166e7c430cf2dda1c0a164faee3f24b0387da5217827901567b865db"
+  },
+  "checks": {
+    "all_release_reference_hashes_exact": true,
+    "cpu_and_review_bindings_exact": true,
+    "expiry_is24hours_from_creation_and_unexpired_at_review": true,
+    "fixed_target_result_path_and_unused_abort_root": true,
+    "ordinary_user_exact_python_alias_family": true,
+    "release_eight_artifact_closure_exact": true,
+    "retained_repository_indexes_empty_and_expected_dirty_astrid_preserved": true,
+    "retained_spot_pause528_no_lease_ready_and_connected": true,
+    "single_exact_command_no_shell_chain_or_sudo_wrapper": true,
+    "validator_calls_only_retained_file_and_release_validation": true,
+    "validator_denies_children_network_signals_and_other_filesystem_effects": true,
+    "validator_has_no_nativehost_construction_or_entrypoint_call": true,
+    "validator_installs_import_audit_before_target_imports": true,
+    "validator_only_allowed_write_is_exclusive_new_validation_receipt": true,
+    "validator_pins_exact_release_checkpoint_and_source_bytes": true
+  },
+  "limitations": [
+    "The validator has not yet been run; this review approves only its one guarded read-only invocation and the exact scoped user-Terminal command.",
+    "No actual abort, sudo authentication, OS control, tests or target-module imports were performed by this reviewer.",
+    "Root remains unauthorized to execute the abort autonomously; only the stated user-Terminal path is released. Sudo applies only to one generated-target launchctl debug, never the whole controller.",
+    "Execution rechecks current exact process/guard/listener/source/coordination identities under the retained lock. Failure retains evidence and forbids retry or automatic cleanup.",
+    "Successful abort must independently prove final durable11/7 and later executor/action-child/job/port absence. It cannot make failed fixture02 pass or qualify production/MLX."
+  ],
+  "precommand_spot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-precommand-spot-01.json",
+    "sha256": "29f8c0563cf96d75d6e9d2b21477fd966a0e977dd11db4e6b4a5d460a4c41ed0"
+  },
+  "production_qualified": false,
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/evidence/abort-release-01.json",
+    "sha256": "bc7fe8c32e20f7e16a8f753315d27962fe583e6f7fe30565fbb76712f10fc02a"
+  },
+  "reviewed_at": "2026-10-17T06:35:25.289691+00:00",
+  "reviewer": "mlx_integration",
+  "reviewer_execution_performed": false,
+  "schema": "owned_fixture02_abort_exact_command_review_v1",
+  "scope": "exact_failed_fixture_abort_only",
+  "source_test_preflight_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/evidence/independent-review-01.json",
+    "sha256": "258bfd70a692fbb15bea51673e3d374d7fdc615c554999c03579720fb0eb3993"
+  },
+  "terminal_command": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-terminal-command-01.txt",
+    "sha256": "1cb3ace6b95a0ed6fe69dcc6c88a13651317c470983dfd477b1a72fcabfd5238"
+  },
+  "validator": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/validate_fixture02_abort_release_01.py",
+    "sha256": "fc18b807f53d160b50a3efc19c31ea9b8218d8c696eef021d96ec02c50bca2e6"
+  },
+  "validator_approved_for_one_readonly_run": true,
+  "validator_result_available": false
+}

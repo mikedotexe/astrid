@@ -1,0 +1,1 @@
+{"operation":"release_hold","plan_sha256":"aac07df02cea30948774fa257153dbcd8eca17e93f0b21cdef64c2e761ff474b","previous_sha256":"8daa7d34682fb645fbae99fe4865a2adbe3fa7d29a4b7b826773540baaaf7c96","result":{"released":true},"role":"reservoir","sequence":37,"type":"mutation_completed"}

@@ -1,0 +1,249 @@
+{
+  "actual_restore_chain_compatibility": {
+    "accepted_children": 10,
+    "all_claim_monitor_hashes_resolve_to_permit_snapshots": true,
+    "all_historical_snapshot_ages_within15s": true,
+    "all_permit_expiry_and_sample_prefix_checks_match": true,
+    "all_previous_and_child_claim_links_match": true,
+    "checks": [
+      {
+        "acceptance": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-accepted.json",
+          "sha256": "9a471b134e58f356c3f73e83dc5c218dc3e582b5d69a7a930a52b08d592b57fc"
+        },
+        "case": "seed",
+        "claim_to_child_s": 0.0006620883941650391,
+        "immutable_claim_snapshot": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-root-supervisor.json",
+          "sha256": "faaa4da070c712b7476bcf4c4230afa29fe8b389b660b7ae48bbd9b2b188c5c6"
+        },
+        "ordinal": 0,
+        "snapshot_age_at_start_s": 4.098535060882568
+      },
+      {
+        "acceptance": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-accepted.json",
+          "sha256": "5f24e3e302f40239c576f319223f7eaaa3a8df3f793d87ae710779030dd16185"
+        },
+        "case": "complete",
+        "claim_to_child_s": 0.0006210803985595703,
+        "immutable_claim_snapshot": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-root-supervisor.json",
+          "sha256": "55be574eafcc269927f59efe24cb38408647296bcb6a66faf45587a6a3c41643"
+        },
+        "ordinal": 1,
+        "snapshot_age_at_start_s": 4.155094146728516
+      },
+      {
+        "acceptance": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/02-missing-sidecar-accepted.json",
+          "sha256": "6587a736340359e4d5df1a10ab2980fc9d9af7df6a4bc452365ca86b7c39db92"
+        },
+        "case": "missing-sidecar",
+        "claim_to_child_s": 0.000982046127319336,
+        "immutable_claim_snapshot": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/02-missing-sidecar-root-supervisor.json",
+          "sha256": "70656d51f54b014ba86990fb57142999d225fb1e6e30d411948fceb8a8ac4fc9"
+        },
+        "ordinal": 2,
+        "snapshot_age_at_start_s": 2.1315500736236572
+      },
+      {
+        "acceptance": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/03-malformed-sidecar-accepted.json",
+          "sha256": "0eb042bbca080b0330e0c5f906af26a31b33ed1a6aed71dab6eaed52577293ee"
+        },
+        "case": "malformed-sidecar",
+        "claim_to_child_s": 0.0046138763427734375,
+        "immutable_claim_snapshot": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/03-malformed-sidecar-root-supervisor.json",
+          "sha256": "9205e76add82e3e3e80fee2e3567ff503beb65448bf63bd52a05c6ce24ed4b17"
+        },
+        "ordinal": 3,
+        "snapshot_age_at_start_s": 3.815532922744751
+      },
+      {
+        "acceptance": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/04-corrupt-npz-accepted.json",
+          "sha256": "dc746fa8a5ef5b7e1e961ed6dc04abcb990b8c753f2a82740b6e2035323512ee"
+        },
+        "case": "corrupt-npz",
+        "claim_to_child_s": 0.0008289813995361328,
+        "immutable_claim_snapshot": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/04-corrupt-npz-root-supervisor.json",
+          "sha256": "8aa5d0c405f3cdb68bd8d85bdb523dae9249feafa35815899947b51e03da0352"
+        },
+        "ordinal": 4,
+        "snapshot_age_at_start_s": 1.994899034500122
+      },
+      {
+        "acceptance": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/05-schema-mismatch-accepted.json",
+          "sha256": "36b23fd38d4a32d5019d4e31dc232edc360ad59a84928f954aae1e1a038ffe72"
+        },
+        "case": "schema-mismatch",
+        "claim_to_child_s": 0.0010502338409423828,
+        "immutable_claim_snapshot": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/05-schema-mismatch-root-supervisor.json",
+          "sha256": "90b38443b839a903d0503bfbace73288a62d21335a3e4bd2070beacb825f24f0"
+        },
+        "ordinal": 5,
+        "snapshot_age_at_start_s": 2.845427989959717
+      },
+      {
+        "acceptance": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/06-config-mismatch-accepted.json",
+          "sha256": "3880eb81261967512f1e042c4bbab01cd822434c45943c829f19c8cb27efc2c1"
+        },
+        "case": "config-mismatch",
+        "claim_to_child_s": 0.0008947849273681641,
+        "immutable_claim_snapshot": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/06-config-mismatch-root-supervisor.json",
+          "sha256": "364f600b31b02b4956cf74343e8f72694dba6197913889245e3532623bd80093"
+        },
+        "ordinal": 6,
+        "snapshot_age_at_start_s": 3.7545669078826904
+      },
+      {
+        "acceptance": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/07-source-drift-accepted.json",
+          "sha256": "8e37cace6b59a97d1f93b728fcf96f681908644fec4528a680589074f99a805b"
+        },
+        "case": "source-drift",
+        "claim_to_child_s": 0.0010068416595458984,
+        "immutable_claim_snapshot": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/07-source-drift-root-supervisor.json",
+          "sha256": "c85666d826a12f8f08e1b855d966e96b8a6aa93e8d46166a5addc8c294b32790"
+        },
+        "ordinal": 7,
+        "snapshot_age_at_start_s": 4.012441873550415
+      },
+      {
+        "acceptance": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/08-package-drift-accepted.json",
+          "sha256": "5fe4e1722fadeac98630d1ef875589bb903fc093e2c3b9317664e8a00f379d67"
+        },
+        "case": "package-drift",
+        "claim_to_child_s": 0.0011479854583740234,
+        "immutable_claim_snapshot": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/08-package-drift-root-supervisor.json",
+          "sha256": "4309122e21dd9059a62868aa0dff01912db1580c5949dbe185d7b3398cc47bcf"
+        },
+        "ordinal": 8,
+        "snapshot_age_at_start_s": 2.0902099609375
+      },
+      {
+        "acceptance": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/09-backup-drift-accepted.json",
+          "sha256": "546b378710e76befab6f52f195128fac14d53000213ebcf4804b689d7be3e085"
+        },
+        "case": "backup-drift",
+        "claim_to_child_s": 0.000965118408203125,
+        "immutable_claim_snapshot": {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/09-backup-drift-root-supervisor.json",
+          "sha256": "e2701b4331167e50707e16f0876cd3bbbaeab4eb3bb6c056fa2ad9118619ee15"
+        },
+        "ordinal": 9,
+        "snapshot_age_at_start_s": 3.0838801860809326
+      }
+    ],
+    "limit": "This bounded receipt inspection is not the full numerical independent review; integration owns full field/thermostat/negative-control acceptance.",
+    "producer_final_samples": 46,
+    "qualification_passed_reported": true,
+    "qualification_sha256": "023ea4a004d64b841f8bc381b86cc62d24648e521dbb0c4832e4e85563209a2c"
+  },
+  "administration_actions_authorized_by_this_design": false,
+  "created_at": "2026-10-17T01:02:54.023393+00:00",
+  "existing_evidence_modified": false,
+  "fixture_and_final_release_sequence": [
+    "Preserve disabled04 and owned-recovery-fixture-01 unchanged. They explicitly require disabled04 and preparatory_exact04_no_transfer_to_enabled_release; changing paths or labeling their existing results as final is not valid.",
+    "Implement and review consumer05 behind false production flags; guarded tests and a read-only revalidation-cost measurement against the completed real proofs must precede a live drain. No validation cache or weaker raw-proof gate is proposed.",
+    "Choose the exact final release directory and all final code bytes, including any explicit production entrypoint and flag/gate implementation, before the real operational fixture. A later enablement edit changes the release identity and requires renewed exact-source review/fixture. A reviewed unchanged-byte release mechanism is an alternative only if implemented and qualified first.",
+    "Prepare owned-recovery-fixture-02 with a loader binding the final release closure rather than disabled04. Keep Host.scope=owned_fixture and private generated labels throughout; never impersonate production scope or bypass ProductionHost admission. Exercise the final shared controller/lock/ledger/recovery bytes, explicit interruption/adoption schedule, setup ownership, cleanup and separate pin sentinel. Freeze its final enabled fixture coordinator bytes before root releases any administrator-dependent OS action.",
+    "A new pure fixture reviewer must consume actual setup/executor/main/recovery/cleanup/pin records and reaped identities. The old validate_fixture accepts the older simple launchd-fixture schema, so05 needs explicit final operational-fixture evidence support. Do not fabricate an old-schema passed wrapper around new logs. Retain every raw interruption/cleanup outcome and prove no owned jobs/processes or pending holds remain.",
+    "Only after the exact final owned fixture passes may its immutable result/review enter a fresh production preparation, alongside actual14+9 proof references and current source/package/model/process/boot/steward bindings. The existing preparation digest excluding execution_review supports sealing the final review afterward without a self-hash cycle. No administrator action should be spent on bytes that will subsequently be patched just for enablement."
+  ],
+  "inputs": {
+    "prior_compatibility_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-candidate-04-v2-qualification-compatibility-review-01.json",
+      "sha256": "95e0f1ada8dfa3daa7cea91d9bffcc441b227f9366f189ddedbd89b92a005411"
+    },
+    "restore_preclose": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-matrix-preclose-01.json",
+      "sha256": "ac300f1ed8c7e66c9637b8d4047a8c3f1a1026048a4e9494812ec8b046126e0a"
+    },
+    "restore_qualification": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/qualification.json",
+      "sha256": "023ea4a004d64b841f8bc381b86cc62d24648e521dbb0c4832e4e85563209a2c"
+    },
+    "service_matrix": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/matrix-review-01.json",
+      "sha256": "42a63f52154aafca5b8502f667cd6af4679aee73d69281551e3c508801c9729d"
+    },
+    "service_prepared": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/sources.json",
+      "sha256": "dc6183624da3c5beec22ae1ff78bbed9d0df12850e413612305ac21f500cef2e"
+    },
+    "service_root_acceptance": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-matrix-root-acceptance-01.json",
+      "sha256": "739c5a4261c645747dd516456017c2dacfeb230fb0b84dad2122bc7cf37fa6be"
+    }
+  },
+  "minimal_versioned_changes": [
+    {
+      "change": "Source-only clone04. Select exact qualification-harness-v3 and restore-qualification-02. Reuse the v3 review_matrix.review and result_checks.verify_process_evidence in the existing hash-bound scoped alias loader; do not copy or weaken publication parsing. This automatically recomputes raw initial observations and launcher/framework transition while preserving the14-case snapshot, thermostat, protocol2s/5s and reversed aggregate oracles. Bind the accepted matrix, its independent/root review and immutable final host05 record; raw coverage must still be rechecked, not inferred from accepted:true.",
+      "path": "production-candidate-05/production_admission.py"
+    },
+    {
+      "change": "Add a read/hash-only historical restore02 chain validator, called by existing validate_restore_result. Keep all current seed, runtime/source/config, natural exit, exact named negative mutation, raw witness/comparison/log and backup inventory checks. Require exactly seed+9 ordered unique acceptances, exact request/permit/claim/start/exit/expected-result/acceptance references, previous-acceptance links and one immutable release_v2. Child-start exact shape must include its validated admission_claim rather than tolerate arbitrary extra fields.",
+      "path": "production-candidate-05/production_restore_admission.py (proposed cohesive pure helper)"
+    },
+    {
+      "change": "Validate supervisor source/review/sampler/protected maps with the frozen child_admission validation and AST seam. Historical freshness is evaluated at each claim and actual child start, and permit/run expiry at the recorded launch; never require old completed releases to be current today. Resolve claim.supervisor_observed by identical retained immutable snapshot bytes, not its later mutable path. Reject a missing digest match. Recheck ready policy on that snapshot, prefix continuity through each coverage snapshot, and covers_case on actual intervals using both producer final_supervision and root completed final06. New production execution separately requires its own current host gate.",
+      "path": "production-candidate-05/production_restore_admission.py (proposed cohesive pure helper)"
+    },
+    {
+      "change": "Add child_admission before qualify_restore in RESTORE_MODULES, include all7 restore02 harness files plus the exact supervision policy/source/reviews/binding records, and include any new pure consumer module in RUNTIME_HELPERS and immutable reviewed closure. Preserve scoped sys.modules/sys.path/bytecode restoration and unchanged installed package validation. Preserve original prepared source references where hashes are identical; do not rewrite historical requests or outputs.",
+      "path": "production-candidate-05/production_admission.py scoped loader and production_preflight.py closure"
+    },
+    {
+      "change": "Cover actual retained-shape positive consumption and rejected placeholder/raw-proof tampering; changed release/source/argv/request/claim, missing/duplicate/reordered acceptance, altered permit snapshot, stale historical sample, swapped monitor identity, rebound swap, broken previous chain, unresolved child, wrong named negative mutation and drifted backup/package inputs. Include expired-now but valid-at-launch historical proof acceptance. Keep controller/Host production flags false during05 development.",
+      "path": "production-candidate-05 tests (new versioned fake tests only after root release)"
+    }
+  ],
+  "production_execution_authorized": false,
+  "production_flags_changed": false,
+  "remaining_blockers": [
+    "Consumer05 and its historical raw-supervision checks are not implemented or tested; frozen04 deliberately rejects these new proof paths/schemas.",
+    "Full independent restore02 final acceptance remains separately owned by integration at the time of this design; partial/preclose success is not a substitute.",
+    "No exact final-enabled operational fixture or aggregate reviewer exists yet. Owned fixture01 has not qualified final bytes and excludes the production-only provider pin phase, which is represented by its separate pin sentinel; scope limitations must remain explicit.",
+    "Frozen controller CLI is check-plan-only and ProductionHost has no live CLI. Any future bounded production entrypoint must be reviewed and included in the exact final closure; this design supplies no admin or live command.",
+    "Production freshness/original-runtime alignment, eight protected processes including Minime engine, exact package/source/model identities, drain/QoS/check-in, stopped-state backup, actual private restore and restart/startup witnesses, lock/recovery ownership, no forced termination and no state rollback remain mandatory. Numerical synthetic qualification alone establishes none of these live maintenance facts."
+  ],
+  "reviewer": "/root/mlx_upstream",
+  "reviewer_actions": {
+    "existing_source_edits": 0,
+    "runtime_probes": 0,
+    "service_control": 0,
+    "source_and_existing_receipt_reads_only": true,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "schema": "reservoir_production_consumer_alignment_design_v1",
+  "source_hashes": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_coordinator.py": "f164d777a8866abce3d4d322c0f3283e017681b971e5fe06844a003af50c306e",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_plan.py": "6f49c5f5d7f9154e0a1b9e0a69171aa04a1125f8522ed63725087fbea6303c69",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_recovery_core.py": "422b5e7438fad31c944af501d34bee52ad72a287dd180f19ba15233951bc49f2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_admission.py": "b2b67eb8941471eacffd44b2149e0e7b6aeb6e9df91c2e8be4adfc1c28580be9",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_host.py": "18bf34c606df39da65c4d7b392d51e88d7285b0048c032bf7a7877df9da9dfae",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_preflight.py": "0671c054eb6f37f122e1c61e26a91cf7e3e9e311266029008e87d7db11adef1b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_phases.py": "df6e3e959f79e560dfbe8904cbf9546b79e27b2819f7f5b8ab1aa89bb6917389",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance.py": "55e53b84d8caae818fc29fb997761c160cb296e2512207d4d9dbe48da15c5536",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/child_admission.py": "21b13f54390bbb058a26749d84aad625cda6df7f2df2e8917782e432107aa99d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/qualify_restore.py": "c1fde3f0e25ead1d417f74408571e3f95bc9b6a69f001f69256708fc0e0b8f6c",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/process_identity.py": "badc6dd3ddec6aa9bf0c3996aecfab0e40232acad9dae346d6302bbec16803c7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/result_checks.py": "047389e82d8a8e5109ff6c49d4af10dd1bd9b80e254c965e9dd94692529ae5cf",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440"
+  },
+  "status": "read_only_design_not_implemented_or_enabled"
+}

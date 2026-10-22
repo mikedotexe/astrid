@@ -1,0 +1,164 @@
+"""Pure fakes for the initial ps publication boundary; no real child or ps."""
+from __future__ import annotations
+
+import copy
+from pathlib import Path
+import subprocess
+import tempfile
+from types import SimpleNamespace
+import unittest
+
+from common import HARNESS
+from process_identity import await_initial_identity, publication_proof, same_identity
+from test_harness import fake_framework
+
+
+class Clock:
+    def __init__(self): self.value = 100.0
+    def now(self): return self.value
+    def sleep(self, seconds): self.value += seconds
+
+
+class Child:
+    pid = 123
+    def __init__(self): self.exited = False
+    def poll(self): return 0 if self.exited else None
+
+
+class PublicationTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory(dir=HARNESS)
+        self.addCleanup(self.temporary.cleanup)
+        self.command, self.runtime, self.launched, self.ready = fake_framework(Path(self.temporary.name))
+        self.placeholder = {**self.launched, "command": "(python3.12)"}
+        self.clock, self.child, self.evidence = Clock(), Child(), {}
+        self.observed, self.persisted = [], []
+
+    def reader(self, rows, *, advance=.001, callback=None):
+        pending = list(rows)
+        def read(command, **kwargs):
+            self.assertEqual(command[:4], ["/bin/ps", "-ww", "-p", "123"])
+            self.assertGreater(kwargs["timeout"], 0)
+            self.assertLessEqual(kwargs["timeout"], 2)
+            self.observed.append(dict(kwargs))
+            item = pending.pop(0) if len(pending) > 1 else pending[0]
+            self.clock.value += advance
+            if callback: callback(len(self.observed))
+            if isinstance(item, BaseException): raise item
+            raw = item if isinstance(item, str) else f'{item["pid"]} {item["started_at"]} {item["command"]}\n'
+            return SimpleNamespace(stdout=raw)
+        return read
+
+    def observe(self, rows, *, deadline=300.0, advance=.001, callback=None):
+        return await_initial_identity(self.child, self.command, self.runtime, self.evidence,
+            case_started=0.0, case_deadline=deadline, reader=self.reader(rows, advance=advance, callback=callback),
+            monotonic=self.clock.now, sleep=self.clock.sleep,
+            persist=lambda: self.persisted.append(copy.deepcopy(self.evidence)))
+
+    def proof(self):
+        return publication_proof(self.evidence, self.command, self.runtime, self.child.pid, 0.0,
+                                 self.evidence["case_deadline_mono"])
+
+    def test_exact_placeholder_then_launcher_or_runtime(self):
+        for complete in (self.launched, self.ready):
+            with self.subTest(command=complete["command"]):
+                self.clock, self.evidence = Clock(), {}
+                accepted = self.observe([self.placeholder, self.placeholder, complete])
+                self.assertEqual(accepted, complete)
+                self.assertEqual(self.proof()["placeholder_count"], 2)
+                self.assertEqual([row["index"] for row in self.evidence["observations"]], [0, 1, 2])
+                self.assertTrue(all("raw_ps_stdout" in row for row in self.evidence["observations"]))
+                with self.assertRaises(ValueError): same_identity(self.placeholder, accepted)
+
+    def test_full_exact_command_needs_no_wait(self):
+        self.assertEqual(self.observe([self.ready]), self.ready)
+        self.assertEqual(self.proof()["observation_count"], 1)
+        self.assertEqual(self.proof()["placeholder_count"], 0)
+
+    def test_unknown_full_argv_and_other_placeholders_fail_immediately(self):
+        commands = ["(Python)", "(python3)", "python3.12", "/unreviewed/python -I -B child.py",
+                    self.ready["command"] + " --extra", self.ready["command"].replace("service_child.py", "wrong.py")]
+        for command in commands:
+            with self.subTest(command=command):
+                self.clock, self.evidence, self.observed = Clock(), {}, []
+                with self.assertRaises(ValueError): self.observe([{**self.ready, "command": command}, self.ready])
+                self.assertEqual(len(self.observed), 1)
+                self.assertEqual(self.evidence["status"], "failed")
+                self.assertIn(command, self.evidence["observations"][0]["raw_ps_stdout"])
+
+    def test_pid_start_or_malformed_metadata_fails_with_raw_observation(self):
+        wrongs = [{**self.ready, "pid": 124}, {**self.ready, "started_at": "Thu Oct 15 20:31:06 2026"}, "", "123 incomplete\n"]
+        for wrong in wrongs:
+            with self.subTest(wrong=wrong):
+                self.clock, self.evidence = Clock(), {}
+                with self.assertRaises(ValueError): self.observe([self.placeholder, wrong])
+                self.assertEqual(len(self.evidence["observations"]), 2)
+                self.assertIn("raw_ps_stdout", self.evidence["observations"][-1])
+
+    def test_publication_timeout_retains_every_observation(self):
+        with self.assertRaisesRegex(ValueError, "deadline expired"):
+            self.observe([self.placeholder])
+        self.assertEqual(self.evidence["status"], "failed")
+        self.assertLessEqual(len(self.observed), 81)
+        self.assertEqual(len(self.observed), len(self.evidence["observations"]))
+        self.assertLessEqual(self.clock.now(), 102.001)
+
+    def test_case_budget_caps_ps_and_late_exact_result_is_refused(self):
+        with self.assertRaisesRegex(ValueError, "deadline expired"):
+            self.observe([self.ready], deadline=100.01, advance=.02)
+        self.assertLessEqual(self.observed[0]["timeout"], .011)
+        self.assertEqual(self.evidence["observations"][0]["identity"] if "identity" in self.evidence["observations"][0] else None, None)
+        self.assertIn(self.ready["command"], self.evidence["observations"][0]["raw_ps_stdout"])
+
+    def test_expired_case_never_reads_ps(self):
+        with self.assertRaisesRegex(ValueError, "watchdog"):
+            self.observe([self.ready], deadline=100.0)
+        self.assertEqual(self.observed, [])
+
+    def test_child_exit_before_or_during_ps_is_not_accepted(self):
+        self.child.exited = True
+        with self.assertRaisesRegex(ValueError, "exited before"):
+            self.observe([self.ready])
+        self.assertEqual(self.observed, [])
+        self.child.exited, self.evidence = False, {}
+        with self.assertRaisesRegex(ValueError, "exited during"):
+            self.observe([self.ready], callback=lambda _: setattr(self.child, "exited", True))
+        self.assertEqual(self.evidence["observations"][-1]["poll_after"], 0)
+        self.assertIn("raw_ps_stdout", self.evidence["observations"][-1])
+
+    def test_ps_timeout_is_not_retried_and_partial_raw_output_survives(self):
+        failure = subprocess.TimeoutExpired("inert fake ps", .1, output=b"123 partial output")
+        with self.assertRaises(subprocess.TimeoutExpired):
+            self.observe([failure, self.ready])
+        self.assertEqual(len(self.observed), 1)
+        self.assertEqual(self.evidence["observations"][0]["raw_ps_stdout"], "123 partial output")
+
+    def test_interpreter_change_during_publication_fails_before_acceptance(self):
+        runtime_path = Path(next(p for p in self.runtime["files"] if p != self.runtime["resolved"]))
+        def change(index):
+            if index == 2: runtime_path.write_bytes(b"unreviewed runtime")
+        with self.assertRaisesRegex(ValueError, "family/hash"):
+            self.observe([self.placeholder, self.ready], callback=change)
+        self.assertEqual(self.evidence["status"], "failed")
+        self.assertIn(self.ready["command"], self.evidence["observations"][-1]["raw_ps_stdout"])
+
+    def test_verifier_recomputes_raw_observations_and_rejects_tampering(self):
+        self.observe([self.placeholder, self.ready])
+        original = copy.deepcopy(self.evidence)
+        def missing(row): row["observations"].pop(0)
+        def reorder(row): row["observations"].reverse()
+        def extra(row): row["observations"].append(copy.deepcopy(row["observations"][-1]))
+        def raw_argv(row): row["observations"][-1]["raw_ps_stdout"] += " --wrong"
+        def raw_start(row): row["observations"][-1]["raw_ps_stdout"] = row["observations"][-1]["raw_ps_stdout"].replace("20:31:05", "20:31:06")
+        def late(row): row["observations"][-1]["completed_mono"] = row["deadline_mono"]
+        def exited(row): row["observations"][-1]["poll_after"] = 0
+        def too_long_ps(row): row["observations"][-1]["ps_timeout_s"] = 5
+        def claimed_only(row): row["observations"] = []
+        for mutation in (missing, reorder, extra, raw_argv, raw_start, late, exited, too_long_ps, claimed_only):
+            with self.subTest(mutation=mutation.__name__):
+                self.evidence = copy.deepcopy(original); mutation(self.evidence)
+                with self.assertRaises(ValueError): self.proof()
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

@@ -1,0 +1,109 @@
+{
+  "actual_os_fixture_accepted": false,
+  "actual_os_fixture_executed": false,
+  "all_agent_tests_held": true,
+  "all_future_paths_unused": true,
+  "executor_steps": 71,
+  "external_action": "Run the exact command once as the ordinary owning user in an interactive Terminal. Administrator authentication is required only for four generated-label launchctl debug calls; no whole-controller sudo.",
+  "fixture_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02",
+  "fixture_tests_passed": 94,
+  "fixture_token": "7e6529d26a3046ca87c0ca9b94332b02",
+  "followup_pause_required": true,
+  "injections": 23,
+  "live_environment_mutated": false,
+  "mlx_qualified": false,
+  "native_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-native-7e6529d26a3046ca87c0ca9b94332b02",
+  "on_return": "Review all71 executor outcomes,74 parent actions,5 sessions,23 injections, raw readiness/native ownership records, natural reaps, saved states/check-ins/pin proof, original backup preservation and final generated-job/process/listener/guard absence. Establish parent absence separately. Independently accept or preserve failure; never rerun automatically.",
+  "original_fixture02_cleanup_accepted": true,
+  "original_fixture02_remains_failed": true,
+  "other_automations_changed": false,
+  "parent_actions": 74,
+  "parent_sessions": 5,
+  "preparation_accepted": true,
+  "prepared_at": "2026-10-17T15:40:12.174841+00:00",
+  "prepared_by": "root",
+  "preserved_failures": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-guarded-tests-01.json",
+      "sha256": "f93017ad4e6dfaad6b8c4caf21d15facf30a6a66fbd9895ca0e6f078537ded3c"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-guarded-tests-02.json",
+      "sha256": "059dcbc16754461f578678c0f97f7faaed3aba11a80bbcffb4585086bf9be297"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-release-validation-01.json",
+      "sha256": "80820187faef66f98c69fa253c0df1e843fca51b47e0f3090773d6dc46e0585c"
+    }
+  ],
+  "production_helper_tests_passed": 327,
+  "production_qualified": false,
+  "python_file_count": 2,
+  "references": {
+    "command": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-command-01.txt",
+      "sha256": "bd54061b4682067cd51343bf477bf2c9c64c6bb929151f3bad2cb8131df9bb9a"
+    },
+    "command_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-exact-command-independent-review-01.json",
+      "sha256": "4b56d299438ea313241234e8c28744f007ac2297b3787aaafad1ffeef417c93a"
+    },
+    "disabled_archive": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-preparation-06-disabled-01/archive-manifest.json",
+      "sha256": "207bbe669b9fda9efdbaedd776b4a9fa11e59664cf6dce56d125b2c6d615aa17"
+    },
+    "enabling_delta": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-candidate06-final-enabling-delta-01.json",
+      "sha256": "7cfdd882a5cb78c36f34e6695ce5d9630df77650f60efbae7493fbe3188dbff9"
+    },
+    "host_spot": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-precommand-host-spot-01.json",
+      "sha256": "734693f3be1269fe2961bf97c67ee47e2335d44982193593583b70ac398d2881"
+    },
+    "inputs": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-source-inputs-01.json",
+      "sha256": "a2af3f3f32c121ab2d010bc6ee3c4cbd7f3f24b36888d34d2d77ffef9b6226b1"
+    },
+    "original_fixture_cleanup_acceptance": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-root-acceptance-01.json",
+      "sha256": "f6e339ae02a69df8fe720b56800b665dae679a3e51f8fb8b850fdaa1539de98d"
+    },
+    "read_only_validation": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-release-validation-02.json",
+      "sha256": "f63f0554263781828fa7d4b4b3c6b6299a8a922368d79ea8f206415c3ae12876"
+    },
+    "release": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-release-01.json",
+      "sha256": "1ee094f1a0d71f9df05114a12b0350b2aaebc403371d4dbbbf7e6cc688a1396d"
+    },
+    "source_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-source-review-01.json",
+      "sha256": "86ca85057b813c82ec93fd162236f65c86aa1fa019858daf7d60b2c9eb465c76"
+    },
+    "tests_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-candidate06-guarded-tests-closeout-independent-review-01.json",
+      "sha256": "c46e1ec59efe5fba50727fc0a1797b5263796ddee71db9071d1da2cd12621bac"
+    },
+    "validation_root_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-final-validation-root-review-01.json",
+      "sha256": "7cc65caccbe769f2d2bf07e44ced21ed87d0003fc0a9c220ecbeb7a98057f33f"
+    },
+    "validator_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-final-release-validator-02-independent-review-01.json",
+      "sha256": "5c23ca55860232b6ae882af45cbd73f783c2ddf9b843c9d1c3eacc776366051a"
+    }
+  },
+  "result_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/evidence/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02-result.json",
+  "schema": "owned_fixture03_handoff_preparation_acceptance_v1",
+  "scope": "exact_generated_owned_fixture_only",
+  "source_binding_count": 70,
+  "source_only_validator_revision": "Validator01 refused a cache read probe before executing any target code; retained. Separately source-reviewed validator02 passed using pinned direct-source loading with unchanged guards and unchanged final release.",
+  "steward_pause_generation": 528,
+  "still_required_before_production": [
+    "Actual exact final owned OS rehearsal and independent acceptance.",
+    "Current complete production runtime/source alignment and admission proof, including managed and protected identities.",
+    "Measured exact-stage full revalidation cost and maintenance duration before live drain.",
+    "Reviewed production handoff preserving provider final check-in, held reservoir write barrier, saved handles/sidecars and stopped backup."
+  ],
+  "tests_qualify_archived_disabled_source_only": true
+}

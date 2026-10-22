@@ -1,0 +1,69 @@
+{
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/autosnapshot-cooperative.patch": "e54e052ae3519b5893b0b08ae02a362004571072562c92c2694563850071f01a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/baseline/persistence.py": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/baseline/reservoir_service.py": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/original-manifest.json": "e3535f3bb45c528fec07cbeaf5d99bfebbbd083354f44f02a2b728600cfd2c7a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/reservoir_service.py": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/test_autosnapshot_cooperative.py": "50cfa90f191308d5123b3c0fd741aaf904245e9d3882585d36f6961a3b15eb76",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/tests-01.json": "c699b44c57127e9d9f3fa705a85deda992ca7733267c5f13f4b3297fb8a43fa2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/tests-01.txt": "0c45752b5d880fa5468920b73f8d95ff70064d9f3546df4b09b82ee2ec429ace"
+  },
+  "checks": {
+    "all_retained_test_artifact_and_log_hashes_verified": true,
+    "autosnapshot_interval_and_initial_wait_unchanged": true,
+    "byte_identical_methods": {
+      "run": true,
+      "snapshot_all": true,
+      "snapshot_handle": true
+    },
+    "cooperative_cancelled_error_propagates_at_between_handle_yield": true,
+    "final_shutdown_uses_unchanged_synchronous_snapshot_all": true,
+    "no_worker_thread_or_new_persistence_format": true,
+    "only_new_cooperative_method_and_autosnapshot_call_differ": true,
+    "ordinary_cancellation_cannot_interrupt_synchronous_writer": true,
+    "same_captured_insertion_order_handle_names": true,
+    "same_per_handle_exception_log_and_continue_behavior": true,
+    "writer_remains_synchronous_on_event_loop_thread": true
+  },
+  "limits": [
+    "A single synchronous handle snapshot longer than two seconds can still delay a WebSocket handshake beyond the current client timeout.",
+    "Yielding permits interleaved rehearsal, client commands and handle registration changes between handles; the batch is no longer a cross-handle point-in-time snapshot. Each individual writer remains unchanged.",
+    "asyncio.sleep(0) provides a scheduling opportunity, not a measured or guaranteed end-to-end handshake latency bound.",
+    "Fake scheduling tests do not qualify the real persistence/backend workload or the live WebSocket service.",
+    "No failed generation state is recovered, replayed or acknowledged by this change.",
+    "No old handles are deleted, reset or omitted; added handles wait for the next captured batch and removed handles retain existing per-handle error handling.",
+    "The cause of the incident batch slowing to twenty seconds remains unproven.",
+    "This review does not accept the failed passive baseline or authorize a production restart/deployment; a separately reviewed deployment and fresh observation would be required."
+  ],
+  "live_sources": {
+    "/Users/v/other/neural-triple-reservoir/persistence.py": {
+      "matches_preserved_baseline": true,
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f"
+    },
+    "/Users/v/other/neural-triple-reservoir/reservoir_service.py": {
+      "matches_preserved_baseline": true,
+      "sha256": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0"
+    }
+  },
+  "operations": {
+    "live_calls": 0,
+    "review_artifact_only": true,
+    "runtime_changes": 0,
+    "service_or_model_imports": 0,
+    "signals": 0,
+    "source_edits": 0
+  },
+  "production_deployment_accepted": false,
+  "prototype_review_passed": true,
+  "reviewed_at": "2026-10-16T02:54:56.765308+00:00",
+  "reviewer": "codex mlx_upstream",
+  "schema": "reservoir_autosnapshot_independent_review_v1",
+  "test_review": {
+    "covered": "Ready companion progress, captured order and additions/removals, ordinary writer failure/log equivalence, cancellation propagation, empty/single batches, original timer and shutdown source boundary.",
+    "independent_checks": "Parsed source AST, normalized allowed delta, compared exact method source segments, checked recorded artifact hashes; no service/model imports.",
+    "independent_suite_rerun": false,
+    "retained_result": "10 stdlib AST/fake tests passed; 0.059 seconds reported by unittest"
+  },
+  "verdict": "no blocking findings for the isolated prototype; deployment remains unqualified"
+}

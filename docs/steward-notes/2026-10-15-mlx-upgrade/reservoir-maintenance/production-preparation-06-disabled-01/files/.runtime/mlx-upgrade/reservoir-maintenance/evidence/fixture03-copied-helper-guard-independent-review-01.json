@@ -1,0 +1,116 @@
+{
+  "accepted_for_root_serialized_fake_test_preparation": true,
+  "actual_os_acceptance": false,
+  "blockers": [],
+  "created_at": "2026-10-17T15:21:37.259854+00:00",
+  "execution_authority_created": false,
+  "failed_result_review": {
+    "all_flags_false_reported": true,
+    "classification": "Every failure is the reviewed FixtureHost.create import of its exact copied model_environment.py from a private fake-run directory. The earlier mock keyword collision and source-tree mkdir defects are resolved; these 17 Host tests did not reach their bodies. This retained failed result is not relabeled.",
+    "denied_actions": 17,
+    "errors": 0,
+    "executed_bound_local_sources": 30,
+    "failures": 17,
+    "forbidden_numeric_modules": [],
+    "new_real_fixture_run_absent_reported": true,
+    "passed": false,
+    "preserved_inventory_before_after_matches_plan": true,
+    "skipped": 0,
+    "source_before_after_matches_plan": true,
+    "source_protected_preserved_unchanged_reported": true,
+    "tests": 94
+  },
+  "guard_delta_review": {
+    "arbitrary_scratch_code_still_denied": true,
+    "canonical_path_regular_uid_owned_nlink1_required": true,
+    "copied_bytes_equal_exact_pinned_original_sha256": true,
+    "existing_native_signal_network_numeric_and_write_guards_unchanged": true,
+    "fixture_generated_code_empty": true,
+    "fixture_host_copy_import_source_lines": [
+      83,
+      84
+    ],
+    "only_behavior_change": "Permit only the single pinned model_environment.py helper copied to SCRATCH/tmp*/runs/owned-recovery-<32 lowercase hex>/model_environment.py. Fresh plan/output/scratch paths use suffix03; import re implements the exact token check.",
+    "original_source_rechecked_per_exec": true,
+    "path_components_exactly_four": true
+  },
+  "limits": [
+    "No target code imported, test executed, compilation performed, native query issued, or live source changed by this review.",
+    "Protected runtime payloads and old RUN/ABORT inventories were compared as retained maps, not newly traversed; the guarded runner performed the reported before/after preservation checks.",
+    "The passed 327-test candidate06 receipt remains separately accepted and is not rerun for this guard-only fixture correction.",
+    "A future successful fake suite is not actual OS fixture or production qualification."
+  ],
+  "plan_review": {
+    "bound_source_entries_rehashed": 88,
+    "expected_tests": 94,
+    "fixture_core_artifacts": 69,
+    "fixture_core_artifacts_unchanged": true,
+    "fresh03_output_scratch_absent": true,
+    "invocation": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "-I",
+      "-B",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture03_candidate06_tests_05.py",
+      "fixture03"
+    ],
+    "modules": [
+      "test_owned_fixture_commands",
+      "test_owned_fixture_coordinator",
+      "test_owned_fixture_pin",
+      "test_owned_fixture_readiness",
+      "test_owned_fixture_run",
+      "test_owned_recovery_host"
+    ],
+    "preserved_inventory_entries": 171,
+    "protected_and_preserved_maps_unchanged": true,
+    "protected_hashes": 305,
+    "small_reference_hashes_verified": 6,
+    "source_map_only_addition_from_plan02": "run_fixture03_candidate06_tests_05.py"
+  },
+  "production_qualified": false,
+  "references": {
+    "candidate06_checkpoint01": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-06/evidence/source-checkpoint-01.json",
+      "sha256": "fe9af826301bf00127c799dff5b75dcc7e10f30e2a84cf8cd0d7b9cc72b94e74"
+    },
+    "checkpoint02": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/evidence/source-checkpoint-02.json",
+      "sha256": "112a921274f7933cd64b3c285b39e1d976b0b8714f601317704620e22f6b9776"
+    },
+    "failed_log": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-guarded-tests-02.txt",
+      "sha256": "15a962eb07b0f6031426b21254f7606c55133a7978873b71bb18a2f7f005ebec"
+    },
+    "failed_result": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-guarded-tests-02.json",
+      "sha256": "059dcbc16754461f578678c0f97f7faaed3aba11a80bbcffb4585086bf9be297"
+    },
+    "model_environment": {
+      "path": "/Users/v/other/astrid/scripts/model_environment.py",
+      "sha256": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587"
+    },
+    "plan03": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-test-plan-03.json",
+      "sha256": "8ae1749f729fcd3a29bff8a3a52f132726dc39d8ab5bc487bfca13da8bca5654"
+    },
+    "previous_actual_evidence_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-candidate06-guarded-tests-independent-review-01.json",
+      "sha256": "d9ce01cbf82eb004dd16948912eb98493337c736a86181a02dc7814610f77178"
+    },
+    "previous_delta_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-source-checkpoint-02-independent-review-01.json",
+      "sha256": "eea1556dc1edc768053fddee52fbbfbacca479efc0d09be2bc7029ccb09be430"
+    },
+    "runner04": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture03_candidate06_tests_04.py",
+      "sha256": "4644998d6314747939206fac56d7468761c88fc964c89189f49708960fca98a2"
+    },
+    "runner05": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture03_candidate06_tests_05.py",
+      "sha256": "552c115707925a43a948964cfeb032915ce150e3a37a14f59c028194c6c08a5f"
+    }
+  },
+  "reviewer": "/root/mlx_upstream",
+  "schema": "fixture03_copied_helper_guard_independent_review_v1",
+  "scope": "source_and_retained_stdlib_fake_evidence_only"
+}

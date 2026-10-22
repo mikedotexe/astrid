@@ -1,0 +1,55 @@
+"""Synthetic fixture construction; no imports of numeric packages at module load."""
+from __future__ import annotations
+
+import base64
+from collections import deque
+import time
+
+COUNT = 102
+NAMES = tuple(f"qualification_{index:03d}" for index in range(COUNT))
+TARGET = NAMES[-1]
+
+
+def fill(np, service):
+    for index, name in enumerate(NAMES):
+        info = service.create_handle(name, entity=f"synthetic-{index}", backend="numpy")
+        layers = [np.full((1, 192), (index + 1) / (1000 * factor), dtype=np.float32)
+                  for factor in (1, 2, 3)]
+        service.bridge.set_state(name, *layers)
+        info.tick_count = 1000 + index
+        info.event_seq = 10 + index
+        info.last_tick_time = time.monotonic() - 1
+        info.last_live_meta = {"source": "synthetic", "event_id": f"{name}:{info.event_seq:06d}",
+                               "event_seq": info.event_seq, "synthetic_fixture": True}
+        info.last_lane_meta = {"feeder": dict(info.last_live_meta)}
+        info.provenance_ring.append(dict(info.last_live_meta))
+        info.output_ring.extend([.25, .5, .75])
+        info.h_norm_ring.extend([[.1, .2, .3], [.4, .5, .6]])
+        rs = service.rehearsal.get_state(name)
+        rs.last_live_input = np.full(32, index / 1000, dtype=np.float32)
+        rs.last_live_time = info.last_tick_time
+        rs.mode = "quiet"
+        rs.decay_weight = 0.0
+        rs.hint_policy = "guarded"
+        rs.mode_authority = "system"
+        for layer_index, thermostat in enumerate(info.thermostats):
+            thermostat.entropy_target = .5
+            thermostat.rho = .97
+            thermostat.tick = 1001  # one push doesn't trigger an entropy recomputation
+            thermostat.last_entropy = .45
+            thermostat.last_saturation = .01
+            thermostat._warmup_entropies = [.2, .3]
+            thermostat.buffer = deque(
+                [np.full(192, (index + row + layer_index + 1) / 10000, dtype=np.float32)
+                 for row in range(48)], maxlen=200)
+
+
+def push_payload(sequence):
+    # struct encodes float32 without importing NumPy in the external client.
+    import struct
+    values = [.125 + sequence / 1000, .25 + sequence / 1000, .5 + sequence / 1000]
+    layers = [base64.b64encode(struct.pack("<192f", *([value] * 192))).decode() for value in values]
+    return {"type": "push_state", "name": TARGET, "h1": layers[0], "h2": layers[1], "h3": layers[2],
+            "tick_delta": 7, "last_input": [.125] * 32,
+            "meta": {"source": "qualification-harness", "synthetic_request": f"probe-{sequence}",
+                     "rehearsal_hint": {"mode": "quiet", "decay_profile": "medium"}}}

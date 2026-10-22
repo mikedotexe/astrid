@@ -1,0 +1,39 @@
+{
+  "approved_source_only": true,
+  "confirmed": [
+    "External exact final-input SHA is mandatory and rechecked; no default digest, release creation, flag change or authority repair.",
+    "Exact all-direct03/06 Python closure, fixture README and worker/hold helpers, selected/current interpreter hashes and fixed future release/runtime/schedule fields are bound.",
+    "The sole target call is coordinator.validate_release; no load_core, Host construction, native entrypoint, child command, socket or service request is called.",
+    "Runtime audit rejects audited mutations/write opens, native child/signal/network/ctypes actions, numeric/hardware imports, unbound local source and bytecode; only the exclusively preopened receipt is written.",
+    "30-second cooperative acceptance starts before input reads and is checked after validation and unused run/native/result checks; no hard-interruption guarantee is claimed.",
+    "Disabled source/test acceptance cannot transfer to the exact final enabled fixture. Actual71-executor/74-parent-phase proof, five sessions and independent post-parent absence remain later requirements."
+  ],
+  "created_at": "2026-10-17T15:10:53.061685+00:00",
+  "execution_authorized": false,
+  "findings": [],
+  "fixture_checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/evidence/source-checkpoint-01.json",
+    "sha256": "cb34ae43252b824b75c1b9f85092bd786117ec300664c4b3e2d68a46d5b19722"
+  },
+  "limitations": [
+    "No final-source inputs, release or live execution authority is created or accepted by this source review.",
+    "Before any actual wrapper invocation root must freeze and independently review exact enabled closure, inputs and release and admit the bounded read-only command.",
+    "Precondition failures before receipt creation may leave no output; unknown OS fixture outcomes require separate reviewed cleanup, never a rerun.",
+    "Audit hook is reviewed-path defense, not a general Python sandbox; raw file reads can overrun the cooperative deadline but must refuse afterward."
+  ],
+  "os_or_numeric_actions_executed": false,
+  "production_qualified": false,
+  "reviewer": "mlx_upstream",
+  "schema": "fixture03_final_release_validator_source_review_v1",
+  "scope": "source_only",
+  "target_imports_executed": false,
+  "tests_executed": false,
+  "validator": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/validate_fixture03_final_release_01.py",
+    "sha256": "db96f8365ce37ca547b45032c01e7711513fd25be9336c1558e0e76b528a40db"
+  },
+  "workflow": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-final-release-workflow-design-01.json",
+    "sha256": "b13b29dd334f96831d878301aa3156b5f903b9006c96e11bdbf9e47356bcc57f"
+  }
+}

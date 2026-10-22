@@ -1,0 +1,74 @@
+{
+  "approved_source": true,
+  "binding": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-bindings.json",
+    "sha256": "0d0de21af432a19c1f612840025238f6f2197452c3d5ea9d2a6c7207073045a2"
+  },
+  "binding_checks": {
+    "all_referenced_history_hashes_verified": true,
+    "exact_process_count": 7,
+    "file_count": 237,
+    "identity_listener_launchd_and_pause_maps_equal07_and08": true,
+    "metadata_changes_only": [
+      "created_at",
+      "preceding_accepted_window",
+      "previous_binding",
+      "previous_completed_observation",
+      "reason"
+    ],
+    "pause_generation": 528
+  },
+  "created_at": "2026-10-16T22:56:35.364764+00:00",
+  "exact_equivalence": "Byte-for-byte equal to approved08 after only output08\u219209, binding08\u219209 path/hash, and previous completed07\u219208 substitutions.",
+  "independent_preceding_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-review.json",
+    "sha256": "114012c4b785c120b1cc236159f79f8df8e21bcc5bb6b221dda224bf478a845e"
+  },
+  "limits": [
+    "No launch until current private repairs, serialized guarded tests, new preparation and independent reviews finish, followed by fresh current ownership/runtime/host preflight.",
+    "Retained headroom and ownership references are historical preparation provenance, not fresh preflight or present conditions.",
+    "Accepted08 remains historical; it does not automatically authorize later numerical cases. Actual09 raw gate and later continuous coverage require separate review."
+  ],
+  "observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-observer.py",
+    "sha256": "7ae1c4946ad83a5a696c3dba8d89fbe612fb4ec20406a3ac886a1b5fe72e8f51"
+  },
+  "outputs_absent": true,
+  "preceding_accepted_window": {
+    "raw": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08.json",
+      "sha256": "2624125047f38c00fee0fa393908b827977ae43c17393445395a15945e605227"
+    },
+    "root_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-root-review.json",
+      "sha256": "7b5060960f84fb1798e927664b058be2186b3872edc91a53de56597e73faa663"
+    }
+  },
+  "prior_observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-observer.py",
+    "sha256": "114fcec2a3263e98646628189fdb0c1e40f8e3032cb5716e08f00713e3845a78"
+  },
+  "prior_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-source-review.json",
+    "sha256": "d1bb2c3d96c864a689e26ca661cc6f35b9605d8961e7d704d0ec6c4c45eeabec"
+  },
+  "reviewer": "mlx_integration",
+  "rules_preserved": [
+    "300 current consecutive observed seconds of pressure1, swap never increasing between consecutive samples and never exceeding window start, no detected builds/tests, healthy readyz and reservoir.",
+    "Positive sample gaps<=15seconds; every-sample exact process/file identities and mandatory final identity check. Nominal5second cadence,610second maximum loop plus bounded probe overhead.",
+    "Exclusive new output; no force, model imports, service mutations or case starts."
+  ],
+  "schema": "reservoir_host_window_source_review_v1",
+  "scope": {
+    "bound_live_file_contents_rehashed_by_reviewer": false,
+    "numerical_work_authorized": false,
+    "observer_or_monitor_executed": false,
+    "production_mutations": false,
+    "review_only": true,
+    "runtime_probes_executed": false,
+    "target_source_imported": false,
+    "tests_executed": false
+  },
+  "status": "accepted_source_only_not_executed",
+  "unresolved_source_blockers": []
+}

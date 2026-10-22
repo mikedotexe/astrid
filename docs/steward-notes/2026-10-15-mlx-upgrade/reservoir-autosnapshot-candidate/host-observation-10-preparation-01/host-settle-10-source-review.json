@@ -1,0 +1,80 @@
+{
+  "approved_source": true,
+  "binding": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-bindings.json",
+    "sha256": "fc1a29297899220701591a78d4e928ca13844c2bdac2562da6ffd5059b356b09"
+  },
+  "binding_checks": {
+    "all_referenced_preparation_and_history_hashes_verified": true,
+    "exact_process_count": 7,
+    "file_count": 237,
+    "identity_listener_launchd_and_pause_maps_equal07_and09": true,
+    "metadata_changes_only": [
+      "created_at",
+      "ownership_reaudit",
+      "preceding_failed_window",
+      "previous_binding",
+      "previous_completed_observation",
+      "reason"
+    ],
+    "new_ownership_receipt_reports_other_chats_idle_and_agents_holding": true,
+    "pause_generation": 528
+  },
+  "created_at": "2026-10-16T23:47:51.441974+00:00",
+  "exact_equivalence": "Byte-for-byte equal to approved09 after only output09\u219210, binding09\u219210 path/hash and previous completed08\u219209 substitutions.",
+  "limits": [
+    "Preparation approval only. Root must perform the fresh current ownership/runtime/host preflight and hold all tests before launching the one requested observation.",
+    "The root ownership reaudit is recorded evidence; this reviewer did not inspect chats or probe live host state. Retained older headroom references are historical, not fresh preflight.",
+    "Failed09 remains failed and accepted08 remains historical. Actual completed10 requires independent raw current-window review before any separate numerical release; source approval is not admission."
+  ],
+  "observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-observer.py",
+    "sha256": "ff4c0f5ba7d0587440e554393abe19bbd3dabd0300f3ec677f1311562d91cc93"
+  },
+  "outputs_absent": true,
+  "ownership_reaudit": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-ownership-reaudit.json",
+    "sha256": "a7e066c1af8b28ed6b1a48e3cb512652fa67692faf2ebc38a4b13b240984bd11"
+  },
+  "preceding_failed_window": {
+    "independent_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-review.json",
+      "sha256": "f10d97356d967d7281190fcee314049bfff7478c5a5e168d474300ecd2479dac"
+    },
+    "raw": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09.json",
+      "sha256": "0bad870ef7b342c6c6774c93ce79edc9cde21e677821bf1de844ed510ec551b5"
+    },
+    "root_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-root-review.json",
+      "sha256": "f9c0d5c22e35ceac4b27e928f5cf53b1b01aa73fd1ce9b8feb68bf6d5eae2681"
+    }
+  },
+  "prior_observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-observer.py",
+    "sha256": "7ae1c4946ad83a5a696c3dba8d89fbe612fb4ec20406a3ac886a1b5fe72e8f51"
+  },
+  "prior_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-source-review.json",
+    "sha256": "3efdc12766d60da961483bd24599f4a62f2a3f4c8a9e31a438f56e53441ba01f"
+  },
+  "reviewer": "mlx_integration",
+  "rules_preserved": [
+    "300 current consecutive observed seconds of pressure1; no positive adjacent-sample swap increase and no increase over window-start swap; no detected builds/tests; healthy readyz and connected reservoir.",
+    "Strict0<samplegap<=15seconds; unchanged per-sample protected237file/sevenprocess checks and final identity verification. Nominal5second cadence and610second maximum loop plus bounded probe overhead.",
+    "Exclusive unused output, atomic private evidence saves and read-only host/health sampling; no model/numerical imports, service changes, forced termination or case starts."
+  ],
+  "schema": "reservoir_host_window_source_review_v1",
+  "scope": {
+    "bound_live_file_contents_rehashed_by_reviewer": false,
+    "numerical_work_authorized": false,
+    "observer_or_monitor_executed": false,
+    "production_mutations": false,
+    "review_only": true,
+    "runtime_probes_executed": false,
+    "target_source_imported": false,
+    "tests_executed": false
+  },
+  "status": "accepted_source_only_not_executed",
+  "unresolved_source_blockers": []
+}

@@ -1,0 +1,39 @@
+test_all_one_step_actions_then_separate_cleanup_preserve_main (test_owned_recovery_host.HostTests.test_all_one_step_actions_then_separate_cleanup_preserve_main) ... ERROR
+test_changed_host_and_foreign_argv_are_refused (test_owned_recovery_host.HostTests.test_changed_host_and_foreign_argv_are_refused) ... ok
+test_debug_result_interruption_adopts_without_rearming (test_owned_recovery_host.HostTests.test_debug_result_interruption_adopts_without_rearming) ... ok
+test_foreign_old_sentinel_listener_prevents_absence (test_owned_recovery_host.HostTests.test_foreign_old_sentinel_listener_prevents_absence) ... ok
+test_fresh_exact_controller_finishes_without_any_real_io (test_owned_recovery_host.HostTests.test_fresh_exact_controller_finishes_without_any_real_io) ... ok
+test_install_effect_adoption_and_bootstrap_result_adoption (test_owned_recovery_host.HostTests.test_install_effect_adoption_and_bootstrap_result_adoption) ... ok
+test_no_host_mutation_outside_shared_session (test_owned_recovery_host.HostTests.test_no_host_mutation_outside_shared_session) ... ok
+test_unknown_debug_with_live_original_refuses_replay_and_adoption (test_owned_recovery_host.HostTests.test_unknown_debug_with_live_original_refuses_replay_and_adoption) ... ok
+test_witness_effect_adoption_does_not_overwrite_evidence (test_owned_recovery_host.HostTests.test_witness_effect_adoption_does_not_overwrite_evidence) ... ok
+test_wrong_planned_action_blocks_before_recovery_claim (test_owned_recovery_host.HostTests.test_wrong_planned_action_blocks_before_recovery_claim) ... ok
+
+======================================================================
+ERROR: test_all_one_step_actions_then_separate_cleanup_preserve_main (test_owned_recovery_host.HostTests.test_all_one_step_actions_then_separate_cleanup_preserve_main)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/test_owned_recovery_host.py", line 221, in test_all_one_step_actions_then_separate_cleanup_preserve_main
+    self.step(journal)
+    ~~~~~~~~~^^^^^^^^^
+  File "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/test_owned_recovery_host.py", line 159, in step
+    return self.core['production_recovery_driver'].resume_one(journal,self.host,
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+        expected=self.core['production_recovery_driver'].expected_heads(checkpoint),mode=mode)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_driver.py", line 143, in resume_one
+    validate_phase_observation(current.plan, checkpoint, report, reconcile=mode == 'reconcile')
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_driver.py", line 88, in validate_phase_observation
+    m.require(view.get('process') == old and view['job_loaded'] is True
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              and view['listener_pids'] == [old['pid']], 'original role changed: ' + role)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance.py", line 39, in require
+    raise Refusal(message)
+reservoir_maintenance.Refusal: original role changed: provider
+
+----------------------------------------------------------------------
+Ran 10 tests in 2.585s
+
+FAILED (errors=1)

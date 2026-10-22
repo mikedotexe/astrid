@@ -1,0 +1,60 @@
+"""Real synchronous client, imported only when a released run requests it."""
+from __future__ import annotations
+
+import json
+import time
+
+from common import require
+from fixture import TARGET, push_payload
+
+
+def probe(port, sequence, expected_tick):
+    from websockets.sync.client import connect
+    request = push_payload(sequence)
+    result = {"sequence": sequence, "request": request, "expected_tick_before": expected_tick,
+              "started_mono": time.monotonic(), "started_wall": time.time(),
+              "application_sent": False, "acknowledged": False, "passed": False,
+              "open_timeout": 2, "receive_timeout": 5, "proxy": None}
+    connection = None
+    try:
+        connection = connect(f"ws://127.0.0.1:{port}", open_timeout=2, proxy=None)
+        result["opened_mono"] = time.monotonic()
+        connection.send(json.dumps(request))
+        result["sent_mono"] = time.monotonic()
+        result["application_sent"] = True
+        acknowledgement = json.loads(connection.recv(timeout=5))
+        result["ack_mono"] = time.monotonic()
+        result["ack"] = acknowledgement
+        require(acknowledgement.get("type") == "push_state_response"
+                and acknowledgement.get("ok") is True
+                and acknowledgement.get("name") == TARGET
+                and acknowledgement.get("backend") == "numpy"
+                and acknowledgement.get("tick") == expected_tick + 7
+                and acknowledgement.get("hint_applied") is True
+                and acknowledgement.get("mode") == "quiet"
+                and acknowledgement.get("last_live_meta", {}).get("synthetic_request") == f"probe-{sequence}",
+                "push acknowledgement differs from request")
+        result["acknowledged"] = True
+        connection.send(json.dumps({"type": "pull_state", "name": TARGET}))
+        pulled = json.loads(connection.recv(timeout=5))
+        result["pulled_mono"] = time.monotonic()
+        result["pull"] = pulled
+        require(pulled.get("type") == "pull_state_response" and pulled.get("name") == TARGET
+                and pulled.get("backend") == "numpy" and pulled.get("tick_count") == expected_tick + 7
+                and all(pulled.get(key) == request[key] for key in ("h1", "h2", "h3")),
+                "pull did not preserve the acknowledged pushed state")
+        result["passed"] = True
+    except BaseException as error:
+        result["error_type"] = type(error).__name__
+        result["error"] = str(error)
+    finally:
+        result["close_started_mono"] = time.monotonic()
+        if connection is not None:
+            try:
+                connection.close()
+            except BaseException as error:
+                result["passed"] = False
+                result["close_error"] = f"{type(error).__name__}: {error}"
+        result["closed_mono"] = time.monotonic()
+        result["completed_wall"] = time.time()
+    return result

@@ -1,0 +1,19 @@
+{
+  "schema": "owned_fixture_workers_integration_source_review_v1",
+  "reviewer": "Codex /root",
+  "reviewed_at": "2026-10-16T03:38:49.501520+00:00",
+  "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/qualify_fixture_workers.py",
+  "sha256": "acb52ba69b8a8114f8b0efc6b93f87aa77c1a9c5a4dea18c9f24755a496f1324",
+  "approved_for_one_owned_stdlib_run": true,
+  "production_authorized": false,
+  "checks": [
+    "Freshprivateownerroot/token; exactPython3.14andreviewedcopiedworkerhashes",
+    "Popen-ownedchildPID/start/fullargv beforeonesignalperchild;20sphase/90sglobalbounds",
+    "ProviderACKwhile reservoiralive,6sproviderdrainthen6sreservoirfinalsave",
+    "Two sequentialcycleswithdistinctrequestidsand11\u219222ticks;all4childrenreaped",
+    "No launchd/sudo/model/productionpaths; failure retainsguardandownedchildrenwithnoforce"
+  ],
+  "limitations": [
+    "Tests synthetic file IPC/worker signals only; no launchd or actualreservoirpersistenceacceptance."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "launchd_provider_environment": {},
+  "plist_sha256": "4d4bb17099f48b85e2cdcee7d343b4238253edb982fde67d3d9b1e5cad0152ec",
+  "settings": {
+    "KeepAlive": true,
+    "Label": "com.reservoir.coupled-astrid",
+    "ProgramArguments": [
+      "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+      "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+      "--port",
+      "8090",
+      "--coupling-strength",
+      "0.1",
+      "--model-memory-map",
+      "--model",
+      "mlx-community/gemma-4-12B-it-5bit",
+      "--model-qos-mode",
+      "active"
+    ],
+    "RunAtLoad": true,
+    "StandardErrorPath": "/Users/v/other/neural-triple-reservoir/logs/coupled-astrid.log",
+    "StandardOutPath": "/Users/v/other/neural-triple-reservoir/logs/coupled-astrid.log",
+    "WorkingDirectory": "/Users/v/other/neural-triple-reservoir"
+  }
+}

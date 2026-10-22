@@ -1,0 +1,65 @@
+{
+  "actual_os_fixture_executed": false,
+  "after_user_returns": [
+    "Preserve result or failure without rerunning this command.",
+    "Perform separately owned read-only parent absence closeout and recompute raw fixture proof.",
+    "Obtain independent actual final-release fixture qualification before any separate production preparation or maintenance."
+  ],
+  "argv": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_run.py",
+    "--execute",
+    "--release",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-01.json"
+  ],
+  "checks": {
+    "both_indexes_clean_and_repo_status_unchanged": true,
+    "current_seven_protected_processes_and237_files_unchanged": true,
+    "fixed_ordinary_user_entrypoint": true,
+    "literal_flags_as_reviewed": true,
+    "no_build_at_spot_and_ready_health": true,
+    "no_whole_controller_sudo": true,
+    "pause528_and_no_lease": true,
+    "readonly_validation_passed": true,
+    "reviewed_source_closure_matches": true,
+    "seventy_one_steps": true,
+    "unused_root_and_result": true
+  },
+  "command": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-terminal-command-01.txt",
+    "sha256": "70bd0005916a558da28930efbbcc20f4362b6cea40524e8932eadabee72fc3f7"
+  },
+  "created_at": "2026-10-17T02:03:08.742380+00:00",
+  "final_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-source-review-01.json",
+    "sha256": "02c5e463adfef20776e7a50b012841ef624c48eb20d3afc173bd7c90b573ef14"
+  },
+  "independent_exact_command_review_pending": true,
+  "limits": [
+    "Private generated fake-service jobs only; no actual ProductionHost, production pin schedule, live AI service transition or MLX qualification.",
+    "The host spot is not continuous numerical admission.",
+    "The62/299 test receipts belong to archived disabled source plus explicit final flag delta, not actual OS acceptance."
+  ],
+  "precommand_host_spot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-precommand-host-spot-01.json",
+    "sha256": "76c9d13e9456d04a0aae7501d874eca3c37d8b908db79c09fcb59d04e17dfcfa"
+  },
+  "production_qualified": false,
+  "read_only_validation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-validation-01.json",
+    "sha256": "56ccca1d03c45cee140bf2fd19f3bb71f9f648f9c88f7ff67a256620ed20e1b1"
+  },
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-01.json",
+    "sha256": "aa1273e375e376d51ea70be44b1bbb684f1a0a5c3fc96a7ca0bb5bc192ee215c"
+  },
+  "remaining_action": "User runs this exact command in an interactive Terminal; narrow guarded sudo launchctl debug may prompt for administrator authentication.",
+  "root_preparation_passed": true,
+  "schema": "owned_fixture02_handoff_root_review_v1",
+  "scope": "owned_fixture_only",
+  "validator_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-validator-source-review-01.json",
+    "sha256": "2e9308d55ee319f6d0b51765f7efc4b2360b2030128dba38f0fed9f5db82730f"
+  }
+}

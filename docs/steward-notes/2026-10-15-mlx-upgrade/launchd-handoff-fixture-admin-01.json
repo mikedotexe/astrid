@@ -1,0 +1,31 @@
+{
+  "activation_sha256": "0066cd022087dd1e4de30688c99f2f5a4fa95cb464c11b197008a20e9af5fc83",
+  "boot_session_uuid": "A86C8146-975D-4935-85A6-A7879EC7BBE3",
+  "cleanup": {
+    "bootout_returncode": 0,
+    "service_absent": true
+  },
+  "debug_output": "sudo debug output displayed directly on the controlling terminal; not captured",
+  "debug_returncode": 0,
+  "debug_supported": true,
+  "failure": "fixture timed out: one-shot held replacement",
+  "fixture_sha256": "4e0f2d00aba5004698cf98907d8e2ebf58dfe8b6a118a547ea5cac251fc474bb",
+  "host_version": "27.0.1",
+  "hostname": "m3-volya",
+  "label": "com.codex.model-handoff-fixture.9ac62110dd5a482d9277592eb6f53cbb",
+  "launcher_sha256": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+  "original_pid": 65292,
+  "passed": false,
+  "python": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+  "python_runtime_sha256": {
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python": "7ecc1ecbf9daa9303c4bf502ff62ffdd9010ed5c08729d470ae9380c10ce1211",
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43"
+  },
+  "python_sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43",
+  "schema": "model_launchd_handoff_fixture_v1",
+  "scope": "owned_stdlib_fixture_no_model_no_gpu_no_production_services",
+  "signal_sent": true,
+  "stderr": "  File \"/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14\", line 1\n    \ufffd\ufffd\ufffd\ufffd\f\n    ^\nSyntaxError: Non-UTF-8 code starting with '\\xcf' in file /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14 on line 1, but no encoding declared; see https://peps.python.org/pep-0263/ for details\n",
+  "sudo_debug_requested": true,
+  "uid": 501
+}

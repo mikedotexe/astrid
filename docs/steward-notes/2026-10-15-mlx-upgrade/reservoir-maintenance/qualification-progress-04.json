@@ -1,0 +1,55 @@
+{
+  "schema": "mlx_private_qualification_progress_v1",
+  "recorded_at": "2026-10-16T18:48:52.051316+00:00",
+  "status": "disabled_recovery_04_reviewed_waiting_for_foreign_integration",
+  "shared_tree_writes_deferred": true,
+  "coordination": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/external-source-transition-02.json",
+    "sha256": "0fa94ec4680234453cb12fb4bd5a520fcf0eb1a8a482c2562d2b8f6fb8706679"
+  },
+  "candidate": {
+    "version": "04",
+    "root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04",
+    "archive": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-preparation-04/archive-manifest.json",
+      "sha256": "6140cc5878e1b8d5053011c39c71d34f4eadc2a1fa21ad022f92b968abc521e2"
+    },
+    "review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-candidate-04-independent-review-01.json",
+      "sha256": "432c940e984b6a9ceeb728217f0a78c182b0f09df38d06fe36b6f2a5abba9e18"
+    },
+    "combined_tests": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/combined-stdlib-tests-01.json",
+      "sha256": "c978657bfd1ec5a00178fa445d02cd1b3bb66b661e2832f1cd9c2c2f8e70dabd"
+    },
+    "tests_passed": 231,
+    "source_files": 28,
+    "production_flags_enabled": false,
+    "production_recovery_qualified": false
+  },
+  "actual_cases": {
+    "service_matrix_executed": 0,
+    "service_matrix_required": 14,
+    "restore_executed": 0,
+    "restore_required": 9
+  },
+  "host06": {
+    "prepared": true,
+    "started": false,
+    "output_exists": false,
+    "binding_status": "superseded_for_future_execution_by_foreign_Minime_and_bridge_replacements",
+    "preserve_files": true
+  },
+  "eligible_mlx_baseline": false,
+  "reservoir_source_deployed_by_this_task": false,
+  "mlx_promoted": false,
+  "perception_containment_deployed": false,
+  "next_requirements": [
+    "Complete source-only exact-controller owned interruption fixture design; no new administrator command until all preparation and numerical prerequisites are ready.",
+    "After foreign active integration finishes, re-audit ownership, clean handoff eligibility, source/configuration and exact runtime identities. Existing user authorization remains in effect; no new user permission is needed for ordinary coordination.",
+    "Create a fresh versioned host observer bound to the new seven-process runtime and source identity; do not mutate06 or run against old identities.",
+    "Only a genuine completed passing host window may release root-supervised14-case numerical service qualification and9-case restore checks.",
+    "Measure full revalidation cost without weakening checks; qualify exact actual OS recovery and independent cleanup before any production drain.",
+    "Publish04 source/test/review archive and updated documentation only after shared-tree coordination permits."
+  ]
+}

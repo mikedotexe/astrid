@@ -1,0 +1,96 @@
+{
+  "accepted_matrix": {
+    "bytes": 5017,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/matrix-review-01.json",
+    "sha256": "42a63f52154aafca5b8502f667cd6af4679aee73d69281551e3c508801c9729d"
+  },
+  "created_at": "2026-10-17T01:32:21.895097+00:00",
+  "execution_authorized": false,
+  "harness_hashes": {
+    "common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+    "driver.py": "f99dc8d0945cd23c62249b78a3a8a24fa5791f61c57b5ec37fb1bc90b1dbcf63",
+    "fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+    "process_identity.py": "badc6dd3ddec6aa9bf0c3996aecfab0e40232acad9dae346d6302bbec16803c7",
+    "protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+    "result_checks.py": "047389e82d8a8e5109ff6c49d4af10dd1bd9b80e254c965e9dd94692529ae5cf",
+    "review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+    "service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+    "snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+    "test_harness.py": "05e35897981af399fde10ee4a7baabd9dc8f15988179cdd0e0ef3daa78928148",
+    "test_initial_publication.py": "54462505c1efac8080f6ef60608605d93182a5ef9c9b90f88c455cbd316f024b"
+  },
+  "interpreter_aliases": [
+    "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+    "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+    "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12"
+  ],
+  "metadata": {
+    "bytes": 17196470,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/revalidation-cost-metadata-02.json",
+    "sha256": "d86d6932225abe231601e7f316242b688c818cb3c0b5f68fecac5d86943eedbd"
+  },
+  "preparation_policy": "Derived solely from saved inventory, correction, assessment and guarded-test receipt; no new payload traversal or target import.",
+  "python": {
+    "bytes": 52448,
+    "path": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "resolved": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43"
+  },
+  "root_assessment": {
+    "bytes": 1319,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/revalidation-cost-metadata-02-root-assessment-01.json",
+    "sha256": "0691ddfae622d1e2f44b18f347b0d4b8bb5363ad47d547b25663b7d026f8c799"
+  },
+  "schema": "reservoir_service_review_timing_inputs_v1",
+  "scope_correction": {
+    "bytes": 11210,
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/revalidation-cost-metadata-02-scope-correction-01.json",
+    "sha256": "9b0d67ca826d3605de33a611a8e5e02cffb39eda4b268ce8fd0c47f3dbaa54a2"
+  },
+  "source_files": {
+    "common.py": {
+      "bytes": 4299,
+      "sha256": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420"
+    },
+    "driver.py": {
+      "bytes": 13093,
+      "sha256": "f99dc8d0945cd23c62249b78a3a8a24fa5791f61c57b5ec37fb1bc90b1dbcf63"
+    },
+    "fixture.py": {
+      "bytes": 2659,
+      "sha256": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b"
+    },
+    "process_identity.py": {
+      "bytes": 13702,
+      "sha256": "badc6dd3ddec6aa9bf0c3996aecfab0e40232acad9dae346d6302bbec16803c7"
+    },
+    "protocol_client.py": {
+      "bytes": 2904,
+      "sha256": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427"
+    },
+    "result_checks.py": {
+      "bytes": 7620,
+      "sha256": "047389e82d8a8e5109ff6c49d4af10dd1bd9b80e254c965e9dd94692529ae5cf"
+    },
+    "review_matrix.py": {
+      "bytes": 4401,
+      "sha256": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440"
+    },
+    "service_child.py": {
+      "bytes": 15760,
+      "sha256": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7"
+    },
+    "snapshot_oracle.py": {
+      "bytes": 5431,
+      "sha256": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae"
+    },
+    "test_harness.py": {
+      "bytes": 17987,
+      "sha256": "05e35897981af399fde10ee4a7baabd9dc8f15988179cdd0e0ef3daa78928148"
+    },
+    "test_initial_publication.py": {
+      "bytes": 8906,
+      "sha256": "54462505c1efac8080f6ef60608605d93182a5ef9c9b90f88c455cbd316f024b"
+    }
+  }
+}

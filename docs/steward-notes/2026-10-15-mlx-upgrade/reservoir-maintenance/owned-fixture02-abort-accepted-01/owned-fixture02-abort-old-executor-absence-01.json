@@ -1,0 +1,157 @@
+{
+  "at": "2026-10-17T14:34:43.693819+00:00",
+  "exits": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/01-lock-hold-lock/exit.json",
+      "pid": 9345,
+      "sha256": "2036e884897bdc38e8c0c2cfd31b74d5b1df9f0ed82c8777473ac9e1b4951f03"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/02-lock-refusal-lock/exit.json",
+      "pid": 9389,
+      "sha256": "c09782316eed5017a7cca667a963d806c0fbc01076601429af08f63cef205051"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/03-fresh-arm-next-spawn-provi/exit.json",
+      "pid": 9441,
+      "sha256": "d5a678b32dc6263b58313dbcf742d23e647d32b717be4a1f62ab8d87bb422e39"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/04-resume-one-arm-next-spawn-provi/exit.json",
+      "pid": 9667,
+      "sha256": "55eee40ba16cf0fb02dc314d9cda0e67d91abc2a3db9174757de873681c53d19"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/05-resume-one-signal-stop-provider/exit.json",
+      "pid": 9948,
+      "sha256": "3e52eb7b6d71318aebd35963efd2e890c003a6bcef9b2d0d602686e0114ea8fa"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/06-resume-one-signal-stop-provider/exit.json",
+      "pid": 10253,
+      "sha256": "5f29e2c5aaa3bb3f6486d50fe23640061e66acf42c2ac8e9af1b9cdf7f35530f"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/07-resume-one-held-verified-provid/exit.json",
+      "pid": 10522,
+      "sha256": "cb8a2c159ca389ee32ae295b3e194c054e71059fc2c826661299eae966372c30"
+    }
+  ],
+  "passed": true,
+  "queries": [
+    {
+      "absent": true,
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "9345",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "query_pid": 92181,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "absent": true,
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "9389",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "query_pid": 92182,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "absent": true,
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "9441",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "query_pid": 92183,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "absent": true,
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "9667",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "query_pid": 92184,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "absent": true,
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "9948",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "query_pid": 92185,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "absent": true,
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "10253",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "query_pid": 92186,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "absent": true,
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "10522",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "query_pid": 92187,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    }
+  ],
+  "schema": "owned_fixture02_abort_old_executor_absence_v1",
+  "service_actions": false
+}

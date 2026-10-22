@@ -1,0 +1,74 @@
+{
+  "schema": "mlx_production_handoff_readiness_review_v1",
+  "reviewed_at": "2026-10-16T00:32:16Z",
+  "reviewer": "codex-mlx-upgrade/mlx_upstream",
+  "scope": "Read-only privilege, retained fixture and live identity review. No launchd, sudo, configuration or process mutation by this reviewer.",
+  "fixture": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/launchd-handoff-fixture-admin-02.json",
+    "passed": true,
+    "scope": "owned_stdlib_fixture_no_model_no_gpu_no_production_services",
+    "label": "com.codex.model-handoff-fixture.530a580bd53a4e27821c15bc8893eb85",
+    "one_shot_override_consumed_by_fixture": true,
+    "cleanup_service_absent": true,
+    "production_override_or_authorization_established": false
+  },
+  "production_observed": {
+    "target": "gui/501/com.reservoir.coupled-astrid",
+    "pid": 3893,
+    "runs": 1,
+    "program": "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+    "original_server_and_arguments": true,
+    "permanent_launcher_installed": false,
+    "owned_hold_or_selection_found_in_upgrade_trees": false
+  },
+  "privilege_evidence": {
+    "sudoers_drop_in_directory_empty": true,
+    "main_sudoers_readable_by_reviewer": false,
+    "sudo_timestamp_directory_readable_by_reviewer": false,
+    "noninteractive_check": {
+      "source": "root agent reported direct command result",
+      "observed_at": "2026-10-16T00:28Z",
+      "command": "/usr/bin/sudo -n true",
+      "succeeded": false,
+      "diagnostic": "a password is required"
+    },
+    "usable_preauthorization_established": false,
+    "first_migration_requires_narrow_terminal_authentication": true
+  },
+  "qualified_privileged_operation": {
+    "implementation": "/Users/v/other/astrid/scripts/model_environment_activate.py:523",
+    "command_template": [
+      "/usr/bin/sudo", "--", "/bin/launchctl", "debug",
+      "gui/501/com.reservoir.coupled-astrid", "--program",
+      "<fixture-matched resolved launcher Python>", "--",
+      "/Users/v/other/astrid/scripts/model_environment.py", "launch",
+      "--control-root", "<validated transaction control root>",
+      "--hold-only", "<owned transaction UUID>"
+    ],
+    "controller_runs_as_desktop_user": true,
+    "credentials_remain_in_terminal": true,
+    "must_follow_accepted_qualification_and_durable_owned_hold": true,
+    "manual_prearming_is_not_the_supported_workflow": true
+  },
+  "concurrent_qualification_headroom": {
+    "snapshot_at": "2026-10-16T00:29:42Z",
+    "physical_memory_gib": 64,
+    "pressure_level": 1,
+    "swap_used_mib": 17489.06,
+    "approximate_free_physical_gib": 1.075,
+    "approximate_compressor_gib": 13.44,
+    "latest_controlled_core_record": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/core/offline-settled-01/offline.json",
+    "latest_core_initial_pressure_level": 1,
+    "latest_core_passed": false,
+    "latest_core_retained_swap_growth_bytes": 983239229.4400024,
+    "latest_core_wide_k16_latency_ms": 5.184,
+    "wide_k16_latency_limit_ms": 1.5,
+    "full_model_matched_generation_started": false,
+    "conclusion": "Current evidence does not establish enough headroom to qualify concurrently with all existing live workloads. Normal initial pressure alone did not prevent retained swap growth and latency failure. This does not establish a package regression. A changed, genuinely quieter measured window requires fresh evidence under unchanged gates."
+  },
+  "blockers": [
+    "No accepted core offline and matched performance proof exists.",
+    "No reusable privileged production handoff authorization or arm is evidenced; the noninteractive sudo check required a password.",
+    "Current concurrent qualification has repeatedly failed the preserved memory and latency gates."
+  ]
+}

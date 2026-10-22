@@ -1,0 +1,32 @@
+{
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-bindings.json": "beae54c2362ea251c6b5a1fc9dbdf78532fa65b498796b97c7515c2c7cd5f629",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-observer.py": "005c5db21d9ff36dd2e867cb54a272cabdc2c1922f0a8bb0f0b5a7ddd5709d05",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision.py": "371a5fb7b4a94773b8e73f87df4d2fcf2b510dd049fcd6520f9d1395a6791483",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/test_matrix_host_supervision.py": "41416812f873c9481dddeea0b2e2cc98b7093cd60419390294ebb9fc53aa7dd5"
+  },
+  "audit_violations": [],
+  "completed_at": "2026-10-16T19:16:17.245475+00:00",
+  "duration_s": 0.048743042163550854,
+  "errors": 0,
+  "failures": 0,
+  "forbidden_imports_loaded": [],
+  "log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-tests-01.txt",
+    "sha256": "151cbc39658a6dd91aafd7323ace94426437ab42ac2d3d06f7f6568021624a4c"
+  },
+  "monitor_executed": false,
+  "numerical_cases_executed": 0,
+  "passed": true,
+  "production_mutations": 0,
+  "python": {
+    "path": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43"
+  },
+  "schema": "reservoir_matrix_supervision_stdlib_tests_v1",
+  "scope": "inert_fakes_only_no_host_observation",
+  "skipped": 0,
+  "source_unchanged": true,
+  "started_at": "2026-10-16T19:16:17.196581+00:00",
+  "tests_run": 11
+}

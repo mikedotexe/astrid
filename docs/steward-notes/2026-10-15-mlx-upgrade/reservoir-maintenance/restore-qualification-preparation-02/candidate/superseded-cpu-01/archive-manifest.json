@@ -1,0 +1,96 @@
+{
+  "files": [
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/README.md",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/README.md",
+      "sha256": "e193b6a67dcf4559b6150ebc5655bcd132a219e1dab1a5f11d5b8122813a6db2"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/child_admission.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/child_admission.py",
+      "sha256": "08cea644200ccce6dfa6b8330ea65893ec077cbac8d845c9d8f5a5a0e6f5b1b2"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/inputs.json",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/inputs.json",
+      "sha256": "0e802f5798e721ef39064e5b7a4753e8e1a04def437adbb91bfb63e153c64430"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/original-copy-manifest.json",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/original-copy-manifest.json",
+      "sha256": "b315fb9130c8848e924877dbd5e541602ee0e33b80ff59a51d88eca565915ac9"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/qualify_restore.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/qualify_restore.py",
+      "sha256": "3a92d16d1486c34128d3c203df8461e4874398e7119d89a0461047d0a68a1561"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/reservoir_maintenance_state.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/reservoir_maintenance_state.py",
+      "sha256": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/restore_verifier.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/restore_verifier.py",
+      "sha256": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/seed_fixture.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/seed_fixture.py",
+      "sha256": "4a3507615ff5a8f25f9fcd8d0ca592beee14820c1a591045446fc0a8e190c7b8"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/source/dual_ai_bridge.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/dual_ai_bridge.py",
+      "sha256": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/source/lsm_reservoir.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/lsm_reservoir.py",
+      "sha256": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/source/persistence.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/persistence.py",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/source/rehearsal.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/rehearsal.py",
+      "sha256": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/source/reservoir_service.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/reservoir_service.py",
+      "sha256": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/source/triple_reservoir_coreml.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/source/triple_reservoir_coreml.py",
+      "sha256": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/test_child_admission.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/test_child_admission.py",
+      "sha256": "b67f3a0fc161066814cf9968aa27aaa0b805f15cf01398830bd7ceb2c7c6cf4f"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/test_qualification.py",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/test_qualification.py",
+      "sha256": "703ef72e01b3526671b0c11babda84e4537facd2c0085441514afde23648d5e0"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/admission-cpu-tests-01.json",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/admission-cpu-tests-01.json",
+      "sha256": "86b51df0b4e73f9fe35ba788640973c8fb8fdfe01476407d2b83e2a19b85112a"
+    },
+    {
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/superseded-cpu-01/admission-cpu-tests-01.txt",
+      "original": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/admission-cpu-tests-01.txt",
+      "sha256": "351df1e2a54933aee22eac11ecfdbf8d156c116ab7c45745420633aa3c116df7"
+    }
+  ],
+  "purpose": "Preserve exact passing cpu01 source/evidence before narrow immutable initial-release binding repair",
+  "schema": "restore_admission_cpu_source_archive_v1"
+}

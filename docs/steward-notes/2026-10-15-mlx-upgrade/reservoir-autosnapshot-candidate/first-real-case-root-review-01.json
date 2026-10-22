@@ -1,0 +1,65 @@
+{
+  "case_duration_s": 18.18599224090576,
+  "case_probes": 0,
+  "case_result": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/runs/01-original-normal/result.json",
+    "sha256": "d167342961a4d97211958146aa2802754a70392132ab01cbb1d68e2ab31194b0"
+  },
+  "cause_evidence": {
+    "launch": {
+      "command": "/Users/v/other/neural-triple-reservoir/.venv/bin/python -I -B /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/service_child.py --manifest /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/sources.json --variant original --case normal --output /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/runs/01-original-normal --control-fd 4",
+      "pid": 27375,
+      "started_at": "Fri Oct 16 15:52:03 2026"
+    },
+    "pinned_interpreter": {
+      "executable": "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+      "files": {
+        "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python": "2cb7bcb114a9a92ac12d1072406261ac039bed938b25bfc70dd30ec5855a3353",
+        "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12": "31b9c9a8d50289f3a13f014b3efd8ea3534fc3eea7ca7d9809e166139910b805"
+      },
+      "resolved": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12",
+      "sha256": "31b9c9a8d50289f3a13f014b3efd8ea3534fc3eea7ca7d9809e166139910b805"
+    },
+    "ready": {
+      "command": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python -I -B /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/service_child.py --manifest /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/sources.json --variant original --case normal --output /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/runs/01-original-normal --control-fd 4",
+      "pid": 27375,
+      "started_at": "Fri Oct 16 15:52:03 2026"
+    }
+  },
+  "child_exit_code": 0,
+  "child_result": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/runs/01-original-normal/child.json",
+    "sha256": "30c070a6ea139119313a3d371c6513c0d0b8e7a7c6d00239257e231d93a08302"
+  },
+  "created_at": "2026-10-16T22:54:06.353303+00:00",
+  "failure": "ValueError: OS process identity changed",
+  "force_used": false,
+  "host_admission": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-root-review.json",
+    "sha256": "7b5060960f84fb1798e927664b058be2186b3872edc91a53de56597e73faa663"
+  },
+  "host_end_pressure": 1,
+  "host_interval_coverage_passed": true,
+  "host_invalidated": false,
+  "host_raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-02.json",
+    "sha256": "01069411581484777db77feb0bdef59eab533c060e4c16a06b2fbd70600ff5f2"
+  },
+  "host_samples": 33,
+  "host_source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2.py",
+    "sha256": "fbaea5a9132b6d1ed92262d70dfadbd5f3d2cc2c93c2b4bb90662ed41e5d687d"
+  },
+  "host_start_end_identities_match": true,
+  "next": "Separate reviewed harnessv2 exact initial interpreter transition fix and focused isolated tests, fresh preparation and host admission before new complete14-case matrix. No blind replay of this run.",
+  "owned_observer_supervisor_driver_child_pids_absent": true,
+  "passed": false,
+  "production_mutations": 0,
+  "remaining_case_count_not_started": 13,
+  "root_case_release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-release-01.json",
+    "sha256": "cf653dbf38464069df1cfb74e8cc0b4b9848a2fbc50e0a71597e077db3e63af3"
+  },
+  "schema": "reservoir_first_real_case_root_review_v1",
+  "scope": "First actual private original/normal case failed early in harness identity validation. Any child snapshot/restore output is retained partial evidence, not complete persistence/latency/matrix acceptance."
+}

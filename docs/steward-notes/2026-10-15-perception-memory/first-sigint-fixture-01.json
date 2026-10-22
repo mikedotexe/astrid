@@ -1,0 +1,60 @@
+{
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/first-sigint-01/capture-returned.json": "34cac05580ada6ebb1188d48603d5f45c92c59dd161d599e9107d3404fa146bd",
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/first-sigint-01/child-complete.json": "1926304182892b4223fa396c27e890d4ea62fe091cb08e231507949787c12f5e",
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/first-sigint-01/child-ready.json": "6fcaa25c1c3fb7e89b5524a2a6ecfc4e7ca7cbd7d3686f02a815992715c26db6",
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/first-sigint-01/parent-output.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/first-sigint-01/parent-ready.json": "21f45b88c877ec54d7430706f2982c9a1a2b0b8a4f3878d7a2c2f03f466da0f5",
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/first-sigint-01/parent-result.json": "ae548221246f89365427d801c05ae4545762bcce90bd1577d6159d5349d588f0"
+  },
+  "checks": {
+    "capture_completed_after_signal": true,
+    "child_exit_zero_and_reaped_before_cancellation": true,
+    "exact_fake_jpeg_returned": true,
+    "first_signal_deferred_to_async_cancellation_point": true,
+    "no_native_or_model_modules_loaded": true,
+    "parent_exited_cleanly_after_handling_interrupt": true,
+    "signal_preceded_worker_completion": true,
+    "single_signal_only": true
+  },
+  "child_pid": 36044,
+  "completed_at": "2026-10-16T01:44:16.861224+00:00",
+  "fixture": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/first_sigint_fixture.py",
+    "sha256": "95915edff8acc33a388aab212430b3de4d4d495940cda98f858a92467e3cb8c1"
+  },
+  "helper": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py",
+    "sha256": "4692f30fe56090490cc648b78447e993a368a5a148ef53a0b2e38d235caae34d"
+  },
+  "limitations": "First SIGINT only under asyncio.run; repeated/immediate KeyboardInterrupt during wait remains outside this guarantee.",
+  "parent_pid": 36043,
+  "parent_result": {
+    "capture_returned": true,
+    "child_pid": 36044,
+    "child_reaped": true,
+    "child_returncode": 0,
+    "first_sigint_observed_as_keyboard_interrupt": true,
+    "interrupt_observed_at": 1792115056.84717,
+    "jpeg_hex": "ffd866616b652d6a706567ffd9",
+    "native_or_model_modules_loaded": [],
+    "parent_pid": 36043,
+    "python": "3.14.3 (main, Feb  3 2026, 15:32:20) [Clang 17.0.0 (clang-1700.6.3.2)]",
+    "returned_at": 1792115056.846627
+  },
+  "passed": true,
+  "production_mutations": 0,
+  "python_executable": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+  "python_version": "3.14.3 (main, Feb  3 2026, 15:32:20) [Clang 17.0.0 (clang-1700.6.3.2)]",
+  "schema": "perception_camera_first_sigint_owned_fixture_v1",
+  "scope": "One signal to this fixture's owned asyncio parent, one finite 0.7-second fake worker, no production signals or process changes, no camera/cv2/models.",
+  "signal": "SIGINT",
+  "signal_count": 1,
+  "signal_sent_at_unix": 1792115056.135648,
+  "started_at": "2026-10-16T01:44:16.059635+00:00",
+  "work_directory": "/Users/v/other/astrid/.runtime/perception-memory-investigation/first-sigint-01",
+  "worker_completed": {
+    "at": 1792115056.840084,
+    "pid": 36044
+  }
+}

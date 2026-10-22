@@ -1,0 +1,36 @@
+{
+  "schema": "reservoir_fixture_host_settle_review_v1",
+  "reviewed_at": "2026-10-16T03:47:47.948702+00:00",
+  "raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-03.json",
+    "sha256": "74f1f3fccc2ce463d92c46eaadca55ec5090b34aa33f15bcb26edeeb1b80f2f2"
+  },
+  "observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-03-observer.py",
+    "sha256": "4bdd764d364ffd9c25df5b40c57ba1e7555ae6c7dba5f5944010cbdcea3676ce"
+  },
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-03-source-review.json",
+    "sha256": "f74a80348fc5d39709215a4994ae0cbb7e50d22ef9a5f8f88ae527e5f6c91a8e"
+  },
+  "passed": false,
+  "samples": 123,
+  "duration_s": 611.7030273340642,
+  "longest_eligible_window_s": 289.98845887184143,
+  "current_eligible_window_s": 50.00586771965027,
+  "pressure_sample_counts": {
+    "1": 113,
+    "2": 10
+  },
+  "swap_bytes_first": 13515945410.56,
+  "swap_bytes_last": 12921402818.56,
+  "swap_endpoint_growth_bytes": -594542592.0,
+  "swap_bytes_max": 14080341442.56,
+  "detected_build_process_samples": 0,
+  "max_sample_gap_s": 5.0100250244140625,
+  "production_identity_unchanged": true,
+  "real_numeric_fixture_started": false,
+  "owned_stdlib_workers_during_window": "Four small worker children,03:39:12\u201303:39:36UTC; no models/numeric imports. Recorded separately; no qualification waiver.",
+  "production_mutations": false,
+  "acceptance": "Longest289.988s is below required300s. Failed window preserved; no numeric test released. Do not repeat while awaiting interactivefixture action; re-evaluatefreshconditionswhenuserreturns."
+}

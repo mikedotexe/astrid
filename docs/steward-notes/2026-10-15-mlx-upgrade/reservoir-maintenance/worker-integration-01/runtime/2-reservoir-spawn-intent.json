@@ -1,0 +1,21 @@
+{
+  "role": "reservoir",
+  "cycle": 2,
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-I",
+    "-B",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/maintenance_fixture_worker.py",
+    "--root",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00",
+    "--token",
+    "6bc1283024024a53be0090debfaf4e00",
+    "--role",
+    "reservoir",
+    "--drain-seconds",
+    "6.0"
+  ],
+  "spawn_intent_at": "2026-10-16T03:39:24.531574+00:00",
+  "signal_sent": false,
+  "force_used": false
+}

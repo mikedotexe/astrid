@@ -1,0 +1,84 @@
+{
+  "schema": "reservoir_autosnapshot_candidate_v1",
+  "created_at": "2026-10-16T02:54:38.442118+00:00",
+  "status": "isolated_prototype_not_deployment_ready",
+  "source_files_unchanged": [
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+      "sha256": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+      "hash_matches_original": true,
+      "mtime_ns_unchanged": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/persistence.py",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+      "hash_matches_original": true,
+      "mtime_ns_unchanged": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/AGENTS.md",
+      "sha256": "8a1472db335677180180dd4c63f13d4cbb2a7ff91658b3f8ba97018e1e442fb5",
+      "hash_matches_original": true,
+      "mtime_ns_unchanged": true
+    }
+  ],
+  "test_interpreter": {
+    "executable": "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+    "version": "3.12.13 (main, Mar  3 2026, 12:39:30) [Clang 17.0.0 (clang-1700.6.3.2)]",
+    "base_executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12",
+    "resolved_executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/bin/python3.12",
+    "resolved_sha256": "31b9c9a8d50289f3a13f014b3efd8ea3534fc3eea7ca7d9809e166139910b805"
+  },
+  "tests_passed": 10,
+  "real_service_or_persistence_tested": false,
+  "deployed": false,
+  "artifacts": {
+    "original-manifest.json": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/original-manifest.json",
+      "sha256": "e3535f3bb45c528fec07cbeaf5d99bfebbbd083354f44f02a2b728600cfd2c7a"
+    },
+    "baseline/reservoir_service.py": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/baseline/reservoir_service.py",
+      "sha256": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0"
+    },
+    "baseline/persistence.py": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/baseline/persistence.py",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f"
+    },
+    "baseline/AGENTS.md": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/baseline/AGENTS.md",
+      "sha256": "8a1472db335677180180dd4c63f13d4cbb2a7ff91658b3f8ba97018e1e442fb5"
+    },
+    "reservoir_service.py": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/reservoir_service.py",
+      "sha256": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da"
+    },
+    "test_autosnapshot_cooperative.py": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/test_autosnapshot_cooperative.py",
+      "sha256": "50cfa90f191308d5123b3c0fd741aaf904245e9d3882585d36f6961a3b15eb76"
+    },
+    "autosnapshot-cooperative.patch": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/autosnapshot-cooperative.patch",
+      "sha256": "e54e052ae3519b5893b0b08ae02a362004571072562c92c2694563850071f01a"
+    },
+    "tests-01.json": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/tests-01.json",
+      "sha256": "c699b44c57127e9d9f3fa705a85deda992ca7733267c5f13f4b3297fb8a43fa2"
+    },
+    "tests-01.txt": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/tests-01.txt",
+      "sha256": "0c45752b5d880fa5468920b73f8d95ff70064d9f3546df4b09b82ee2ec429ace"
+    },
+    "README.md": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/README.md",
+      "sha256": "e588259f3d9c6afab65f6f1a3c57e14e4435bcfac49d466568ebd3486a260bfe"
+    }
+  },
+  "limitations": [
+    "One slow per-handle save still blocks the event loop.",
+    "No demonstrated real handshake latency bound.",
+    "Interleaving permits state changes between handles; not cross-handle atomic.",
+    "No safe live handoff implemented or authorized by this candidate.",
+    "Full preservation/restore qualification and renewed source preparation plus a fresh clean two-hour baseline remain required."
+  ]
+}

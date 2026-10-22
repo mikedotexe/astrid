@@ -1,0 +1,227 @@
+{
+  "accepted_stdlib_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/combined-cpu-tests-02.json",
+    "sha256": "1340194973c2360003a01dc0e4a9926f3357486ade280917e6ace8b7d47dd566"
+  },
+  "actual_numeric_cases_executed": 0,
+  "actual_os_fixture_executed": false,
+  "copies": [
+    {
+      "archive_path": "README.md",
+      "bytes": 4246,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/README.md",
+      "reconstruction_path": "README.md",
+      "sha256": "120e920a8bfcbdbb05dd7839920f04e819387e3e4e33de11abee0233b903c537"
+    },
+    {
+      "archive_path": "evidence/combined-cpu-tests-01.json",
+      "bytes": 9748,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/combined-cpu-tests-01.json",
+      "reconstruction_path": "evidence/combined-cpu-tests-01.json",
+      "sha256": "8cbee3f751ed485bdd2116b1da40ebf9d87cd0c3a98ddacad8404ffbd082eb1d"
+    },
+    {
+      "archive_path": "evidence/combined-cpu-tests-01.txt",
+      "bytes": 4978,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/combined-cpu-tests-01.txt",
+      "reconstruction_path": "evidence/combined-cpu-tests-01.txt",
+      "sha256": "d5ce3f1a6362f1e7e96067732d4edf6cc00a4a29c9b91bdbef2ce9f0ebe961c3"
+    },
+    {
+      "archive_path": "evidence/combined-cpu-tests-02.json",
+      "bytes": 9748,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/combined-cpu-tests-02.json",
+      "reconstruction_path": "evidence/combined-cpu-tests-02.json",
+      "sha256": "1340194973c2360003a01dc0e4a9926f3357486ade280917e6ace8b7d47dd566"
+    },
+    {
+      "archive_path": "evidence/combined-cpu-tests-02.txt",
+      "bytes": 6376,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/combined-cpu-tests-02.txt",
+      "reconstruction_path": "evidence/combined-cpu-tests-02.txt",
+      "sha256": "8260afbfddfe254b8e5a17a90d6c32428eddfc4fe97f064fc6fe5b7641bfbcba"
+    },
+    {
+      "archive_path": "evidence/host-cpu-tests-01.json",
+      "bytes": 9490,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/host-cpu-tests-01.json",
+      "reconstruction_path": "evidence/host-cpu-tests-01.json",
+      "sha256": "e273362db51dda8cd888d2db17bf7653de72685ba702417b6e11a0fc7287b92e"
+    },
+    {
+      "archive_path": "evidence/host-cpu-tests-01.txt",
+      "bytes": 3835,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/host-cpu-tests-01.txt",
+      "reconstruction_path": "evidence/host-cpu-tests-01.txt",
+      "sha256": "801c1c8649710d544e5820da5b3ca8f1aa54a9ba35cd3d1ca193360f8fec6855"
+    },
+    {
+      "archive_path": "evidence/host-interface-01.json",
+      "bytes": 4643,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/host-interface-01.json",
+      "reconstruction_path": "evidence/host-interface-01.json",
+      "sha256": "aec91a1d785bdaf74e9e987ce8a3d82a7a75b39bec9ff824c768d2b01a73b80b"
+    },
+    {
+      "archive_path": "evidence/independent-source-review-01.json",
+      "bytes": 19034,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/independent-source-review-01.json",
+      "reconstruction_path": "evidence/independent-source-review-01.json",
+      "sha256": "7b5d75d300d652292daf634d266f152be4244cee014094ff447be9d59fa7d1a6"
+    },
+    {
+      "archive_path": "owned_fixture_cleanup.py",
+      "bytes": 12682,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_cleanup.py",
+      "reconstruction_path": "owned_fixture_cleanup.py",
+      "sha256": "5637d6269990e70b9ec0dbc6505173d891171f7dfbeca4c543ca4364c4097a66"
+    },
+    {
+      "archive_path": "owned_fixture_cleanup_host.py",
+      "bytes": 10401,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_cleanup_host.py",
+      "reconstruction_path": "owned_fixture_cleanup_host.py",
+      "sha256": "3aa97ac474aa77d67d2617435823c802a5e725526967af3d7b98a26f489f6ace"
+    },
+    {
+      "archive_path": "owned_fixture_coordinator.py",
+      "bytes": 23918,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_coordinator.py",
+      "reconstruction_path": "owned_fixture_coordinator.py",
+      "sha256": "f164d777a8866abce3d4d322c0f3283e017681b971e5fe06844a003af50c306e"
+    },
+    {
+      "archive_path": "owned_fixture_injection.py",
+      "bytes": 7523,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_injection.py",
+      "reconstruction_path": "owned_fixture_injection.py",
+      "sha256": "e5272b25d734753b2049d95bf271097735a2cc7785b3909c4de8e16c63308123"
+    },
+    {
+      "archive_path": "owned_fixture_pin.py",
+      "bytes": 11743,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_pin.py",
+      "reconstruction_path": "owned_fixture_pin.py",
+      "sha256": "99f2522f163ba303fd28b71d802dc5bcf749447b29a3f6449e9bccf5da0d2eca"
+    },
+    {
+      "archive_path": "owned_fixture_plan.py",
+      "bytes": 4532,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_plan.py",
+      "reconstruction_path": "owned_fixture_plan.py",
+      "sha256": "6f49c5f5d7f9154e0a1b9e0a69171aa04a1125f8522ed63725087fbea6303c69"
+    },
+    {
+      "archive_path": "owned_fixture_records.py",
+      "bytes": 8014,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_records.py",
+      "reconstruction_path": "owned_fixture_records.py",
+      "sha256": "728c1f178cb3a6f8e1a88f0229d8a691fb11d11bd8b090e07c480c0ec5b88300"
+    },
+    {
+      "archive_path": "owned_fixture_retained.py",
+      "bytes": 24975,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_retained.py",
+      "reconstruction_path": "owned_fixture_retained.py",
+      "sha256": "d1b09bc4eae7f41593557fc028ee03289953c8a5b7c8f5cdb205d8807bfc70a2"
+    },
+    {
+      "archive_path": "owned_fixture_setup.py",
+      "bytes": 14476,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_setup.py",
+      "reconstruction_path": "owned_fixture_setup.py",
+      "sha256": "d38a8559710f67ba8cae32ee997d4e867d8a518856b02181d60a4ea891a925fe"
+    },
+    {
+      "archive_path": "owned_fixture_system.py",
+      "bytes": 6282,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_system.py",
+      "reconstruction_path": "owned_fixture_system.py",
+      "sha256": "bfc620d4a5432ad818e19e20e61dda94fc1d52a6a902c48f3fa01bec6db5dbbd"
+    },
+    {
+      "archive_path": "owned_fixture_witnesses.py",
+      "bytes": 11441,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_witnesses.py",
+      "reconstruction_path": "owned_fixture_witnesses.py",
+      "sha256": "3530284ed90730b5c78f277c195d10b20103924806c5d0ca6091f1e20789acd8"
+    },
+    {
+      "archive_path": "owned_pin_sentinel.py",
+      "bytes": 1675,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_pin_sentinel.py",
+      "reconstruction_path": "owned_pin_sentinel.py",
+      "sha256": "137a98436b58c29d6d28749d3e4857a1bfb7d0be729e249703922ca33e2712eb"
+    },
+    {
+      "archive_path": "owned_pin_system.py",
+      "bytes": 3330,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_pin_system.py",
+      "reconstruction_path": "owned_pin_system.py",
+      "sha256": "d405265534ce65b14a7d062a2d722c43fca8d0a844791be4e65d9a9034eb30ca"
+    },
+    {
+      "archive_path": "owned_recovery_core.py",
+      "bytes": 2211,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_recovery_core.py",
+      "reconstruction_path": "owned_recovery_core.py",
+      "sha256": "422b5e7438fad31c944af501d34bee52ad72a287dd180f19ba15233951bc49f2"
+    },
+    {
+      "archive_path": "owned_recovery_host.py",
+      "bytes": 31198,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_recovery_host.py",
+      "reconstruction_path": "owned_recovery_host.py",
+      "sha256": "58fdae455d5151a2f9694b67bf2fc5904cbf35aa7614ce2b319018bcc9768782"
+    },
+    {
+      "archive_path": "test_owned_fixture_coordinator.py",
+      "bytes": 17612,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/test_owned_fixture_coordinator.py",
+      "reconstruction_path": "test_owned_fixture_coordinator.py",
+      "sha256": "eb5ddc43dbbb23f0c2844ac82eb792db804df8c8aa62307acfd5f320817b3c75"
+    },
+    {
+      "archive_path": "test_owned_fixture_pin.py",
+      "bytes": 7626,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/test_owned_fixture_pin.py",
+      "reconstruction_path": "test_owned_fixture_pin.py",
+      "sha256": "b3be3df73d2c6f998a6e09ea2ce293314fd8f42b487419728ffb138b163108f9"
+    },
+    {
+      "archive_path": "test_owned_recovery_host.py",
+      "bytes": 23448,
+      "original_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/test_owned_recovery_host.py",
+      "reconstruction_path": "test_owned_recovery_host.py",
+      "sha256": "fad4c04716ec311922fbbdaa61ba0840ab41e77a0d9de1a0ead73802ced293d5"
+    }
+  ],
+  "core_archive": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-maintenance/production-preparation-04/archive-manifest.json",
+    "sha256": "e3483d7b3ce74e7879ec0fd82bd99aa082f21329d52aaa20fe181a020c55beca"
+  },
+  "created_at": "2026-10-16T19:27:36.451964+00:00",
+  "final_enabled_release_acceptance": false,
+  "fixture_execution_enabled": false,
+  "historical_receipt_note": "Earlier receipts retain their original source hashes and outcomes. They are superseded for current-source testing by combined02. This archive contains final reviewed source, not reconstructed earlier drafts.",
+  "historical_receipts_retained": [
+    "evidence/host-cpu-tests-01.json",
+    "evidence/combined-cpu-tests-01.json"
+  ],
+  "independent_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/independent-source-review-01.json",
+    "sha256": "7b5d75d300d652292daf634d266f152be4244cee014094ff447be9d59fa7d1a6"
+  },
+  "original_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01",
+  "production_qualified": false,
+  "remaining": [
+    "Fresh passing observed host admission and supervised14-case actual-service matrix.",
+    "Fresh accepted release and supervised9-case numerical restore qualification.",
+    "Final release-byte alignment, exact owned OS interruption/continuation/cleanup fixture and independent review.",
+    "Measured revalidation cost and reviewed maintenance duration before live drain.",
+    "Current production alignment and narrow interactive administrator handoff only when final requirement."
+  ],
+  "schema": "owned_recovery_fixture_preparation_archive_v1",
+  "scope": "disabled_preparation_only",
+  "stdlib_tests_passed": 41
+}

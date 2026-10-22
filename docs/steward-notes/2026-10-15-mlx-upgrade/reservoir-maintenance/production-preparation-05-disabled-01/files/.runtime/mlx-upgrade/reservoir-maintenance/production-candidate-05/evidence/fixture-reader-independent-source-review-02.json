@@ -1,0 +1,111 @@
+{
+  "accepted_for_guarded_stdlib_test_preparation": true,
+  "actual_os_fixture_accepted": false,
+  "created_at": "2026-10-17T01:46:00.727183+00:00",
+  "exact_worker": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py",
+    "sha256": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418"
+  },
+  "new_finding": {
+    "delta_verified": "Each runtime reader file differs from its archived prior version by exactly one candidate-to-candidate-v2 path string. Tests add only ast import and the focused source dependency regression.",
+    "fix": "Both reader strings now match the actual producer WORKER_SOURCE. A new AST-only test verifies the actual producer expression and both function-local reader references without importing Host.",
+    "issue": "Producer release keys and copied worker authority use candidate-v2/maintenance_fixture_worker.py, but the reader required candidate/maintenance_fixture_worker.py in both release-set and copied-worker checks. Exact key equality made a legitimate producer result fail.",
+    "status": "resolved_before_reader_test_execution"
+  },
+  "preserved_prior_source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-source-checkpoint-01/manifest.json",
+    "sha256": "d3520a57f9d42b23cc8756038bfaeb48e315cabf3f9638662c78885ab3d3cf35"
+  },
+  "producer_artifact_hashes_verified": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/README.md": "77a23e0d16a782c165d513e616b64556a3c192820f5f83445790e44874631a41",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_cleanup.py": "5637d6269990e70b9ec0dbc6505173d891171f7dfbeca4c543ca4364c4097a66",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_cleanup_host.py": "3aa97ac474aa77d67d2617435823c802a5e725526967af3d7b98a26f489f6ace",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_coordinator.py": "8916fab1874d6790e3e222b06353e3776fd83c1765500e7e2f64df03f9b1cd8f",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_injection.py": "fb4fac96f776fb615ad26fef3db43856f70e7f7ea0c348a76100021a3a714fc0",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_pin.py": "99f2522f163ba303fd28b71d802dc5bcf749447b29a3f6449e9bccf5da0d2eca",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_plan.py": "6f49c5f5d7f9154e0a1b9e0a69171aa04a1125f8522ed63725087fbea6303c69",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_records.py": "728c1f178cb3a6f8e1a88f0229d8a691fb11d11bd8b090e07c480c0ec5b88300",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_result.py": "823ce8eb4a036711d8c5b46b6458402a6f2bce6f1af59a4c6a1920edf08e46b2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_retained.py": "d1b09bc4eae7f41593557fc028ee03289953c8a5b7c8f5cdb205d8807bfc70a2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_run.py": "c5c7117abce79963d22aed713f9d3fee388b6d4d060eda71357ac29f52ac775d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_setup.py": "731d9243f9e6afc8c019edaf2c13b700d6c896a91e68678d183d50e81e48d28b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_system.py": "96a95258ae81652f5ad3e1bf222f9159163ad134e6dd7113d16fbabeb6576817",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_witnesses.py": "3530284ed90730b5c78f277c195d10b20103924806c5d0ca6091f1e20789acd8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_pin_sentinel.py": "1e8008dfb6f2d245232d229e30bd41d3765615ed6f13123993c0776bafdb6829",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_pin_system.py": "60897105636e29b6a986f7983e2d6514c7237243e45c34f3c0dd3d00c20493da",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_core.py": "111041830169d70bafa98ab54bd2a6f4c76f7d26a7910dc3a68a984d53f2ab15",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_host.py": "0fa54ce45e72452fb01108360dc0c48aade212cfc47de77fdf0167a45aba286a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/raw-proof-interface-01.json": "cdfbcbf855401cca73494e16d1b0e409befb78243f4249dc67a9b63c58b932c3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/raw-proof-interface-02.json": "c533c430717c064adb4a918f904fcfb2608824251458666a86cc011395343996",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-parent-01.json": "d8c473de1d8c1c12285936f9ec6abba870bf35fd112fc4f3e6f3d3fe169aa10f",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_coordinator.py": "06051d8ec4f62cd4c6a53aa995b4512d62c746b29efa9cd01942ecee1f247aa3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_pin.py": "b3be3df73d2c6f998a6e09ea2ce293314fd8f42b487419728ffb138b163108f9",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_run.py": "a49a0f9fce2cb31cf5e4c7811409ba8cc24eda3e7446825df8f9917e9fd03f26",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_recovery_host.py": "e3e43d76d3ceb0b01188fc0f2f6b5b3d0c9acb04a6de83738aa3047708da77ef"
+  },
+  "producer_checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-checkpoint-03.json",
+    "sha256": "8a2798806dd6524deb188bc64c531403652f65e07e53afdcef0f09900e00a68d"
+  },
+  "production_qualified": false,
+  "reader_artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_fixture_admission.py": "69f85904322db994707432d9f288df8e485607b6a1a6cc1a1ee7253a2bbd961a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_fixture_history.py": "506bd5cfeeda0dcb2315ec601aaa29e54eae58fa117310f5d60ffc66b83e8013",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_fixture_admission.py": "a58e4fa279710ed4f67a9c27f072bfb59d677e938874d8bbc1be8f848b8aa7d1"
+  },
+  "reason_for_superseding": "The previous source review missed an exact worker dependency path mismatch. Its unqualified no-blocker conclusion is superseded; previous evidence is retained unchanged.",
+  "remaining_concrete_release_requirements": [
+    "Complete corrected-reader guarded validation under root release; no tests were run by this reviewer.",
+    "Freeze and independently review the exact final enabled05 core and fixture02 bytes with source/interpreter/worker/hold closure and unchanged independent execution-review, ownership, preparation and plan gates.",
+    "Create the exact finite owned fixture release and execute its71-step schedule only under root-authorized OS release; retain raw natural exits, interruptions, recovery, cleanup, pin and independent after-parent absence.",
+    "Run the pure reader against that exact new raw result and independent review; no disabled04/05 fake evidence transfers to final enabled or ProductionHost acceptance."
+  ],
+  "remaining_source_blockers": [],
+  "retained_prior_findings": [
+    "Exact Host/pin interruption boundary and final absence timestamp fixes remain unchanged.",
+    "Exact 71-executor/23-injection schedule, three parent sessions, complete session inventory, 22/7 final versus11/7 backup and raw absence/parent closeout requirements remain unchanged."
+  ],
+  "review_operations": {
+    "compilation": 0,
+    "numeric_workloads": 0,
+    "os_actions": 0,
+    "runtime_probes": 0,
+    "source_edits": 0,
+    "target_imports": 0,
+    "test_runs": 0
+  },
+  "reviewer": "/root/mlx_upstream",
+  "runner_review": {
+    "limits": [
+      "This is a reviewed-test guard, not a general filesystem security sandbox.",
+      "Original runner pins superseded reader hashes and37 methods; it must remain preserved, with a fresh runner and output for the corrected38-method reader test.",
+      "A passing fake suite is not actual OS, numerical restoration, ProductionHost or production pin schedule acceptance."
+    ],
+    "no_guard_blocker_found_for_reviewed_tests": true,
+    "runner": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture02_reader05_tests_01.py",
+      "sha256": "35b4c9b3ac8641839567451921c6f3a0da5d9ee316c2030e0dad5aa1cb8b68a8"
+    },
+    "scope": "original fixture62 guarded fake runner and original reader37 checkpoint only",
+    "verified_features": [
+      "Import guard precedes test import and forbids numerical/hardware/service modules.",
+      "Audit denies subprocess, sockets, ctypes, process exec/fork/spawn and signal events.",
+      "Pre/post hashes cover all core05/fixture02 Python sources, fixed helpers, checkpoint03 artifacts and runner; checks all three source flags false and no remaining real run-directory name change.",
+      "Reviewed injection test supplies inert exit callback; tests use FakeIO and owned temporary evidence.",
+      "Separate exclusive scope-specific output and log receipts prevent overwritten results."
+    ]
+  },
+  "runtime_execution_authorized": false,
+  "schema": "reservoir_fixture_reader_independent_source_review_v2",
+  "scope": "source_only_disabled_preparation",
+  "supersedes": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-independent-source-review-01.json",
+    "sha256": "c75eaf1cac885714b99373ab2ddb7485d1f41abbbd1a86b85fd54663c00d0986"
+  },
+  "test_status": {
+    "authored_methods": 38,
+    "executed_by_this_reviewer": 0,
+    "reader_tests_run_at_review": false
+  },
+  "worker_semantics_unchanged_from_original": true
+}

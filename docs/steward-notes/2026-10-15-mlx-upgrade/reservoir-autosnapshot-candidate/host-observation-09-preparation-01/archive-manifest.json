@@ -1,0 +1,33 @@
+{
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-bindings.json": {
+      "copy": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/host-observation-09-preparation-01/host-settle-09-bindings.json",
+      "sha256": "0d0de21af432a19c1f612840025238f6f2197452c3d5ea9d2a6c7207073045a2"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-observer.py": {
+      "copy": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/host-observation-09-preparation-01/host-settle-09-observer.py",
+      "sha256": "7ae1c4946ad83a5a696c3dba8d89fbe612fb4ec20406a3ac886a1b5fe72e8f51"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-source-review.json": {
+      "copy": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/host-observation-09-preparation-01/host-settle-09-source-review.json",
+      "sha256": "3efdc12766d60da961483bd24599f4a62f2a3f4c8a9e31a438f56e53441ba01f"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-run03-source-review-01.json": {
+      "copy": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/host-observation-09-preparation-01/matrix-host-supervision-v2-run03-source-review-01.json",
+      "sha256": "454b2242a39ca4b986ee17c296b923916d4b282e332c97b9929c8551d892e18e"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2_run03.py": {
+      "copy": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/host-observation-09-preparation-01/matrix_host_supervision_v2_run03.py",
+      "sha256": "633adcb5f4ead6cec38b16bee98956ffb0005c2d111d17b104b60cc9c30a876a"
+    }
+  },
+  "created_at": "2026-10-16T22:59:44.751590+00:00",
+  "executed": false,
+  "production_mutations": false,
+  "protected_files": 237,
+  "protected_processes": 7,
+  "schema": "reservoir_host_preparation_archive_v1",
+  "scope": "Strict09 window and v2 run03 fresh instances only. Preserved08 and02 evidence are historical; require fresh preflight, completed09 acceptance and fresh live03 coverage. No numerical or production authorization.",
+  "state": "source_reviewed_not_executed",
+  "steward_pause_generation": 528
+}

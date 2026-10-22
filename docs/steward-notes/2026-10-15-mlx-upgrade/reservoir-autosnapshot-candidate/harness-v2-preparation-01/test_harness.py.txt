@@ -1,0 +1,271 @@
+"""Stdlib checks only: never import service_child or numeric/network packages."""
+from __future__ import annotations
+
+import ast
+import copy
+import json
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common import HARNESS, ImportGuard, digest, read_events, write_json
+from driver import private_path
+from process_identity import (identity, interpreter, interpreter_paths, parse_identity, same_identity,
+                              validate_launched_identity, launch_transition)
+from fixture import COUNT, NAMES, push_payload
+from result_checks import verify_result, verify_retained_files, verify_process_evidence
+from review_matrix import review
+from snapshot_oracle import compare_fields, thermostat_signature
+
+
+def fake_result(variant="candidate", case="normal"):
+    count = 7 if variant == "candidate" and case.startswith("cancel") else COUNT
+    rows = [{"name": name, "phase": phase, "passed": True, "started_mono": index,
+             "completed_mono": index + 4}
+            for phase, names in (("periodic", NAMES[:count]), ("final", NAMES))
+            for index, name in enumerate(names)]
+    if case == "writer-error":
+        rows[33].update(passed=False, prior_file_preserved=True)
+    restore = {name: {"preserved": True} for name in NAMES}
+    child = {"exit_code": 0, "preservation_passed": True, "event_sequence_continued": True,
+             "restore_one": restore, "restore_two": restore, "roundtrip_files": dict.fromkeys(NAMES, {}),
+             "fixture_sha256": "a" * 64, "writer_rows": rows, "auto_cancellation_seen": True}
+    timeout = case == "single" or case == "aggregate" and variant == "original"
+    probes = []
+    for index in range(3 if case == "aggregate" else 1):
+        probes.append({"open_timeout": 2, "receive_timeout": 5, "application_sent": not timeout,
+                       "acknowledged": not timeout, "passed": not timeout,
+                       "error_type": "TimeoutError" if timeout else None,
+                       "error": "timed out while waiting for handshake response" if timeout else None,
+                       "started_mono": 1.1 + index, "ack_mono": 2 + index,
+                       "trigger": {"phase": "periodic", "mono": 1 + index}})
+    child["pushes"] = [{}] * (0 if timeout else len(probes))
+    events = [{"event": "batch_end", "phase": "periodic", "mono": 30}]
+    return probes, child, events
+
+
+def fake_framework(root):
+    base = root / "Python.framework/Versions/3.12"
+    wrapper = base / "bin/python3.12"; runtime = base / "Resources/Python.app/Contents/MacOS/Python"
+    wrapper.parent.mkdir(parents=True); runtime.parent.mkdir(parents=True)
+    wrapper.write_bytes(b"inert launcher bytes"); runtime.write_bytes(b"inert runtime bytes")
+    alias = root / "venv/bin/python"; alias.parent.mkdir(parents=True); alias.symlink_to(wrapper)
+    binding = interpreter(alias)
+    command = [str(alias), "-I", "-B", str(HARNESS / "service_child.py"), "--case", "normal"]
+    launched = {"pid": 123, "started_at": "Thu Oct 15 20:31:05 2026", "command": " ".join(command)}
+    ready = {**launched, "command": " ".join([str(runtime), *command[1:]])}
+    return command, binding, launched, ready
+
+
+class ReceiptTests(unittest.TestCase):
+    def test_incomplete_matrix_cannot_be_accepted(self):
+        with self.assertRaises(ValueError): review([])
+
+    def test_all_planned_cases_have_distinct_expected_outcomes(self):
+        for variant in ("original", "candidate"):
+            for case in ("normal", "aggregate", "single", "writer-error", "cancel", "cancel-delayed-final"):
+                with self.subTest(variant=variant, case=case):
+                    probes, child, events = fake_result(variant, case)
+                    self.assertTrue(verify_result(variant, case, probes, child, events)["passed"])
+
+    def test_incomplete_or_weakened_receipts_fail(self):
+        def missing_restore(p, c, e): c["restore_two"].pop(NAMES[-1])
+        def lost_final(p, c, e): c["writer_rows"].pop()
+        def bad_timeout(p, c, e): p[0]["receive_timeout"] = 2
+        def lost_ack(p, c, e): p[0]["acknowledged"] = False
+        def missing_fixture(p, c, e): c.pop("fixture_sha256")
+        def missing_files(p, c, e): c["roundtrip_files"].pop(NAMES[-1])
+        for change in (missing_restore, lost_final, bad_timeout, lost_ack, missing_fixture, missing_files):
+            with self.subTest(change=change.__name__):
+                p, c, e = fake_result()
+                change(p, c, e)
+                with self.assertRaises(ValueError): verify_result("candidate", "normal", p, c, e)
+
+    def test_negative_control_cannot_hide_application_send(self):
+        p, c, e = fake_result("original", "aggregate")
+        p[0]["application_sent"] = True
+        with self.assertRaises(ValueError): verify_result("original", "aggregate", p, c, e)
+
+    def test_late_trigger_and_after_batch_ack_fail(self):
+        for key, value in (("started_mono", 2), ("ack_mono", 31)):
+            p, c, e = fake_result("candidate", "aggregate")
+            p[0][key] = value
+            with self.assertRaises(ValueError): verify_result("candidate", "aggregate", p, c, e)
+
+    def test_cancellation_and_single_delay_evidence_required(self):
+        p, c, e = fake_result("candidate", "cancel")
+        c["auto_cancellation_seen"] = False
+        with self.assertRaises(ValueError): verify_result("candidate", "cancel", p, c, e)
+        p, c, e = fake_result("candidate", "single")
+        c["writer_rows"][0]["completed_mono"] = 1
+        with self.assertRaises(ValueError): verify_result("candidate", "single", p, c, e)
+
+    def test_file_hashes_and_owned_paths_required(self):
+        with tempfile.TemporaryDirectory(dir=HARNESS) as name:
+            root = Path(name)
+            for filename in ("one.npz", "one.json"):
+                (root / filename).write_bytes(b"synthetic bytes only")
+            files = {"npz_path": str(root / "one.npz"), "npz_sha256": digest(root / "one.npz"),
+                     "thermostat_path": str(root / "one.json"), "thermostat_sha256": digest(root / "one.json")}
+            child = {"writer_rows": [{"passed": True, "files": files}], "roundtrip_files": {}}
+            verify_retained_files(child, root)
+            (root / "one.npz").write_bytes(b"changed")
+            with self.assertRaises(ValueError): verify_retained_files(child, root)
+
+
+class ProcessIdentityTests(unittest.TestCase):
+    def test_readonly_process_reader_and_strict_parse(self):
+        from types import SimpleNamespace
+        def reader(command, **kwargs):
+            self.assertEqual(command, ["/bin/ps", "-ww", "-p", "123", "-o", "pid=", "-o", "lstart=", "-o", "command="])
+            self.assertEqual(kwargs["env"]["LC_ALL"], "C")
+            return SimpleNamespace(stdout=" 123 Thu Oct 15 20:31:05 2026 /python -I /private/child.py --case normal\n")
+        result = identity(123, reader)
+        same_identity(result, dict(result))
+        for text in ("", "124 Thu Oct 15 20:31:05 2026 /python", "123 unknown /python"):
+            with self.subTest(text=text), self.assertRaises(ValueError): parse_identity(text, 123)
+        with self.assertRaises(ValueError): same_identity(result, {**result, "started_at": "Thu Oct 15 20:31:06 2026"})
+
+    def test_framework_runtime_requires_both_exact_files(self):
+        with tempfile.TemporaryDirectory(dir=HARNESS) as name:
+            base = Path(name) / "Python.framework/Versions/3.12"
+            launcher = base / "bin/python3.12"
+            launcher.parent.mkdir(parents=True)
+            launcher.write_bytes(b"fake launcher")
+            with self.assertRaises(ValueError): interpreter_paths(launcher)
+            runtime = base / "Resources/Python.app/Contents/MacOS/Python"
+            runtime.parent.mkdir(parents=True)
+            runtime.write_bytes(b"fake runtime")
+            self.assertEqual(interpreter_paths(launcher), {launcher.resolve(), runtime.resolve()})
+
+    def test_process_evidence_requires_both_separate_stable_processes(self):
+        with tempfile.TemporaryDirectory(dir=HARNESS) as name:
+            root = Path(name); command, runtime, launched, ready = fake_framework(root)
+            parent_identity = {**ready, "pid": 99, "command": "/python driver.py"}
+            manifest = root / "sources.json"; write_json(manifest, {"expected_interpreter": runtime})
+            parent = {"client_identity_before": parent_identity, "client_identity_after": parent_identity,
+                      "child_identity_launched": launched, "child_identity_ready": ready,
+                      "child_identity_before_shutdown": ready, "child_pid": 123, "interpreter": runtime,
+                      "command": command, "manifest": str(manifest), "manifest_sha256": digest(manifest),
+                      "child_interpreter_transition": launch_transition(launched, ready, command, runtime)}
+            child = {"process_identity_before": ready, "process_identity_after_listener": ready,
+                     "process_identity_after_restore": ready, "pid": 123, "interpreter": runtime}
+            verify_process_evidence(parent, child)
+            for key in ("process_identity_after_listener", "process_identity_after_restore", "interpreter"):
+                altered = dict(child); altered.pop(key)
+                with self.subTest(key=key), self.assertRaises(ValueError): verify_process_evidence(parent, altered)
+            altered = dict(parent); altered["client_identity_before"] = altered["client_identity_after"] = ready
+            with self.assertRaises(ValueError): verify_process_evidence(altered, child)
+            for key in ("child_interpreter_transition", "child_identity_before_shutdown", "manifest_sha256"):
+                altered = copy.deepcopy(parent)
+                if key == "child_interpreter_transition": altered[key]["kind"] = "forged"
+                elif key == "child_identity_before_shutdown": altered[key] = launched
+                else: altered[key] = "0" * 64
+                with self.subTest(key=key), self.assertRaises(ValueError): verify_process_evidence(altered, child)
+
+    def test_exact_initial_framework_transition_and_already_steady_identity(self):
+        with tempfile.TemporaryDirectory(dir=HARNESS) as name:
+            command, runtime, launched, ready = fake_framework(Path(name))
+            validate_launched_identity(launched, command, runtime)
+            proof = launch_transition(launched, ready, command, runtime)
+            self.assertEqual(proof["kind"], "exact_framework_reexec")
+            self.assertEqual(proof["launched"], launched); self.assertEqual(proof["steady_identity"], ready)
+            self.assertEqual(launch_transition(ready, ready, command, runtime)["kind"], "already_steady")
+            with self.assertRaises(ValueError): same_identity(launched, ready)  # The general guard stays strict.
+
+    def test_initial_wrong_interpreter_argv_pid_or_start_is_not_normalized(self):
+        with tempfile.TemporaryDirectory(dir=HARNESS) as name:
+            command, runtime, launched, ready = fake_framework(Path(name))
+            wrong = [({**launched, "command": "/unreviewed/python " + " ".join(command[1:])}, ready),
+                     ({**launched, "command": launched["command"] + " --extra"}, ready),
+                     (launched, {**ready, "command": ready["command"] + " --extra"}),
+                     (launched, {**ready, "command": ready["command"].replace("service_child.py", "other_child.py")}),
+                     (launched, {**ready, "command": ready["command"].replace("--case normal", "--case aggregate")}),
+                     (launched, {**ready, "pid": 124}),
+                     (launched, {**ready, "started_at": "Thu Oct 15 20:31:06 2026"}),
+                     (ready, launched)]
+            for first, final in wrong:
+                with self.subTest(first=first, final=final), self.assertRaises(ValueError):
+                    launch_transition(first, final, command, runtime)
+
+    def test_current_interpreter_hash_and_exact_family_required(self):
+        with tempfile.TemporaryDirectory(dir=HARNESS) as name:
+            command, runtime, launched, ready = fake_framework(Path(name))
+            for key in ("sha256", "resolved", "executable", "files"):
+                altered = copy.deepcopy(runtime)
+                if key == "files": altered[key].pop(next(p for p in altered[key] if p != altered["resolved"]))
+                else: altered[key] = "0" * 64 if key == "sha256" else "/unreviewed/python"
+                with self.subTest(key=key), self.assertRaises(ValueError):
+                    launch_transition(launched, ready, command, altered)
+            runtime_path = Path(next(p for p in runtime["files"] if p != runtime["resolved"]))
+            runtime_path.write_bytes(b"changed runtime bytes")
+            with self.assertRaisesRegex(ValueError, "family/hash"):
+                launch_transition(launched, ready, command, runtime)
+
+
+class OracleTests(unittest.TestCase):
+    def test_no_missing_or_changed_snapshot_fields(self):
+        expected = {"fields": {"h1": {"dtype": "float32", "shape": [1, 192], "sha256": "a"}},
+                    "last_live_wall_time": 10}
+        actual = {**expected["fields"], "timestamp": {"dtype": "float64", "shape": [], "scalar": 20},
+                  "last_live_wall_time": {"dtype": "float64", "shape": [], "scalar": 10}}
+        compare_fields(expected, actual, started_wall=19, completed_wall=21)
+        for change in ("missing", "array", "clock", "extra"):
+            candidate = copy.deepcopy(actual)
+            if change == "missing": candidate.pop("h1")
+            if change == "array": candidate["h1"]["sha256"] = "b"
+            if change == "clock": candidate["timestamp"]["scalar"] = 22
+            if change == "extra": candidate["extra"] = {}
+            with self.assertRaises(ValueError): compare_fields(expected, candidate, started_wall=19, completed_wall=21)
+
+    def test_thermostat_digest_binds_values_and_order(self):
+        initial = [{"rho": .9, "buffer_tail": [[1, 2]]}, {"rho": .8, "buffer_tail": [[3, 4]]}]
+        self.assertNotEqual(thermostat_signature(initial), thermostat_signature(list(reversed(initial))))
+        changed = copy.deepcopy(initial)
+        changed[0]["buffer_tail"][0][0] = 9
+        self.assertNotEqual(thermostat_signature(initial), thermostat_signature(changed))
+
+
+class BoundaryTests(unittest.TestCase):
+    def test_gpu_guard_and_private_output(self):
+        guard = ImportGuard()
+        for name in ("mlx", "mlx.core", "mlx_lm.generate", "coremltools"):
+            with self.assertRaises(ImportError): guard.find_spec(name)
+        self.assertIsNone(guard.find_spec("numpy"))
+        with self.assertRaises(ValueError): private_path("/Users/v/other/neural-triple-reservoir/state")
+
+    def test_event_reader_does_not_parse_partial_record(self):
+        with tempfile.TemporaryDirectory(dir=HARNESS) as name:
+            path = Path(name) / "events"
+            path.write_bytes(b'{"event":"ready"}\n{"event":')
+            self.assertEqual(read_events(path), [{"event": "ready"}])
+
+    def test_request_has_native_full_state_and_quiet_hint(self):
+        request = push_payload(1)
+        import base64
+        self.assertEqual(len(base64.b64decode(request["h1"])), 192 * 4)
+        self.assertEqual(request["meta"]["rehearsal_hint"]["mode"], "quiet")
+
+    def test_child_and_driver_have_no_forced_termination(self):
+        for name in ("service_child.py", "driver.py"):
+            tree = ast.parse((HARNESS / name).read_text())
+            forbidden = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
+                         and isinstance(node.func, ast.Attribute)
+                         and node.func.attr in {"kill", "terminate", "send_signal"}]
+            self.assertEqual(forbidden, [])
+        tree = ast.parse((HARNESS / "service_child.py").read_text())
+        imports = [node for node in tree.body if isinstance(node, (ast.Import, ast.ImportFrom))]
+        rendered = "\n".join(ast.unparse(node) for node in imports)
+        self.assertNotIn("numpy", rendered)
+        self.assertNotIn("reservoir_service", rendered)
+        self.assertNotIn("torch", rendered)
+
+    def test_tests_import_no_real_service_or_numeric_packages(self):
+        for name in ("numpy", "torch", "reservoir_service", "websockets", "mlx", "coremltools", "socket"):
+            self.assertNotIn(name, sys.modules)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

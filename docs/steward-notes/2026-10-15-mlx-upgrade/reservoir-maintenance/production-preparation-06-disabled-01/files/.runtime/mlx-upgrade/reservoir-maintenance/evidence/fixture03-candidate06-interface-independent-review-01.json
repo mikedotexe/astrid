@@ -1,0 +1,49 @@
+{
+  "accepted_direction": true,
+  "actual_fixture_qualified": false,
+  "contract_checked": [
+    "Fixed71 executors and74 parent actions retained. Only two named held_verified/reconcile steps obtain readiness evidence; exact five parent shared sessions include the three existing phases.",
+    "A parent-claim-bound locked readiness stage precedes authoritative full inspection/checkpoint/heads/request.90-second readiness acceptance consumes the existing300-second executor phase budget; preparing/sealing consumes the same budget.",
+    "Readiness binds retained successful debug/signal intent/results, prior executor natural exit, stable immutable heads, raw query links, exact ready holder/guard/old absence and unchanged other role. Child exact head/revalidation semantics remain unchanged.",
+    "Sibling native attempt root exists before initial identity queries and blocks blind attempt reuse. Parent plus71 possible executor callers use bounded append-only chains with direct Popen creation and natural return or explicit unresolved state; no timeout kill or retry.",
+    "Production sink design explicitly separates query-only preverified attempts from fixed transaction mutations; actual bootstrap/bootout/debug paths require verified recorder plus flags/session/role/source gates. Defaults do not silently construct native authority.",
+    "No prior failed fixture or successful abort acceptance transfers. Actual new implementation/source closure/guarded tests/final enabled release/owned fixture/raw independent acceptance remain pending."
+  ],
+  "execution_authorized": false,
+  "findings_requiring_design_change": [],
+  "implementation_accepted": false,
+  "implementation_constraints": [
+    "Nonzero natural query returns can prove absence only under their exact per-command status/output rules. Do not implement the interface narrative as a universal returncode-zero requirement: ps/lsof and missing-service launchctl cases intentionally accept specific nonzero returns. Mutation success still requires its precise successful result and effect proof.",
+    "Parent native commands must be tied to initial/setup/readiness/finalize ownership/time intervals, and query links must resolve to that exact command and phase. A matching allowed argv elsewhere in the run cannot substitute.",
+    "Before polling, hydrate only exact validated retained signal/debug reservations; fresh attach initially lacks signalled state. An early full authoritative inspection must not become a hidden prerequisite or authority.",
+    "Consumers must enforce all record counts/order/finite times, native child natural-reap evidence and no unresolved attempts, exact five sessions, full inventory bounds and after-parent absence. Claimed boolean readiness or elapsed metadata alone is insufficient.",
+    "Production incomplete mutation evidence remains a separate blocker; a later owned-holder appearance cannot erase an unresolved native child or authorize control replay. Review the upcoming recorder/adoption wiring, not just this design."
+  ],
+  "interface": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-candidate06-interface-01.json",
+    "sha256": "f59b561ebc0d6f5411ccf41c6686f696af217c96db130a048e9f6d520bc49034"
+  },
+  "preserved_design_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-candidate06-independent-design-review-01.json",
+    "sha256": "a467bb8533d06c5f1b0d59d74aebc95eab2f60da0cfd8afa206755c653059da2"
+  },
+  "production_qualified": false,
+  "production_sink_design": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production06-native-sink-design-01.json",
+    "sha256": "e9478f4f49a40f9357f200bfed340a7ff0bcd8fad991f3c0b9401b12e87b5354"
+  },
+  "reviewed_at": "2026-10-17T14:47:00.681774+00:00",
+  "reviewer": "codex-mlx-upstream",
+  "reviewer_operations": {
+    "process_queries": 0,
+    "service_calls": 0,
+    "signals": 0,
+    "source_edits": 0,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "schema": "fixture03_candidate06_interface_independent_review_v1",
+  "scope": "static_interface_and_native_sink_design_only",
+  "target_imports": false,
+  "tests_run": false
+}

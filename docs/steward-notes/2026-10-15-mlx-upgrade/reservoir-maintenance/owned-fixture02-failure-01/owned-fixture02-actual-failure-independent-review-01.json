@@ -1,0 +1,462 @@
+{
+  "actual_fixture_accepted": false,
+  "artifacts": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-01.json",
+      "sha256": "aa1273e375e376d51ea70be44b1bbb684f1a0a5c3fc96a7ca0bb5bc192ee215c"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/plan.json",
+      "sha256": "d30a5d9bcf1f859ae4dd1f52c1834c667b01fa8537a3a2ad694355d728a7aa32"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/preparation.json",
+      "sha256": "d1365b86574800f3b16a2e10d7ac055203ee76c844e2c186e2bc6a305cfcc8fe"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/fixture.owner.json",
+      "sha256": "b80b25708fee23aa9f77e0a76a6e97abf843370e203645f5aab34dd07ca8cbf4"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/host-operation-00001.json",
+      "sha256": "8b8eaec6b787f19a740ae9ddda87694555780a7617ad203c6e0134df1c22a115"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/host-operation-00002.json",
+      "sha256": "38873df3ab60d3f0043f411415b17c2718e6b2110148efa72cc914aad9027905"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/host-operation-00003.json",
+      "sha256": "b4f298b9f05c6e139c5ccb5df3a617578a8566c98a77fd5d9ba36c344f46f475"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/host-operation-00004.json",
+      "sha256": "96b68beb3c4cbf31c074b0dec27537fede440e9bb7a2765ea4d72190619986ff"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/host-operation-00005.json",
+      "sha256": "2e8ee958eb85819954698c162b3a8ff7d1e81d28c5d5d7ed762d5c745bac2849"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/host-operation-00006.json",
+      "sha256": "6d03162de36cd3385f003190a3356754ffffdfd185abc6aea766ee7ed76bfe73"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/07-resume-one-held-verified-provid/stderr",
+      "sha256": "cb986ce505257a37d7338e8ad3f56abb776a9f02cb02fa738d84ae6ec448b46f"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/07-resume-one-held-verified-provid/unresolved.json",
+      "sha256": "5114c88f50d2cffe07f4a13dc7d67f8c33d0ea4bbe28a0e43373c8a240a039ab"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/request.provider-9267-1413460269693791.json",
+      "sha256": "a1eceb64f2592544d59d3ab8743617ee97a7d8154e3fcbe1fc5379f769b92b4c"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/ack.provider-9267-1413460269693791.json",
+      "sha256": "ef5b1f4ca4356657d2f278e45bd1d070ffbdc292e54821d19bc1bc2217da88db"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/hold-provider/hold.json",
+      "sha256": "44e544e8f1caff8f7886521c5d24292d6e95550798aaca1b8a2fb037d4084a0e"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/hold-provider/held/10721.json",
+      "sha256": "5dcbdbc489815c62dd489c80701e447e435e08466ccbbd67e3d9ba85be9112fd"
+    }
+  ],
+  "chains": {
+    "controller": {
+      "count": 4,
+      "head_sha256": "f6319a27198294d78e780c3f28416adef0f2d48e7ff4a9caa1020619994b3e35",
+      "raw_records": [
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/controller/event-00001.json",
+          "sha256": "2287d525af6edf7088659c6cf085c0e513c566cb9a59abf65b271de26a6c3841"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/controller/event-00002.json",
+          "sha256": "ac2afcaf17150ef6f687fd5b50078b2eae78bc48bb4f50fde314f1c92cc6af9c"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/controller/event-00003.json",
+          "sha256": "3a98a56a9638a3197b1152995af69b63cc57d6ec524385485253ae30b58bc1d9"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/controller/event-00004.json",
+          "sha256": "fd0b7412bd2c904f22ab736a6354a83fdbb56f067629efdc00d70affee0fc9c4"
+        }
+      ]
+    },
+    "parent": {
+      "count": 14,
+      "head_sha256": "2f940e0d748f2097548707ed592acc275bf0a273cac663c01966205abc024f15",
+      "raw_records": [
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00001.json",
+          "sha256": "2c0b110cd0e731eb9c187409191d1634783a1b04e6d154ca5d91936815274a5f"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00002.json",
+          "sha256": "9917a330c471074dadb3d323f8237f4ff308242dff90fce424c27f54e7d4ea07"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00003.json",
+          "sha256": "6527c1fd5fa5afd414bc8b1d336130a0f0f451d7cfa35e130d421445caca0d21"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00004.json",
+          "sha256": "1da2ffe43b62b75d3690d853b763fad33377e53a7100a70dec35c6742d39310d"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00005.json",
+          "sha256": "9ca214cba046b94d06f0bcbf7920e9d75e37a789d48ce352282084394ccd06c2"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00006.json",
+          "sha256": "36a8629c1e1edfdc8460bdd06d3c6d6008b482a14678be741b4545b3374a78f2"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00007.json",
+          "sha256": "b64e4c9a699e784cf5a96709e17e32dfebf9a28ba2aba76dc5d60bab3674ea36"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00008.json",
+          "sha256": "1535a0463ef5ee37cbbf93399feb2bd52a6edcd1cd262d7519daa81713e46514"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00009.json",
+          "sha256": "c1cea439730cd5739cf60ffb1b175fc89113494366176f1eed0e3b3eaec2fd40"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00010.json",
+          "sha256": "90b8593e7483f07f1e4c8e49c8fb1d12fe2031ef138bfa2b48faabc0037cadf0"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00011.json",
+          "sha256": "8e8328b97bbccebda8ac8359cc99d5f34553eeae29ae0e9aab25ba7b5b253a3f"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00012.json",
+          "sha256": "483c7bb69f68f7e438725a58979c5289c9bbb9475d53fac2488ee03e48da29d3"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00013.json",
+          "sha256": "d894248121eb87a37a97756e6c297e5362873aafea5392ef90b12780fd00836d"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/parent/event-00014.json",
+          "sha256": "6f8c695b038b790daf57881bcdb3f5131f122d38e301e0b005da465910bda4ff"
+        }
+      ]
+    },
+    "recovery": {
+      "count": 7,
+      "head_sha256": "a08ba3c5da05256e451f66f0a8c99ce287a33497a73903d762659d8bb7e111db",
+      "raw_records": [
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/recovery/event-00001.json",
+          "sha256": "0aed3c673a7838eebafa487b0ece6ed93b45fef58c18ed79cb0ffc7ee1bc9abf"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/recovery/event-00002.json",
+          "sha256": "2ba12f078f49131d3e09895915cbc6572d085a7b480d52927c2201fc11d86980"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/recovery/event-00003.json",
+          "sha256": "6ea41ef56a71b05ec2c0988ca60668253192abeef8c7d5362af6c4caddd353d3"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/recovery/event-00004.json",
+          "sha256": "882a0d9fc8c8f965d4835d5a1aa2f3b6a7cbb498ae8229bc0eebf510a29f3ffe"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/recovery/event-00005.json",
+          "sha256": "75bad3c9689e91bbcd369a72d78e86397884e430ce4fe900ee0eb4a3059ede7b"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/recovery/event-00006.json",
+          "sha256": "5ff5198b8124f84b8edf7c944ee12008018973584ed1b7b2f34a1985148c6500"
+        },
+        {
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/recovery/event-00007.json",
+          "sha256": "afb782f814b5bf71e2c3a9a40ed7cfef0d7612a4150f8daa862c95ee96c34139"
+        }
+      ]
+    }
+  },
+  "diagnosis": {
+    "conclusion": "A premature observational scheduling failure, not evidence of failed check-in or lost state. Historical failure is not relabeled successful after the holder later appears.",
+    "failure_after_signal_s": 3.468576,
+    "holder_receipt_started_local": "Fri Oct 16 23:04:59 2026",
+    "immediate_cause": "The sealed step07 uses reconciliation for held_verified:provider. adopt_operation performs one observation and requires an already-published exact holder, so it refuses a correctly still-draining original worker.",
+    "intentional_drain_seconds": 6.0,
+    "observed_error": "ValueError: unknown command outcome; exact owned holder not observed",
+    "predicate_limitation": "The error does not retain the precise single inspect_role return. Timing proves step07 ended before the worker emitted checkin_sent/ACK/drained; holder receipt was published later.",
+    "provider_acknowledged_at": "2026-10-17T06:04:59.092091+00:00",
+    "provider_checkin_sent_at": "2026-10-17T06:04:58.969793+00:00",
+    "provider_drained_at": "2026-10-17T06:04:59.092968+00:00",
+    "provider_holder_receipt": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/hold-provider/held/10721.json",
+      "sha256": "5dcbdbc489815c62dd489c80701e447e435e08466ccbbd67e3d9ba85be9112fd"
+    },
+    "signal_sent_at": "2026-10-17T06:04:52.955072+00:00",
+    "step07_failure_reaped_at": "2026-10-17T06:04:56.423648+00:00",
+    "test_gap": "FakeIO.signal in test_owned_recovery_host.py:59\u201388 advances fake time six seconds and publishes drain/check-in/holder synchronously before returning. It does not model the real return-before-drain boundary."
+  },
+  "failure_confirmed": true,
+  "fixture_run": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2",
+  "frozen62_source_interpreter_hashes_match": true,
+  "limits": [
+    "No live ownership/liveness or production-impact claim is made from this file-only review; root owns those observations.",
+    "Recorded reaped and signals_sent=0 describe executor parent closeout; provider SIGTERM is separately documented in Host operations and was authorized fixture work.",
+    "The local primitive check-in/state is synthetic; this failure provides no production or MLX numerical acceptance."
+  ],
+  "operations_by_reviewer": {
+    "process_queries": 0,
+    "service_calls": 0,
+    "signals": 0,
+    "source_edits": 0,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "original_release_preserved": true,
+  "preservation_status": {
+    "current_process_liveness_not_observed_by_reviewer": true,
+    "durable_state_and_later_witness_paths_absent": [
+      "state.json",
+      "provider_drain-witness.json",
+      "final_snapshot-witness.json",
+      "backup-witness.json",
+      "private_restore-witness.json",
+      "stopped-backup",
+      "cleanup",
+      "pin"
+    ],
+    "first_checkin_request_id": "provider-9267-1413460269693791",
+    "full_cleanup_22_7_not_reached": true,
+    "logged_applied_state": {
+      "fixture_astrid": {
+        "ticks": 11
+      },
+      "fixture_minime": {
+        "ticks": 7
+      }
+    },
+    "no_reservoir_control_operation_in_retained_host_history": true,
+    "only_provider_hold_debug_signal_recorded": true,
+    "request_ack_and_worker_logs_correspond": true,
+    "step07_appended_host_operations": 0
+  },
+  "production_qualified": false,
+  "recovery_requirements": [
+    "Do not rerun the original parent, reuse its failed executor directory, erase unresolved/failure rows, replay provider debug/SIGTERM, or advance the old sealed schedule.",
+    "Use a separately reviewed owned-abort transaction and receipt, binding the exact failed release/root/owner/history heads and current host/boot. Root must independently verify old parent/all executors absent and exact current original reservoir plus provider holder/guard/listener ownership before any effect.",
+    "Independently bind the unique request/ACK and provider acknowledged/drained + reservoir applied11/7 records; an owned holder alone is not a provider check-in witness.",
+    "State.json has not been persisted. Preserve the live reservoir until a reviewed exact-target hold, one cooperative stop and natural drain establish final state11/7 with both per-handle save records and a matching final completion. Never bootout the stateful worker or copy its live state as final.",
+    "Remove only positively identified held/no-listener replacements after their exact old workers are absent; unknown debug, signal, bootstrap or removal outcomes stop without retry or force.",
+    "Retain original journals/failure/release/log prefixes. Later safe abort closeout can establish resource/state preservation, but cannot turn this failed71-step fixture into accepted qualification."
+  ],
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-01.json",
+    "sha256": "aa1273e375e376d51ea70be44b1bbb684f1a0a5c3fc96a7ca0bb5bc192ee215c"
+  },
+  "reviewed_at": "2026-10-17T06:08:41.343218+00:00",
+  "reviewer": "/root/mlx_integration",
+  "schema": "owned_fixture02_actual_failure_independent_review_v1",
+  "scope": "retained_files_and_frozen_source_only",
+  "source_refs": {
+    "driver": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery_driver.py",
+      "sha256": "a092c51499c353b53ddf4c09a43cf2d308ce951a535274f652cf755fb815d904"
+    },
+    "fake_tests": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_recovery_host.py",
+      "sha256": "e3e43d76d3ceb0b01188fc0f2f6b5b3d0c9acb04a6de83738aa3047708da77ef"
+    },
+    "host": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_host.py",
+      "sha256": "0fa54ce45e72452fb01108360dc0c48aade212cfc47de77fdf0167a45aba286a"
+    },
+    "parent": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_run.py",
+      "sha256": "c5c7117abce79963d22aed713f9d3fee388b6d4d060eda71357ac29f52ac775d"
+    },
+    "phases": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/recovery_phases.py",
+      "sha256": "df6e3e959f79e560dfbe8904cbf9546b79e27b2819f7f5b8ab1aa89bb6917389"
+    },
+    "plan": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_plan.py",
+      "sha256": "6f49c5f5d7f9154e0a1b9e0a69171aa04a1125f8522ed63725087fbea6303c69"
+    },
+    "production_retained": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_retained.py",
+      "sha256": "5c287b8757dfd7e8eb876fa8064edba7e4d51d11c179a0c3ed7274effe331a9b"
+    },
+    "retained": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_retained.py",
+      "sha256": "d1b09bc4eae7f41593557fc028ee03289953c8a5b7c8f5cdb205d8807bfc70a2"
+    },
+    "worker": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py",
+      "sha256": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418"
+    }
+  },
+  "steps": [
+    {
+      "actual_exit": 0,
+      "completed_at": "2026-10-17T06:04:43.516130+00:00",
+      "completed_wall_time_ns": 1792217083516130000,
+      "exit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/01-lock-hold-lock/exit.json",
+        "sha256": "2036e884897bdc38e8c0c2cfd31b74d5b1df9f0ed82c8777473ac9e1b4951f03"
+      },
+      "expected_exit": 0,
+      "pid": 9345,
+      "reaped": true,
+      "request": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/01-lock-hold-lock/request.json",
+        "sha256": "a7bcbd86789df4413363bf5bc5a9d14280223895f18d82d050313fff61215961"
+      },
+      "signals_sent": 0,
+      "step_id": "01-lock-hold-lock",
+      "timed_out": false
+    },
+    {
+      "actual_exit": 76,
+      "completed_at": "2026-10-17T06:04:43.361335+00:00",
+      "completed_wall_time_ns": 1792217083361335000,
+      "exit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/02-lock-refusal-lock/exit.json",
+        "sha256": "c09782316eed5017a7cca667a963d806c0fbc01076601429af08f63cef205051"
+      },
+      "expected_exit": 76,
+      "pid": 9389,
+      "reaped": true,
+      "request": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/02-lock-refusal-lock/request.json",
+        "sha256": "f59709de357594d51d39e89829ed8a5b3b296567cbfd8e34511a334b8c6c35e7"
+      },
+      "signals_sent": 0,
+      "step_id": "02-lock-refusal-lock",
+      "timed_out": false
+    },
+    {
+      "actual_exit": 75,
+      "completed_at": "2026-10-17T06:04:49.213427+00:00",
+      "completed_wall_time_ns": 1792217089213427000,
+      "exit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/03-fresh-arm-next-spawn-provi/exit.json",
+        "sha256": "d5a678b32dc6263b58313dbcf742d23e647d32b717be4a1f62ab8d87bb422e39"
+      },
+      "expected_exit": 75,
+      "pid": 9441,
+      "reaped": true,
+      "request": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/03-fresh-arm-next-spawn-provi/request.json",
+        "sha256": "99cc83f0c484b27c168d8923aa7747ee612141f64d658f573f315413b63c64f9"
+      },
+      "signals_sent": 0,
+      "step_id": "03-fresh-arm-next-spawn-provi",
+      "timed_out": false
+    },
+    {
+      "actual_exit": 0,
+      "completed_at": "2026-10-17T06:04:50.982587+00:00",
+      "completed_wall_time_ns": 1792217090982587000,
+      "exit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/04-resume-one-arm-next-spawn-provi/exit.json",
+        "sha256": "55eee40ba16cf0fb02dc314d9cda0e67d91abc2a3db9174757de873681c53d19"
+      },
+      "expected_exit": 0,
+      "pid": 9667,
+      "reaped": true,
+      "request": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/04-resume-one-arm-next-spawn-provi/request.json",
+        "sha256": "9e66b2e4d07a96acfbb6e3e35f0f09aa865e37cae3f87e40a07b206e12bc468e"
+      },
+      "signals_sent": 0,
+      "step_id": "04-resume-one-arm-next-spawn-provi",
+      "timed_out": false
+    },
+    {
+      "actual_exit": 75,
+      "completed_at": "2026-10-17T06:04:52.998031+00:00",
+      "completed_wall_time_ns": 1792217092998031000,
+      "exit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/05-resume-one-signal-stop-provider/exit.json",
+        "sha256": "3e52eb7b6d71318aebd35963efd2e890c003a6bcef9b2d0d602686e0114ea8fa"
+      },
+      "expected_exit": 75,
+      "pid": 9948,
+      "reaped": true,
+      "request": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/05-resume-one-signal-stop-provider/request.json",
+        "sha256": "920a8d67664f4b8023f9fecbf24ae273cc12b3e19547038fd82136e79a316910"
+      },
+      "signals_sent": 0,
+      "step_id": "05-resume-one-signal-stop-provider",
+      "timed_out": false
+    },
+    {
+      "actual_exit": 0,
+      "completed_at": "2026-10-17T06:04:54.721353+00:00",
+      "completed_wall_time_ns": 1792217094721353000,
+      "exit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/06-resume-one-signal-stop-provider/exit.json",
+        "sha256": "5f29e2c5aaa3bb3f6486d50fe23640061e66acf42c2ac8e9af1b9cdf7f35530f"
+      },
+      "expected_exit": 0,
+      "pid": 10253,
+      "reaped": true,
+      "request": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/06-resume-one-signal-stop-provider/request.json",
+        "sha256": "6ea89d70139a64bd44e4d62a7c6badbda344f6c08f4507c9dba3e4713d05fa31"
+      },
+      "signals_sent": 0,
+      "step_id": "06-resume-one-signal-stop-provider",
+      "timed_out": false
+    },
+    {
+      "actual_exit": 1,
+      "completed_at": "2026-10-17T06:04:56.423648+00:00",
+      "completed_wall_time_ns": 1792217096423648000,
+      "exit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/07-resume-one-held-verified-provid/exit.json",
+        "sha256": "cb8a2c159ca389ee32ae295b3e194c054e71059fc2c826661299eae966372c30"
+      },
+      "expected_exit": 0,
+      "pid": 10522,
+      "reaped": true,
+      "request": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/executors/07-resume-one-held-verified-provid/request.json",
+        "sha256": "eb36be24fe41f418640a5b47d00c2b0ff1bbb168c8c669f2c60a02a3282959ca"
+      },
+      "signals_sent": 0,
+      "step_id": "07-resume-one-held-verified-provid",
+      "timed_out": false
+    }
+  ],
+  "worker_log_prefixes": {
+    "provider.events.jsonl": {
+      "captured_bytes": 2103,
+      "captured_prefix_sha256": "491b4b91f2ba23a22bd1d135291379bb10a32e99c9e9acb354118968cf79310f",
+      "complete_lines": 7,
+      "device": 16777234,
+      "future_append_not_excluded": true,
+      "inode": 396518422,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/provider.events.jsonl"
+    },
+    "reservoir.events.jsonl": {
+      "captured_bytes": 1323,
+      "captured_prefix_sha256": "d12ea918e4fdc788d49d68392d41e0e0410195debdea6ca80778ba283fddf24f",
+      "complete_lines": 3,
+      "device": 16777234,
+      "future_append_not_excluded": true,
+      "inode": 396518407,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/reservoir.events.jsonl"
+    }
+  }
+}

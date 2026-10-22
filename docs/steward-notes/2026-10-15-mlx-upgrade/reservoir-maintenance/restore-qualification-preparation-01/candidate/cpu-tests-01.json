@@ -1,0 +1,62 @@
+{
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/README.md": "6baba4dd5e679aaf8b857098e86392694548af58a51b6a5afa92213a69a772ab",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/inputs.json": "f830793317e866c30f02770581713ff171e5309c36362c4f2f44c069090ab6e7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/qualify_restore.py": "12db8c1f5feddb30df279863b016f727e98c5f7a3961c1d47a6517219f0f55af",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/seed_fixture.py": "d7cad8c071b646862a469a3dffb27844b249e7c8b8ff0b80f1cd14022551c71f",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/test_qualification.py": "a6be8c150d940d8a2332b25cc3ceb346a8269d9147d2134aec4a6c9c6523db06"
+  },
+  "artifacts_unchanged": true,
+  "blocked_operation_attempts": [],
+  "default_check": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/default-check-01.json",
+    "sha256": "540262bb0858f0ee668372860fddc7b4a6016638b2bea6cb337ab2c5ba28476c"
+  },
+  "elapsed_seconds": 0.2420172921847552,
+  "errors": 0,
+  "failures": 0,
+  "finished_at": "2026-10-16T17:39:56.323293+00:00",
+  "forbidden_imports": [],
+  "input_artifact_count": 129,
+  "inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/inputs.json",
+    "sha256": "f830793317e866c30f02770581713ff171e5309c36362c4f2f44c069090ab6e7"
+  },
+  "log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/cpu-tests-01.txt",
+    "sha256": "d2d88ce179bea8616ab1659212bd129db31df12453f74e6f26c305dcee48c45a"
+  },
+  "no_launch_guard_exists": true,
+  "no_release_exists": true,
+  "original_verifier_preserved": true,
+  "passed": true,
+  "planned_cases": [
+    "complete",
+    "missing-sidecar",
+    "malformed-sidecar",
+    "corrupt-npz",
+    "schema-mismatch",
+    "config-mismatch",
+    "source-drift",
+    "package-drift",
+    "backup-drift"
+  ],
+  "production_qualified": false,
+  "python": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+  "python_sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43",
+  "python_version": "3.14.3 (main, Feb  3 2026, 15:32:20) [Clang 17.0.0 (clang-1700.6.3.2)]",
+  "real_numerical_executed": false,
+  "schema": "reservoir_restore_qualification_cpu_tests_v1",
+  "scope": "stdlib fake files and child objects only; audit hook rejects subprocess/network/signal operations",
+  "selected_verifier_equals_v2": true,
+  "started_at": "2026-10-16T17:39:56.110397+00:00",
+  "superseded_inputs_archive": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/superseded-v1/archive-manifest.json",
+    "sha256": "fdfc502e7117b8c1d70e9cd752ffb264a14cb2753430062b72b26578dc7ff098"
+  },
+  "tests": 16
+}

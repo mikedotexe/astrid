@@ -1,0 +1,92 @@
+{
+  "schema": "reservoir_disabled_production_integration_interface_v1",
+  "created_at": "2026-10-16T18:00:58.756165+00:00",
+  "scope": "version03 isolated preparation only",
+  "production_execution_enabled": false,
+  "production_controller_enabled": false,
+  "execution_cli": null,
+  "actual_numeric_cases_executed": 0,
+  "production_qualified": false,
+  "full_recovery_qualified": false,
+  "source_hashes": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/metadata_preflight.py": "3c2bce47648596f8988e0884081625f729d77856526c1b062f5078b68684d318",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_admission.py": "5cdd190c7ff23eca45e7a4f86054463e120b6921c5ef154618bb5f1f1e3b308d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_host.py": "032ad961a339d7bdeb9a61dd7aecc7864f9dd3d8067dea33d733a549d1fcad56",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_preflight.py": "48c81c1b60d8c49b3c6de5738c3e114f5173ec438ea2d5de1fd42cd21916baef",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_recovery.py": "970abaeb7eea7f23cd52d743da958021dafdf1a01bf72e70ac7e6768172ad5bc",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_recovery_inspect.py": "d1c40638b2ec12c87d55a25f619016978e272928b3bf8e4258e4feef99589bd4",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_restore_runner.py": "8b19eaa84b3ef19f99e80df3d7096a19150c1787ecf4fe48d61a75e7275c7a06",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/reservoir_maintenance.py": "09631605fcb28a6e9f8649980b729557a75a1c6c039775ff3c77f14f2c6487e8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_production_admission.py": "ff2b7fb1e8b62ddb7f4e1175cff462600a86447cc245b22cbb3acd4cc3c55d2c",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_production_controller.py": "abf198d3027dae327ae43097a98ecc8cb2805d3002f4c0ca266368541d5e1073",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_production_host.py": "03dcca8758bfbcdfb2a730481946850357324cbb6b6e85663f5f3bd679a56df3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_production_preflight.py": "9d5ae4dd4d34d73ff015e26ba7df6de8c9e93bf716d5802184d3c1e5eb6a1a9d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_production_recovery.py": "5331b9ca3ae00e01e2e010aef52705e48e9beea4cfafbd3cfb543eaf355198a8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_production_recovery_inspect.py": "a6a945d4160dec93a6be9d6c9057747a19db4ab9edc17c8680ac618a5f49c28f",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_production_restore_runner.py": "d44197bc1abf2b5e969097572eed33d7b71f131e68d298a36c0dbe0b9480e32a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_reservoir_maintenance_state.py": "5c896092de2a2da6351c7a05ffe78a080fcfd49e91630fd5764b6110a9075834",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/test_restore_verifier.py": "0494a6570245cfc2e6a76cd18188789130c7cedf3b1eb80743522e0e5e3f7522"
+  },
+  "combined_tests": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/combined-stdlib-tests-01.json",
+    "sha256": "01f4db53adb364a26f4ef93490fa87b3af67d6ab03e0d39889530a3e0b6b49b2"
+  },
+  "combined_test_count": 183,
+  "admission": {
+    "implementation": "production_admission.validate_admission(spec, plan)",
+    "actual_reports": [
+      "reservoir_private_matrix_review_v1 with14 raw case receipts re-reviewed",
+      "reservoir_restore_qualification_v1 with9 actual child cases reclassified from original qualifier scope",
+      "reservoir_maintenance_actual_fixture_review_v1 binding exact integrated controller and selected owned fixture cleanup"
+    ],
+    "new_fields": [
+      "fixture_review",
+      "restore_qualification"
+    ],
+    "preserved_original_validation": "Host construction validates canonical original preparation once. Repeated admission revalidates immutable retained proofs/helpers; Host ownership tracks intentional canonical source/plist transitions.",
+    "review_artifacts_limit": "Immutable helper/proof closure only; canonical reservoir source/provider plist intentionally change and use phase-aware checks.",
+    "cost_limit": "Repeated full raw proof/snapshot/RECORD hashing cost unmeasured; measure before live scheduling. No unreviewed cache shortcut."
+  },
+  "provider_pin": {
+    "separate_action": "apply_provider_restart(context)",
+    "order": "Accepted reservoir startup, provider absent, unchanged final journal -> atomic sole-model-argument plist update -> durable controller mutation_completed -> new provider_settings invariant -> bootstrap pinned provider.",
+    "rollback": "Original source/plist retained, never revert history or state after resumed writes."
+  },
+  "restore_runner": {
+    "implementation": "FiniteRestoreRunner(host)",
+    "preconditions": "Still-disabled Host gate, exact transaction/context/backup, both service jobs and old workers absent, original Python and complete source/runtime binding",
+    "backup_root": "<transaction>/stopped-backup/state",
+    "work_root": "production-candidate-03/restore-runs/production-<transaction_id>",
+    "launch": "exact original venv Python -B selected byte-identical verifier --request <owned request> --execute-private-restore",
+    "timeout_seconds": 300,
+    "single_thread": true,
+    "success": "Natural exit0, owned PID matches comparison, full verifier witness semantics and before/after absence/input checks",
+    "failure": "Exclusive request/launch marker and child logs retained; no signal, retry or second child. Missing outer accepted witness never authorizes install."
+  },
+  "protected_native_engine": {
+    "separate_identity": "minime_engine",
+    "protected_process_count": 8,
+    "bound_inputs": 7,
+    "scope": "binary/plist/launcher/rescue code/profile/runtime-manifest/shader; source-only preparation, no engine action"
+  },
+  "recovery": {
+    "implementation": "production_recovery.reconstruct and plan_resume",
+    "scope": "Nonexecuting proposals only for fully recorded provider-held, reservoir-held or both-parked checkpoints",
+    "blocked": [
+      "ambiguous debug/signal/bootout outcomes",
+      "every started private restore including missing outer witness",
+      "later install/pin/bootstrap recovery",
+      "any inferred sudo pre-command authentication failure"
+    ],
+    "limitations": "Preserved anchors, guards, counters and consumed proposal bindings do not constitute an executable or fully qualified production recovery controller."
+  },
+  "remaining": [
+    "Fresh300-second healthy host admission after meaningful headroom change",
+    "Actual14-case autosnapshot service matrix and9-case verifier qualification",
+    "Future owned fixture of exact integrated controller and independent review; completed admin02 remains historical accepted primitive evidence",
+    "Current exact runtime/preparation and full recovery/operational integration review before enabling anything",
+    "Narrow administrator action only when all concrete prerequisites are accepted"
+  ]
+}

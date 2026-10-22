@@ -1,0 +1,394 @@
+{
+  "actual_os_fixture_executed": false,
+  "common_inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-candidate06-test-common-inputs-01.json",
+    "sha256": "0213c79d71af36ed057b694373abc5c819723b48bb49e6a6ab0206a2e04244c7"
+  },
+  "completed_at": "2026-10-17T15:21:04.445179+00:00",
+  "coordination": {
+    "actor": "codex-mlx-upgrade",
+    "pause_generation": 528,
+    "paused": true,
+    "reason": "Continue user-authorized isolated reservoir and staged MLX qualification after completed truthful-return paired rollout and clean shared-tree re-audit; preserve all paused automations and unrelated work",
+    "recorded_at": "2026-10-16T18:55:22.383738+00:00",
+    "schema": "steward_control_state_v1",
+    "schema_version": 1
+  },
+  "coordination_sha256": "d722df02a823393130dfb31c402c1600754ef887cda04da2b272adf6099478e3",
+  "errors": [],
+  "file_mismatches": [],
+  "health": {
+    "body": {
+      "model": "coupled-astrid",
+      "ready": true,
+      "reservoir": {
+        "last_sync_unix_ms": 1792250384405,
+        "operation": "pull_state",
+        "status": "connected"
+      },
+      "status": "generating",
+      "worker": {
+        "heartbeat_age_ms": 80036.002,
+        "last_generation_error": null,
+        "phase": "generating",
+        "queue_capacity": 4,
+        "queue_depth": 0
+      }
+    },
+    "http_status": 200
+  },
+  "host": {
+    "boot_uuid": "A86C8146-975D-4935-85A6-A7879EC7BBE3",
+    "hostname": "m3-volya",
+    "os_version": "27.0.1",
+    "uid": 501
+  },
+  "job_absence": {
+    "pin": true,
+    "provider": true,
+    "reservoir": true
+  },
+  "lease_absent": true,
+  "numerical_admission": false,
+  "passed": true,
+  "prior_observation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-postexit-observation-01.json",
+    "sha256": "76e572221c44eb45a598ebf149a854d478d1713c7c5a78beda07abcf9a1aadc5"
+  },
+  "production_mutations": false,
+  "protected_exact": {
+    "22354": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+    "35303": "35303     1 Thu Oct  1 11:16:53 2026     /Users/v/other/minime/minime/target/release/minime run --log-homeostat --eigenfill-target 0.6800 --warm-start-blend 0.55 --reg-tick-secs 0.5 --legacy-audio-synth-enabled false --legacy-video-synth-enabled false --ws-addr 127.0.0.1:7900 --sensory-ws-addr 127.0.0.1:7901 --av-ws-addr 127.0.0.1:7902 --enable-gpu-av",
+    "35486": "35486 35461 Thu Oct 15 13:14:29 2026     /Applications/Ollama.app/Contents/Resources/ollama serve",
+    "3888": "3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state",
+    "3893": "3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active",
+    "60407": "60407     1 Fri Oct 16 11:43:16 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60",
+    "61069": "61069     1 Fri Oct 16 11:44:08 2026     /Users/v/other/worktrees/truthful-return-20261016/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/truthful-return-20261016/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/truthful-return-20261016/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous"
+  },
+  "protected_file_count": 305,
+  "queries": [
+    {
+      "argv": [
+        "/usr/sbin/sysctl",
+        "-n",
+        "kern.bootsessionuuid"
+      ],
+      "completed_at": "2026-10-17T15:21:04.218894+00:00",
+      "naturally_reaped": true,
+      "pid": 99605,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.212328+00:00",
+      "stderr": "",
+      "stdout": "A86C8146-975D-4935-85A6-A7879EC7BBE3\n"
+    },
+    {
+      "argv": [
+        "/bin/hostname"
+      ],
+      "completed_at": "2026-10-17T15:21:04.223404+00:00",
+      "naturally_reaped": true,
+      "pid": 99606,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.218959+00:00",
+      "stderr": "",
+      "stdout": "m3-volya\n"
+    },
+    {
+      "argv": [
+        "/usr/bin/sw_vers",
+        "-productVersion"
+      ],
+      "completed_at": "2026-10-17T15:21:04.235585+00:00",
+      "naturally_reaped": true,
+      "pid": 99607,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.223452+00:00",
+      "stderr": "",
+      "stdout": "27.0.1\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "22354",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "completed_at": "2026-10-17T15:21:04.240278+00:00",
+      "naturally_reaped": true,
+      "pid": 99608,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.235705+00:00",
+      "stderr": "",
+      "stdout": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "35303",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "completed_at": "2026-10-17T15:21:04.244116+00:00",
+      "naturally_reaped": true,
+      "pid": 99609,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.240348+00:00",
+      "stderr": "",
+      "stdout": "35303     1 Thu Oct  1 11:16:53 2026     /Users/v/other/minime/minime/target/release/minime run --log-homeostat --eigenfill-target 0.6800 --warm-start-blend 0.55 --reg-tick-secs 0.5 --legacy-audio-synth-enabled false --legacy-video-synth-enabled false --ws-addr 127.0.0.1:7900 --sensory-ws-addr 127.0.0.1:7901 --av-ws-addr 127.0.0.1:7902 --enable-gpu-av\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "35486",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "completed_at": "2026-10-17T15:21:04.247865+00:00",
+      "naturally_reaped": true,
+      "pid": 99610,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.244201+00:00",
+      "stderr": "",
+      "stdout": "35486 35461 Thu Oct 15 13:14:29 2026     /Applications/Ollama.app/Contents/Resources/ollama serve\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "3888",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "completed_at": "2026-10-17T15:21:04.252196+00:00",
+      "naturally_reaped": true,
+      "pid": 99611,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.247930+00:00",
+      "stderr": "",
+      "stdout": " 3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "3893",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "completed_at": "2026-10-17T15:21:04.257234+00:00",
+      "naturally_reaped": true,
+      "pid": 99612,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.252267+00:00",
+      "stderr": "",
+      "stdout": " 3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "60407",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "completed_at": "2026-10-17T15:21:04.262278+00:00",
+      "naturally_reaped": true,
+      "pid": 99613,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.257320+00:00",
+      "stderr": "",
+      "stdout": "60407     1 Fri Oct 16 11:43:16 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "61069",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "completed_at": "2026-10-17T15:21:04.266060+00:00",
+      "naturally_reaped": true,
+      "pid": 99614,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.262364+00:00",
+      "stderr": "",
+      "stdout": "61069     1 Fri Oct 16 11:44:08 2026     /Users/v/other/worktrees/truthful-return-20261016/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/truthful-return-20261016/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/truthful-return-20261016/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous\n"
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/Users/v/other/astrid",
+        "rev-parse",
+        "HEAD"
+      ],
+      "completed_at": "2026-10-17T15:21:04.281767+00:00",
+      "naturally_reaped": true,
+      "pid": 99615,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.266129+00:00",
+      "stderr": "",
+      "stdout": "297023ab75ebdc1ee0beb28848d8b50fb4965191\n"
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/Users/v/other/astrid",
+        "diff",
+        "--cached",
+        "--name-status"
+      ],
+      "completed_at": "2026-10-17T15:21:04.297745+00:00",
+      "naturally_reaped": true,
+      "pid": 99616,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.281851+00:00",
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/Users/v/other/astrid",
+        "status",
+        "--porcelain=v1"
+      ],
+      "completed_at": "2026-10-17T15:21:04.343481+00:00",
+      "naturally_reaped": true,
+      "pid": 99617,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.297838+00:00",
+      "stderr": "",
+      "stdout": " M CHANGELOG.md\n M docs/astrid-mlx-upgrade-runbook.md\n M scripts/astrid_live_soak.py\n M scripts/astrid_mlx_soak_compare.py\n M scripts/astrid_model_canary.py\n M scripts/capture_stack_receipt.sh\n M scripts/test_astrid_live_soak.py\n M scripts/test_astrid_mlx_soak_compare.py\n?? docs/steward-notes/2026-10-15-inbox-format-repair.json\n?? docs/steward-notes/2026-10-15-mlx-upgrade/\n?? docs/steward-notes/2026-10-15-perception-memory/\n?? scripts/astrid_mlx_candidate.py\n?? scripts/astrid_mlx_embedding_gate.py\n?? scripts/astrid_mlx_fixture.py\n?? scripts/astrid_mlx_generator_contract.py\n?? scripts/astrid_mlx_memory.py\n?? scripts/astrid_soak_observer.py\n?? scripts/astrid_soak_performance.py\n?? scripts/model_environment.py\n?? scripts/model_environment_activate.py\n?? scripts/model_qualification.py\n?? scripts/model_runtime_identity.py\n?? scripts/prepare_mlx_environments.py\n?? scripts/qualify_mlx_offline.py\n?? scripts/qualify_mlx_packages.py\n?? scripts/qualify_model_launchd_handoff.py\n?? scripts/stage_mlx_manifests.py\n?? scripts/test_astrid_mlx_candidate.py\n?? scripts/test_astrid_mlx_embedding_gate.py\n?? scripts/test_astrid_mlx_generator_contract.py\n?? scripts/test_astrid_mlx_shutdown.py\n?? scripts/test_astrid_soak_observer.py\n?? scripts/test_model_environment.py\n?? scripts/test_model_environment_activate.py\n?? scripts/test_model_qualification.py\n?? scripts/test_model_runtime_identity.py\n?? scripts/test_prepare_mlx_environments.py\n?? scripts/test_qualify_mlx_packages.py\n?? scripts/test_qualify_model_launchd_handoff.py\n?? scripts/test_stage_mlx_manifests.py\n"
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/Users/v/other/minime",
+        "rev-parse",
+        "HEAD"
+      ],
+      "completed_at": "2026-10-17T15:21:04.360251+00:00",
+      "naturally_reaped": true,
+      "pid": 99618,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.343555+00:00",
+      "stderr": "",
+      "stdout": "b8d47c7ad7adbf21b17f19942e6d3489b4ed65fb\n"
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/Users/v/other/minime",
+        "diff",
+        "--cached",
+        "--name-status"
+      ],
+      "completed_at": "2026-10-17T15:21:04.378258+00:00",
+      "naturally_reaped": true,
+      "pid": 99619,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.360314+00:00",
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/Users/v/other/minime",
+        "status",
+        "--porcelain=v1"
+      ],
+      "completed_at": "2026-10-17T15:21:04.411238+00:00",
+      "naturally_reaped": true,
+      "pid": 99620,
+      "returncode": 0,
+      "started_at": "2026-10-17T15:21:04.378340+00:00",
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/launchctl",
+        "print",
+        "gui/501/com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.provider"
+      ],
+      "completed_at": "2026-10-17T15:21:04.433587+00:00",
+      "naturally_reaped": true,
+      "pid": 99621,
+      "returncode": 113,
+      "started_at": "2026-10-17T15:21:04.425479+00:00",
+      "stderr": "Bad request.\nCould not find service \"com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.provider\" in domain for user gui: 501\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/launchctl",
+        "print",
+        "gui/501/com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.reservoir"
+      ],
+      "completed_at": "2026-10-17T15:21:04.440450+00:00",
+      "naturally_reaped": true,
+      "pid": 99622,
+      "returncode": 113,
+      "started_at": "2026-10-17T15:21:04.433656+00:00",
+      "stderr": "Bad request.\nCould not find service \"com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.reservoir\" in domain for user gui: 501\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/launchctl",
+        "print",
+        "gui/501/com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.pin"
+      ],
+      "completed_at": "2026-10-17T15:21:04.445011+00:00",
+      "naturally_reaped": true,
+      "pid": 99623,
+      "returncode": 113,
+      "started_at": "2026-10-17T15:21:04.440522+00:00",
+      "stderr": "Bad request.\nCould not find service \"com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.pin\" in domain for user gui: 501\n",
+      "stdout": ""
+    }
+  ],
+  "repositories": {
+    "/Users/v/other/astrid": {
+      "head": "297023ab75ebdc1ee0beb28848d8b50fb4965191\n",
+      "index": "",
+      "status": " M CHANGELOG.md\n M docs/astrid-mlx-upgrade-runbook.md\n M scripts/astrid_live_soak.py\n M scripts/astrid_mlx_soak_compare.py\n M scripts/astrid_model_canary.py\n M scripts/capture_stack_receipt.sh\n M scripts/test_astrid_live_soak.py\n M scripts/test_astrid_mlx_soak_compare.py\n?? docs/steward-notes/2026-10-15-inbox-format-repair.json\n?? docs/steward-notes/2026-10-15-mlx-upgrade/\n?? docs/steward-notes/2026-10-15-perception-memory/\n?? scripts/astrid_mlx_candidate.py\n?? scripts/astrid_mlx_embedding_gate.py\n?? scripts/astrid_mlx_fixture.py\n?? scripts/astrid_mlx_generator_contract.py\n?? scripts/astrid_mlx_memory.py\n?? scripts/astrid_soak_observer.py\n?? scripts/astrid_soak_performance.py\n?? scripts/model_environment.py\n?? scripts/model_environment_activate.py\n?? scripts/model_qualification.py\n?? scripts/model_runtime_identity.py\n?? scripts/prepare_mlx_environments.py\n?? scripts/qualify_mlx_offline.py\n?? scripts/qualify_mlx_packages.py\n?? scripts/qualify_model_launchd_handoff.py\n?? scripts/stage_mlx_manifests.py\n?? scripts/test_astrid_mlx_candidate.py\n?? scripts/test_astrid_mlx_embedding_gate.py\n?? scripts/test_astrid_mlx_generator_contract.py\n?? scripts/test_astrid_mlx_shutdown.py\n?? scripts/test_astrid_soak_observer.py\n?? scripts/test_model_environment.py\n?? scripts/test_model_environment_activate.py\n?? scripts/test_model_qualification.py\n?? scripts/test_model_runtime_identity.py\n?? scripts/test_prepare_mlx_environments.py\n?? scripts/test_qualify_mlx_packages.py\n?? scripts/test_qualify_model_launchd_handoff.py\n?? scripts/test_stage_mlx_manifests.py\n"
+    },
+    "/Users/v/other/minime": {
+      "head": "b8d47c7ad7adbf21b17f19942e6d3489b4ed65fb\n",
+      "index": "",
+      "status": ""
+    }
+  },
+  "schema": "owned_fixture03_precommand_read_only_spot_v1",
+  "started_at": "2026-10-17T15:21:04.134704+00:00",
+  "targets": {
+    "pin": "gui/501/com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.pin",
+    "provider": "gui/501/com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.provider",
+    "reservoir": "gui/501/com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.reservoir"
+  },
+  "token": "7e6529d26a3046ca87c0ca9b94332b02",
+  "unused_paths": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/evidence/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02-result.json": true,
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-native-7e6529d26a3046ca87c0ca9b94332b02": true,
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02": true
+  }
+}

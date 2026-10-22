@@ -1,0 +1,240 @@
+{
+  "schema": "reservoir_maintenance_design_v1",
+  "status": "design_only_not_implemented_not_authorized_for_execution_by_this_record",
+  "purpose": "Replace only the reservoir snapshot scheduler while preserving every stored handle and restoring the original provider model, packages and settings.",
+  "scope": {
+    "production_labels_for_future_transaction": [
+      "com.reservoir.coupled-astrid",
+      "com.reservoir.service"
+    ],
+    "do_not_restart": [
+      "spectral-bridge",
+      "astrid-feeder",
+      "minime-feeder",
+      "collab-feeder",
+      "perception",
+      "Ollama",
+      "Minime autonomy"
+    ],
+    "never": [
+      "SIGKILL",
+      "kickstart -k",
+      "bootout of a live provider or reservoir",
+      "broad pkill",
+      "install.sh",
+      "runtime-state rollback after resumed writes",
+      "delete old handles",
+      "claim zero missed live inputs"
+    ],
+    "current_work": "Read source and process metadata; write only this ignored design artifact. No API calls, signals, fixture execution, package imports or model work."
+  },
+  "facts": {
+    "reservoir": "Observed live PID 3888 is launchd-owned with KeepAlive and exit timeout 5 seconds. Source shutdown is cooperative SIGTERM/SIGINT, exits WebSocket serve context, cancels background tasks, runs final synchronous snapshot_all, then exits. A roughly 20-second, 102-handle snapshot batch makes launchd stopping escalation unsafe.",
+    "websocket_barrier": "Installed websockets.asyncio.server.Server closes the listener, rejects new handshakes, closes established connections and waits for all handlers. reservoir_service.run leaves this context before the final snapshot. Once the old PID has exited and replacement remains held, no service process can mutate snapshots, regardless of surviving clients.",
+    "provider": "SIGTERM sets stop_event. The main inference thread finishes its current generate_coupled call, including _push_state, before stopping. mark_stopping subsequently rejects/fails pending jobs and gateway.stop closes HTTP. The hold.json file gates only future launches, not admission in the running process. _push_state catches failures, so exit and completed HTTP generation alone do not prove successful reservoir check-in.",
+    "launch_hold": "model_environment.launch --hold-only requires the exact transaction hold forever; removing that hold raises rather than executing a release. The existing activator intentionally migrates the one-shot held process to a permanent launcher before releasing. Do not misuse --hold-only as a release-to-original exec switch.",
+    "qualified_precedent": "launchd-handoff-fixture-admin-02 passed on the recorded host/boot/user with Python 3.14. It proves the script-first launchctl debug argument tail, cooperative original exit, held next spawn, same-PID release execution and model-free cleanup. It does not qualify this two-service reservoir transaction, actual provider check-in evidence, long final snapshots, or reservoir restore correctness.",
+    "bridge": "reservoir_ws_call is a one-shot synchronous request with five-second read/write timeout and no general retry. Failed calls return None. Actions generally record service unavailability; some multi-step create/push calls ignore intermediate responses. A request accepted before closure may take effect without its response reaching the caller. This is unknown acknowledgement, not permission to replay.",
+    "astrid_feeder": "tick_handle reconnects after failure but does not replay failed delivery. last_id advances after each processed codec row even when tick_with_shadow returned false. Restart would additionally initialize last_id to MAX(codec_impact.id) and reset conditioner/gift state, so leaving it alive is narrower.",
+    "minime_feeder": "The last fingerprint is set before attempting tick. A failed unchanged input is not retried on subsequent polls; reconnect happens on later delivery attempts. Restart resets the fingerprint and may resubmit the latest input.",
+    "collab_feeder": "Live PID 3905 is another writer. Its loop reconnects with backoff and re-evaluates current collaboration inputs; this is not a durable exactly-once replay queue. Keep it alive and record planned failures.",
+    "no_broad_barrier_required": "The transaction requires provider completion before reservoir downtime to preserve generated state. Other writers need not be stopped to obtain a stopped-reservoir backup barrier. Their transient unavailable/unknown-ack calls are an explicitly bounded maintenance outage, not a claim that pre-existing stored history was erased."
+  },
+  "reuse_without_editing_frozen_tools": [
+    {
+      "source": "/Users/v/other/astrid/scripts/model_environment.py",
+      "symbols": [
+        "digest",
+        "interpreter_paths",
+        "command_matches",
+        "read_json",
+        "atomic_json",
+        "sync_directory",
+        "process_start",
+        "create_hold",
+        "assert_hold",
+        "release_hold"
+      ],
+      "rule": "Read-only import or exact hash-bound copy into the isolated candidate; do not edit this frozen source. Shared utility reuse must not import model packages. Preserve Python framework wrapper/runtime identity handling."
+    },
+    {
+      "source": "/Users/v/other/astrid/scripts/model_environment.py",
+      "symbols": [
+        "launch --hold-only"
+      ],
+      "rule": "Reusable as a temporary stdlib-only holding process for either of the two exact labels. Give each role its own owned control root. It does not validate a reservoir manifest, authorize a transition, or open a listener. Keep the hold until that owned held process is safely removed."
+    },
+    {
+      "source": "/Users/v/other/astrid/scripts/qualify_model_launchd_handoff.py",
+      "symbols": [
+        "held_override_arguments",
+        "debug_fixture"
+      ],
+      "rule": "Use the tested script-first argument construction and terminal-owned sudo pattern. Its privilege target allowlist is fixture-specific and must not be bypassed; the new fixture needs its own equally narrow generated-label prefix."
+    },
+    {
+      "source": "/Users/v/other/astrid/scripts/model_environment_activate.py",
+      "symbols": [
+        "verify_fixture",
+        "held",
+        "wait_held",
+        "migration_checkpoint",
+        "inspect_absent_migration"
+      ],
+      "rule": "Reuse the identity, durable intent/result and interrupted-recovery design, not the model activation entrypoint or qualification bypass. Existing transition explicitly does not claim atomic traffic quiescence."
+    }
+  ],
+  "proposed_new_files_after_implementation_release": [
+    {
+      "path": "candidate/reservoir_maintenance.py",
+      "role": "Two-label orchestration only. Hard-code provider 8090/reservoir 7881 and canonical state root. Check-only and planning are read-only. Execution consumes exact owner, expected identities, reviewed repair/source hashes, fresh fixture proof, original launch configurations and recovery receipt."
+    },
+    {
+      "path": "candidate/reservoir_maintenance_state.py",
+      "role": "Stopped-state inventory, durable private backup and restore-verification routines. No service control. Validate all handle snapshots and thermostat sidecars with allow_pickle=False in a separate declared CPU-only verifier where NumPy is needed."
+    },
+    {
+      "path": "candidate/qualify_reservoir_maintenance.py",
+      "role": "Owned stdlib-only launchd fixture for the exact new two-label state machine and long drain. Uses generated com.codex.reservoir-maintenance-fixture.<uuid> labels only, temporary directories and fake work/state; never production ports, models or snapshots."
+    },
+    {
+      "path": "candidate/test_reservoir_maintenance.py",
+      "role": "Deterministic state-machine and ownership fault tests with fake host/process API. No GPU or production services."
+    },
+    {
+      "path": "candidate/test_reservoir_maintenance_state.py",
+      "role": "Tiny synthetic state preservation/failure tests. No real history or model import."
+    }
+  ],
+  "transaction_phases": [
+    {
+      "id": "preflight",
+      "requirements": [
+        "Wait for the running observation to finish; retain its genuine failure and do not relabel it accepted.",
+        "Verify root-owned steward pause generation, no competing lease, exact provider/reservoir PID/start/argv, source/install plist bytes, listener ownership, all protected process identities and no unreviewed file drift.",
+        "Bind original provider command, cwd, model snapshot, .venv/package content, sampling/coupling/wide/QoS settings, journal path and receipt path. Bind original reservoir command and state schema/fingerprint. No package upgrade is part of this transaction.",
+        "Prepare old and repaired source artifacts, full rollback software, sufficient backup space, recovery plan and current-host privileged fixture proof before signaling anything.",
+        "Write durable transaction intent plus exact copies of both source and installed plists. All outputs are fresh; never overwrite historical evidence."
+      ]
+    },
+    {
+      "id": "hold_provider_next_spawn",
+      "requirements": [
+        "Create an owned provider hold, write debug-attempt intent, then arm only that exact label's next invocation through the reviewed narrow sudo launchctl debug call.",
+        "Only after arm success and identity revalidation may a cooperative provider SIGTERM be sent. Keep the reservoir running and available throughout provider drain.",
+        "Do not treat two idle samples as the barrier. The barrier is exact old-provider exit plus a verified stdlib-only held replacement, followed by removal of only that verified held job so the provider job is absent and 8090 has no listener.",
+        "Accepted pending HTTP requests may fail explicitly on shutdown. Account for these outcomes; do not pretend all queued jobs were completed. Verify each generation that actually ran after the drain boundary reached successful reservoir check-in, and save the final coupling journal.",
+        "A timeout, failed/missing check-in or unexpected replacement identity stops here; the reservoir is not signaled. Resolve while it remains available. Never infer a missing check-in from generic exit success."
+      ]
+    },
+    {
+      "id": "hold_and_stop_reservoir",
+      "requirements": [
+        "With provider job absent and 8090 closed, arm the reservoir's owned next-spawn hold and record exact source and in-memory-handle inventory evidence where available.",
+        "Send one cooperative SIGTERM to the verified reservoir. Do not use bootout/unload to stop its live process. Await natural exit beyond the normal final snapshot duration without forced termination.",
+        "Verify handler closure and final snapshot batch boundaries from the complete log interval. Require a successful final per-handle snapshot entry for every final handle, no snapshot failure and natural exit. Generic final snapshot complete is insufficient.",
+        "Verify held replacement identity and absence of 7881 listener. The held process performs no imports of reservoir/model code and no state access. If it fails or a real service unexpectedly returns, stop; no backup is accepted as quiescent.",
+        "Remove only the verified held reservoir job. Require service definition absent, both original PIDs gone, no provider/reservoir listeners and unchanged transaction ownership before backup or source installation."
+      ]
+    },
+    {
+      "id": "preserve_stopped_state",
+      "requirements": [
+        "Inventory all state files, including all 102 currently observed handles plus any legitimately added before handler closure. Preserve extra historic snapshots, invalid/quarantined files, sidecars and journal; delete nothing.",
+        "Check every expected final .npz and thermostat JSON for regular-file ownership, bounded size, valid content, compatible schema/fingerprint and completion during the final batch. Reject missing, truncated, stale-final or partially paired snapshots.",
+        "Bind h1/h2/h3, last_input, backend/entity, tick_count/event_seq, modes/decay/hint policy, live/lane metadata, provenance, output/norm history and thermostat state. Preserve timestamp-derived age semantics.",
+        "Create a fresh private durable backup with exclusive creation, file and directory fsync, before/after source identities and SHA256 verification. Back up the stopped writer state, not a concurrent live copy.",
+        "Do not restore this backup automatically after a replacement has accepted new writes. Software rollback must retain newer current state and separately preserve failed-transition evidence."
+      ]
+    },
+    {
+      "id": "install_and_restore_reservoir",
+      "requirements": [
+        "Install only reviewed reservoir scheduling repair files while the reservoir job is absent; preserve original rollback software and exact launch configuration. No handle, model, sampling, mode, state-format or package changes.",
+        "Bootstrap only the original reservoir plist after verifying its canonical entrypoint resolves to the repaired source. Verify exact new process identity and interpreter/source/config closure.",
+        "A complete restore proof must be obtained before admitting network writes/background rehearsal, or an equivalent reviewed startup witness must bind per-handle restored values. Merely counting restore log lines or reading changing state after normal admission is insufficient.",
+        "If restore fails, do not release provider admission. Preserve failed state and roll back software only under the prepared recovery procedure; never mask errors by deleting incompatible handles."
+      ]
+    },
+    {
+      "id": "restore_original_provider",
+      "requirements": [
+        "Only after repaired reservoir restoration/readiness is verified, bootstrap the byte-preserved original provider launch configuration with its original model, package environment and settings. No MLX candidate is selected.",
+        "Require exact provider identity/listener, healthy reservoir connection, saved journal continuity and unchanged original source/settings except the separately reviewed reservoir repair.",
+        "The provider begins normal admission after restore. Record outage boundaries, any rejected queued HTTP work, feeder/bridge unavailable or unknown-ack calls and reconnect evidence. Do not replay unknown-ack writes automatically.",
+        "Verify bridge, all three feeders, perception, Ollama and Minime autonomy retained their identities. Keep stewardship pause in place. Start a fresh source/PID-bound passive baseline before returning to additional-model qualification."
+      ]
+    }
+  ],
+  "privileged_fixture": {
+    "must_run": "A newly reviewed qualify_reservoir_maintenance.py fixture implementing the exact final state machine, as the ordinary desktop user. Elevate only each generated owned fixture label's launchctl debug call; do not sudo Python or capture credentials.",
+    "proposed_argv_not_yet_executable": [
+      "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+      "-B",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/qualify_reservoir_maintenance.py",
+      "--run-owned-host-fixture",
+      "--sudo-debug",
+      "--output",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/launchd-fixture-01.json"
+    ],
+    "assertions": [
+      "No production label/port/path can be targeted.",
+      "A provider fake job admitted at the stop boundary completes its fake check-in while the reservoir fake remains available; pending requests fail explicitly rather than disappearing.",
+      "A final snapshot taking longer than five seconds completes after direct SIGTERM without launchd stop escalation.",
+      "Both next-spawn replacements remain dependency-free and cannot touch fake state or model sentinel files.",
+      "The exact held process alone is removed; service absence prevents KeepAlive restart throughout backup/install.",
+      "Delayed final writes finish before backup; missing/corrupt/failed per-handle snapshot blocks release.",
+      "Original provider argv, environment, cwd and settings are restored; fake candidate/source repair cannot alter model selection.",
+      "Injected driver interruption at each durable phase resumes only owned state or stops with explicit recovery instructions.",
+      "Unexpected held-process exit/default respawn and stale PID/receipt ownership are detected before reservoir shutdown or backup acceptance.",
+      "Fixture cleanup removes only generated owned jobs, with independent absence checks even on failure."
+    ],
+    "binding": [
+      "helper and reused primitive hashes",
+      "fixture/test hashes and CPU receipt",
+      "host OS and boot UUID",
+      "UID and hostname",
+      "Python launcher and framework runtime hashes",
+      "role commands and generated labels",
+      "passed cleanup inspection"
+    ],
+    "existing_admin_02_is_insufficient": "It proves a related one-service lifecycle but is not evidence for the new multi-phase preservation workflow."
+  },
+  "unresolved_before_live_execution": [
+    {
+      "id": "provider_checkin_witness",
+      "requirement": "Specify and test a complete last-admitted-generation to successful check-in witness from the running provider's available logs/audit. _push_state swallows failure; health sampled before signal and exit status alone are insufficient. Unknown/missing witness blocks reservoir shutdown."
+    },
+    {
+      "id": "restore_before_admission",
+      "requirement": "Select the smallest reviewed startup validation mechanism that confirms every restored handle and sidecar before network/background writers run. Current restore_all catches errors and counts filenames; do not use that count as success. A separately scoped startup witness or wrapper may be required; do not silently expand the scheduling patch."
+    },
+    {
+      "id": "held_removal_race",
+      "requirement": "The one-shot launchctl override is consumed after spawning the holder. If that holder unexpectedly dies, KeepAlive can start the original service. Immediate identity checks are necessary but do not make launchctl bootout atomic with a PID assertion. The new owned fixture and review must address this interval and forbid stopping a newly active real process based on a stale holder receipt. Reservoir remains live until provider job absence is proven."
+    },
+    {
+      "id": "pending_override_recovery",
+      "requirement": "If debug is armed but an old process never exits or the driver stops, durable receipt and hold must remain; deletion of hold is not safe cancellation. Define an explicit recovery operation that either finishes the exact owned handoff or safely replaces/cancels the pending override using a qualified host mechanism."
+    },
+    {
+      "id": "original_runtime_alignment",
+      "requirement": "Bind original provider command/settings/package content and reviewed source for restart; old process startup predates some checkout work. Existing original frozen manifest may be useful evidence, but switching launch paths or source is a separate reviewed choice, not automatic permission."
+    },
+    {
+      "id": "final_handle_set",
+      "requirement": "Determine how the old process's final handle set is attested without assuming the previously observed 102 count remains constant. No deleted or failed handle may be hidden by successful snapshot filenames alone."
+    },
+    {
+      "id": "host_privilege_and_fixture",
+      "requirement": "Implement and pass the new owned fixture on the current host/boot using the exact launcher/helper bytes before any live transition. Prior administrator qualification is not a blanket privilege or workflow proof."
+    }
+  ],
+  "requalification": {
+    "current_observation": "Preserve its recorded failed push handshake as historical failure; do not promote it.",
+    "source": "The MLX source closure includes all tracked top-level reservoir Python files. Canonical repair needs new immutable preparation/source provenance and manifests plus reviewed revision-pin adjustment, preserving old evidence unchanged.",
+    "packages": "Reservoir maintenance restores the original provider packages; no MLX version change. Verified wheel/environment artifacts can be reused only through a reviewed refreeze path.",
+    "fixture": "The private MLX fixture excludes persistence/rehearsal/thermostats. Its captured comparison input can stay unchanged if protocol/schema semantics remain unchanged, but separate real scheduling/preservation qualification is mandatory.",
+    "later_gpu": "Fresh accepted passive baseline, then unchanged five-minute quiet-host/memory gate and fresh offline/matched receipts bound to the new preparation/manifests. No automatic qualification in this maintenance design."
+  }
+}

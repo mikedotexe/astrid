@@ -1,0 +1,199 @@
+{
+  "cases": [
+    {
+      "case": "encode_exception",
+      "events": [
+        "VideoCapture",
+        "isOpened",
+        "read",
+        "release",
+        "imencode"
+      ],
+      "exception": {
+        "message": "fake encode error",
+        "type": "RuntimeError"
+      },
+      "explicit_capture_release_observed": true,
+      "import_calls": [
+        "cv2"
+      ],
+      "release_calls": 1,
+      "returned_hex": null
+    },
+    {
+      "case": "encode_false_buffer",
+      "events": [
+        "VideoCapture",
+        "isOpened",
+        "read",
+        "release",
+        "imencode",
+        "tobytes"
+      ],
+      "exception": null,
+      "explicit_capture_release_observed": true,
+      "import_calls": [
+        "cv2"
+      ],
+      "release_calls": 1,
+      "returned_hex": "66616b652d6a706567"
+    },
+    {
+      "case": "encode_false_none",
+      "events": [
+        "VideoCapture",
+        "isOpened",
+        "read",
+        "release",
+        "imencode"
+      ],
+      "exception": {
+        "message": "'NoneType' object has no attribute 'tobytes'",
+        "type": "AttributeError"
+      },
+      "explicit_capture_release_observed": true,
+      "import_calls": [
+        "cv2"
+      ],
+      "release_calls": 1,
+      "returned_hex": null
+    },
+    {
+      "case": "open_check_exception",
+      "events": [
+        "VideoCapture",
+        "isOpened"
+      ],
+      "exception": {
+        "message": "fake open-check error",
+        "type": "RuntimeError"
+      },
+      "explicit_capture_release_observed": false,
+      "import_calls": [
+        "cv2"
+      ],
+      "release_calls": 0,
+      "returned_hex": null
+    },
+    {
+      "case": "open_failure",
+      "events": [
+        "VideoCapture",
+        "isOpened",
+        "log.error"
+      ],
+      "exception": null,
+      "explicit_capture_release_observed": false,
+      "import_calls": [
+        "cv2"
+      ],
+      "release_calls": 0,
+      "returned_hex": null
+    },
+    {
+      "case": "read_exception",
+      "events": [
+        "VideoCapture",
+        "isOpened",
+        "read"
+      ],
+      "exception": {
+        "message": "fake read error",
+        "type": "RuntimeError"
+      },
+      "explicit_capture_release_observed": false,
+      "import_calls": [
+        "cv2"
+      ],
+      "release_calls": 0,
+      "returned_hex": null
+    },
+    {
+      "case": "read_false",
+      "events": [
+        "VideoCapture",
+        "isOpened",
+        "read",
+        "release"
+      ],
+      "exception": null,
+      "explicit_capture_release_observed": true,
+      "import_calls": [
+        "cv2"
+      ],
+      "release_calls": 1,
+      "returned_hex": null
+    },
+    {
+      "case": "success",
+      "events": [
+        "VideoCapture",
+        "isOpened",
+        "read",
+        "release",
+        "imencode",
+        "tobytes"
+      ],
+      "exception": null,
+      "explicit_capture_release_observed": true,
+      "import_calls": [
+        "cv2"
+      ],
+      "release_calls": 1,
+      "returned_hex": "66616b652d6a706567"
+    }
+  ],
+  "characterization_tests_passed": true,
+  "completed_at": "2026-10-16T01:27:58.417372+00:00",
+  "elapsed_s": 0.00036645890213549137,
+  "extraction": {
+    "first_line": 125,
+    "function_source_sha256": "d4abd8e3de5624f0534eccfa4f4e1b24ebe6853149a9e1254c1611ecc1b141dc",
+    "last_line": 141,
+    "method": "Parse copied source as AST, compile and execute capture_frame FunctionDef only; import hook returns fake cv2."
+  },
+  "findings": [
+    "Explicit release is skipped after a constructed capture reports not opened, raises during isOpened, or raises during read.",
+    "A false read return, encoding failure or exception, and success all occur after explicit release.",
+    "The encoding success flag is ignored; false plus None raises AttributeError, while false plus a buffer is accepted as JPEG bytes."
+  ],
+  "invocation": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-I",
+    "-B",
+    ".runtime/perception-memory-investigation/candidate/test_capture_frame_lifecycle.py",
+    "--evidence-output",
+    "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/lifecycle-characterization.json"
+  ],
+  "isolated_python": true,
+  "limitations": [
+    "Passing tests confirm existing behavior, not resource-safety acceptance.",
+    "Fake objects cannot establish native camera handle retention, OpenCV destructor behavior, allocator retention, or the cause of prior heap growth.",
+    "No production/candidate module import, real OpenCV, camera, microphone, network, models, stress loop, or implementation repair occurred."
+  ],
+  "model_modules_imported": [],
+  "production_mutations": 0,
+  "provenance": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/provenance.json",
+    "sha256": "827671a9fc3301eda812acad4eefd2735eaf8371d25a6407a6806548d237c636"
+  },
+  "python_executable": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+  "python_version": "3.14.3 (main, Feb  3 2026, 15:32:20) [Clang 17.0.0 (clang-1700.6.3.2)]",
+  "real_cv2_imported": false,
+  "schema": "perception_capture_lifecycle_characterization_v1",
+  "self_cpu_s": {
+    "system": 0.015347999999999999,
+    "user": 0.054062
+  },
+  "source": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/perception.py",
+    "sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a"
+  },
+  "started_at": "2026-10-16T01:27:58.416853+00:00",
+  "test_harness": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/test_capture_frame_lifecycle.py",
+    "sha256": "4a5d73ad58653ad250799860ae68be7697bccf97a93692ee0340fee1112d3c5b"
+  },
+  "test_output": "test_encode_exception_occurs_after_release (__main__.ExistingLifecycleTests.test_encode_exception_occurs_after_release) ... ok\ntest_encode_false_buffer_is_incorrectly_accepted (__main__.ExistingLifecycleTests.test_encode_false_buffer_is_incorrectly_accepted) ... ok\ntest_encode_false_none_releases_then_raises (__main__.ExistingLifecycleTests.test_encode_false_none_releases_then_raises) ... ok\ntest_open_check_exception_skips_explicit_release (__main__.ExistingLifecycleTests.test_open_check_exception_skips_explicit_release) ... ok\ntest_open_failure_skips_explicit_release (__main__.ExistingLifecycleTests.test_open_failure_skips_explicit_release) ... ok\ntest_read_exception_skips_explicit_release (__main__.ExistingLifecycleTests.test_read_exception_skips_explicit_release) ... ok\ntest_read_false_releases_capture (__main__.ExistingLifecycleTests.test_read_false_releases_capture) ... ok\ntest_success_releases_once_before_encoding (__main__.ExistingLifecycleTests.test_success_releases_once_before_encoding) ... ok\n\n----------------------------------------------------------------------\nRan 8 tests in 0.000s\n\nOK\n",
+  "tests_run": 8
+}

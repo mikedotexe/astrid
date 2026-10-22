@@ -1,0 +1,58 @@
+--- /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-bindings.json
++++ /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12-bindings.json
+@@ -8,7 +8,7 @@
+     "schema": "steward_control_state_v1",
+     "schema_version": 1
+   },
+-  "created_at": "2026-10-16T23:58:35.475084+00:00",
++  "created_at": "2026-10-17T00:35:43.143730+00:00",
+   "expected_launchd_pids": {
+     "com.astrid.perception-host-ascii": 22354,
+     "com.astrid.spectral-bridge": 61069,
+@@ -271,16 +271,16 @@
+   },
+   "preceding_accepted_window": {
+     "independent_review": {
+-      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-review.json",
+-      "sha256": "576a4ab3b5c2b2151169823dc4eac5069aa142a809c9a334275b941482c8241e"
++      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-review.json",
++      "sha256": "808060e241f3fe4823429a5410c781d28141683df83e28978e959e805735a86c"
+     },
+     "raw": {
+-      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10.json",
+-      "sha256": "1ae9817de06591336cbfa3eb266217168d69ec9c73cb73092e881543ae51da9b"
++      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11.json",
++      "sha256": "c80c7f34ddb58cad86d9c9f5aa397347e105c2b723d8d1c0cc87f72faadb61d2"
+     },
+     "root_review": {
+-      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-root-review.json",
+-      "sha256": "14d520242fa771f69968647d8b66d07da74ff899ac836a985c699e0bcf9cb61c"
++      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-root-review.json",
++      "sha256": "5817de28dad2ca276cdfc652d65efb1531a91a9909746ee7efc55eccfa64bd2f"
+     }
+   },
+   "preceding_failed_window": {
+@@ -298,10 +298,10 @@
+     }
+   },
+   "previous_binding": {
+-    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-bindings.json",
+-    "sha256": "fc1a29297899220701591a78d4e928ca13844c2bdac2562da6ffd5059b356b09"
+-  },
+-  "previous_completed_observation": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10.json",
++    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-bindings.json",
++    "sha256": "6b92de441dac3730c047c0111a850527dfff0739048d0db6b23f50d16054d2f6"
++  },
++  "previous_completed_observation": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11.json",
+   "protected_processes": {
+     "22354": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+     "35303": "35303     1 Thu Oct  1 11:16:53 2026     /Users/v/other/minime/minime/target/release/minime run --log-homeostat --eigenfill-target 0.6800 --warm-start-blend 0.55 --reg-tick-secs 0.5 --legacy-audio-synth-enabled false --legacy-video-synth-enabled false --ws-addr 127.0.0.1:7900 --sensory-ws-addr 127.0.0.1:7901 --av-ws-addr 127.0.0.1:7902 --enable-gpu-av",
+@@ -312,7 +312,7 @@
+     "61069": "61069     1 Fri Oct 16 11:44:08 2026     /Users/v/other/worktrees/truthful-return-20261016/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/truthful-return-20261016/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/truthful-return-20261016/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous"
+   },
+   "qualifying_window": false,
+-  "reason": "Preparation only for a fresh strict window after servicev3 metadata-publication repair. Do not launch until source/tests/preparation/independent review complete, all tests held, and fresh current ownership/identity/health preflight passes. Accepted10 is historical admission only; failed v2 real case remains failed.",
++  "reason": "Preparation only for a fresh strict host12 window before the later restore02 seed and nine-child qualification. Do not launch until independent source review, all tests held, completion of the current service matrix, and fresh root ownership/identity/health preflight. Completed11 is historical evidence only; it does not admit host12, run06 or any child. Root must separately accept completed12, bind the exact live run06 supervisor, and issue each one-use child permit. No automatic admission or repeat.",
+   "schema": "reservoir_host_window_input_binding_v2",
+   "unused_previous_preparation": {
+     "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-06-observer.py",

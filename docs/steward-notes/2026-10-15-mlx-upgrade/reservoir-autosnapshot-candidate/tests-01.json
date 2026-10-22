@@ -1,0 +1,26 @@
+{
+  "schema": "reservoir_autosnapshot_cpu_tests_v1",
+  "started_at": "2026-10-16T02:53:32.563516+00:00",
+  "completed_at": "2026-10-16T02:53:32.711836+00:00",
+  "elapsed_seconds": 0.14818270807154477,
+  "command": [
+    "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+    "-I",
+    "-B",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/test_autosnapshot_cooperative.py"
+  ],
+  "returncode": 0,
+  "passed": true,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/baseline/reservoir_service.py": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/reservoir_service.py": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/test_autosnapshot_cooperative.py": "50cfa90f191308d5123b3c0fd741aaf904245e9d3882585d36f6961a3b15eb76",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/autosnapshot-cooperative.patch": "e54e052ae3519b5893b0b08ae02a362004571072562c92c2694563850071f01a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/original-manifest.json": "e3535f3bb45c528fec07cbeaf5d99bfebbbd083354f44f02a2b728600cfd2c7a"
+  },
+  "test_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/tests-01.txt",
+    "sha256": "0c45752b5d880fa5468920b73f8d95ff70064d9f3546df4b09b82ee2ec429ace"
+  },
+  "scope": "AST-extracted methods, fake handle calls and stdlib asyncio only. No reservoir/persistence/model/network import, no runtime changes."
+}

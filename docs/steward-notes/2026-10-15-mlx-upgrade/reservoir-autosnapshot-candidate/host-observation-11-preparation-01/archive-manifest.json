@@ -1,0 +1,57 @@
+{
+  "all_agent_tests_held": true,
+  "created_at": "2026-10-17T00:06:32.148051+00:00",
+  "files": [
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/host-observation-11-preparation-01/host-settle-11-bindings.json",
+      "bytes": 41048,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-bindings.json",
+      "sha256": "6b92de441dac3730c047c0111a850527dfff0739048d0db6b23f50d16054d2f6"
+    },
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/host-observation-11-preparation-01/host-settle-11-observer.py.txt",
+      "bytes": 11970,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-observer.py",
+      "sha256": "ea290b954f4d888a3f8ec18e8762b747983a5b41af03d5be83576d552619a663"
+    },
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/host-observation-11-preparation-01/host-settle-11-source-review.json",
+      "bytes": 5093,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-source-review.json",
+      "sha256": "eea9e12f1fa86ddaa7677be7f99a8a132cae092956d7d5e6d2f51b7bd496f55b"
+    },
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/host-observation-11-preparation-01/matrix_host_supervision_v2_run05.py.txt",
+      "bytes": 8718,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2_run05.py",
+      "sha256": "02c1f9152d94f86849cfc2fc3cfe3ab893b8ceb03fed683c4f61a7619671b91b"
+    },
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/host-observation-11-preparation-01/matrix-host-supervision-v2-run05-source-review-01.json",
+      "bytes": 4886,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-run05-source-review-01.json",
+      "sha256": "c4ce99ec02a8b334a8e834bd9521ad1d2aee9aaffc9b07e6e278afff63a87904"
+    },
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/host-observation-11-preparation-01/host-settle-11-preflight-01.json",
+      "bytes": 48028,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-preflight-01.json",
+      "sha256": "91a7a9792edb64e5d014247f2152f2720b494720cf8789bf5102ca2e77691a9a"
+    },
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/host-observation-11-preparation-01/host-settle-11-launch-01.json",
+      "bytes": 637,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-launch-01.json",
+      "sha256": "21e69dc6be047a94a7d9c35b23a8fbca41c99c7ac449e2e913d1170805cf8640"
+    }
+  ],
+  "harness_preparation": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/harness-v3-preparation-01/archive-manifest.json",
+    "sha256": "d0749cf7291172a4cb437c8664b1bafad4c05dbb16fccb8145178104e10d6ed2"
+  },
+  "numerical_cases_started": 0,
+  "observer_running_pid": 45314,
+  "schema": "reservoir_host_observation_preparation_archive_v1",
+  "source_only_approval_is_not_host_admission": true,
+  "supervisor05_started": false
+}

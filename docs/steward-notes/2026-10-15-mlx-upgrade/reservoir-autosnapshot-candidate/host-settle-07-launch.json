@@ -1,0 +1,15 @@
+{
+  "schema": "reservoir_host_observer_launch_v1",
+  "at": "2026-10-16T19:05:22.913143+00:00",
+  "controller_pid": 70406,
+  "observer_pid": 70407,
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-I",
+    "-B",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-observer.py"
+  ],
+  "preflight_sha256": "7b482162f23e3604f2448c86f659cdb3ecb2cca0e833840a02651ace735db62d",
+  "source_sha256": "005c5db21d9ff36dd2e867cb54a272cabdc2c1922f0a8bb0f0b5a7ddd5709d05",
+  "production_action": false
+}

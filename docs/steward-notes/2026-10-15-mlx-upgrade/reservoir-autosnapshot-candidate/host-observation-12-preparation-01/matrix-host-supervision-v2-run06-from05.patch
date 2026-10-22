@@ -1,0 +1,15 @@
+--- /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2_run05.py
++++ /Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2_run06.py
+@@ -18,9 +18,9 @@
+ ROOT = Path('/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate')
+ SOURCE = ROOT / 'host-settle-07-observer.py'
+ SOURCE_SHA = '005c5db21d9ff36dd2e867cb54a272cabdc2c1922f0a8bb0f0b5a7ddd5709d05'
+-OUTPUT = ROOT / 'matrix-host-supervision-05.json'
+-STOP = ROOT / 'matrix-host-supervision-05-stop.json'
+-TOKEN = 'mlx-matrix-20261016-528-supervision-05'
++OUTPUT = ROOT / 'matrix-host-supervision-06.json'
++STOP = ROOT / 'matrix-host-supervision-06-stop.json'
++TOKEN = 'mlx-matrix-20261016-528-supervision-06'
+ MAX_SECONDS = 3600
+ 
+ 

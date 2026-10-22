@@ -1,0 +1,13 @@
+{
+  "failures": [],
+  "host_reinspection_performed": false,
+  "identity_file_count": 105,
+  "observed_health_ok": true,
+  "passed": true,
+  "qualified_observation": true,
+  "reviewer_sha256": "1fea36cfd32c4ab51e8761b11fac878155661c6ff55c5ae1bedb8e861bccabdb",
+  "sample_count": 240,
+  "schema": "astrid_observation_provenance_review_v1",
+  "source_record": "/Users/v/other/astrid/.runtime/mlx-upgrade/observations/20261015T203041Z/soak_result.json",
+  "source_record_sha256": "760021391ee08584d6416b324e671a950cbb523b7cb57091562a4c09031361c4"
+}

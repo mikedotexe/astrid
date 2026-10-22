@@ -1,0 +1,51 @@
+{
+  "schema": "reservoir_maintenance_state_interface_v1",
+  "created_at": "2026-10-16T03:31:41.657400+00:00",
+  "status": "isolated_prototype_no_production_adapter_or_real_restore_acceptance",
+  "source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/reservoir_maintenance_state.py",
+    "sha256": "30fc7e3aa9e90719d89fc34f3dc509e49b6b9d95735af6f45c2cff826ed561fa"
+  },
+  "witness_schema": "reservoir_maintenance_witness_v1",
+  "common_bindings": [
+    "plan_sha256",
+    "provider_old_identity_sha256",
+    "reservoir_old_identity_sha256"
+  ],
+  "functions": {
+    "verify_provider_drain": "(context, log_path, qos_path, coverage, journal_path) -> provider_drain witness; retained private artifacts only",
+    "verify_final_snapshot": "(context, log_path, initial_handles, coverage) -> final_snapshot witness; initial_handles is the original list_handles_response object",
+    "inventory_tree": "(root, max_file_bytes=256MiB) -> complete regular-file/directory inventory; aggregate bound2GiB; rejects symlinks/hardlinks/special/unowned paths or traversal failure",
+    "backup_stopped_tree": "(context, root, destination, stopped_barrier) -> backup witness; exclusive new destination; context must bind final_snapshot_sha256; stopped_barrier requires exact context bindings, ownership_current and both role job/old-process/listener absence",
+    "prepare_restore_request": "(context, backup_witness, source_sha256, interpreter_sha256, configuration_sha256) -> private_restore envelope with passed:false; actual isolated restore not implemented here"
+  },
+  "coverage_contract": {
+    "schema": "reservoir_maintenance_log_coverage_v1",
+    "complete": true,
+    "process_identity_sha256": "matching role old identity hash",
+    "old_process_absent": true,
+    "log": {
+      "device": "integer>=0",
+      "inode": "integer>0",
+      "start_offset": "integer>=0",
+      "end_offset": "start_offset+captured byte length",
+      "sha256": "captured bytes hash"
+    },
+    "provider_additional": [
+      "start_worker_idle:true",
+      "start_queue_empty:true",
+      "qos span with same fields as log"
+    ],
+    "reservoir_additional": [
+      "inventory_matches_start_boundary:true"
+    ]
+  },
+  "critical_limits": [
+    "Coverage metadata is an input from the separately reviewed host adapter. This helper cannot establish live ownership or complete capture from a caller Boolean.",
+    "Provider logs lack per-line PID and push request ID. Only a complete consistently captured idle/empty-start to old-exit window, bound to exclusive provider identity and the reviewed single-worker source, permits ordered generation/acknowledgement matching.",
+    "The initial idle/empty condition establishes the evidence window, not an admission/drain barrier. A generation selected after SIGTERM must still complete and be represented.",
+    "Journal entries precede push; request audit and QoS completion alone do not prove success. Missing pushes, ambiguous pairing, failed generations, unmatched QoS lifecycle or incomplete coverage block.",
+    "A passed backup receipt proves byte preservation under an externally established stopped barrier, not NumPy/schema/thermostat or real restore validity.",
+    "No real service/state/model/API or signal was used to generate the 19-test receipt."
+  ]
+}

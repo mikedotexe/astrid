@@ -1,0 +1,57 @@
+{
+  "actual_case_execution_authorized": false,
+  "approved_preparation": true,
+  "authorized_test_slot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/harness-v3-test-slot-01.json",
+    "sha256": "55a3caeb2a9f30d45a1d34e4f7fdd04a2bd1c06fc357b391b1e68c3b5a4bf7ff"
+  },
+  "cpu_test_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/cpu-tests-01.txt",
+    "sha256": "ea12093f80780c29a39daa444e908ecbeedb23948e7ce9fecff734a2d730cefe"
+  },
+  "cpu_test_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/cpu-tests-01.json",
+    "sha256": "591282f935267edd983ac9fbf07e9844c3bcc3383b1a82f61e30a426a1ecca35"
+  },
+  "created_at": "2026-10-17T00:03:46.560825+00:00",
+  "limitations": [
+    "Independent review read/hash only; no reviewed-code imports, compilation, tests, ps, child starts, signals, sockets or numerical operations.",
+    "Actual macOS initial metadata publication remains unqualified until a separately released and supervised private case completes.",
+    "A fresh v3 source preparation and exact case evidence are required. Prior version failures and reviews remain unchanged.",
+    "Production proof-reader alignment and production admission are separate future work."
+  ],
+  "production_qualified": false,
+  "reviewer": "/root/mlx_readiness",
+  "schema": "reservoir_private_harness_initial_publication_final_review_v1",
+  "source_artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/README.md": "0550cfe1621ec7dc5557f9d872aead8708eaf8c6d9f4c5ee9ce8b9b45d91e44a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/driver.py": "f99dc8d0945cd23c62249b78a3a8a24fa5791f61c57b5ec37fb1bc90b1dbcf63",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/process_identity.py": "badc6dd3ddec6aa9bf0c3996aecfab0e40232acad9dae346d6302bbec16803c7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/result_checks.py": "047389e82d8a8e5109ff6c49d4af10dd1bd9b80e254c965e9dd94692529ae5cf",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/source-parent-01.json": "9432395c6c17fec75ab5813a9810a32a56a3d93f214e409748b3ebb72b6969e7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/test_harness.py": "05e35897981af399fde10ee4a7baabd9dc8f15988179cdd0e0ef3daa78928148",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/test_initial_publication.py": "54462505c1efac8080f6ef60608605d93182a5ef9c9b90f88c455cbd316f024b"
+  },
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/independent-source-review-01.json",
+    "sha256": "fe3c2205bdaedb2423349d62ef491904184a48abfe62bde4558a562f190b4b31"
+  },
+  "status": "accepted_source_and_guarded_fake_tests_only",
+  "unresolved_source_blockers": [],
+  "verification": {
+    "all_current_hashes_match_source_review_and_cpu_receipt": true,
+    "all_eleven_python_files_compiled_in_memory_by_recorded_runner": true,
+    "errors": 0,
+    "failures": 0,
+    "no_forbidden_actions_or_imports_recorded": true,
+    "skipped": 0,
+    "test_suite_rerun_by_reviewer": false,
+    "tests": 31
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "reservoir_maintenance_design_provenance_v1",
+  "created_at": "2026-10-16T03:01:22.715040+00:00",
+  "design_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/design-v1.json",
+  "design_sha256": "d89206c91b6343ab3278f2b651b011863697c822f804d36b4c0310326db97920",
+  "source_hashes": {
+    "/Users/v/other/astrid/scripts/model_environment.py": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+    "/Users/v/other/astrid/scripts/model_environment_activate.py": "3523eadcc729004908ad99419e17b45c25245330dc0066e45f40cb558622dc86",
+    "/Users/v/other/astrid/scripts/qualify_model_launchd_handoff.py": "570e7f40ebc778a488b4179eee81f6e3122569617aa9826f797fe5a5ed25ac00",
+    "/Users/v/other/astrid/scripts/bridge_drain.py": "9cec15ada094b462323ab1d0d1f0c8a364a9863e83b2c69dcf484aa72b907b9c",
+    "/Users/v/other/astrid/capsules/spectral-bridge/src/autonomous/reservoir.rs": "9a8bd8865f91c5b20dfa68e37225d360c6609359c9a0ba3cc8db034e4190b07f",
+    "/Users/v/other/astrid/capsules/spectral-bridge/src/main.rs": "77e7b714da61f49a1e232aa2ecaf66f2e7772f59831e224f080da597b445bdca",
+    "/Users/v/other/neural-triple-reservoir/AGENTS.md": "8a1472db335677180180dd4c63f13d4cbb2a7ff91658b3f8ba97018e1e442fb5",
+    "/Users/v/other/neural-triple-reservoir/reservoir_service.py": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+    "/Users/v/other/neural-triple-reservoir/persistence.py": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+    "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py": "d67a0704c7498c49ed0ac36ea5b3d161f74753419f823327f1b1572d9203610f",
+    "/Users/v/other/neural-triple-reservoir/coupled_http_gateway.py": "10f6d216baf5169c1fd375e79aa3d565459d14edf02089e53a8ff4bb6f17b54c",
+    "/Users/v/other/neural-triple-reservoir/astrid_feeder.py": "dce37ed5531d65c14932e74a562ad5529b31f2d6cb0303cbaa1866b0178bbf80",
+    "/Users/v/other/neural-triple-reservoir/minime_feeder.py": "6e06f73da069690aa31baef56170a8984fb8a220cf5e2777f42b38df3e912c81",
+    "/Users/v/other/neural-triple-reservoir/collab_feeder.py": "5315b45b9246bda055d4f648190d5ef58567bd9249baa168e8fa53def099726e",
+    "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/websockets/asyncio/server.py": "c10f6805cd1604e2336d7283609f148574537a85eb49f2eee82582ad497ebdc9",
+    "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/launchd-handoff-fixture-admin-02-review.json": "806b1a056ca9a4513281fb02aa18537c839a676c10613b1de149dd1595720e24"
+  },
+  "scope": "documentation_only",
+  "production_mutations_performed": false,
+  "fixtures_or_models_executed": false,
+  "apis_called": false,
+  "controller_modified": false,
+  "validation": {
+    "json_parsed": true,
+    "two_label_scope": true,
+    "phase_ids_unique": true,
+    "unresolved_requirements_count": 7
+  }
+}

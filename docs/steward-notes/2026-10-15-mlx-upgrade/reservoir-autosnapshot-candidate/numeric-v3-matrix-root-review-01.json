@@ -1,0 +1,107 @@
+{
+  "accepted_for_private_numpy_only": true,
+  "case_count": 14,
+  "created_at": "2026-10-17T00:41:18.725016+00:00",
+  "host_admission": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-root-review.json",
+    "sha256": "5817de28dad2ca276cdfc652d65efb1531a91a9909746ee7efc55eccfa64bd2f"
+  },
+  "host_all_case_coverage_passed": true,
+  "host_completed_at": null,
+  "host_final_raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-05.json",
+    "sha256": "11b8fdcc7979e954b35cfb2d370c4b838a537aa5d7a616bf868f2f3eec21edda"
+  },
+  "host_finish_request": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-05-stop.json",
+    "sha256": "ecdb0d83aca4d433158ca138420ccb60232f2ae968bd120f30019e0f762eb146"
+  },
+  "host_invalidated": false,
+  "host_samples": 303,
+  "host_source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2_run05.py",
+    "sha256": "02c1f9152d94f86849cfc2fc3cfe3ab893b8ceb03fed683c4f61a7619671b91b"
+  },
+  "host_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-run05-source-review-01.json",
+    "sha256": "c4ce99ec02a8b334a8e834bd9521ad1d2aee9aaffc9b07e6e278afff63a87904"
+  },
+  "independent_complete_matrix_review_pending": true,
+  "limitations": [
+    "Complete private NumPy scheduling and state-preservation evidence only. Restore02, final production consumer alignment, actual owned recovery fixture, maintenance acceptance and new MLX baseline remain separate prerequisites.",
+    "Expected negative original aggregate and both single-save timing failures are explicit controls; they do not waive live health gates.",
+    "All cases ran serially with root one-use releases and continuous strict host evidence."
+  ],
+  "manifest": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/sources.json",
+    "sha256": "dc6183624da3c5beec22ae1ff78bbed9d0df12850e413612305ac21f500cef2e"
+  },
+  "matrix_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/matrix-review-01.json",
+    "sha256": "42a63f52154aafca5b8502f667cd6af4679aee73d69281551e3c508801c9729d"
+  },
+  "mlx_qualified": false,
+  "observer_absent": true,
+  "passed": true,
+  "production_qualified": false,
+  "reviewer": "root",
+  "root_case_reviews": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-01-root-review.json",
+      "sha256": "522db336b5f83c6a8e3a2905b28264a43e150afa6e25c9db96fb70bd76ae24f6"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-02-root-review.json",
+      "sha256": "233c8364dba672da76218c75f472042617649ac37e245bae435d704e760f2e4a"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-03-root-review.json",
+      "sha256": "9daa8b2626d14329203275d5628d65500e6d15f7a8328004d1421bb796820892"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-04-root-review.json",
+      "sha256": "8fd7d34ab18e7a3bc1c908b028b5059a1c4dc703956141cfb3c85a185e8ca0e4"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-05-root-review.json",
+      "sha256": "7f71b8ca5f6ef5715b4faabf012f44cabaca4529858e3130cb1813f2633836fd"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-06-root-review.json",
+      "sha256": "c227720c7ca2bdb1c7582b606edc56e4a1f05098f26b0605ac744a93ff8e0c03"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-07-root-review.json",
+      "sha256": "19dab18cf7b36e89c0b3fabce56f9fde30d973a5ca6934d187af6fa6bda9f1a5"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-08-root-review.json",
+      "sha256": "2ac3937ae1131b7aebd87592192464519b502207698043325414cf4de4f55cdb"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-09-root-review.json",
+      "sha256": "8abe1a010af90a0f5fddcff13a4dcc73da00ef19bc4eccef188565b3fea39796"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-10-root-review.json",
+      "sha256": "9c80d0f5287718250691925170f6c793427b70f4dc78b5dfefe5df9174fa3256"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-11-root-review.json",
+      "sha256": "8bcd2af581f8adee51524a45a2e7a62ef17a49a1777865daa9e5d3594f412cd3"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-12-root-review.json",
+      "sha256": "79438503618ddf76f7519407f9e9955215e0c2fffab8cc8efb1a28b5a9e08122"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-13-root-review.json",
+      "sha256": "cfc723e1b5abcfc2258ba04fb622c6bd6a8b6e04ceb7ce4e9e7fe10862ded545"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-case-14-root-review.json",
+      "sha256": "463e70f4ad76bbf78fd6f5a74cacc61cae401cb9f89c736fcd483a7da9b0e38b"
+    }
+  ],
+  "schema": "reservoir_private_matrix_root_review_v1"
+}

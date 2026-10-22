@@ -1,0 +1,17 @@
+{
+  "created_at": "2026-10-17T01:17:38.935707+00:00",
+  "prepared_by": "root",
+  "production_enabled": false,
+  "review_pending": true,
+  "runtime_actions": false,
+  "schema": "reservoir_production_entrypoint_source_checkpoint_v1",
+  "scope": "disabled source and unrun stdlib tests only",
+  "source_files": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_entrypoint.py": "a32fac0b1733719ac3c995215f95b97f13d606cc657f6707166bd7a21661dcd1",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_preflight.py": "8b355ee2a9b90fff1f7bf26a8923e59294abf1563604645b36ac279d1d51e824",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_entrypoint.py": "d43ddb7deffa4b92d966e5f31f7eda53eabfe3f3fc6ff0731743ab594e002801",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_preflight.py": "c998cb23966aadd35d265d8446ba61b38ac615b320d3a2c53f140414cb1bf66c"
+  },
+  "target_imports": false,
+  "tests_run": false
+}

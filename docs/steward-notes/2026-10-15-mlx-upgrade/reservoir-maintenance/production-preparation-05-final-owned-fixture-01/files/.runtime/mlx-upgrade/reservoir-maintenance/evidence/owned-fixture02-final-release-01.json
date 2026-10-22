@@ -1,0 +1,711 @@
+{
+  "approved": true,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/README.md": "043ead2c0a701f4ead564393b8845b19dd73a1fa5444943721b7858e711493c9",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_cleanup.py": "5637d6269990e70b9ec0dbc6505173d891171f7dfbeca4c543ca4364c4097a66",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_cleanup_host.py": "3aa97ac474aa77d67d2617435823c802a5e725526967af3d7b98a26f489f6ace",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_coordinator.py": "8244b61c4fa980b67528f8ebeaa20b7ebe6c7ca45e8039e1493977c2ab5a07ba",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_injection.py": "fb4fac96f776fb615ad26fef3db43856f70e7f7ea0c348a76100021a3a714fc0",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_pin.py": "99f2522f163ba303fd28b71d802dc5bcf749447b29a3f6449e9bccf5da0d2eca",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_plan.py": "6f49c5f5d7f9154e0a1b9e0a69171aa04a1125f8522ed63725087fbea6303c69",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_records.py": "728c1f178cb3a6f8e1a88f0229d8a691fb11d11bd8b090e07c480c0ec5b88300",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_result.py": "823ce8eb4a036711d8c5b46b6458402a6f2bce6f1af59a4c6a1920edf08e46b2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_retained.py": "d1b09bc4eae7f41593557fc028ee03289953c8a5b7c8f5cdb205d8807bfc70a2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_run.py": "c5c7117abce79963d22aed713f9d3fee388b6d4d060eda71357ac29f52ac775d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_setup.py": "731d9243f9e6afc8c019edaf2c13b700d6c896a91e68678d183d50e81e48d28b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_system.py": "96a95258ae81652f5ad3e1bf222f9159163ad134e6dd7113d16fbabeb6576817",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_witnesses.py": "3530284ed90730b5c78f277c195d10b20103924806c5d0ca6091f1e20789acd8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_pin_sentinel.py": "1e8008dfb6f2d245232d229e30bd41d3765615ed6f13123993c0776bafdb6829",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_pin_system.py": "60897105636e29b6a986f7983e2d6514c7237243e45c34f3c0dd3d00c20493da",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_core.py": "111041830169d70bafa98ab54bd2a6f4c76f7d26a7910dc3a68a984d53f2ab15",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_host.py": "0fa54ce45e72452fb01108360dc0c48aade212cfc47de77fdf0167a45aba286a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_coordinator.py": "06051d8ec4f62cd4c6a53aa995b4512d62c746b29efa9cd01942ecee1f247aa3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_pin.py": "b3be3df73d2c6f998a6e09ea2ce293314fd8f42b487419728ffb138b163108f9",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_fixture_run.py": "a49a0f9fce2cb31cf5e4c7811409ba8cc24eda3e7446825df8f9917e9fd03f26",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_recovery_host.py": "e3e43d76d3ceb0b01188fc0f2f6b5b3d0c9acb04a6de83738aa3047708da77ef",
+    "/Users/v/other/astrid/scripts/model_environment.py": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587"
+  },
+  "coordination": {
+    "actor": "codex-mlx-upgrade",
+    "control": {
+      "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/steward_control_v1/control.json",
+      "sha256": "d722df02a823393130dfb31c402c1600754ef887cda04da2b272adf6099478e3"
+    },
+    "lease_absent": true,
+    "lease_path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/steward_control_v1/lease.json",
+    "pause_generation": 528,
+    "paused": true
+  },
+  "core": {
+    "artifacts": {
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/metadata_preflight.py": "3c2bce47648596f8988e0884081625f729d77856526c1b062f5078b68684d318",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_admission.py": "6a047fc63f3a8cf05a865f72eb0f9c42b1cc58c5137eda86e85eb96d662253ed",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_entrypoint.py": "a32fac0b1733719ac3c995215f95b97f13d606cc657f6707166bd7a21661dcd1",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_fixture_admission.py": "69f85904322db994707432d9f288df8e485607b6a1a6cc1a1ee7253a2bbd961a",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_fixture_history.py": "506bd5cfeeda0dcb2315ec601aaa29e54eae58fa117310f5d60ffc66b83e8013",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_host.py": "7b162da2a92c6cce0156fd83e3162b2decbc5cc2ffafb7b4bdc4570d43736945",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_preflight.py": "01aed915bee64829b2c579e2be4124eb7738d25ccb20d41a7666d3bccfe63534",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery.py": "893f70d91a8955df5e60cbacc3caf22dc08f2c1c8863677180a5cfc37a5f14d7",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery_driver.py": "a092c51499c353b53ddf4c09a43cf2d308ce951a535274f652cf755fb815d904",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery_inspect.py": "eaafdbbd0521c8a25468d0d40613fcc5e8d2be105b73a511089228dfbde5cdc3",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_restore_admission.py": "8ca6fd9139a788b9fca28895f8a98bc0697255afa57a846d722e7466b4719162",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_restore_runner.py": "f7c9be6dffc8161af2d678bfd804e0642e31611b7877d55b98a71429e4bd903e",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_retained.py": "5c287b8757dfd7e8eb876fa8064edba7e4d51d11c179a0c3ed7274effe331a9b",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/recovery_ledger.py": "fd855cd1613e9fbab1a8e5ae8df4a144fc936bdb7fa5525f3bee0a4e8b03ee84",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/recovery_phases.py": "df6e3e959f79e560dfbe8904cbf9546b79e27b2819f7f5b8ab1aa89bb6917389",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/reservoir_maintenance.py": "b8be135139bc53e5d46d124d778f83daacaff0e0957dc9bf18cc88efe86b17d3",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_admission.py": "83c997249a72cbb6a8600a3b94a9845280e333c90fd81c461f5d814f8f2c3533",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_controller.py": "6d7b05f415d033c164f85abdc22fbcbb7303f9fc2022f4fc03de6f68b4b7ba40",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_entrypoint.py": "fb059b7fe81ce99af98ab8c87617c46798e903fe68c0eec992f7d8a6544f262e",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_fixture_admission.py": "a58e4fa279710ed4f67a9c27f072bfb59d677e938874d8bbc1be8f848b8aa7d1",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_host.py": "37f234156c1eabd902faf26ce9ee5409841d5332b12218ba407a6b45658d8d61",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_preflight.py": "c6d4ff825edf5c2ed823f1bbddbfcb51d10932129d029e83a87cfbea5130518a",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_recovery.py": "5331b9ca3ae00e01e2e010aef52705e48e9beea4cfafbd3cfb543eaf355198a8",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_recovery_driver.py": "0a948bbce5d3f6dc77b82254ab5a5858db9626a9a6cd80d2f7569347fd6c6355",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_recovery_inspect.py": "5b5af27039762aa4527d89d16bce29005d434dc1da11db37e28eb560311f8fca",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_restore_admission.py": "1404e7b499770af296ad2aa86d16f6cca65d06379b02efb6a081b51d8549ca03",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_restore_runner.py": "82986ef70d485f73a11cbd8d02c074b6f910e39b6101bc20b79ab57c2b48b804",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_retained.py": "e9dea40dcd0ba6baeb5e67142dfcc605625cb15449588dc903632e5460a5dde7",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_service_admission.py": "cd5f121aad506590aad66178579115de6ba4df9986b5ab29889ddcb22a542739",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_recovery_phases.py": "3a4c17fc8ec0caaa61424028c28a208fac681c70a367e6bcd91cb48c1ee69d03",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_reservoir_maintenance_state.py": "5c896092de2a2da6351c7a05ffe78a080fcfd49e91630fd5764b6110a9075834",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_restore_verifier.py": "0494a6570245cfc2e6a76cd18188789130c7cedf3b1eb80743522e0e5e3f7522",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_transaction_execution.py": "996d4a57be06ff2055a292f06e83c38247685db8b3c6dc6fc2ace44dda91d44a",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/transaction_execution.py": "2b4e5ad98f4e920ceb67a161480afaffde9e6a44e3c9007645dc9e9445ccc4cb"
+    },
+    "flags": {
+      "PRODUCTION_CONTROLLER_ENABLED": true,
+      "PRODUCTION_EXECUTION_ENABLED": true
+    },
+    "root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05"
+  },
+  "created_at": "2026-10-17T02:02:28.282899+00:00",
+  "executor_plan": [
+    {
+      "action_id": "lock",
+      "expected_exit": 0,
+      "id": "01-lock-hold-lock",
+      "injection": null,
+      "kind": "lock_hold",
+      "mode": "execute"
+    },
+    {
+      "action_id": "lock",
+      "expected_exit": 76,
+      "id": "02-lock-refusal-lock",
+      "injection": null,
+      "kind": "lock_refusal",
+      "mode": "execute"
+    },
+    {
+      "action_id": "arm_next_spawn:provider",
+      "expected_exit": 75,
+      "id": "03-fresh-arm-next-spawn-provi",
+      "injection": "fresh-provider-arm",
+      "kind": "fresh",
+      "mode": "execute"
+    },
+    {
+      "action_id": "arm_next_spawn:provider",
+      "expected_exit": 0,
+      "id": "04-resume-one-arm-next-spawn-provi",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "signal_stop:provider",
+      "expected_exit": 75,
+      "id": "05-resume-one-signal-stop-provider",
+      "injection": "main-signal-stop-provider",
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "signal_stop:provider",
+      "expected_exit": 0,
+      "id": "06-resume-one-signal-stop-provider",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "held_verified:provider",
+      "expected_exit": 0,
+      "id": "07-resume-one-held-verified-provid",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "witness:provider_drain",
+      "expected_exit": 75,
+      "id": "08-resume-one-witness-provider-dra",
+      "injection": "main-witness-provider-drain",
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "witness:provider_drain",
+      "expected_exit": 0,
+      "id": "09-resume-one-witness-provider-dra",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "remove_held:provider",
+      "expected_exit": 75,
+      "id": "10-resume-one-remove-held-provider",
+      "injection": "main-remove-held-provider",
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "remove_held:provider",
+      "expected_exit": 0,
+      "id": "11-resume-one-remove-held-provider",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "job_absent:provider",
+      "expected_exit": 0,
+      "id": "12-resume-one-job-absent-provider",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "create_hold:reservoir",
+      "expected_exit": 0,
+      "id": "13-resume-one-create-hold-reservoi",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "arm_next_spawn:reservoir",
+      "expected_exit": 0,
+      "id": "14-resume-one-arm-next-spawn-reser",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "signal_stop:reservoir",
+      "expected_exit": 75,
+      "id": "15-resume-one-signal-stop-reservoi",
+      "injection": "main-signal-stop-reservoir",
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "signal_stop:reservoir",
+      "expected_exit": 0,
+      "id": "16-resume-one-signal-stop-reservoi",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "held_verified:reservoir",
+      "expected_exit": 0,
+      "id": "17-resume-one-held-verified-reserv",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "witness:final_snapshot",
+      "expected_exit": 75,
+      "id": "18-resume-one-witness-final-snapsh",
+      "injection": "main-witness-final-snapshot",
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "witness:final_snapshot",
+      "expected_exit": 0,
+      "id": "19-resume-one-witness-final-snapsh",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "remove_held:reservoir",
+      "expected_exit": 0,
+      "id": "20-resume-one-remove-held-reservoi",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "job_absent:reservoir",
+      "expected_exit": 0,
+      "id": "21-resume-one-job-absent-reservoir",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "witness:backup",
+      "expected_exit": 75,
+      "id": "22-resume-one-witness-backup",
+      "injection": "main-witness-backup",
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "witness:backup",
+      "expected_exit": 0,
+      "id": "23-resume-one-witness-backup",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "witness:private_restore",
+      "expected_exit": 75,
+      "id": "24-resume-one-witness-private-rest",
+      "injection": "main-witness-private-restore",
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "witness:private_restore",
+      "expected_exit": 0,
+      "id": "25-resume-one-witness-private-rest",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "install_repair",
+      "expected_exit": 75,
+      "id": "26-resume-one-install-repair",
+      "injection": "main-install-repair",
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "install_repair",
+      "expected_exit": 0,
+      "id": "27-resume-one-install-repair",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "bootstrap_original:reservoir",
+      "expected_exit": 75,
+      "id": "28-resume-one-bootstrap-original-r",
+      "injection": "main-bootstrap-original-reservoir",
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "bootstrap_original:reservoir",
+      "expected_exit": 0,
+      "id": "29-resume-one-bootstrap-original-r",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "witness:startup",
+      "expected_exit": 0,
+      "id": "30-resume-one-witness-startup",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "bootstrap_original:provider",
+      "expected_exit": 75,
+      "id": "31-resume-one-bootstrap-original-p",
+      "injection": "main-bootstrap-original-provider",
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "bootstrap_original:provider",
+      "expected_exit": 0,
+      "id": "32-resume-one-bootstrap-original-p",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "witness:provider_ready",
+      "expected_exit": 0,
+      "id": "33-resume-one-witness-provider-rea",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "release_hold:provider",
+      "expected_exit": 75,
+      "id": "34-resume-one-release-hold-provide",
+      "injection": "main-release-hold-provider",
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "release_hold:provider",
+      "expected_exit": 0,
+      "id": "35-resume-one-release-hold-provide",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "release_hold:reservoir",
+      "expected_exit": 0,
+      "id": "36-resume-one-release-hold-reservo",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "completed",
+      "expected_exit": 75,
+      "id": "37-resume-one-completed",
+      "injection": "main-completed",
+      "kind": "resume_one",
+      "mode": "execute"
+    },
+    {
+      "action_id": "completed",
+      "expected_exit": 0,
+      "id": "38-resume-one-completed",
+      "injection": null,
+      "kind": "resume_one",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "create_hold:provider",
+      "expected_exit": 0,
+      "id": "39-cleanup-create-hold-provider",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "arm_next_spawn:provider",
+      "expected_exit": 0,
+      "id": "40-cleanup-arm-next-spawn-provi",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "signal_stop:provider",
+      "expected_exit": 75,
+      "id": "41-cleanup-signal-stop-provider",
+      "injection": "cleanup-signal-stop-provider",
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "signal_stop:provider",
+      "expected_exit": 0,
+      "id": "42-cleanup-signal-stop-provider",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "held_verified:provider",
+      "expected_exit": 0,
+      "id": "43-cleanup-held-verified-provid",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "cleanup_witness:provider",
+      "expected_exit": 75,
+      "id": "44-cleanup-cleanup-witness-prov",
+      "injection": "cleanup-cleanup-witness-provider",
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "cleanup_witness:provider",
+      "expected_exit": 0,
+      "id": "45-cleanup-cleanup-witness-prov",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "remove_held:provider",
+      "expected_exit": 75,
+      "id": "46-cleanup-remove-held-provider",
+      "injection": "cleanup-remove-held-provider",
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "remove_held:provider",
+      "expected_exit": 0,
+      "id": "47-cleanup-remove-held-provider",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "job_absent:provider",
+      "expected_exit": 0,
+      "id": "48-cleanup-job-absent-provider",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "create_hold:reservoir",
+      "expected_exit": 0,
+      "id": "49-cleanup-create-hold-reservoi",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "arm_next_spawn:reservoir",
+      "expected_exit": 0,
+      "id": "50-cleanup-arm-next-spawn-reser",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "signal_stop:reservoir",
+      "expected_exit": 75,
+      "id": "51-cleanup-signal-stop-reservoi",
+      "injection": "cleanup-signal-stop-reservoir",
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "signal_stop:reservoir",
+      "expected_exit": 0,
+      "id": "52-cleanup-signal-stop-reservoi",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "held_verified:reservoir",
+      "expected_exit": 0,
+      "id": "53-cleanup-held-verified-reserv",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "cleanup_witness:reservoir",
+      "expected_exit": 75,
+      "id": "54-cleanup-cleanup-witness-rese",
+      "injection": "cleanup-cleanup-witness-reservoir",
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "cleanup_witness:reservoir",
+      "expected_exit": 0,
+      "id": "55-cleanup-cleanup-witness-rese",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "remove_held:reservoir",
+      "expected_exit": 75,
+      "id": "56-cleanup-remove-held-reservoi",
+      "injection": "cleanup-remove-held-reservoir",
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "remove_held:reservoir",
+      "expected_exit": 0,
+      "id": "57-cleanup-remove-held-reservoi",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "job_absent:reservoir",
+      "expected_exit": 0,
+      "id": "58-cleanup-job-absent-reservoir",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "final_state",
+      "expected_exit": 0,
+      "id": "59-cleanup-final-state",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "release_hold:provider",
+      "expected_exit": 75,
+      "id": "60-cleanup-release-hold-provide",
+      "injection": "cleanup-release-hold-provider",
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "release_hold:provider",
+      "expected_exit": 0,
+      "id": "61-cleanup-release-hold-provide",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "release_hold:reservoir",
+      "expected_exit": 0,
+      "id": "62-cleanup-release-hold-reservo",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "complete",
+      "expected_exit": 75,
+      "id": "63-cleanup-complete",
+      "injection": "cleanup-complete",
+      "kind": "cleanup",
+      "mode": "execute"
+    },
+    {
+      "action_id": "complete",
+      "expected_exit": 0,
+      "id": "64-cleanup-complete",
+      "injection": null,
+      "kind": "cleanup",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "replace_plist",
+      "expected_exit": 75,
+      "id": "65-pin-replace-plist",
+      "injection": "pin-replace_plist",
+      "kind": "pin",
+      "mode": "execute"
+    },
+    {
+      "action_id": "replace_plist",
+      "expected_exit": 0,
+      "id": "66-pin-replace-plist",
+      "injection": null,
+      "kind": "pin",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "bootstrap",
+      "expected_exit": 75,
+      "id": "67-pin-bootstrap",
+      "injection": "pin-bootstrap",
+      "kind": "pin",
+      "mode": "execute"
+    },
+    {
+      "action_id": "bootstrap",
+      "expected_exit": 0,
+      "id": "68-pin-bootstrap",
+      "injection": null,
+      "kind": "pin",
+      "mode": "reconcile"
+    },
+    {
+      "action_id": "verify_exit",
+      "expected_exit": 0,
+      "id": "69-pin-verify-exit",
+      "injection": null,
+      "kind": "pin",
+      "mode": "execute"
+    },
+    {
+      "action_id": "remove_absent_job",
+      "expected_exit": 0,
+      "id": "70-pin-remove-absent-job",
+      "injection": null,
+      "kind": "pin",
+      "mode": "execute"
+    },
+    {
+      "action_id": "complete",
+      "expected_exit": 0,
+      "id": "71-pin-complete",
+      "injection": null,
+      "kind": "pin",
+      "mode": "execute"
+    }
+  ],
+  "final_release_acceptance": false,
+  "fixture": {
+    "root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2",
+    "targets": {
+      "pin": "gui/501/com.codex.reservoir-maintenance-fixture.4327212894d64b31980b98bf3fbd7fc2.pin",
+      "provider": "gui/501/com.codex.reservoir-maintenance-fixture.4327212894d64b31980b98bf3fbd7fc2.provider",
+      "reservoir": "gui/501/com.codex.reservoir-maintenance-fixture.4327212894d64b31980b98bf3fbd7fc2.reservoir"
+    },
+    "token": "4327212894d64b31980b98bf3fbd7fc2"
+  },
+  "host_binding": {
+    "boot_uuid": "A86C8146-975D-4935-85A6-A7879EC7BBE3",
+    "hostname": "m3-volya",
+    "os_version": "27.0.1",
+    "uid": 501
+  },
+  "injections": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-injections-01.json",
+    "sha256": "942838d25509d884a87e1d0f7397e6fef7c821b056996531ef1d2faabaa00513"
+  },
+  "limits": [
+    "This release authorizes the single generated-job synthetic owned fixture only.",
+    "No ProductionHost, production provider-pinning schedule, numerical restore, live service transition or MLX acceptance is included.",
+    "Default remains inert; explicit ordinary-user interactive Terminal invocation is required.",
+    "Any failure preserves root, holds and journals; no retry or automatic cleanup is authorized."
+  ],
+  "precommand_host_spot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-precommand-host-spot-01.json",
+    "sha256": "76c9d13e9456d04a0aae7501d874eca3c37d8b908db79c09fcb59d04e17dfcfa"
+  },
+  "preparation_inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-source-inputs-01.json",
+    "sha256": "2ae353e1c80d5e40adabd4194b4aba9a355a3d2092105018cd23fec386595180"
+  },
+  "prepared_by": "root",
+  "production_qualified": false,
+  "python": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+  "python_files": {
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python": "7ecc1ecbf9daa9303c4bf502ff62ffdd9010ed5c08729d470ae9380c10ce1211",
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43"
+  },
+  "qualification_meaning": "owned_fixture_exact_final_release_only",
+  "release_stage": "final_enabled",
+  "result_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/evidence/owned-recovery-4327212894d64b31980b98bf3fbd7fc2-result.json",
+  "schema": "owned_recovery_fixture_release_v2",
+  "scope": "owned_fixture_only",
+  "setup_plan": [
+    "bootstrap:reservoir",
+    "bootstrap:provider"
+  ],
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-source-review-01.json",
+    "sha256": "02c5e463adfef20776e7a50b012841ef624c48eb20d3afc173bd7c90b573ef14"
+  },
+  "sudo_debug": true
+}

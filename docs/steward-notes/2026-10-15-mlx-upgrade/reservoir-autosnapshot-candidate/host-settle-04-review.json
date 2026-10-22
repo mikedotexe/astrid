@@ -1,0 +1,43 @@
+{
+  "schema": "reservoir_fixture_host_settle_review_v1",
+  "reviewed_at": "2026-10-16T17:09:16.767995+00:00",
+  "raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-04.json",
+    "sha256": "ec051655dab5eaa2643fc6f36ee66f275433997c77f5aaa04067b3cbf4ec4a5f"
+  },
+  "observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-04-observer.py",
+    "sha256": "97e6c8f688e42d6beeb996bb819964eaa5426a4b3d37734288d1e5b3d04b3f85"
+  },
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-04-source-review.json",
+    "sha256": "95772487d9ca683ad454116f217abd04104f05c4594dd5ca03bedd64a972ebb4"
+  },
+  "passed": false,
+  "samples": 123,
+  "duration_s": 611.7145283338614,
+  "longest_eligible_window_s": 155.00004506111145,
+  "current_eligible_window_s": 34.99919509887695,
+  "window_independently_recomputed": true,
+  "pressure_sample_counts": {
+    "1": 100,
+    "2": 23
+  },
+  "swap_bytes_first": 14143392317.44,
+  "swap_bytes_last": 14038461317.12,
+  "swap_endpoint_growth_bytes": -104931000.3199997,
+  "swap_bytes_max": 15074653634.56,
+  "detected_build_process_samples": 2,
+  "max_sample_gap_s": 5.004961013793945,
+  "health_ready_samples": 123,
+  "reservoir_connected_samples": 123,
+  "production_identity_unchanged": true,
+  "real_numeric_fixture_started": false,
+  "production_mutations": false,
+  "acceptance": "Failed: 155 seconds is below the unchanged 300-second gate. End-to-end swap decreased, but intermittent pressure and swap rises broke clean windows. No numeric fixture was released; all historical failures are retained.",
+  "footprint_point_diagnostic": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-footprint-01.json",
+    "sha256": "ef7a9b1ac30788aed092bffcf93442b84a66dde4db0263c0fba2e74e6e7664c0"
+  },
+  "footprint_limit": "One read-only physical-footprint accounting sample is not an allocator diagnosis, sustained-growth result or authorization to stop other processes."
+}

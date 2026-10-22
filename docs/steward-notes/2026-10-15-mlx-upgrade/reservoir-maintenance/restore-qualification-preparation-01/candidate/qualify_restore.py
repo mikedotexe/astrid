@@ -1,0 +1,439 @@
+"""One opt-in CPU fixture qualification of the frozen actual restore verifier.
+
+Default/check mode only hashes prepared code/runtime metadata. It never imports
+numeric modules, starts a child, queries a service, or writes a run directory.
+"""
+from __future__ import annotations
+
+import argparse
+import ast
+import copy
+from datetime import datetime
+from email.parser import Parser
+import hashlib
+import importlib.util
+import json
+import math
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import time
+
+HERE = Path(__file__).resolve().parent
+INPUTS = HERE / 'inputs.json'
+PYTHON = '/Users/v/other/neural-triple-reservoir/.venv/bin/python'
+ORIGINAL_MANIFEST = Path('/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests-v2/original.json')
+SOURCE_PREPARATION = HERE.parent.parent / 'reservoir-snapshot-candidate/qualification-harness/prepared-01/sources.json'
+REPAIR_SHA256 = 'cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da'
+FROZEN = HERE.parent / 'production-candidate-02'
+ENV_HELPER = Path('/Users/v/other/astrid/scripts/model_environment.py')
+CASES = ('complete', 'missing-sidecar', 'malformed-sidecar', 'corrupt-npz',
+         'schema-mismatch', 'config-mismatch', 'source-drift', 'package-drift', 'backup-drift')
+EXPECTED = {
+    'missing-sidecar': ('FileNotFoundError:', 'qualification_numpy_thermostats.json'),
+    'malformed-sidecar': ('ValueError:', 'exactly three thermostat sidecars required'),
+    'corrupt-npz': ('BadZipFile:', 'File is not a zip file'),
+    'schema-mismatch': ('ValueError:', 'snapshot schema/fingerprint incompatible'),
+    'config-mismatch': ('ValueError:', 'restore config differs from preserved reservoir command'),
+    'source-drift': ('ValueError:', 'bound file changed:'),
+    'package-drift': ('ValueError:', 'installed package versions differ'),
+    'backup-drift': ('ValueError:', 'immutable backup changed'),
+}
+THREADS = ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS',
+           'VECLIB_MAXIMUM_THREADS', 'NUMEXPR_NUM_THREADS', 'BLIS_NUM_THREADS')
+
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def digest(path):
+    with Path(path).open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+
+
+def ref(path):
+    path = Path(path)
+    require(path.is_absolute() and path.is_file() and not path.is_symlink(), 'regular absolute reference required')
+    return {'path': str(path), 'sha256': digest(path)}
+
+
+def read(path):
+    with Path(path).open('rb') as stream:
+        data = stream.read(8 * 1024 * 1024 + 1)
+    require(len(data) <= 8 * 1024 * 1024, 'JSON record exceeds bound')
+    return json.loads(data, parse_constant=lambda value: (_ for _ in ()).throw(ValueError('nonfinite JSON')))
+
+
+def write(path, value):
+    with Path(path).open('x') as stream:
+        json.dump(value, stream, indent=2, sort_keys=True, allow_nan=False)
+        stream.write('\n'); stream.flush(); os.fsync(stream.fileno())
+    descriptor = os.open(Path(path).parent, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def check_ref(value):
+    require(ref(Path(value['path'])) == value, 'reference changed: ' + value['path'])
+    return read(value['path'])
+
+
+def harness_hashes():
+    return {str(HERE / name): digest(HERE / name) for name in
+            ('qualify_restore.py', 'seed_fixture.py', 'test_qualification.py',
+             'restore_verifier.py', 'reservoir_maintenance_state.py')}
+
+
+def verify_import_order(verifier_source, bridge_source):
+    """Static acceptance of the known deferred LSM import, without importing it."""
+    verifier = ast.parse(verifier_source); bridge = ast.parse(bridge_source)
+    execute = next(node for node in verifier.body if isinstance(node, ast.FunctionDef)
+                   and node.name == 'execute_private_restore')
+    origin = next(node for node in ast.walk(execute) if isinstance(node, ast.For)
+                  and isinstance(node.target, ast.Name) and node.target.id == 'filename'
+                  and isinstance(node.iter, ast.Name) and node.iter.id == 'SOURCE_NAMES')
+    construction = next(node for node in ast.walk(execute) if isinstance(node, ast.Call)
+                        and isinstance(node.func, ast.Attribute) and node.func.attr == 'ReservoirService')
+    backend = next(node for node in bridge.body if isinstance(node, ast.ClassDef) and node.name == '_LSMShadowBackend')
+    init = next(node for node in backend.body if isinstance(node, ast.FunctionDef) and node.name == '__init__')
+    require(any(isinstance(node, ast.ImportFrom) and node.module == 'lsm_reservoir' for node in ast.walk(init))
+            and not any(isinstance(node, ast.ImportFrom) and node.module == 'lsm_reservoir' for node in bridge.body),
+            'deferred LSM import contract changed; review required')
+    require(construction.lineno < origin.lineno, 'complete origin check precedes deferred LSM constructor import')
+
+
+def check():
+    inputs = read(INPUTS)
+    require(inputs['schema'] == 'reservoir_restore_qualification_inputs_v1'
+            and inputs['production_qualified'] is False, 'fixture inputs required')
+    require(inputs['runtime_manifest']['python'] == PYTHON, 'exact original venv required')
+    require(inputs['source_manifest']['root'] == str(HERE / 'source'), 'only private source copy permitted')
+    require(inputs['config'] == {'input_dim': 32, 'n_nodes': 192, 'backend': 'numpy'}, 'fixed CPU fixture required')
+    require(inputs['original_manifest']['path'] == str(ORIGINAL_MANIFEST)
+            and inputs['source_preparation']['path'] == str(SOURCE_PREPARATION), 'fixed preparation provenance required')
+    original = check_ref(inputs['original_manifest']); source_preparation = check_ref(inputs['source_preparation'])
+    source = inputs['source_manifest']; runtime = inputs['runtime_manifest']
+    require(source['files'] == source_preparation['variants']['candidate']
+            and len(source['files']) == 6 and source['files']['reservoir_service.py'] == REPAIR_SHA256,
+            'complete exact repaired source closure required')
+    require(set(source['files']) == {'reservoir_service.py', 'persistence.py', 'dual_ai_bridge.py',
+            'triple_reservoir_coreml.py', 'lsm_reservoir.py', 'rehearsal.py'}
+            and all(value == original['artifacts'][str(Path(original['source_root']) / name)]
+                    for name, value in source['files'].items() if name != 'reservoir_service.py'),
+            'supporting source differs from original frozen closure')
+    required = {str(ORIGINAL_MANIFEST): inputs['original_manifest']['sha256'],
+                str(SOURCE_PREPARATION): inputs['source_preparation']['sha256'],
+                original['package_inventory']: original['artifacts'][original['package_inventory']]}
+    for name, sha in source['files'].items():
+        require(Path(name).name == name and name.endswith('.py'), 'unsafe source name')
+        required[str(HERE / 'source' / name)] = sha
+    metadata = {}
+    for path, sha in original['artifacts'].items():
+        if Path(path).name == 'METADATA':
+            row = Parser().parsestr(Path(path).read_text())
+            name = re.sub(r'[-_.]+', '-', row['Name']).lower()
+            record = str(Path(path).with_name('RECORD'))
+            metadata[name] = {'version': row['Version'], 'files': {path: sha, record: original['artifacts'][record]}}
+    require(runtime['packages'] == metadata
+            and {name: row['version'] for name, row in metadata.items()} == original['packages'],
+            'complete original package inventory/METADATA/RECORD required')
+    inventory = read(original['package_inventory'])
+    require(inventory['executable'] == PYTHON and inventory['packages'] == original['packages'], 'original inventory differs')
+    require(digest(ENV_HELPER) == inputs['artifacts'].get(str(ENV_HELPER)), 'environment helper changed before import')
+    helper_spec = importlib.util.spec_from_file_location('restore_qualification_environment', ENV_HELPER)
+    helper = importlib.util.module_from_spec(helper_spec); helper_spec.loader.exec_module(helper)
+    interpreters = {str(path): original['artifacts'][str(path)] for path in helper.interpreter_paths(Path(PYTHON))}
+    require(runtime['interpreter_files'] == interpreters, 'exact original interpreter family required')
+    cfg = str(Path(PYTHON).parent.parent / 'pyvenv.cfg')
+    require(runtime['pyvenv_cfg'] == {'path': cfg, 'sha256': original['artifacts'][cfg]}, 'original pyvenv required')
+    required.update(interpreters); required[cfg] = original['artifacts'][cfg]
+    for row in metadata.values():
+        required.update(row['files'])
+    copies = {str(FROZEN / name): str(HERE / name) for name in ('restore_verifier.py', 'reservoir_maintenance_state.py')}
+    require(inputs['verbatim_copies'] == copies, 'exact frozen helper copies required')
+    for original_path, copied in copies.items():
+        required[original_path] = digest(original_path); required[copied] = digest(original_path)
+    required[str(ENV_HELPER)] = digest(ENV_HELPER)
+    require(inputs['artifacts'] == required, 'prepared artifact closure is incomplete or contains unrelated inputs')
+    for path, expected in inputs['artifacts'].items():
+        require(Path(path).is_absolute() and not Path(path).is_symlink() and digest(path) == expected,
+                'prepared artifact changed: ' + path)
+    for original, copied in inputs['verbatim_copies'].items():
+        require(digest(original) == digest(copied), 'frozen verifier/state copy differs')
+    verify_import_order((HERE / 'restore_verifier.py').read_text(), (HERE / 'source/dual_ai_bridge.py').read_text())
+    return inputs
+
+
+def validate_host_gate(raw, review, raw_ref, *, now=None, fresh=True):
+    require(raw.get('schema') == 'reservoir_cpu_fixture_host_window_v1' and raw.get('state') == 'completed'
+            and raw.get('production_identity_unchanged') is True
+            and raw.get('production_identity_start')
+            and raw['production_identity_start'] == raw.get('production_identity_end'), 'host window incomplete or identities changed')
+    require(review.get('schema') == 'reservoir_fixture_host_settle_review_v1'
+            and review.get('passed') is True and review.get('raw') == raw_ref, 'passing bound host review required')
+    start_date = datetime.fromisoformat(raw['started_at']); end_date = datetime.fromisoformat(raw['completed_at'])
+    require(start_date.tzinfo is not None and end_date.tzinfo is not None, 'host timestamps must have timezone')
+    started = start_date.timestamp(); completed = end_date.timestamp()
+    now = time.time() if now is None else now
+    require(0 <= completed - started <= 1800 and (not fresh or 0 <= now - completed <= 600), 'host window stale or malformed')
+    rows = raw.get('samples', []); require(len(rows) >= 21, 'host sample coverage insufficient')
+    first = swap = previous = None
+    for row in rows:
+        stamp, used = row.get('t_s'), row.get('swap_bytes')
+        require(type(stamp) in (int, float) and math.isfinite(stamp)
+                and type(used) in (int, float) and math.isfinite(used) and used >= 0, 'invalid host sample')
+        require(previous is None or stamp > previous, 'unordered host samples')
+        ready = row.get('readyz', {}); body = ready.get('body', {}); worker = body.get('worker', {})
+        healthy = (ready.get('http_status') == 200 and body.get('ready') is True and not body.get('error')
+                   and worker.get('phase') in ('ready', 'generating') and worker.get('last_generation_error') is None
+                   and body.get('reservoir', {}).get('status') == 'connected')
+        clean = (row.get('pressure_level') == 1 and row.get('build_test_processes') == [] and healthy
+                 and not any(key in row for key in ('memory_error', 'process_error')))
+        if not clean or previous is not None and stamp - previous > 15:
+            first = swap = None
+        elif first is None or used > swap:
+            first, swap = stamp, used
+        previous = stamp
+    current = 0 if first is None else rows[-1]['t_s'] - first
+    require(current >= 300 and raw.get('current_eligible_window_s', 0) >= 300
+            and raw.get('five_minute_eligible_window_observed') is True
+            and 0 <= rows[0]['t_s'] - started <= 15 and 0 <= completed - rows[-1]['t_s'] <= 15,
+            'no complete healthy current five-minute low-contention window')
+    return {'current_eligible_window_s': current, 'completed_wall': completed, 'samples': len(rows)}
+
+
+def validate_release(path, inputs, run_id, *, fresh=True):
+    ref(Path(path))
+    release = read(path)
+    require(release.get('schema') == 'reservoir_restore_qualification_release_v1'
+            and release.get('accepted') is True and release.get('reviewer')
+            and release.get('scope') == 'synthetic_cpu_fixture_only', 'explicit root-reviewed fixture release required')
+    require(release.get('run_id') == run_id and release.get('inputs') == ref(INPUTS)
+            and release.get('artifacts') == harness_hashes(), 'release does not bind exact run/inputs/harness')
+    require(release.get('input_artifacts') == inputs['artifacts'], 'release runtime/source closure differs')
+    raw = check_ref(release['host_gate_raw'])
+    review = check_ref(release['host_gate_review'])
+    validate_host_gate(raw, review, release['host_gate_raw'], fresh=fresh)
+    require(release.get('purpose') == 'release_restore_qualification_cpu', 'release purpose differs')
+    require(type(release.get('expires_wall')) in (int, float) and math.isfinite(release['expires_wall'])
+            and time.time() <= release['expires_wall'], 'host release expired')
+    return release
+
+
+def load_verifier():
+    # Its two copied modules are standard-library-only until explicit execute.
+    sys.path.insert(0, str(HERE))
+    for name in ('reservoir_maintenance_state', 'restore_verifier'):
+        existing = sys.modules.get(name)
+        require(existing is None or Path(existing.__file__).resolve() == HERE / (name + '.py'),
+                'foreign frozen helper already imported')
+    import restore_verifier
+    return restore_verifier
+
+
+def child_environment():
+    env = dict(os.environ)
+    for key in ('PYTHONPATH', 'PYTHONHOME', 'PYTHONSTARTUP'):
+        env.pop(key, None)
+    env.update({key: '1' for key in THREADS})
+    env.update(PYTHONDONTWRITEBYTECODE='1', PYTHONNOUSERSITE='1', TOKENIZERS_PARALLELISM='false')
+    return env
+
+
+def run_child(argv, directory, *, popen=subprocess.Popen, timeout=300):
+    """No signals or kill fallback. Unresolved own child blocks all next work."""
+    out, err = directory / 'stdout.txt', directory / 'stderr.txt'
+    started = time.time(); process = None
+    try:
+        with out.open('xb') as stdout, err.open('xb') as stderr:
+            process = popen(argv, cwd=str(directory), env=child_environment(), stdin=subprocess.DEVNULL,
+                            stdout=stdout, stderr=stderr, start_new_session=True)
+            write(directory / 'child-start.json', {'pid': process.pid, 'argv': argv,
+                  'started_wall': started, 'scope': 'owned_synthetic_cpu_child', 'signals_permitted': False})
+            code = process.wait(timeout=timeout)
+        result = {'pid': process.pid, 'argv': argv, 'returncode': code, 'started_wall': started,
+                  'completed_wall': time.time(), 'reaped': True, 'stdout': ref(out), 'stderr': ref(err)}
+        write(directory / 'child-exit.json', result)
+        return result
+    except BaseException as error:
+        write(directory / 'child-unresolved.json', {'pid': getattr(process, 'pid', None), 'argv': argv,
+              'started_wall': started, 'error': type(error).__name__ + ': ' + str(error),
+              'may_still_be_running': process is not None and process.poll() is None,
+              'force_used': False, 'next_children_permitted': False})
+        raise
+
+
+def context_for(v, inputs, run_id, case):
+    runtime = inputs['runtime_manifest']; source = inputs['source_manifest']
+    config_hash = v.state.canonical_hash(inputs['config'])
+    plan = {'scope': 'synthetic_fixture_only', 'production_qualified': False,
+            'roles': {'reservoir': {'identity': {'argv': [PYTHON, 'synthetic-fixture-no-service',
+                      '--input-dim', '32', '--n-nodes', '192', '--backend', 'numpy']}}},
+            'input_hashes': {'reservoir_settings': config_hash,
+                            'reservoir_candidate': source['files']['reservoir_service.py'],
+                            'interpreter': v.state.canonical_hash(runtime['interpreter_files'])}}
+    return {'transaction_id': 'synthetic-restore-qualification-' + run_id + '-' + case,
+            'scope': 'synthetic_fixture_only', 'plan': plan,
+            'bindings': {'plan_sha256': v.state.canonical_hash(plan),
+                'provider_old_identity_sha256': v.state.canonical_hash({'scope': 'fixture', 'role': 'no-provider'}),
+                'reservoir_old_identity_sha256': v.state.canonical_hash({'scope': 'fixture', 'role': 'seed-child-exited'}),
+                'repair_source_sha256': source['files']['reservoir_service.py'],
+                'interpreter_sha256': plan['input_hashes']['interpreter'], 'configuration_sha256': config_hash}}
+
+
+def prepare_case(v, inputs, run_root, run_id, case):
+    directory = run_root / case; directory.mkdir(mode=0o700)
+    source = run_root / 'seed' / 'state'
+    inventory = v.state.inventory_tree(source)
+    backup = directory / 'backup'
+    copied = v.copy_tree(source, backup, inventory)
+    if case == 'missing-sidecar':
+        (backup / 'qualification_numpy_thermostats.json').unlink()
+    elif case == 'malformed-sidecar':
+        (backup / 'qualification_numpy_thermostats.json').write_text('[]\n')
+    elif case == 'corrupt-npz':
+        (backup / 'qualification_numpy.npz').write_bytes(b'INTENTIONAL PRIVATE CORRUPT NPZ\n')
+    elif case == 'schema-mismatch':
+        private_bad = run_root / 'seed' / 'schema-mismatch.npz'
+        (backup / 'qualification_numpy.npz').write_bytes(private_bad.read_bytes())
+    copied = v.state.inventory_tree(backup)
+    context = context_for(v, inputs, run_id, case)
+    witness = v.state.envelope(context, 'backup', {'scope': 'synthetic_fixture_only',
+        'production_qualified': False, 'backup_root': str(backup), 'backup_inventory': copied,
+        'seed_inventory': inventory, 'origin': 'owned seed child exited; independent fixture copy; no production barrier claim'})
+    request = v.prepare_request(context, witness, source_manifest=copy.deepcopy(inputs['source_manifest']),
+        runtime_manifest=copy.deepcopy(inputs['runtime_manifest']), config=dict(inputs['config']),
+        work_root=v.RUNS / ('fixture-' + run_id + '-' + case))
+    if case == 'config-mismatch':
+        request['config']['n_nodes'] = 64
+    elif case == 'source-drift':
+        private_source = directory / 'source'; private_source.mkdir()
+        for name in request['source_manifest']['files']:
+            (private_source / name).write_bytes((Path(request['source_manifest']['root']) / name).read_bytes())
+        with (private_source / 'persistence.py').open('ab') as stream:
+            stream.write(b'\n# intentional private drift, never imported\n')
+        request['source_manifest']['root'] = str(private_source)
+    elif case == 'package-drift':
+        request['runtime_manifest']['packages']['numpy']['version'] = '0.0.0-private-negative-control'
+    elif case == 'backup-drift':
+        (backup / 'intentional-private-drift.txt').write_text('not in bound inventory\n')
+    path = directory / 'request.json'; write(path, request)
+    return directory, path, request
+
+
+def classify_case(v, case, request, child, directory, seed):
+    work = Path(request['work_root']); witness_path = work / 'restore-witness.json'
+    if case == 'complete':
+        require(child['returncode'] == 0, 'positive verifier child failed')
+        witness = v.validate_restore_witness(witness_path, request['context'], request['backup_witness'])
+        comparison = read(witness['evidence']['comparison']['path'])
+        require(witness['evidence']['expected_startup'] == seed['expected_startup'], 'fixture startup oracle differs')
+        require(set(comparison['comparisons']) == set(seed['expected_startup']), 'fixture coverage incomplete')
+        for name, row in comparison['comparisons'].items():
+            require(row['event_seq'] == seed['event_seq'][name], 'event max semantics differ from fixture oracle')
+            require(set(row['source_fields']) == v.NPZ_KEYS and row['elapsed_time_checked'] is True,
+                    'complete field/time comparison missing')
+            require(row['source_fields'] == seed['source_fields'][name]
+                    and row['thermostat_semantics_sha256'] == seed['thermostat_semantics_sha256'][name],
+                    'complete stored fields or thermostat semantics differ from seed oracle')
+        return {'case': case, 'passed': True, 'expected_rejection': False, 'witness': ref(witness_path)}
+    require(child['returncode'] == 1, 'negative case did not return expected rejection status')
+    if case == 'config-mismatch':
+        require(not witness_path.exists(), 'invalid request unexpectedly executed')
+        text = Path(child['stderr']['path']).read_text()
+    else:
+        witness = read(witness_path)
+        comparison = read(witness['evidence']['comparison']['path'])
+        require(witness['passed'] is False and comparison['passed'] is False, 'negative accepted unexpectedly')
+        require(len(comparison['errors']) == 1, 'negative control has extra/unclassified failures')
+        text = comparison['errors'][0]
+    require(all(part in text for part in EXPECTED[case]), 'wrong rejection for ' + case + ': ' + text[-1000:])
+    if case == 'source-drift':
+        require(str(directory / 'source/persistence.py') in text, 'wrong source drift rejection')
+    return {'case': case, 'passed': True, 'expected_rejection': True, 'reason': text,
+            'witness': ref(witness_path) if witness_path.exists() else None}
+
+
+def execute(run_id, release_path):
+    require(re.fullmatch(r'[a-z0-9][a-z0-9-]{0,47}', run_id), 'safe fixed run ID required')
+    try:
+        inputs = check(); release = validate_release(release_path, inputs, run_id)
+    except BaseException as error:
+        write(HERE / ('refused-' + str(time.time_ns()) + '.json'), {
+            'schema': 'reservoir_restore_qualification_refusal_v1', 'passed': False,
+            'production_qualified': False, 'run_id': run_id, 'release_path': str(release_path),
+            'error': type(error).__name__ + ': ' + str(error), 'children_started': 0})
+        raise
+    # Single finite run per version; an interrupted run cannot be blindly retried.
+    write(HERE / 'launch-guard.json', {'run_id': run_id, 'release': ref(release_path),
+          'artifacts': harness_hashes(), 'automatic_retry_permitted': False})
+    runs = HERE / 'runs'; runs.mkdir(mode=0o700, exist_ok=True)
+    require(runs == runs.resolve() and runs.stat().st_uid == os.getuid(), 'owned canonical runs root required')
+    run_root = runs / run_id; run_root.mkdir(mode=0o700)
+    record = {'schema': 'reservoir_restore_qualification_v1', 'passed': False,
+              'scope': 'synthetic_cpu_fixture_only', 'production_qualified': False,
+              'started_wall': time.time(), 'release': ref(release_path), 'inputs': ref(INPUTS),
+              'artifacts': harness_hashes(), 'cases': [], 'errors': []}
+    write(run_root / 'started.json', record)
+    try:
+        v = load_verifier()
+        seed_dir = run_root / 'seed'; seed_dir.mkdir(mode=0o700)
+        seed_child = run_child([PYTHON, '-B', str(HERE / 'seed_fixture.py'), '--execute-fixture',
+                               '--output', str(seed_dir), '--inputs', str(INPUTS)], seed_dir)
+        require(seed_child['returncode'] == 0, 'seed child failed; no verifier children started')
+        seed = read(seed_dir / 'seed-receipt.json')
+        require(seed['passed'] is True and seed['production_qualified'] is False, 'fixture seed not accepted')
+        record['seed'] = ref(seed_dir / 'seed-receipt.json'); record['seed_child'] = seed_child
+        for case in CASES:
+            # Continue only if the fixed release remains current before each child.
+            check_ref(record['release'])  # An edited release cannot extend this run.
+            check(); validate_release(release_path, inputs, run_id, fresh=False)
+            directory, request_path, request = prepare_case(v, inputs, run_root, run_id, case)
+            child = run_child([PYTHON, '-B', str(HERE / 'restore_verifier.py'), '--request',
+                               str(request_path), '--execute-private-restore'], directory)
+            result = classify_case(v, case, request, child, directory, seed)
+            result.update(child=child, request=ref(request_path))
+            write(directory / 'expected-result.json', result)
+            record['cases'].append(result)
+        complete = record['cases'][0]
+        request = read(complete['request']['path'])
+        v.validate_restore_witness(Path(complete['witness']['path']), request['context'], request['backup_witness'])
+        require(v.state.inventory_tree(seed_dir / 'state') == seed['inventory'], 'original synthetic seed changed')
+        record['final_runtime_and_positive_witness_revalidated'] = True
+        require(record['artifacts'] == harness_hashes(), 'harness changed during run')
+        check_ref(record['release'])
+        check(); record['passed'] = True
+    except BaseException as error:
+        record['errors'].append(type(error).__name__ + ': ' + str(error))
+    finally:
+        record['completed_wall'] = time.time()
+        write(run_root / 'qualification.json', record)
+    return record
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--execute-cpu-qualification', action='store_true')
+    parser.add_argument('--release', type=Path)
+    parser.add_argument('--run-id')
+    args = parser.parse_args(argv)
+    if not args.execute_cpu_qualification:
+        check()
+        print(json.dumps({'passed': False, 'status': 'not_executed', 'production_qualified': False,
+                          'cases': CASES, 'inputs': ref(INPUTS), 'artifacts': harness_hashes()}))
+        return 0
+    require(args.release is not None and args.run_id, 'explicit reviewed release and run ID required')
+    result = execute(args.run_id, args.release)
+    print(json.dumps({'passed': result['passed'], 'production_qualified': False,
+                      'receipt': str(HERE / 'runs' / args.run_id / 'qualification.json')}))
+    return 0 if result['passed'] else 1
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

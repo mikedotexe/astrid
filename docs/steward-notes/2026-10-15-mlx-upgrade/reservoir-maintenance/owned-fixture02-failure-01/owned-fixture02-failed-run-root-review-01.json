@@ -1,0 +1,42 @@
+{
+  "actions_this_turn": [
+    "Read retained evidence and frozen source",
+    "Archived141 stable failed-run files with per-file identity; not a stopped-service backup",
+    "Resumed only the requested follow-up after user return",
+    "Prepared separate abort design; new driver/test preparation underway"
+  ],
+  "actual_os_fixture_executed": true,
+  "cause": "Step07 one-shot holder reconciliation ran3.468576 seconds after provider SIGTERM, before the deliberately6-second cooperative drain completed. The later unique provider request was acknowledged/applied at11/7. This timing failure is not waived.",
+  "current_observation_scope": "The06:06UTC read-only observation binds reservoir9217 and provider holder10721, all old executor/parent absence, all237 protected inputs and seven exact production processes. Revalidate before any control.",
+  "fixture_passed": false,
+  "main_command_must_not_be_repeated": true,
+  "new_os_controls": 0,
+  "new_test_or_numeric_workloads": 0,
+  "production_qualified": false,
+  "references": {
+    "owned-fixture-holder-scheduling-fix-design-01.json": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-holder-scheduling-fix-design-01.json",
+      "sha256": "93277cedacf396c0e9c9bf0aa9eaca7f6ca5540c93c2d08271163e10b3d45ec6"
+    },
+    "owned-fixture02-actual-failure-independent-review-01.json": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-actual-failure-independent-review-01.json",
+      "sha256": "073610566bb9906bf3e8d076d08ed6e591932dc3bb8ac8ff6fef77285b7ac20e"
+    },
+    "owned-fixture02-failed-run-snapshot-01/manifest.json": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-failed-run-snapshot-01/manifest.json",
+      "sha256": "c6c11df7fb4bc18d4ead51df32c8eeae6635da187cd2e127f1a62d053c8a36a2"
+    },
+    "owned-fixture02-failure-observation-01.json": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-failure-observation-01.json",
+      "sha256": "968bd3b0fca1e9bb3c470452bdcdb9c535ec32273ba652232bf03ea03129c854"
+    },
+    "owned-fixture02-failure-recovery-design-01.json": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-failure-recovery-design-01.json",
+      "sha256": "8a45bd55faed3e201d7af57d92c02e9499b68e10129c3e36d8cf5b2b4d52b3e7"
+    }
+  },
+  "reviewed_at": "2026-10-17T06:11:17.841649+00:00",
+  "root_decision": "Failed run preserved. Prepare/review/test separate finite abort; do not retry parent, edit original ownership or transfer qualification. Future fixture must use versioned pre-capture settling fix and exact-final-byte acceptance.",
+  "schema": "owned_fixture02_failed_run_root_review_v1",
+  "state_preservation": "No state.json exists yet. Preserve live synthetic reservoir until separately reviewed abort proves a cooperative final11/7 save and both handle records."
+}

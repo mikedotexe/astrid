@@ -1,0 +1,26 @@
+{
+  "activation_sha256": "140149eca9cffc1c0af96597035e1eb0d867edc78b4cffc387403030c3f318de",
+  "boot_session_uuid": "A86C8146-975D-4935-85A6-A7879EC7BBE3",
+  "cleanup": {
+    "bootout_returncode": 0,
+    "service_absent": true
+  },
+  "debug_output": "This subcommand requires root privileges: debug\n",
+  "debug_returncode": 1,
+  "debug_supported": false,
+  "failure": "next_spawn_override_unsupported_no_signal_sent",
+  "fixture_sha256": "610a6f3509ed91671ad26740b80b0843a9bec41a6698cac7b4276f1095748a26",
+  "host_version": "27.0.1",
+  "hostname": "m3-volya",
+  "label": "com.codex.model-handoff-fixture.32cd8f17e17346cf86810d9927227690",
+  "launcher_sha256": "3c271a3db3126a8f7c9272154d0c10085a775a766a0d9a9b45257e4d60c4c41f",
+  "original_pid": 45359,
+  "passed": false,
+  "python": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+  "python_sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43",
+  "root_privileges_required": true,
+  "schema": "model_launchd_handoff_fixture_v1",
+  "scope": "owned_stdlib_fixture_no_model_no_gpu_no_production_services",
+  "signal_sent": false,
+  "uid": 501
+}

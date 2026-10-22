@@ -1,0 +1,67 @@
+{
+  "files": [
+    {
+      "published": {
+        "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-maintenance/restore-qualification-numerical-02/qualification.json",
+        "sha256": "023ea4a004d64b841f8bc381b86cc62d24648e521dbb0c4832e4e85563209a2c"
+      },
+      "source": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/qualification.json",
+        "sha256": "023ea4a004d64b841f8bc381b86cc62d24648e521dbb0c4832e4e85563209a2c"
+      }
+    },
+    {
+      "published": {
+        "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-maintenance/restore-qualification-numerical-02/root-numerical-review-01.json",
+        "sha256": "9492ab0182cfd11691e2ce9dbf912fc04c5735bea0810bb1fb036a8336c7b6d9"
+      },
+      "source": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-numerical-review-01.json",
+        "sha256": "9492ab0182cfd11691e2ce9dbf912fc04c5735bea0810bb1fb036a8336c7b6d9"
+      }
+    },
+    {
+      "published": {
+        "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-maintenance/restore-qualification-numerical-02/independent-numerical-review-01.json",
+        "sha256": "73778c536e034a59f7eed2b9bd9a3ba27b9edbe12834348c38eeed86e4d74e19"
+      },
+      "source": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/independent-numerical-review-01.json",
+        "sha256": "73778c536e034a59f7eed2b9bd9a3ba27b9edbe12834348c38eeed86e4d74e19"
+      }
+    },
+    {
+      "published": {
+        "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-maintenance/restore-qualification-numerical-02/root-numerical-acceptance-01.json",
+        "sha256": "4c22bf6ae2efad5334d95e7162da34a86362ce79576b54de1c13973f8baa27b9"
+      },
+      "source": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-numerical-acceptance-01.json",
+        "sha256": "4c22bf6ae2efad5334d95e7162da34a86362ce79576b54de1c13973f8baa27b9"
+      }
+    },
+    {
+      "published": {
+        "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-maintenance/restore-qualification-numerical-02/seed-complete-independent-review-01.json",
+        "sha256": "888e9d3740c1384aa4058ac9c776b8b6a75f8179fa4e27b255ea7e91dfbc82c5"
+      },
+      "source": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/seed-complete-independent-review-01.json",
+        "sha256": "888e9d3740c1384aa4058ac9c776b8b6a75f8179fa4e27b255ea7e91dfbc82c5"
+      }
+    },
+    {
+      "published": {
+        "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-maintenance/restore-qualification-numerical-02/root-matrix-preclose-01.json",
+        "sha256": "ac300f1ed8c7e66c9637b8d4047a8c3f1a1026048a4e9494812ec8b046126e0a"
+      },
+      "source": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-matrix-preclose-01.json",
+        "sha256": "ac300f1ed8c7e66c9637b8d4047a8c3f1a1026048a4e9494812ec8b046126e0a"
+      }
+    }
+  ],
+  "production_qualified": false,
+  "schema": "reservoir_restore_numeric_archive_v1",
+  "scope": "synthetic_cpu_fixture_only"
+}

@@ -1,0 +1,52 @@
+{
+  "activation_sha256": "3523eadcc729004908ad99419e17b45c25245330dc0066e45f40cb558622dc86",
+  "boot_session_uuid": "A86C8146-975D-4935-85A6-A7879EC7BBE3",
+  "cleanup": {
+    "bootout_returncode": 0,
+    "service_absent": true
+  },
+  "debug_argument_contract": "script_first_tail_requires_this_owned_host_fixture_to_pass",
+  "debug_arguments": [
+    "--program",
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "--",
+    "/Users/v/other/astrid/scripts/model_environment.py",
+    "launch",
+    "--control-root",
+    "/private/var/folders/98/rh9s2vt50c90b6f910bcnf3m0000gn/T/model-handoff-fixture-jdu5agop/control",
+    "--hold-only",
+    "02e3c0bd875d4d1d82fdd4cb5c118307"
+  ],
+  "debug_output": "sudo debug output displayed directly on the controlling terminal; not captured",
+  "debug_returncode": 0,
+  "debug_supported": true,
+  "executions": [
+    "original 70227",
+    "candidate 70298",
+    "baseline 70328"
+  ],
+  "fixture_sha256": "570e7f40ebc778a488b4179eee81f6e3122569617aa9826f797fe5a5ed25ac00",
+  "host_version": "27.0.1",
+  "hostname": "m3-volya",
+  "label": "com.codex.model-handoff-fixture.530a580bd53a4e27821c15bc8893eb85",
+  "launcher_sha256": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+  "no_execution_during_hold": true,
+  "old_work_finished_before_replacement": true,
+  "one_shot_held_pid": 70288,
+  "original_pid": 70227,
+  "passed": true,
+  "python": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+  "python_runtime_sha256": {
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python": "7ecc1ecbf9daa9303c4bf502ff62ffdd9010ed5c08729d470ae9380c10ce1211",
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43"
+  },
+  "python_sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43",
+  "rollback_pid": 70328,
+  "rollback_same_pid_exec": true,
+  "same_pid_candidate_exec": true,
+  "schema": "model_launchd_handoff_fixture_v1",
+  "scope": "owned_stdlib_fixture_no_model_no_gpu_no_production_services",
+  "signal_sent": true,
+  "sudo_debug_requested": true,
+  "uid": 501
+}

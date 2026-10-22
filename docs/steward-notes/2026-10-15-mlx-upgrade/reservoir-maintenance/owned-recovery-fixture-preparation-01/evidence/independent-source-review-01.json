@@ -1,0 +1,186 @@
+{
+  "ProductionHost_executed": false,
+  "accepted": true,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/README.md": "120e920a8bfcbdbb05dd7839920f04e819387e3e4e33de11abee0233b903c537",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_cleanup.py": "5637d6269990e70b9ec0dbc6505173d891171f7dfbeca4c543ca4364c4097a66",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_cleanup_host.py": "3aa97ac474aa77d67d2617435823c802a5e725526967af3d7b98a26f489f6ace",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_coordinator.py": "f164d777a8866abce3d4d322c0f3283e017681b971e5fe06844a003af50c306e",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_injection.py": "e5272b25d734753b2049d95bf271097735a2cc7785b3909c4de8e16c63308123",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_pin.py": "99f2522f163ba303fd28b71d802dc5bcf749447b29a3f6449e9bccf5da0d2eca",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_plan.py": "6f49c5f5d7f9154e0a1b9e0a69171aa04a1125f8522ed63725087fbea6303c69",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_records.py": "728c1f178cb3a6f8e1a88f0229d8a691fb11d11bd8b090e07c480c0ec5b88300",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_retained.py": "d1b09bc4eae7f41593557fc028ee03289953c8a5b7c8f5cdb205d8807bfc70a2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_setup.py": "d38a8559710f67ba8cae32ee997d4e867d8a518856b02181d60a4ea891a925fe",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_system.py": "bfc620d4a5432ad818e19e20e61dda94fc1d52a6a902c48f3fa01bec6db5dbbd",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_witnesses.py": "3530284ed90730b5c78f277c195d10b20103924806c5d0ca6091f1e20789acd8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_pin_sentinel.py": "137a98436b58c29d6d28749d3e4857a1bfb7d0be729e249703922ca33e2712eb",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_pin_system.py": "d405265534ce65b14a7d062a2d722c43fca8d0a844791be4e65d9a9034eb30ca",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_recovery_core.py": "422b5e7438fad31c944af501d34bee52ad72a287dd180f19ba15233951bc49f2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_recovery_host.py": "58fdae455d5151a2f9694b67bf2fc5904cbf35aa7614ce2b319018bcc9768782",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/test_owned_fixture_coordinator.py": "eb5ddc43dbbb23f0c2844ac82eb792db804df8c8aa62307acfd5f320817b3c75",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/test_owned_fixture_pin.py": "b3be3df73d2c6f998a6e09ea2ce293314fd8f42b487419728ffb138b163108f9",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/test_owned_recovery_host.py": "fad4c04716ec311922fbbdaa61ba0840ab41e77a0d9de1a0ead73802ced293d5",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/metadata_preflight.py": "3c2bce47648596f8988e0884081625f729d77856526c1b062f5078b68684d318",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_admission.py": "b2b67eb8941471eacffd44b2149e0e7b6aeb6e9df91c2e8be4adfc1c28580be9",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_host.py": "18bf34c606df39da65c4d7b392d51e88d7285b0048c032bf7a7877df9da9dfae",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_preflight.py": "0671c054eb6f37f122e1c61e26a91cf7e3e9e311266029008e87d7db11adef1b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery.py": "893f70d91a8955df5e60cbacc3caf22dc08f2c1c8863677180a5cfc37a5f14d7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_driver.py": "a092c51499c353b53ddf4c09a43cf2d308ce951a535274f652cf755fb815d904",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_inspect.py": "eaafdbbd0521c8a25468d0d40613fcc5e8d2be105b73a511089228dfbde5cdc3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_restore_runner.py": "f7c9be6dffc8161af2d678bfd804e0642e31611b7877d55b98a71429e4bd903e",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_retained.py": "5c287b8757dfd7e8eb876fa8064edba7e4d51d11c179a0c3ed7274effe331a9b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_ledger.py": "fd855cd1613e9fbab1a8e5ae8df4a144fc936bdb7fa5525f3bee0a4e8b03ee84",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_phases.py": "df6e3e959f79e560dfbe8904cbf9546b79e27b2819f7f5b8ab1aa89bb6917389",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance.py": "55e53b84d8caae818fc29fb997761c160cb296e2512207d4d9dbe48da15c5536",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_admission.py": "ff2b7fb1e8b62ddb7f4e1175cff462600a86447cc245b22cbb3acd4cc3c55d2c",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_controller.py": "6d7b05f415d033c164f85abdc22fbcbb7303f9fc2022f4fc03de6f68b4b7ba40",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_host.py": "37f234156c1eabd902faf26ce9ee5409841d5332b12218ba407a6b45658d8d61",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_preflight.py": "9be1f7c899493a64e8e324ae06947a26a82a73f0ea72bac45ab27792ba98b67d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery.py": "5331b9ca3ae00e01e2e010aef52705e48e9beea4cfafbd3cfb543eaf355198a8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_driver.py": "0a948bbce5d3f6dc77b82254ab5a5858db9626a9a6cd80d2f7569347fd6c6355",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_inspect.py": "5b5af27039762aa4527d89d16bce29005d434dc1da11db37e28eb560311f8fca",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_restore_runner.py": "82986ef70d485f73a11cbd8d02c074b6f910e39b6101bc20b79ab57c2b48b804",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_retained.py": "e9dea40dcd0ba6baeb5e67142dfcc605625cb15449588dc903632e5460a5dde7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_recovery_phases.py": "3a4c17fc8ec0caaa61424028c28a208fac681c70a367e6bcd91cb48c1ee69d03",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_reservoir_maintenance_state.py": "5c896092de2a2da6351c7a05ffe78a080fcfd49e91630fd5764b6110a9075834",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_restore_verifier.py": "0494a6570245cfc2e6a76cd18188789130c7cedf3b1eb80743522e0e5e3f7522",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_transaction_execution.py": "996d4a57be06ff2055a292f06e83c38247685db8b3c6dc6fc2ace44dda91d44a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/transaction_execution.py": "2b4e5ad98f4e920ceb67a161480afaffde9e6a44e3c9007645dc9e9445ccc4cb"
+  },
+  "authoritative_cpu_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/combined-cpu-tests-02.txt",
+    "sha256": "8260afbfddfe254b8e5a17a90d6c32428eddfc4fe97f064fc6fe5b7641bfbcba"
+  },
+  "authoritative_cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/combined-cpu-tests-02.json",
+    "sha256": "1340194973c2360003a01dc0e4a9926f3357486ade280917e6ace8b7d47dd566"
+  },
+  "blocking_findings_for_disabled_preparation": [],
+  "checks": [
+    "Exact shared04 controller/ExecutionSession/recovery-ledger/phases/one-step-driver module closure is hash checked; every core file still matches the frozen04 independent review.",
+    "Only generated ordinary-user provider/reservoir/pin labels and private run paths are supported. Workers use private ephemeral loopback sentinel listeners and reject protected ports; no ProductionHost or production inspector is substituted.",
+    "Selected executor interpreter resolves to the exact reviewed wrapper/framework family. Preparation, parent launch, immediately-before-Popen validation, and child dispatch bind the retained owner release; alternate self-consistent releases cannot select another launcher or schedule.",
+    "Initial setup retains ownership before bootstrap, uses an exact setup lock, records intent before each attempt, and cannot replay an attempted launch. One explicitly planned successor may perform only the next never-attempted action after prior executor absence and both-role inspection.",
+    "Main fresh and resumed actions use the unchanged shared core lock, retained executor sessions and expected-head/action checks. Actual fixed worker events and private JSON evidence are verified; missing historical command results are preserved rather than invented.",
+    "Injection wrappers call original core/Host operations before acknowledging the exact durable boundary and exiting only their owned executor. The sole concurrent pair is the adjacent nonmutating lock holder/refusal probe; all later executors require natural reaps.",
+    "Cleanup has its own immutable context/ledger/operations under the shared lock, reconstructs main acceptance, reattaches fresh Host state, and verifies both roles before one-role actions. Only a recorded-signal loaded/no-PID/no-listener publication gap can enter bounded held verification.",
+    "Provider drain waits at most 30 seconds only for its exact reservoir applied-event publication under unchanged worker/request/ACK identities. Duplicate or wrong-state events refuse. Pin receipt/natural-exit observation is bounded and never repeats bootstrap or signals a child.",
+    "Final cleanup requires two unique applied check-ins, final 22/7 synthetic state, original 11/7 backup unchanged, absent owned jobs/PIDs/listeners, and released guards. Main history and later accepted state are never rewound.",
+    "Separate pin qualification substitutes only the inert model-path argv value in a private one-shot plist, observes natural successful exit, and removes only the absent stateless job. It does not exercise the production pin schedule.",
+    "Timeout, incomplete evidence, unknown debug/signal/bootstrap outcome, foreign identity, malformed or partial witness, and repeated producer attempts refuse without forced termination or automatic repair.",
+    "All 47 author-receipt source/README hashes, the CPU log, 28 prior frozen04 source hashes and two fixed helper bytes were independently rechecked. Earlier receipts and reviews remain unchanged."
+  ],
+  "cpu_interpreter": {
+    "meaning": "Current read-only hash binding; receipt names this launcher. No new interpreter or OS test executed.",
+    "resolved_files": {
+      "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python": "7ecc1ecbf9daa9303c4bf502ff62ffdd9010ed5c08729d470ae9380c10ce1211",
+      "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43"
+    },
+    "selected": "/opt/homebrew/opt/python@3.14/bin/python3.14"
+  },
+  "cpu_tests": {
+    "fresh_host_attachment_coverage": "Inert same-process reconstruction with changed fake executor argv; not actual process restart evidence.",
+    "reported_errors": 0,
+    "reported_failures": 0,
+    "reported_forbidden_actions": [],
+    "reported_scope": "guarded_stdlib_fake_io_only",
+    "reported_tests_run": 41,
+    "source_and_log_hashes_independently_rechecked": true,
+    "tests_rerun_by_reviewer": false
+  },
+  "final_release_acceptance": false,
+  "fixed_helpers": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+    "/Users/v/other/astrid/scripts/model_environment.py": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587"
+  },
+  "fixed_helpers_equal_previously_qualified_primitive_bytes": true,
+  "fixture_execution_enabled": false,
+  "fixture_source_count": 18,
+  "frozen_core_source_count": 28,
+  "material_limits": [
+    "Forty-one guarded fake tests establish source-level behavior only; actual launchd timing, executor self-exit/reaping, macOS authentication, OS lock contention, and real process interruption/resumption remain untested for this fixture.",
+    "The 14-case actual service matrix, 9-case real installed-runtime restore qualification including NumPy and LSM-shadow semantics, and production preservation/drain evidence remain separate required qualifications.",
+    "The owned fixture omits the production provider-pin phase; its separate plist/sentinel primitive is compositional evidence only, never full production schedule acceptance.",
+    "An incomplete initial layout before any service claim is retained for manual inspection; it is not deleted, silently reconstructed or automatically retried.",
+    "No release manifest or administrator command is authorized by this review. Current ownership must be revalidated and any active work safely handed off within the existing user authorization before future runtime work.",
+    "Any enablement or bound helper/source change requires freezing and reviewing the final release closure and testing those exact bytes, or a separately reviewed unchanged-byte release mechanism. A disabled04 preparation result cannot silently qualify changed enabled bytes.",
+    "A fresh passing host admission window and supervised runtime acceptance remain required; failed host07 does not authorize numerical or OS fixture work."
+  ],
+  "numerical_execution_authorized": false,
+  "os_fixture_executed": false,
+  "production_controller_enabled": false,
+  "production_execution_authorized": false,
+  "production_host_enabled": false,
+  "production_pin_schedule_executed": false,
+  "production_qualified": false,
+  "references": {
+    "design": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-recovery-fixture-design-01.json",
+      "sha256": "37e7224f5a5230c4f2d0acb12dcefbfbd371b0e38d7135abbd1e4b0c0f2c4967"
+    },
+    "design_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-recovery-fixture-design-review-01.json",
+      "sha256": "1ca8356d0d6f897c80e09b354d11c3558d1626c62951eb75e43607f33558b810"
+    },
+    "frozen04_source_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-candidate-04-independent-review-01.json",
+      "sha256": "432c940e984b6a9ceeb728217f0a78c182b0f09df38d06fe36b6f2a5abba9e18"
+    },
+    "previous_primitive_qualification": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/launchd-fixture-admin-02-independent-qualification.json",
+      "sha256": "76e96366b284afdb233ab9e8499ac46c8d5bcec965c7198ede38fe8c89c413ac"
+    },
+    "prior_33_test_receipt": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/combined-cpu-tests-01.json",
+      "sha256": "8cbee3f751ed485bdd2116b1da40ebf9d87cd0c3a98ddacad8404ffbd082eb1d"
+    }
+  },
+  "resolved_review_findings": [
+    "Retained release and selected interpreter family now bind before spawn and again in child dispatch.",
+    "Cleanup revalidates both roles, including a narrowly accepted post-signal holder publication gap.",
+    "ACK-before-applied-log and one-shot sentinel publication races use bounded read-only observation.",
+    "Fresh Host reconstruction, exact planned-action admission, setup lock ownership, live lock-pair predecessor evidence, failure-only reconciliation and partial witness refusal have focused fake regressions."
+  ],
+  "reviewed_at": "2026-10-16T19:26:41.679348+00:00",
+  "reviewer": "/root/mlx_integration",
+  "schema": "owned_recovery_fixture_source_review_v1",
+  "scope": "Independent read-only source and retained guarded-test-evidence review; no fixture, process, numerical, network, signal, or test execution by reviewer.",
+  "source_locations": {
+    "owned_fixture_cleanup.py": {
+      "attach": 67,
+      "begin": 29,
+      "step": 145
+    },
+    "owned_fixture_cleanup_host.py": {
+      "cleanup_witness": 90,
+      "final": 113,
+      "validate_roles": 37
+    },
+    "owned_fixture_coordinator.py": {
+      "execute_request": 270,
+      "initialize_fixture": 139,
+      "launch_executor": 225,
+      "owned_release": 84,
+      "run_lock_pair": 172,
+      "validate_python": 28
+    },
+    "owned_fixture_pin.py": {
+      "step": 101,
+      "verify_exit": 71
+    },
+    "owned_fixture_setup.py": {
+      "authorize_successor": 130,
+      "bootstrap_one": 171
+    },
+    "owned_fixture_witnesses.py": {
+      "drain": 37
+    },
+    "owned_recovery_core.py": {
+      "load_core": 21
+    }
+  },
+  "status": "accepted_disabled_preparation_only"
+}

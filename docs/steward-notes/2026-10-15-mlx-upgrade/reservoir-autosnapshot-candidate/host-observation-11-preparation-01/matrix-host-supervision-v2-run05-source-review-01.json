@@ -1,0 +1,73 @@
+{
+  "approved_source": true,
+  "created_at": "2026-10-17T00:01:41.006077+00:00",
+  "exact_equivalence": "Only OUTPUT,STOP,TOKEN04\u219205 differ from reviewed run04; equivalently only02\u219205 constants differ from base v2. All functions, strict raw rules and sampler closure are unchanged.",
+  "future_observer_binding": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-bindings.json",
+    "sha256": "6b92de441dac3730c047c0111a850527dfff0739048d0db6b23f50d16054d2f6"
+  },
+  "limits": [
+    "Preparation only. Completed04 clean coverage applies only to its failed actual v2 case and cannot transfer to05; no new observation, monitor, numerical release or current host acceptance is claimed.",
+    "Freeze/review v3 code/tests/preparation, then require fresh ownership/runtime preflight and an independently accepted completed11 before separate root case admission. Hold all agents tests throughout observations and numerical activity.",
+    "The exact07 AST sampler closure excludes07 main and old window logic. Its protected237file/sevenprocess/listener/launchd/pause maps equal11; v2 strict adjacent-swap and gap checks remain authoritative.",
+    "Base17-test receipt covers the unchanged behavior; this reviewer only read source/evidence and wrote these reviews. Future actual coverage must be independently recomputed."
+  ],
+  "new_output_and_stop_absent": true,
+  "new_paths": {
+    "output": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-05.json",
+    "stop": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-05-stop.json",
+    "token": "mlx-matrix-20261016-528-supervision-05"
+  },
+  "policy_preserved": [
+    "Every sample must have normal pressure, nonincreasing consecutive swap also bounded by initial swap, no detected builds/tests, healthy provider/reservoir and exact protected identities.",
+    "Sticky invalidation; raw covers_case recomputation and fresh ready_for_next_case<=15seconds; fixed5second cadence,3600second finite maximum and exact owned stop request.",
+    "Exact07 AST sampler function closure unchanged; it excludes07 main/old window calculation. Its237file/sevenprocess/listener/launchd/pause maps equal11.",
+    "Monitor records only; it never starts, retries, stops or signals cases. Root must stop admitting later cases on invalidation and allow any current child to exit naturally."
+  ],
+  "previous_instance_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-run04-source-review-01.json",
+    "sha256": "2f3f36544edd974b22faa5841d69694604a64194e639b68c4625a7c973be5d4a"
+  },
+  "previous_instance_source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2_run04.py",
+    "sha256": "f82f686d9651509de1ecc451049ca6629794efcdce15b0011915322679f4873e"
+  },
+  "prior_guarded_cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-tests-01.json",
+    "sha256": "764dc1b547caff69fd9ce3861fdbb9ea1c2715ca5323a0019ddab2cad0c68027"
+  },
+  "prior_source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2.py",
+    "sha256": "fbaea5a9132b6d1ed92262d70dfadbd5f3d2cc2c93c2b4bb90662ed41e5d687d"
+  },
+  "prior_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-source-review-01.json",
+    "sha256": "43e46880a67357488256c7210d5799f315567ea6a216bc110595d41beb3d6935"
+  },
+  "reviewer": "mlx_integration",
+  "sampler_binding": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-bindings.json",
+    "sha256": "beae54c2362ea251c6b5a1fc9dbdf78532fa65b498796b97c7515c2c7cd5f629"
+  },
+  "sampler_source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-observer.py",
+    "sha256": "005c5db21d9ff36dd2e867cb54a272cabdc2c1922f0a8bb0f0b5a7ddd5709d05"
+  },
+  "schema": "reservoir_matrix_supervision_source_review_v1",
+  "scope": {
+    "bound_live_file_contents_rehashed_by_reviewer": false,
+    "numerical_work_authorized": false,
+    "observer_or_monitor_executed": false,
+    "production_mutations": false,
+    "review_only": true,
+    "runtime_probes_executed": false,
+    "target_source_imported": false,
+    "tests_executed": false
+  },
+  "source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision_v2_run05.py",
+    "sha256": "02c1f9152d94f86849cfc2fc3cfe3ab893b8ceb03fed683c4f61a7619671b91b"
+  },
+  "status": "accepted_new_instance_source_only_not_executed",
+  "unresolved_source_blockers": []
+}

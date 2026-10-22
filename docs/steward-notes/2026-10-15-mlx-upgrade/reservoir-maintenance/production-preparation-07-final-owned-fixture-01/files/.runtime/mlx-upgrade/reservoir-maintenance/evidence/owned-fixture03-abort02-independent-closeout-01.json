@@ -1,0 +1,582 @@
+{
+  "abort_result": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-abort-7e6529d26a3046ca87c0ca9b94332b02-02/result.json",
+    "sha256": "80096aaf91ce96441a02cef0fa55b73468799897318435153f96560dfbde015d"
+  },
+  "command_children_naturally_reaped": 3,
+  "created_at": "2026-10-17T16:30:23.789673+00:00",
+  "generated_jobs_absent": [
+    "provider",
+    "reservoir",
+    "pin"
+  ],
+  "guards_absent": true,
+  "no_retry": true,
+  "old_parent_workers_holders_executor_and_action_children_absent": [
+    6774,
+    6858,
+    6816,
+    8095,
+    12100,
+    11477,
+    11693,
+    12219,
+    12333
+  ],
+  "original_fixture_passed": false,
+  "passed": true,
+  "private_listeners_absent": {
+    "provider": 49572,
+    "reservoir": 49571
+  },
+  "production_qualified": false,
+  "proof": {
+    "checkin": {
+      "ack": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02/ack.provider-6858-1449606478912083.json",
+        "sha256": "f8487f3d19923ab081a22c18cd324d429f068c14b8ec2a15aa10a0e3bfd06bd2"
+      },
+      "expected_state": {
+        "fixture_astrid": {
+          "ticks": 11
+        },
+        "fixture_minime": {
+          "ticks": 7
+        }
+      },
+      "one_unique_checkin": true,
+      "provider_log": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02/provider.events.jsonl",
+        "sha256": "b8dac2db23b39804e3ae5405d4acf8747fd438ea7f66cf0c67f037deeb74c732"
+      },
+      "request": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02/request.provider-6858-1449606478912083.json",
+        "sha256": "5ad26c81b4554689d853660ed2421cbd88b0175ffe7a2038c568cece939aa68d"
+      },
+      "reservoir_log": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02/reservoir.events.jsonl",
+        "sha256": "8da5312c6008ea897b0bef8d4755bd8e8bd9b4c90f7d7f0b9486d066952916a2"
+      },
+      "saved": true,
+      "state": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03/runs/owned-recovery-7e6529d26a3046ca87c0ca9b94332b02/state.json",
+        "sha256": "fa40c1ba9a83f543250e08e16b7b27d3d9a9a58e80d1bd0c1bde1830aafa6008"
+      }
+    },
+    "host_binding": {
+      "boot_uuid": "A86C8146-975D-4935-85A6-A7879EC7BBE3",
+      "hostname": "m3-volya",
+      "os_version": "27.0.1",
+      "uid": 501
+    },
+    "original": {
+      "original_file_count": 132,
+      "original_snapshot": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-failed-run-snapshot-01/manifest.json",
+        "sha256": "1792065d3c013d032224e84fc33d78f1a674d044d0ece4d6f51cc5c6e20ee6ea"
+      },
+      "provider_guard_released": true,
+      "saved": true
+    }
+  },
+  "protected_exact_count": 7,
+  "read_only_queries": [
+    {
+      "argv": [
+        "/usr/sbin/sysctl",
+        "-n",
+        "kern.bootsessionuuid"
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623378054000,
+      "pid": 12729,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "A86C8146-975D-4935-85A6-A7879EC7BBE3\n"
+    },
+    {
+      "argv": [
+        "/usr/bin/sw_vers",
+        "-productVersion"
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623387837000,
+      "pid": 12730,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "27.0.1\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "22354",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623392291000,
+      "pid": 12731,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "35303",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623395674000,
+      "pid": 12732,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "35303     1 Thu Oct  1 11:16:53 2026     /Users/v/other/minime/minime/target/release/minime run --log-homeostat --eigenfill-target 0.6800 --warm-start-blend 0.55 --reg-tick-secs 0.5 --legacy-audio-synth-enabled false --legacy-video-synth-enabled false --ws-addr 127.0.0.1:7900 --sensory-ws-addr 127.0.0.1:7901 --av-ws-addr 127.0.0.1:7902 --enable-gpu-av\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "3888",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623398955000,
+      "pid": 12733,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": " 3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "3893",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623403383000,
+      "pid": 12734,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": " 3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "60407",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623407855000,
+      "pid": 12735,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "60407     1 Fri Oct 16 11:43:16 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "61069",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623411034000,
+      "pid": 12736,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "61069     1 Fri Oct 16 11:44:08 2026     /Users/v/other/worktrees/truthful-return-20261016/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/truthful-return-20261016/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/truthful-return-20261016/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-ww",
+        "-p",
+        "9536",
+        "-o",
+        "pid=,ppid=,lstart=,command="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623413908000,
+      "pid": 12737,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": " 9536  9524 Sat Oct 17 09:15:56 2026     /Applications/Ollama.app/Contents/Resources/ollama serve\n"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "6774",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623418559000,
+      "pid": 12738,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "6858",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623422855000,
+      "pid": 12739,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "6938",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623425979000,
+      "pid": 12740,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "6976",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623428447000,
+      "pid": 12741,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "7027",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623430723000,
+      "pid": 12742,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "7258",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623433565000,
+      "pid": 12743,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "7540",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623437620000,
+      "pid": 12744,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "7851",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623441228000,
+      "pid": 12745,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/launchctl",
+        "print",
+        "gui/501/com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.pin"
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623446088000,
+      "pid": 12746,
+      "returncode": 113,
+      "stderr": "Bad request.\nCould not find service \"com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.pin\" in domain for user gui: 501\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/launchctl",
+        "print",
+        "gui/501/com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.provider"
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623471916000,
+      "pid": 12747,
+      "returncode": 113,
+      "stderr": "Bad request.\nCould not find service \"com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.provider\" in domain for user gui: 501\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/launchctl",
+        "print",
+        "gui/501/com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.reservoir"
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623477380000,
+      "pid": 12748,
+      "returncode": 113,
+      "stderr": "Bad request.\nCould not find service \"com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.reservoir\" in domain for user gui: 501\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/launchctl",
+        "print",
+        "gui/501/com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.pin"
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623483259000,
+      "pid": 12749,
+      "returncode": 113,
+      "stderr": "Bad request.\nCould not find service \"com.codex.reservoir-maintenance-fixture.7e6529d26a3046ca87c0ca9b94332b02.pin\" in domain for user gui: 501\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "6774",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623487135000,
+      "pid": 12750,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "6858",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623490425000,
+      "pid": 12751,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "6816",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623493684000,
+      "pid": 12752,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "8095",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623497062000,
+      "pid": 12753,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "12100",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623500191000,
+      "pid": 12754,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "11477",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623503314000,
+      "pid": 12755,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "11693",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623506582000,
+      "pid": 12756,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "12219",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623510997000,
+      "pid": 12757,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "12333",
+        "-o",
+        "lstart="
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623515610000,
+      "pid": 12758,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/usr/sbin/lsof",
+        "-nP",
+        "-iTCP:49572",
+        "-sTCP:LISTEN",
+        "-Fp"
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623574077000,
+      "pid": 12759,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/usr/sbin/lsof",
+        "-nP",
+        "-iTCP:49571",
+        "-sTCP:LISTEN",
+        "-Fp"
+      ],
+      "naturally_reaped": true,
+      "observed_wall_time_ns": 1792254623631858000,
+      "pid": 12761,
+      "returncode": 1,
+      "stderr": "",
+      "stdout": ""
+    }
+  ],
+  "repositories": {
+    "/Users/v/other/astrid": {
+      "head": "297023ab75ebdc1ee0beb28848d8b50fb4965191",
+      "index": "",
+      "status": " M CHANGELOG.md\n M docs/astrid-mlx-upgrade-runbook.md\n M scripts/astrid_live_soak.py\n M scripts/astrid_mlx_soak_compare.py\n M scripts/astrid_model_canary.py\n M scripts/capture_stack_receipt.sh\n M scripts/test_astrid_live_soak.py\n M scripts/test_astrid_mlx_soak_compare.py\n?? docs/steward-notes/2026-10-15-inbox-format-repair.json\n?? docs/steward-notes/2026-10-15-mlx-upgrade/\n?? docs/steward-notes/2026-10-15-perception-memory/\n?? scripts/astrid_mlx_candidate.py\n?? scripts/astrid_mlx_embedding_gate.py\n?? scripts/astrid_mlx_fixture.py\n?? scripts/astrid_mlx_generator_contract.py\n?? scripts/astrid_mlx_memory.py\n?? scripts/astrid_soak_observer.py\n?? scripts/astrid_soak_performance.py\n?? scripts/model_environment.py\n?? scripts/model_environment_activate.py\n?? scripts/model_qualification.py\n?? scripts/model_runtime_identity.py\n?? scripts/prepare_mlx_environments.py\n?? scripts/qualify_mlx_offline.py\n?? scripts/qualify_mlx_packages.py\n?? scripts/qualify_model_launchd_handoff.py\n?? scripts/stage_mlx_manifests.py\n?? scripts/test_astrid_mlx_candidate.py\n?? scripts/test_astrid_mlx_embedding_gate.py\n?? scripts/test_astrid_mlx_generator_contract.py\n?? scripts/test_astrid_mlx_shutdown.py\n?? scripts/test_astrid_soak_observer.py\n?? scripts/test_model_environment.py\n?? scripts/test_model_environment_activate.py\n?? scripts/test_model_qualification.py\n?? scripts/test_model_runtime_identity.py\n?? scripts/test_prepare_mlx_environments.py\n?? scripts/test_qualify_mlx_packages.py\n?? scripts/test_qualify_model_launchd_handoff.py\n?? scripts/test_stage_mlx_manifests.py\n"
+    },
+    "/Users/v/other/minime": {
+      "head": "b8d47c7ad7adbf21b17f19942e6d3489b4ed65fb",
+      "index": "",
+      "status": ""
+    }
+  },
+  "schema": "owned_fixture03_abort02_independent_closeout_v1",
+  "service_actions": false,
+  "source_hash_count": 373,
+  "synthetic_state": {
+    "fixture_astrid": {
+      "ticks": 11
+    },
+    "fixture_minime": {
+      "ticks": 7
+    }
+  }
+}

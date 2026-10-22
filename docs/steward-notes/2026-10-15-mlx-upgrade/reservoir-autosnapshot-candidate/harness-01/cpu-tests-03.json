@@ -1,0 +1,32 @@
+{
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-I",
+    "-B",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/test_harness.py"
+  ],
+  "compile_checks": true,
+  "completed_at": "2026-10-16T03:36:23.771630+00:00",
+  "elapsed_s": 0.08464300003834069,
+  "harness_hashes": {
+    "common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+    "driver.py": "42dc76d5b90a7797ef89b88e1835661c851d85130d5df9d37dd72df6727da09d",
+    "fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+    "process_identity.py": "068da901598ff9cf982314f1cc0f4381a6e6e878143be5e52def59270871d0f2",
+    "protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+    "result_checks.py": "1242f173bd6c77fa1ed4f9bde9a9934845815aab9025aedf44c97f92117a3b86",
+    "review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+    "service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+    "snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+    "test_harness.py": "8b272aca672305744939d88b3e2599c7dedcf2405873c846289077b8c6283e47"
+  },
+  "log": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/cpu-tests-03.txt",
+  "log_sha256": "cf9fed22aa6e7a4921caa32b0458d4d14ddff513ca8f52a6cf0ad05b31909f07",
+  "passed": true,
+  "real_cases_executed": false,
+  "real_service_or_numeric_or_socket_imports": false,
+  "returncode": 0,
+  "schema": "reservoir_qualification_harness_cpu_tests_v1",
+  "scope": "17 stdlib fake receipt/oracle/process identity tests; no actual ps calls; explicit test verifies service/numeric/network/socket modules absent.",
+  "started_at": "2026-10-16T03:36:23.686854+00:00"
+}

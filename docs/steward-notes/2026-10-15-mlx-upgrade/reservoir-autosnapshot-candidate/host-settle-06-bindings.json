@@ -1,0 +1,27 @@
+{
+  "created_at": "2026-10-16T18:10:14.861294+00:00",
+  "identity_files": {
+    "/Users/v/Library/LaunchAgents/com.minime.engine.plist": "6c680e4c523469883fda285724cae076d7c39197bb83b37b7b442d98899b34b1",
+    "/Users/v/other/minime/minime/shaders/av_features.metal": "c041b9a921b9869ce4a3e1c03788b4c40176564466a18d089684489954960f92",
+    "/Users/v/other/minime/minime/target/release/minime": "0610800dd57bf34287bb5e4f9869e777179f602bf5208a4d5524c95b93f235d8",
+    "/Users/v/other/minime/scripts/launchd_minime_engine.sh": "6a8bde6b2e6f62cbf9689a9c05291a3ddd0d87cb9d6d3247952ef915dc8a7f26",
+    "/Users/v/other/minime/scripts/minime_rescue_investigation.py": "3f6a44e309050a440d4f85c40186f8946e3fcf191a56d02e4d6e6e53dad58015",
+    "/Users/v/other/minime/workspace/division/runtime-manifest.json": "58fd6abbdbd08cba72e3e942621228502d014ed163f14d27e268d0d80452000a",
+    "/Users/v/other/minime/workspace/rescue_profile.json": "d892aff002f97ba761cbf25e304fbde3e77fa6e45c2459ee53028af482c25e01"
+  },
+  "previous_observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-05-observer.py",
+    "sha256": "d487413ba3282bc700b6854c1de2521f87055b574acef142e311055f07af44bd"
+  },
+  "protected_processes": {
+    "22354": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+    "35303": "35303     1 Thu Oct  1 11:16:53 2026     /Users/v/other/minime/minime/target/release/minime run --log-homeostat --eigenfill-target 0.6800 --warm-start-blend 0.55 --reg-tick-secs 0.5 --legacy-audio-synth-enabled false --legacy-video-synth-enabled false --ws-addr 127.0.0.1:7900 --sensory-ws-addr 127.0.0.1:7901 --av-ws-addr 127.0.0.1:7902 --enable-gpu-av",
+    "35486": "35486 35461 Thu Oct 15 13:14:29 2026     /Applications/Ollama.app/Contents/Resources/ollama serve",
+    "3888": "3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state",
+    "3893": "3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active",
+    "82314": "82314     1 Thu Oct 15 07:49:29 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60",
+    "82528": "82528     1 Thu Oct 15 07:49:42 2026     /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/writing-admission-guidance-20261014/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous"
+  },
+  "reason": "Meaningful observed headroom change at18:09UTC: pressure1,free44%,usedswap13552.56MiB vs17:57 pressure2,free28%,15614.25MiB; no service change or workload introduced.",
+  "schema": "reservoir_host_window_input_binding_v1"
+}

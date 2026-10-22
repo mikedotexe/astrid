@@ -1,0 +1,98 @@
+{
+  "approved_source": true,
+  "binding": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12-bindings.json",
+    "sha256": "de4de22a0fd0db8d0e1496a8c198af6f4ac38025ba506c2d84358ee7fa478888"
+  },
+  "binding_checks": {
+    "all_referenced_preparation_and_history_hashes_verified": true,
+    "exact_process_count": 7,
+    "file_count": 237,
+    "identity_listener_launchd_and_pause_maps_equal07_and11": true,
+    "metadata_changes_only": [
+      "created_at",
+      "preceding_accepted_window",
+      "previous_binding",
+      "previous_completed_observation",
+      "reason"
+    ],
+    "ownership_reaudit_is_retained_historical_evidence_not_fresh_preflight": true,
+    "pause_generation": 528
+  },
+  "created_at": "2026-10-17T00:37:11.314414+00:00",
+  "exact_equivalence": "Byte-for-byte equal to reviewed11 after exactly the counted substitutions in the preparation manifest: output11\u219212, binding11\u219212 path/hash and prior observation10\u219211. All functions, admission rules and bounds are unchanged.",
+  "limits": [
+    "Preparation only for fresh host admission after the full current service matrix; this source approval does not launch an observer or authorize numerical work.",
+    "Root must revalidate current ownership/runtime/health and host state with fresh preflight. Retained ownership, headroom and completed11 references are historical; no live assertions were refreshed here.",
+    "A completed12 requires independent strict ending-window review. Later restore02 seed and each of nine child cases require the exact current run06 supervisor and a separate one-use root permit.",
+    "All agents continue holding tests throughout active observations and numerical work. Existing source, evidence, running run05 and current service case were not altered or polled."
+  ],
+  "observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12-observer.py",
+    "sha256": "ddf58221b6d39af53519623a1eb05cef30613ab83aef710bb31e50c4160ff1d8"
+  },
+  "outputs_absent": true,
+  "ownership_reaudit": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-ownership-reaudit.json",
+    "sha256": "a7e066c1af8b28ed6b1a48e3cb512652fa67692faf2ebc38a4b13b240984bd11"
+  },
+  "preceding_accepted_window": {
+    "independent_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-review.json",
+      "sha256": "808060e241f3fe4823429a5410c781d28141683df83e28978e959e805735a86c"
+    },
+    "raw": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11.json",
+      "sha256": "c80c7f34ddb58cad86d9c9f5aa397347e105c2b723d8d1c0cc87f72faadb61d2"
+    },
+    "root_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-root-review.json",
+      "sha256": "5817de28dad2ca276cdfc652d65efb1531a91a9909746ee7efc55eccfa64bd2f"
+    }
+  },
+  "preceding_failed_window": {
+    "independent_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-review.json",
+      "sha256": "f10d97356d967d7281190fcee314049bfff7478c5a5e168d474300ecd2479dac"
+    },
+    "raw": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09.json",
+      "sha256": "0bad870ef7b342c6c6774c93ce79edc9cde21e677821bf1de844ed510ec551b5"
+    },
+    "root_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-root-review.json",
+      "sha256": "f9c0d5c22e35ceac4b27e928f5cf53b1b01aa73fd1ce9b8feb68bf6d5eae2681"
+    }
+  },
+  "preparation_manifest": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12-source-preparation-01.json",
+    "sha256": "77f5ec4a9a708bec5eb2964b265aecd3da38b4963a0882aa76d8a85949c9fd3a"
+  },
+  "prior_observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-observer.py",
+    "sha256": "ea290b954f4d888a3f8ec18e8762b747983a5b41af03d5be83576d552619a663"
+  },
+  "prior_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-source-review.json",
+    "sha256": "eea9e12f1fa86ddaa7677be7f99a8a132cae092956d7d5e6d2f51b7bd496f55b"
+  },
+  "reviewer": "mlx_integration",
+  "rules_preserved": [
+    "300 current consecutive observed seconds of pressure1; no positive adjacent-sample swap increase and no increase over window-start swap; no detected builds/tests; healthy readyz and connected reservoir.",
+    "Strict0<samplegap<=15seconds; unchanged per-sample protected237file/sevenprocess checks and final identity verification. Nominal5second cadence and610second maximum loop plus bounded probe overhead.",
+    "Exclusive unused output, atomic private evidence saves and read-only host/health sampling; no model/numerical imports, service changes, forced termination or case starts."
+  ],
+  "schema": "reservoir_host_window_source_review_v1",
+  "scope": {
+    "bound_live_file_contents_rehashed_by_reviewer": false,
+    "numerical_work_authorized": false,
+    "observer_or_monitor_executed": false,
+    "production_mutations": false,
+    "review_only": true,
+    "runtime_probes_executed": false,
+    "target_source_imported": false,
+    "tests_executed": false
+  },
+  "status": "accepted_source_only_not_executed",
+  "unresolved_source_blockers": []
+}

@@ -1,0 +1,72 @@
+{
+  "schema": "mlx_upgrade_preparation_closeout_identity_v1",
+  "at": "2026-10-16T18:00:25.577929+00:00",
+  "scope": "read-only current process/readiness/coordination check; not a passing baseline or host window",
+  "protected_processes": {
+    "22354": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+    "35486": "35486 35461 Thu Oct 15 13:14:29 2026     /Applications/Ollama.app/Contents/Resources/ollama serve",
+    "3888": "3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state",
+    "3893": "3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active",
+    "82314": "82314     1 Thu Oct 15 07:49:29 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60",
+    "82528": "82528     1 Thu Oct 15 07:49:42 2026     /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/writing-admission-guidance-20261014/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous"
+  },
+  "protected_exact_identities_unchanged": {
+    "22354": true,
+    "35486": true,
+    "3888": true,
+    "3893": true,
+    "82314": true,
+    "82528": true
+  },
+  "native_engine": {
+    "line": "35303     1 Thu Oct  1 11:16:53 2026     /Users/v/other/minime/minime/target/release/minime run --log-homeostat --eigenfill-target 0.6800 --warm-start-blend 0.55 --reg-tick-secs 0.5 --legacy-audio-synth-enabled false --legacy-video-synth-enabled false --ws-addr 127.0.0.1:7900 --sensory-ws-addr 127.0.0.1:7901 --av-ws-addr 127.0.0.1:7902 --enable-gpu-av",
+    "exact_identity_unchanged": true,
+    "reference": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/preparation-closeout-identity-01.json",
+      "sha256": "4536151de123017d3c27dfedfb76ce32a1af18e40fd6e956699cf8dc8ae72d4d"
+    }
+  },
+  "readyz": {
+    "http_status": 200,
+    "body": {
+      "ready": true,
+      "status": "generating",
+      "model": "coupled-astrid",
+      "worker": {
+        "phase": "generating",
+        "heartbeat_age_ms": 66111.273,
+        "queue_depth": 0,
+        "queue_capacity": 4,
+        "last_generation_error": null
+      },
+      "reservoir": {
+        "status": "connected",
+        "operation": "pull_state",
+        "last_sync_unix_ms": 1792173559423
+      }
+    }
+  },
+  "stewardship": {
+    "state": {
+      "actor": "codex-mlx-upgrade",
+      "pause_generation": 526,
+      "paused": true,
+      "reason": "User-approved MLX upgrade implementation and qualification; sole coordinator for this change; preserve paused automations",
+      "recorded_at": "2026-10-15T20:24:43.320066+00:00",
+      "schema": "steward_control_state_v1",
+      "schema_version": 1
+    },
+    "lease": null
+  },
+  "sibling_git_status": {
+    "minime": "",
+    "neural-triple-reservoir": ""
+  },
+  "live_reservoir_source_hashes_unchanged": {
+    "/Users/v/other/neural-triple-reservoir/reservoir_service.py": true,
+    "/Users/v/other/neural-triple-reservoir/persistence.py": true
+  },
+  "actual_numeric_cases_this_turn": 0,
+  "production_promoted": false,
+  "runtime_changes_this_turn": false
+}

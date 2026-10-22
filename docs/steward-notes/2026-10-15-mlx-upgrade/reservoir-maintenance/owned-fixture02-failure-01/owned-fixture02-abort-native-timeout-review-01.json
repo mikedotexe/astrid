@@ -1,0 +1,49 @@
+{
+  "actual_abort_executed": false,
+  "commands_or_process_probes_executed": false,
+  "design_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-design-independent-review-01.json",
+    "sha256": "a7c322610878e73414f2422dc729248fc7272c88eef2481719260dd0e5f81eb2"
+  },
+  "finding": {
+    "adapter_lines": [
+      33,
+      39,
+      114,
+      123,
+      131,
+      133
+    ],
+    "details": "Frozen OwnedSystem._run invokes subprocess.run(timeout). The exact installed stdlib explicitly kills its spawned command on TimeoutExpired and on other exceptions including KeyboardInterrupt, then reaps/waits. This contradicts the proposed abort preserving an unresolved native child and consuming its intent without force or retry. It is a property of old code, not evidence that any retained command timed out or was killed.",
+    "severity": "must_not_reuse_for_new_abort_native_commands",
+    "stdlib_lines": [
+      554,
+      574
+    ]
+  },
+  "frozen_source_changed": false,
+  "production_qualified": false,
+  "required_new_adapter_contract": [
+    "Record exclusive command intent before Popen; retain exact allowed argv, command-child PID, launch timing and OS identity observation when available. Missing identity/return evidence remains explicit, not reconstructed as success.",
+    "Use Popen with bounded wait/communicate that does not call kill/terminate/send_signal on timeout or exception. Avoid context-manager exit that implicitly waits without the chosen bound.",
+    "Only an actual natural child return from wait/communicate permits a natural-return/reaped receipt. Timeout/interruption saves unresolved-child evidence and exits the finite action path; do not infer the launched launchctl effect from a timeout.",
+    "A failed or unknown debug must never permit reservoir signal; any signal intent must prevent a second signal. Unknown bootout must not be repeated; later absence adoption requires separate reviewed retained-effect proof.",
+    "Fake tests must cover TimeoutExpired and KeyboardInterrupt after child creation, preserving intent/child identity and asserting zero kill/terminate/additional launches. These tests and final exact adapter review remain pending."
+  ],
+  "reviewed_at": "2026-10-17T06:13:10.030039+00:00",
+  "reviewer": "codex-mlx-upstream",
+  "schema": "owned_fixture02_abort_native_timeout_review_v1",
+  "scope": "source_only_addendum",
+  "sources": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_system.py",
+      "sha256": "96a95258ae81652f5ad3e1bf222f9159163ad134e6dd7113d16fbabeb6576817"
+    },
+    {
+      "path": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py",
+      "sha256": "26b3db4e83c14b624f11907ee81f1fc76d54c3bb56617d6888af60c066d21dcd"
+    }
+  ],
+  "target_imports": false,
+  "tests_executed": false
+}

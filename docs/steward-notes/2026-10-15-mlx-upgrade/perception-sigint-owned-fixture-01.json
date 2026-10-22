@@ -1,0 +1,79 @@
+{
+  "schema": "perception_owned_sigint_fixture_v1",
+  "passed": true,
+  "started_at": 1792112766.6198158,
+  "finished_at": 1792112766.949667,
+  "python": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+  "python_version": "3.14.3 (main, Feb  3 2026, 15:32:20) [Clang 17.0.0 (clang-1700.6.3.2)]",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/perception-sigint-owned-fixture.py",
+    "--child",
+    "/private/var/folders/98/rh9s2vt50c90b6f910bcnf3m0000gn/T/astrid-owned-sigint-93movoge"
+  ],
+  "owned_child_pid": 20481,
+  "owned_worker_pid": 20482,
+  "signal_count": 1,
+  "signal_target": "owned child PID only",
+  "fixture_sha256": "3671bea6a1536098a3919c516bf45c5c34c2dd977ff794c9feb612614b002a6b",
+  "python_sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43",
+  "runners_path": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py",
+  "runners_sha256": "749f15c02d29ea7f79e779b92e066422f8267d3fa0afc7e08b497a56c703897c",
+  "subprocess_path": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py",
+  "subprocess_sha256": "26b3db4e83c14b624f11907ee81f1fc76d54c3bb56617d6888af60c066d21dcd",
+  "checks": {
+    "exact_event_order": true,
+    "complete_single_iteration_write": true,
+    "runner_handler_installed": true,
+    "normal_exit": true,
+    "synchronous_worker_reaped": true
+  },
+  "handler": {
+    "function": "Runner._on_sigint",
+    "is_default": false
+  },
+  "events": [
+    {
+      "event": "iteration_start",
+      "pid": 20481,
+      "at": 1792112766.741832
+    },
+    {
+      "event": "worker_ready",
+      "pid": 20482,
+      "at": 1792112766.8693
+    },
+    {
+      "event": "parent_sends_one_sigint",
+      "pid": 20480,
+      "at": 1792112766.8798451
+    },
+    {
+      "event": "worker_complete",
+      "pid": 20482,
+      "at": 1792112766.883858
+    },
+    {
+      "event": "worker_reaped",
+      "pid": 20481,
+      "at": 1792112766.930368
+    },
+    {
+      "event": "iteration_complete",
+      "pid": 20481,
+      "at": 1792112766.9308531
+    },
+    {
+      "event": "keyboard_interrupt_at_runner_boundary",
+      "pid": 20481,
+      "at": 1792112766.93161
+    }
+  ],
+  "iteration_bytes": "begin\ncomplete\n",
+  "returncode": 0,
+  "stdout": "",
+  "stderr": "",
+  "scope": "Private temporary files and two owned Python processes; no production imports or paths.",
+  "temporary_directory_removed": true
+}

@@ -1,0 +1,1187 @@
+{
+  "schema": "perception_memory_source_audit_v1",
+  "audited_at": "2026-10-16T01:30:22.073584+00:00",
+  "reviewer": "mlx_readiness",
+  "scope": "Complete static read of all59 functions and module-level initialization in perception.py, host_audio_fallback.py, launch wrapper/plist, relevant installed Requests/Pillow resource code, and retained memory/recovery/log evidence. No production import, process attachment, signal, camera/microphone/model/network-service call, source edit, package change, or test execution.",
+  "conclusion": {
+    "root_cause_proven": false,
+    "most_likely_investigation_target": "Repeated camera/native backend activity is the leading source-level candidate, but the actual native allocator/caller remains unknown. Upstream review of exact OpenCV4.13.0-1-gb4c5ec4042 found existing autorelease pools in capture start/grab/stop, so a missing outer pool is not an established explanation.",
+    "confirmed_source_defect": "capture_frame does not guarantee explicit release after construction on every path; unopened return and read exceptions bypass cap.release. Normal successful captures already call release.",
+    "strong_counterevidence_to_error_path_only_explanation": "Exact old-PID pre-restart log prefix has21293 successful LLaVA calls,66 LLaVA failures, and zero camera-not-accessible/visual-error/ASCII-error/archive-compaction-error markers.",
+    "not_supported_as_primary_cause": [
+      "An unbounded Python history/list in the authored loop",
+      "Parent-process MLX or Whisper model caching",
+      "A persistent Requests session or response collection",
+      "Accumulated perception files remaining live as Python objects"
+    ],
+    "containment_not_diagnosis": "Isolating each existing camera capture in a short-lived child bounds any capture-library retained state to the child lifetime. This prevents that particular accumulation channel without claiming it is the demonstrated cause of10.7G; other parent allocations still need passive monitoring."
+  },
+  "source_identity": {
+    "path": "/Users/v/other/astrid/capsules/perception/perception.py",
+    "sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a",
+    "line_count": 1761,
+    "function_count": 59,
+    "global_statements": [],
+    "await_lines": [
+      1707
+    ],
+    "helper": {
+      "path": "/Users/v/other/astrid/capsules/perception/host_audio_fallback.py",
+      "sha256": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69"
+    },
+    "loaded_source_limit": "Current source matches prior deployment review and is baseline-bound. Legacy Python service has no independent in-process loaded-source hash attestation."
+  },
+  "observed_memory": {
+    "before": {
+      "evidence_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/memory-consumers-20261016T0057Z.json",
+      "evidence_sha256": "b28ffe55996c0e0223acafbaa5e1efc969654ed03e731eff91f63a3b3a24117b",
+      "sample": {
+        "pid": 3895,
+        "observed_at": "2026-10-16T00:58:26.100Z",
+        "command": [
+          "/usr/bin/vmmap",
+          "-summary",
+          "3895"
+        ],
+        "returncode": 0,
+        "physical_footprint_display_g": 10.7,
+        "peak_footprint_display_g": 11.0,
+        "total_resident_display": "1.5G",
+        "total_swapped_display": "9.8G",
+        "retained_summary_note": "DefaultMallocZone:39,699,536 allocations,4.3G allocated,1.6G fragmentation,825.0M resident,5.1G swapped"
+      }
+    },
+    "after": {
+      "evidence_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/perception-recovery-memory-01.json",
+      "evidence_sha256": "81ac7ac5a006ef978a4af5d2ea5778b96c3b903544ed4eb387fa4a9f7df4551d",
+      "pid": 22354,
+      "recorded_at": "2026-10-16T01:15:32.897613+00:00",
+      "selected_lines": [
+        "Date/Time:       2026-10-15 18:15:31.912 -0700",
+        "Launch Time:     2026-10-15 18:10:13.593 -0700",
+        "Physical footprint:         101.8M",
+        "Physical footprint (peak):  403.3M",
+        "Writable regions: Total=278.3M written=161.3M(58%) resident=152.9M(55%) swapped_out=12.2M(4%) unallocated=113.3M(41%)"
+      ]
+    },
+    "interpretation": "Same-code restart reduced charged footprint from displayed10.7G to101.8M at the later sample while durable history remained. Old DefaultMallocZone had39,699,536 allocations and4.3G allocated plus1.6G fragmentation. This supports process-owned retained/native state; a snapshot cannot establish a monotonic leak, identify allocation callers, or equate swapped footprint with resident RAM."
+  },
+  "log_evidence": {
+    "path": "/tmp/astrid-perception-host-ascii.log",
+    "prefix_end_exclusive": 17340633,
+    "prefix_sha256": "0818a9f05a2e185f92a1869a88e23aa3a4d114c2ebd9252206a7e225bfc8f91d",
+    "prefix_boundary_receipt": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/maintenance/perception-recover-01.json",
+      "sha256": "5fdc6bdccfbaf5acf37e1bdf8e25f95e307a225f284428712bbcaf2a2e8bc6a6",
+      "field": "log_offset"
+    },
+    "first_timestamp": "2026-09-30 14:29:10,470",
+    "last_timestamp": "2026-10-15 18:10:02,308",
+    "marker_counts": {
+      "LLaVA: saw the world": 21293,
+      "LLaVA failed:": 66,
+      "Camera not accessible": 0,
+      "Visual perception error:": 0,
+      "ASCII visual perception error:": 0,
+      "Audio perception error:": 0,
+      "Perception archive compaction failed:": 0,
+      "OpenCV not installed": 0,
+      "Whisper transcription failed:": 0,
+      "RASCII failed:": 0,
+      "Wide camera RASCII failed:": 0,
+      "Astrid perception capsule starting": 1
+    },
+    "scope": "Exact pre-restart log prefix of old PID3895; excludes replacement observations. Prefix can be revalidated despite later appends.",
+    "privacy": "Only hash, lengths, marker counts and timestamps retained; no perception prose/audio transcript.",
+    "limitations": "Successful LLaVA count is a lower bound on successful camera captures. readFalse is not logged; native retention can occur despite successful release."
+  },
+  "component_audit": [
+    {
+      "component": "Loop state and Python object retention",
+      "references": [
+        "/Users/v/other/astrid/capsules/perception/perception.py:1604-1707",
+        "/Users/v/other/astrid/capsules/perception/perception.py:397",
+        "/Users/v/other/astrid/capsules/perception/perception.py:412-421",
+        "/Users/v/other/astrid/capsules/perception/perception.py:759-813"
+      ],
+      "finding": "Exactly one coroutine loops synchronously with one sleep await. Timers, source selector/crossfade scalars and a deque(maxlen25) persist. Each history element retains one timestamp and an eight-float vector. No task fan-out, queue, growing global collection, log MemoryHandler, user cache or closure retaining every frame is present. Return dictionaries are discarded by the loop, except at most one latest rendered fallback local."
+    },
+    {
+      "component": "Camera/native buffers",
+      "references": [
+        "/Users/v/other/astrid/capsules/perception/perception.py:125-141",
+        "/Users/v/other/astrid/capsules/perception/perception.py:229-231",
+        "/Users/v/other/astrid/capsules/perception/perception.py:575-577",
+        "/Users/v/other/astrid/capsules/perception/perception.py:674-685"
+      ],
+      "finding": "Each capture constructs a new cv2.VideoCapture on the main Python thread. Normal read calls release before JPEG encoding; isOpenedFalse and read exceptions skip explicit release, relying on destruction. No finally or explicit autorelease-pool boundary exists in authored code. Frame and encoded numpy arrays are function locals; returned JPEG bytes are copied with tobytes. Native backend behavior remains outside Python retention analysis.",
+      "normal_workload": "Visual lane repeats at configured60s; camera ASCII repeats at45s when selected/fallback/crossfade needs it. The active host-ASCII choice does not disable the visual camera/LLaVA lane.",
+      "minimal_candidate": "Make ownership explicit with one release attempt in finally after successful construction, preserving the original error when cleanup also fails. Check imencode success. Do not change camera backend/resolution/cadence or keep a camera permanently open as an unqualified leak fix."
+    },
+    {
+      "component": "HTTP vision",
+      "references": [
+        "/Users/v/other/astrid/capsules/perception/perception.py:144-226",
+        "/opt/homebrew/lib/python3.14/site-packages/requests/api.py:55-59",
+        "/opt/homebrew/lib/python3.14/site-packages/requests/sessions.py:451-455",
+        "/opt/homebrew/lib/python3.14/site-packages/requests/sessions.py:745-748",
+        "/opt/homebrew/lib/python3.14/site-packages/requests/sessions.py:794-797",
+        "/opt/homebrew/lib/python3.14/site-packages/requests/models.py:1028-1039"
+      ],
+      "finding": "Base64/image JSON, response and decoded text are local. Installed Requests2.32.5 top-level request creates a context-managed temporary Session; stream defaultsFalse and content is consumed before return, with adapters closed on context exit. No long-lived Session/response list exists. Explicit response.close could clarify lifetime but is not evidenced as a cause.",
+      "limits": "JSON/response bytes have no hard application cap and timeout60 is an I/O timeout rather than strict whole-iteration deadline. Such inputs could create transient peaks, but normal num_predict256 and non-retention do not explain a days-long accumulator by themselves."
+    },
+    {
+      "component": "Pillow/visual feature arrays",
+      "references": [
+        "/Users/v/other/astrid/capsules/perception/perception.py:294-383",
+        "/opt/homebrew/lib/python3.14/site-packages/PIL/Image.py:592-617",
+        "/opt/homebrew/lib/python3.14/site-packages/PIL/ImageFile.py:184-205"
+      ],
+      "finding": "The decoded camera image and full-size RGB conversion are transient; resized image/pixels/luminances are48x48. ImageFile context exit handles file association; the resized Image is not explicitly closed, so deterministic core release relies on object destruction. No Python reference to either survives the function. Explicit close of all intermediate images is useful hygiene but no accumulated-reference evidence was found."
+    },
+    {
+      "component": "Host telemetry, rendering, crossfade",
+      "references": [
+        "/Users/v/other/astrid/capsules/perception/perception.py:442-572",
+        "/Users/v/other/astrid/capsules/perception/perception.py:598-636",
+        "/Users/v/other/astrid/capsules/perception/perception.py:727-813",
+        "/Users/v/other/astrid/capsules/perception/perception.py:820-1285",
+        "/Users/v/other/astrid/capsules/perception/host_audio_fallback.py:14-100"
+      ],
+      "finding": "Telemetry source files are reread into locals. History retains only8 scalar dimensions, not full telemetry JSON. Main host output grid is27x13, outer-ring history24 entries, crossfade grids60x60. Intermediate vectors/grids/ANSI strings are local and bounded by these constants for normal inputs. host_audio_fallback returns a compact value and does not cache input.",
+      "limits": "Input file size and RASCII output size are not explicitly capped before parsing; an abnormal file/child output can cause a transient oversized allocation."
+    },
+    {
+      "component": "RASCII child/process and temporary frame",
+      "references": [
+        "/Users/v/other/astrid/capsules/perception/perception.py:575-595",
+        "/Users/v/other/astrid/capsules/perception/perception.py:674-715"
+      ],
+      "finding": "subprocess.run waits synchronously with30s timeout; stdout/stderr are captured to local CompletedProcess then discarded. Crossfade temporary JPEG is unlinked in finally; ordinary saved raw JPEGs are intentionally retained on disk. No persistent child pool or Python result accumulation exists.",
+      "limits": "A failed write before entering the try, or unlink failure, can leave/mask temporary-file errors; this is disk/exception hygiene, not evidence for parent heap growth."
+    },
+    {
+      "component": "Audio capture/features/Whisper",
+      "references": [
+        "/Users/v/other/astrid/capsules/perception/perception.py:1317-1427",
+        "/Users/v/other/astrid/capsules/perception/perception.py:1464-1597"
+      ],
+      "finding": "The parent never imports mlx or mlx_whisper. Each transcription is a synchronous CLI subprocess with60s timeout; rec uses5s/16kHz/mono/16bit and8s timeout. Normal WAV is about160KB; raw bytes, roughly80000 Python sample ints, feature lists, transcript trigrams/Counter are local. Transcribe finally removes WAV/output tempdir. subprocess.run timeout handling kills/waits its own direct child.",
+      "limits": "Whisper child GPU/transient memory is host pressure distinct from the long-lived parent footprint. A record or feature exception before transcribe cleanup can leave a WAV on disk; no evidence of parent model retention."
+    },
+    {
+      "component": "Artifacts, archives, logging",
+      "references": [
+        "/Users/v/other/astrid/capsules/perception/perception.py:42-46",
+        "/Users/v/other/astrid/capsules/perception/perception.py:64-110",
+        "/Users/v/other/astrid/capsules/perception/perception.py:235-238",
+        "/Users/v/other/astrid/capsules/perception/perception.py:272-278",
+        "/Users/v/other/astrid/capsules/perception/perception.py:639-671",
+        "/Users/v/other/astrid/capsules/perception/perception.py:689-691",
+        "/Users/v/other/astrid/capsules/perception/perception.py:1452-1461"
+      ],
+      "finding": "Perception JSON live directory compacts above6000 into3000-file archive buckets; list of live Path objects is local and discarded after each compaction. Archive history, raw visual JPEGs and stdout log grow on disk intentionally. No file contents are kept in a process-wide collection. Logging has one standard basicConfig StreamHandler, not an in-memory buffer.",
+      "separate_issue": "Raw visual JPEG/archive/log storage is not globally capped, but deleting history is outside scope and would not diagnose this parent heap. Compaction can create transient path allocations; no compaction errors are present in the retained log."
+    }
+  ],
+  "repair_and_validation_recommendations": [
+    {
+      "priority": 1,
+      "action": "Stage a minimal per-capture subprocess candidate outside the119 baseline-bound paths. The parent never imports cv2; each child uses the same sys.executable/default cv2 camera index and JPEG encode settings, returns only the completed JPEG bytes, and exits. Explicitly release its capture in finally.",
+      "semantics": "Keep the existing no-capture-timeout behavior; do not change resolution, backend, sensor choices, cadence, prompts, models, histories or artifact paths. This is capture-native lifetime containment, not an allocator diagnosis."
+    },
+    {
+      "priority": 2,
+      "action": "Prove the subprocess boundary with isolated CPU-only fakes before native/hardware qualification.",
+      "required_test_cases": [
+        "Successful fake child returns exact JPEG bytes only after it exits and is reaped",
+        "Parent never imports cv2 or the live perception module",
+        "Same interpreter/camera/default capture and JPEG settings are forwarded",
+        "Unopened/readFalse/read exception/encodeFalse/encode exception all have deterministic release and return/failure semantics",
+        "Bounded stdout protocol rejects oversized or malformed output without retaining it; stderr handling cannot deadlock the reader",
+        "Nonzero child exit or interruption never publishes partial bytes; direct child is reaped on every failure",
+        "No new execution timeout silently changes blocking behavior",
+        "No recurring child, helper thread, process-local output cache or file descriptor survives completed calls"
+      ]
+    },
+    {
+      "priority": 3,
+      "action": "After the active MLX baseline, coordinate actual camera validation and matched current-source/control-versus-candidate repeated successful captures under the same live-owner constraints. Record memory before/after warmup, cycle count, child exits and JPEG equivalence without invoking model generation.",
+      "acceptance": "Require bounded post-warmup memory trend and preserved capture/output behavior across sustained normal-success workload. CPU fake tests establish lifecycle control but cannot prove native memory trend or camera equivalence."
+    },
+    {
+      "priority": 4,
+      "action": "Treat any later production deployment as a relevant source/process change with its own reviewed handoff and fresh baseline. Continue passive same-PID memory observations meanwhile.",
+      "avoid": "Do not add an outer autorelease-pool patch solely on conjecture, gc.collect, MLX cache clears, permanent camera ownership, package upgrades, history deletion or forced periodic restarts as an asserted root-cause fix."
+    }
+  ],
+  "baseline_preservation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observations-post-perception-01/20261016T012057Z/soak_result.json",
+    "started_at": "2026-10-16T01:20:57.616782+00:00",
+    "state_at_review": "running",
+    "identity_file_count": 119,
+    "all119_hash_size_mtime_match": true,
+    "file_checks": [
+      {
+        "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/live-inventory.json",
+        "sha256": "98797e054cfbbc3d5f4b8bb7d0c5e30f6eb14a691a37f66b6620d5447f7ba7e7",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/aperture_drive_experiment.py",
+        "sha256": "f6ae82f3624a8a207ac4d199691e45f3d3d483aa7348104b03b15cbf75af549c",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/astrid_feeder.py",
+        "sha256": "dce37ed5531d65c14932e74a562ad5529b31f2d6cb0303cbaa1866b0178bbf80",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/attractor_garden.py",
+        "sha256": "c566509a340e2f5861d317d407bee5ab52d747ee535a3d52b22afec9ecebf50d",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/collab_feeder.py",
+        "sha256": "5315b45b9246bda055d4f648190d5ef58567bd9249baa168e8fa53def099726e",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/contextual_capture.py",
+        "sha256": "a820eae8963e92fcac5efd5fc2c39b9926d7b8c15b8a4895be29a0f0812ed256",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/contextual_feedback_study.py",
+        "sha256": "f5488dd7573cbaef3b33472dd70e842c745440409d2a00ffccfe372d232852e9",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/contextual_integrity.py",
+        "sha256": "9c1073c520408a44fa0a8f4ba8e5b0b93692996e5c788c0594fcc0b329152ae5",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/contextual_raw_parity.py",
+        "sha256": "48a82a3f1b734d522ce6ca19271f9f43ea12130ddcfa50047bd7a3f3a93456d2",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+        "sha256": "d67a0704c7498c49ed0ac36ea5b3d161f74753419f823327f1b1572d9203610f",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/coupled_http_gateway.py",
+        "sha256": "10f6d216baf5169c1fd375e79aa3d565459d14edf02089e53a8ff4bb6f17b54c",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/dual_ai_bridge.py",
+        "sha256": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/experiment_same_prompt_different_state.py",
+        "sha256": "7ec0391e1a663c49805edbee89887cdb84938e55c156740fd1316a9e7771cc46",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/generation_controls.py",
+        "sha256": "f1fcf078ab20c106ad41b7142f54125413d66b3b8e3687d6d6eb1930b3b9cd13",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/lsm_reservoir.py",
+        "sha256": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/mcp_reservoir.py",
+        "sha256": "92bf50f85bfce27887668e873b5e4149a02fb23dedcdd98d318151d77923a8d6",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/metrics_snapshot.py",
+        "sha256": "a82efd136d8502ba93a663d0561f75fc52ca0bd5fbaa110db2e38e55fa13e508",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/minime_feeder.py",
+        "sha256": "6e06f73da069690aa31baef56170a8984fb8a220cf5e2777f42b38df3e912c81",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/mlx_reservoir.py",
+        "sha256": "7bf189ff5d618e9002a623ae5d38a206758a80738ee79477eaf8059a1d383f1e",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/model_qos.py",
+        "sha256": "93951ff95e9835c6ca8298afbe12523c34062c0ea38a1b7a6e23d9378d45828f",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/offline_coupling_replay.py",
+        "sha256": "743654843b4842d2d2a7c210d94b31aa5f22ea99e8c1861652dabc9065d35c0b",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/persistence.py",
+        "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/real_model_coupling_study.py",
+        "sha256": "318e8563267c9823552ee1fc2a301edf4051e31c0e885874780af1176e46d1ed",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/rehearsal.py",
+        "sha256": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+        "sha256": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_attractor_garden.py",
+        "sha256": "517731adafb25edb02de53212eba4add00ed280525e1913f447b4e889a21b484",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_contextual_capture.py",
+        "sha256": "8333ecdddb3cfe6bbee79c4df9729a17fa55d7dd51cff5afa0660086e260c31a",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_contextual_resume.py",
+        "sha256": "2c68d97fc86fddf776852ca2540352e931e49aabd1bc412bab080491525f6937",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_coupled_astrid_token_policy.py",
+        "sha256": "81f4f71252199a0fed7177d4b6716020a57aa29a0841cb30bc3c46376b7be7bc",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_coupled_http_gateway.py",
+        "sha256": "935bab48209b581cf690b64d9bdc0bb3ce0dcfecf3e4b94360361e5b0a630ba1",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_feeder_policies.py",
+        "sha256": "e3d989f0d2d45e234b76d623df9e94adc75a636fe4e09fcdee54526fd4c7fac7",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_generation_completion.py",
+        "sha256": "fcd8013fbe81b5172d661ff676e273030bb7da0e1931587a623cdf159c834f7f",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_generation_controls.py",
+        "sha256": "c9cacac27210c4962eaf815a1d2b92069cd08431b60f2d9d824e76576166f33e",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_lsm_shadow.py",
+        "sha256": "8804afc779bc1240cdf4f5c0462d52ff77641b806d03e4ce6b8b5e0112e1dbe8",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_multi_headed.py",
+        "sha256": "7db2314e4bab4c776a44466fbd2a3f0a20ef74e8bbe45a880ec8eb5a77966423",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_offline_coupling_replay.py",
+        "sha256": "be5a490e5db46da0176dba7583c2b5e664c42f970e53f43554ab869e4b25f1fd",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_real_model_coupling_study.py",
+        "sha256": "4151e37eaaacb5db93e5cc7d3b2f9cc15fb93c57bed375996401f405d9c2c36e",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_reservoir_metadata.py",
+        "sha256": "1702753f9135d75201f227de63c09c8725bf58adf79c6a8adf5ce90ab7b2540e",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_same_prompt_experiment.py",
+        "sha256": "600f94cead33fa035ade4534bdb2a6c7889b45b28bfd351df4717e542a42fe45",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_slow_coupling.py",
+        "sha256": "6f5d0a02e62b420b3ba5ab44bf1fe4452d78d6c780292795c079b60ccf144bcc",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_triadic_chamber.py",
+        "sha256": "046c50df3372f49d4b74849cac15ea7a1f74c8e756bb43953dfe8f688e9abeaf",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_wide_coupling_offline.py",
+        "sha256": "7428610268c20e4bb54cb3d5b4d2306ecf0ddde627d3905b97b8816dcd733598",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/test_wide_processor.py",
+        "sha256": "9da04493a30b173c956d7a5703c165ae18d7ace2705672eddfc6ec1b69ba9795",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/triadic_chamber.py",
+        "sha256": "035e2c0b9afbb966353ecf929e1e43e2064660c15bac5a8e07d3440ca78fdac0",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/triple_reservoir_coreml.py",
+        "sha256": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/watch_reservoir.py",
+        "sha256": "91a6b82a3c957786d9d05b2411f35e93657c5bcd7d98f74c6bd6fa6fd6f8a5e0",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/wide_coupling.py",
+        "sha256": "1bc08b46e1d4f869894384504fc31453be5afaf9319e80c351324f73d6b7ff73",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/aiohappyeyeballs-2.6.1.dist-info/METADATA",
+        "sha256": "3525e5849c007e2dfcd1e123028ec14383ff4d56a5f718b4aa4c995a26ccb153",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/aiohttp-3.13.3.dist-info/METADATA",
+        "sha256": "09044e6424ad868f9e6fbc62148b80ce3df426eba9114fe31e96031621bf1e13",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/aiosignal-1.4.0.dist-info/METADATA",
+        "sha256": "09247ef1da8bc696728d47130e702e4307f6f7d101d6c485bff9f3a71ce7008d",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info/METADATA",
+        "sha256": "22b9b9289b9adf7758daa28a02327e3a129a5415487f01467a3fdd49edd9d535",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/anyio-4.13.0.dist-info/METADATA",
+        "sha256": "1741187e23e5993470989376264b4dc4983518d9e5d301e1cce5a6cfba45be33",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/attrs-26.1.0.dist-info/METADATA",
+        "sha256": "4cd40e690f23bf37cbcad34efd6758e062df1df07c86833f7e3ce95bf1fa38cc",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/cattrs-26.1.0.dist-info/METADATA",
+        "sha256": "77de10b9d43480cd19cbf28d3ed2fb9f680479aeecf958abdade3facb0f8ccb0",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/certifi-2026.2.25.dist-info/METADATA",
+        "sha256": "e0d32e197760fe1062440de968a55761c0e61375571015b14ef08bdb1943c8f5",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/click-8.3.1.dist-info/METADATA",
+        "sha256": "5d9781acc004d2085313cf128dfad20ee4b2342a413e9971251d6d6f00fda198",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/coremltools-9.0.dist-info/METADATA",
+        "sha256": "f492b3b2f954f8737078175a9ccaacad327eb7ff0993ee267df736331b1773d4",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/filelock-3.25.2.dist-info/METADATA",
+        "sha256": "08788fe5b29c21352b7432a67c2bccb2911d2948f9bee3eadee765e49037623e",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/frozenlist-1.8.0.dist-info/METADATA",
+        "sha256": "946c22dc9f7e2c76f2d698f00a4306dbe49a820e2b3f1a0e22fe5286cbec35f1",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/fsspec-2026.3.0.dist-info/METADATA",
+        "sha256": "5c24f4a18eed0f2e06ac8a2a694dd1311cb36279134c7b26385170fc0e024831",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/h11-0.16.0.dist-info/METADATA",
+        "sha256": "28f326098ac09fcba79b8f180f96087c841fe2456215cb7b872a9c7d5cd19d64",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/hf_xet-1.4.2.dist-info/METADATA",
+        "sha256": "aa7df944d3798a9168295c96ce9dc3c52c5a162e18cdf040ac15733b776d35dc",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/httpcore-1.0.9.dist-info/METADATA",
+        "sha256": "fe2d4fda6199128978779e0cf27f3c045c531863fcdd987eacc74f3a18d41c21",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/httpx-0.28.1.dist-info/METADATA",
+        "sha256": "febb9b0f8f3e80d57c8199c304f35c4336e8581d1d18d7983c92766b82793b25",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/huggingface_hub-1.8.0.dist-info/METADATA",
+        "sha256": "cc9629251adcec4d8d0dc852ea9957976ea9426b48030b0c68066b00e0f1c0fe",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/idna-3.11.dist-info/METADATA",
+        "sha256": "7c2c12c30f52ba237c4c81e59454804944025b9e6102cf1dcca9ebf5168411b0",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/jinja2-3.1.6.dist-info/METADATA",
+        "sha256": "68c5548fb67c4132a13898d9b31ec50c6bea2abdd915d921f214355c3a6499c8",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/joblib-1.5.3.dist-info/METADATA",
+        "sha256": "cee9c60896ae4e7a965a840fbde50d111d2f8018f61201d1ed2e9fc3dd4883e6",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/markdown_it_py-4.0.0.dist-info/METADATA",
+        "sha256": "e9fcaa1e2daf3f96d840a09fbaaa394feaadf37a36d88a7b6b6b672487c65bfb",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/markupsafe-3.0.3.dist-info/METADATA",
+        "sha256": "12b4cc61a7fa288cf7667ee3f213786d9619db57fb33ff6f934afbcb5c12ec81",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mdurl-0.1.2.dist-info/METADATA",
+        "sha256": "b53b29d48f499367053fda3c81e7ce27d2558380ebbf83e66023b02eb7ddd25d",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx-0.32.0.dist-info/METADATA",
+        "sha256": "d41601d7dc5acdd43978f4afedacae9cf825b872cd82ff4012ee19a9eb1d19f8",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx_lm-0.31.3.dist-info/METADATA",
+        "sha256": "d464222b4761a38f817e5c470e7d4f546cea4df29482335b68c8e22c0142fac4",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx_metal-0.32.0.dist-info/METADATA",
+        "sha256": "1fdec01bdce98317a426f5fa15a8d2bc60d651c305d6aa550be3bfeed53adf92",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mpmath-1.3.0.dist-info/METADATA",
+        "sha256": "44b66ea444b9c0d19ae94815d356bf047ae6b680c19268b5c265687cd6a81406",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/multidict-6.7.1.dist-info/METADATA",
+        "sha256": "4913fdaae936a309c29b89b98c2dbebd237203fb27ab9e68ae5e4ec17ba3024f",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/networkx-3.6.1.dist-info/METADATA",
+        "sha256": "aca5d94a97d1f70f301d033addb635f6e66be8973a00aba4127637eed2ef316a",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/numpy-2.4.3.dist-info/METADATA",
+        "sha256": "621bf875d57eee8673f39344ea98ddc370e944e9c8c36b38b430e290f2b682cf",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/packaging-26.0.dist-info/METADATA",
+        "sha256": "3362bb7d6a26da2962ba8daaa4785cd0bacac21aba908a1195cc8f59580a265a",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pip-26.0.dist-info/METADATA",
+        "sha256": "09cab52f0b9d16a8b84a3d41e615391c40fb3c7bf0870b2a9d2899941b9ffac8",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/propcache-0.4.1.dist-info/METADATA",
+        "sha256": "fc23f3c52b336d5335cd053f47d91ff6316949e65ad1f1e3dfccd5284f4d6ece",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/protobuf-7.34.1.dist-info/METADATA",
+        "sha256": "39712f65d7f7998bd05e15b6cab69e7aa3f7b97ac192d94554565748d7f3315e",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pyaml-26.2.1.dist-info/METADATA",
+        "sha256": "18ce050bc1281f126af1779d3cacd8261e38828e95d7d4c96bf50ab4057a3c47",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pygments-2.19.2.dist-info/METADATA",
+        "sha256": "7ae100d67d67006c6479803dd835fcf47a9b59fac794441ea8e66aa7f5984d82",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pyyaml-6.0.3.dist-info/METADATA",
+        "sha256": "03c3b415ed38d09faedc49360e930769b40c58f68585e6de00e2e4916a858d34",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/regex-2026.2.28.dist-info/METADATA",
+        "sha256": "5e9b8a775c762bef082257beab35374cee11e4c69ac29de4099c79294016e83d",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/rich-14.3.3.dist-info/METADATA",
+        "sha256": "f643a724f7a397abd3c1abe5df9a93266b4abb6d7ca7d39bfb3fa30e8cf5013a",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/safetensors-0.7.0.dist-info/METADATA",
+        "sha256": "6809326fbf17444dd520ab19f0a55b7a18476dbe52a430466bbf5389967c2aaa",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scikit_learn-1.8.0.dist-info/METADATA",
+        "sha256": "95a8f42f4170fc940a71fedfed4fd9353723eb44126130a971a072fe5305d967",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scipy-1.17.1.dist-info/METADATA",
+        "sha256": "b1cd2c784f6e003c6c71af4c5ee57f6370ee467d17b656250d9fd38cf579d7d0",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/sentencepiece-0.2.1.dist-info/METADATA",
+        "sha256": "ce0a2e9c599cd060a7bc3dffb18be5cfc3d5f293533e3ee4e870eaef0a5500fd",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/setuptools-81.0.0.dist-info/METADATA",
+        "sha256": "e3ca2edbff500ebe5ba650aa6d8f10249fb4ceae266029b160ce7058ef40df15",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/shellingham-1.5.4.dist-info/METADATA",
+        "sha256": "183d80220a37493262795739dd357cc5bb3f49bd390cc9198d5180e5451a07fa",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/sympy-1.14.0.dist-info/METADATA",
+        "sha256": "b756c2fbfd5be05ac5bdb0ebca61f55618f30f633ed92d88a5687429313a7595",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/threadpoolctl-3.6.0.dist-info/METADATA",
+        "sha256": "a45df8d07ea1883d772183a501d7d526076aa70dfcfddb276a2cbdc04def5341",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/tokenizers-0.22.2.dist-info/METADATA",
+        "sha256": "15a5ddaf489f592b77e0a934c0eeb46b51130a94064ca129232afdb0a3868efc",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/torch-2.11.0.dist-info/METADATA",
+        "sha256": "d65e0ab5a65ced0dce799a2f6f32bff57b3d3e9d050069f607ef71eb24dd9976",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/tqdm-4.67.3.dist-info/METADATA",
+        "sha256": "7c0e9a662c19095f339a4b761201eb06cff9c61fb9581535b2f96f44e718ed29",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/transformers-5.4.0.dist-info/METADATA",
+        "sha256": "894701b06d4b336ab464d87aa6417bd1281c0a527995bff388a7ef5f9ca4edd8",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/typer-0.24.1.dist-info/METADATA",
+        "sha256": "578396a168c184f35ca0868ec61af572cce8ebd9de3ca3873115c446432c70ab",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/typing_extensions-4.15.0.dist-info/METADATA",
+        "sha256": "c138378fe8f18934ac99de060535c53ec6c13aeed65e94c32641da7ee3192a72",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/websockets-16.0.dist-info/METADATA",
+        "sha256": "25c0ef5a8f03552c39ba80c015b93d37c7c95ee449be7adc2d7541172063c0df",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/yarl-1.23.0.dist-info/METADATA",
+        "sha256": "da3fb5321e2de5b2766214002d5003112ecb18bd4d85f415b413efdd10ef80a3",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/Library/LaunchAgents/com.reservoir.coupled-astrid.plist",
+        "sha256": "4d4bb17099f48b85e2cdcee7d343b4238253edb982fde67d3d9b1e5cad0152ec",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/deployment_manifests/coupled-model.json",
+        "sha256": "3197545f11291fe02b36bb294b714a145ea795c857b430787127d0ca7f556df2",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/astrid/capsules/perception/perception.py",
+        "sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/astrid/capsules/perception/host_audio_fallback.py",
+        "sha256": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/astrid/scripts/launchd_astrid_perception_host_ascii.sh",
+        "sha256": "969323a229a50bb5fe3dda477d2672df198604b6c049480518061a079b06c9f2",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/astrid/launchd/com.astrid.perception-host-ascii.plist",
+        "sha256": "76531cb3b17e20836081b320fc9cd51c34d29068457f5bf76c6b15997e4b1e4e",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/Library/LaunchAgents/com.astrid.perception-host-ascii.plist",
+        "sha256": "76531cb3b17e20836081b320fc9cd51c34d29068457f5bf76c6b15997e4b1e4e",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python",
+        "sha256": "7ecc1ecbf9daa9303c4bf502ff62ffdd9010ed5c08729d470ae9380c10ce1211",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+        "sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_live_soak.py",
+        "sha256": "544ab7078c76dbc1353db458115491348df2834722379fc7d626b281a5e01f73",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_soak_observer.py",
+        "sha256": "1fea36cfd32c4ab51e8761b11fac878155661c6ff55c5ae1bedb8e861bccabdb",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_soak_performance.py",
+        "sha256": "969a9531d2231985b4d5a27e55e3252892d53329b8d088008ea655baa4e1ce0e",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_model_canary.py",
+        "sha256": "09e335d0655e1a7e6dce868a09ce9838770d9aaa2fc22776e8da81d2fa2b4c1f",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_mlx_candidate.py",
+        "sha256": "92c8c36d3fec7b6ceb687e75e44fb4c86a4bc3c51ab267af20830735133a0a68",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/astrid_mlx_fixture.py",
+        "sha256": "528e77c9f06f889a3389c81c50577a8bb5198ed9076e0572c77bc4161ad690a6",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observer-source-v2/manifest.json",
+        "sha256": "3c565c8d9835180ff2a0378244483a68213dc2c7afa38d3129c8fb30ab0254df",
+        "matches_sha256": true,
+        "matches_size": true,
+        "matches_mtime_ns": true
+      }
+    ],
+    "source_or_runtime_mutations": false,
+    "only_new_audit_file_written": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/audit.json",
+    "current_perception_process": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+    "last_verified_at": "2026-10-16T01:41:07.589289+00:00"
+  },
+  "installed_library_source_evidence": [
+    {
+      "path": "/opt/homebrew/lib/python3.14/site-packages/requests/api.py",
+      "sha256": "fd96fd39aeedcd5222cd32b016b3e30c463d7a3b66fce9d2444467003c46b10b"
+    },
+    {
+      "path": "/opt/homebrew/lib/python3.14/site-packages/requests/sessions.py",
+      "sha256": "0a5d5da449ce7f0af3ccf6e4bbe7a67a935e37846dff4ff9f08cb6c7e2464e6f"
+    },
+    {
+      "path": "/opt/homebrew/lib/python3.14/site-packages/requests/models.py",
+      "sha256": "32365d67893bb67c3ed67cf93ca4a18e63e6ab29342fa0dc8b09c59e06ff564e"
+    },
+    {
+      "path": "/opt/homebrew/lib/python3.14/site-packages/PIL/Image.py",
+      "sha256": "3e5ecdcc3e8800749901e61c8108bd3c49063d3ba444fa0b62b0c18af022007f"
+    },
+    {
+      "path": "/opt/homebrew/lib/python3.14/site-packages/PIL/ImageFile.py",
+      "sha256": "5b9fd050b656798ecaab3d3870bba356ed244819ca66eee588b082aa85cef863"
+    },
+    {
+      "path": "/opt/homebrew/lib/python3.14/site-packages/opencv_python_headless-4.13.0.92.dist-info/METADATA",
+      "sha256": "e4a77fb9b25b744ca4db9cdaef315e0dad2ddf173ee741cd95ba543c1cf28e20"
+    },
+    {
+      "path": "/opt/homebrew/lib/python3.14/site-packages/pillow-12.1.1.dist-info/METADATA",
+      "sha256": "17ff1f2d2adbc1ee618e97f149a81caaf4c3293d5a687227b6289199e70f2d17"
+    },
+    {
+      "path": "/opt/homebrew/lib/python3.14/site-packages/requests-2.32.5.dist-info/METADATA",
+      "sha256": "65b5a08da81f4915513e760965ff14b7518f65b7bb3efe0dab364bbcc4d40cb0"
+    }
+  ],
+  "unresolved_questions": [
+    "Which native allocation caller produced the millions of small retained allocations?",
+    "Does per-capture process containment flatten the normal-workload parent footprint under actual camera qualification?",
+    "Could another parent native path retain memory after camera isolation? Old process exited; detailed attribution requires a future owned reproduction."
+  ],
+  "upstream_cross_review": {
+    "reviewer": "mlx_upstream",
+    "reported_exact_native_revision": "4.13.0-1-gb4c5ec4042",
+    "finding": "Exact deployed macOS capture backend has NSAutoreleasePool/drain in startCaptureDevice, grabFrame and stopCaptureDevice plus explicit release paths. See peer upstream source audit for primary-source details.",
+    "implication": "Do not describe missing authored outer pool as a confirmed leak; prefer proposed process containment with honest uncertainty.",
+    "evidence_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/upstream-audit.json",
+    "evidence_sha256": "3dd3cd3804a2889d1e7149284318f0a9767d1d1cfbedd3c064182874672d9240",
+    "native_source_url": "https://github.com/opencv/opencv/blob/b4c5ec4042f097e2a5b386b9d413ec7333d0a184/modules/videoio/src/cap_avfoundation_mac.mm",
+    "native_source_lines": "253-292,295-413,535-615",
+    "caveat": "Caller-thread autorelease scopes do not drain native callback queues. Existing pools weaken the generic missing-pool hypothesis but do not prove all native lifetime paths are leak-free."
+  },
+  "updated_at": "2026-10-16T01:32:20.752925+00:00",
+  "candidate_review": {
+    "reviewed_at": "2026-10-16T01:41:07.580961+00:00",
+    "stage": "isolated CPU-only candidate; not deployed or hardware qualified",
+    "result": "No blocking finding for this stage",
+    "checks": {
+      "all_test_source_hashes_match": true,
+      "tests_passed": true,
+      "all18_owned_test_children_reported_reaped": true,
+      "test_parent_real_cv2_and_models_absent": true,
+      "only_capture_frame_ast_changed": true,
+      "candidate_workspace_absent": true
+    },
+    "test_evidence": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/containment-tests-02.json",
+      "sha256": "c3b376539e8c51c3fb1a02aa95836b4a3650845afe2b69695c6ea823ce865b86",
+      "tests": 20,
+      "owned_children": 18,
+      "wall_seconds": 0.6206412089522928
+    },
+    "source_hashes": {
+      "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py": "4692f30fe56090490cc648b78447e993a368a5a148ef53a0b2e38d235caae34d",
+      "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/host_audio_fallback.py": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69",
+      "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/perception.py": "d842d08aa505836451c64e0ad29158d7610efc6828e54a2988ccfe8f28c648a8",
+      "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/test_camera_capture_containment.py": "5e2fadc465407167aca5f7530b506870733c1c51ed8b6da193028909f76c87f7"
+    },
+    "source_references": {
+      "parent_bounded_drain": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py:27-91",
+      "same_interpreter_and_camera": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py:94-99",
+      "worker_release_finally": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py:108-144",
+      "stdout_fd_isolation_and_close": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py:147-169",
+      "delegation_only": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/perception.py:125-129"
+    },
+    "observations": [
+      "One synchronous child per capture; parent never imports cv2; all successful bytes returned only after direct-child exit/reap.",
+      "16MiB retained-output cap with continued drain handles finite oversized stdout without pipe deadlock; stderr is inherited.",
+      "Dedicated non-inheritable JPEG descriptor is created before cv2 import; native fd1 diagnostics are redirected to stderr. Descriptor is closed on normal/error paths.",
+      "JPEG validation checks SOI/EOI envelope, not full JPEG decoding.",
+      "Existing blocking camera semantics preserved: no timeout, kill, terminate or retry introduced.",
+      "Immediate/repeated interruption inside wait can interrupt reaping; this is explicitly documented and is outside the demonstrated normal first-SIGINT asyncio cancellation boundary."
+    ],
+    "limits": [
+      "Reviewed source and retained CPU test evidence; did not rerun tests or call camera/native libraries.",
+      "Actual camera/TCC access, start latency, output equivalence and sustained native-memory containment remain unqualified until an approved later hardware window.",
+      "Camera process isolation limits capture-process allocations but does not prove the observed historical allocator cause or rule out other parent-memory growth."
+    ]
+  },
+  "passive_observation_handoff": {
+    "recorded_at": "2026-10-16T01:50:36.100841+00:00",
+    "ten_minute_summary": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/passive-memory-observation-01.json",
+      "sha256": "c66544d306564b6f802130dafff1b3b30c84acd1cba09713ebd06d9db0dafb01"
+    },
+    "longer_launch": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/passive-memory-continuation-02.json",
+      "sha256": "07dfdba5cf8e3593b3145a3a36f82071a792cea1f2b127ddb445b219dd1f55c1"
+    },
+    "next_review": "Read .runtime/perception-memory-investigation/passive-rusage-02.json after its finite run ends near2026-10-16T03:21:59Z; no repeat is configured.",
+    "all119_baseline_hash_size_mtime_unchanged": true,
+    "changed_paths": [],
+    "six_process_identities_unchanged": {
+      "35486": true,
+      "3888": true,
+      "3893": true,
+      "82314": true,
+      "82528": true,
+      "22354": true
+    },
+    "baseline_state": "running",
+    "baseline_samples": 59,
+    "target_attachment_or_signals": false
+  }
+}

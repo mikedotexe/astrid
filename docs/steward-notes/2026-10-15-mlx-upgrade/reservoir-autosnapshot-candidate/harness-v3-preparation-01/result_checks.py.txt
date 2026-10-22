@@ -1,0 +1,115 @@
+"""Pure receipt acceptance checks, usable by stdlib fake tests."""
+from __future__ import annotations
+
+from pathlib import Path
+from common import digest, require, read_json
+from fixture import COUNT, NAMES
+from process_identity import same_identity, launch_transition, publication_proof
+
+
+def verify_result(variant, case, probes, child, events):
+    require(child.get("exit_code") == 0 and child.get("preservation_passed") is True,
+            "child preservation/lifecycle failed")
+    require(child.get("event_sequence_continued") is True, "restore sequence continuity missing")
+    for key in ("restore_one", "restore_two"):
+        require(set(child.get(key, {})) == set(NAMES)
+                and all(row.get("preserved") is True for row in child[key].values()),
+                "complete two-cycle restore evidence required")
+    require(set(child.get("roundtrip_files", {})) == set(NAMES), "roundtrip file evidence incomplete")
+    require(isinstance(child.get("fixture_sha256"), str) and len(child["fixture_sha256"]) == 64,
+            "synthetic fixture identity missing")
+    periodic = [row for row in child["writer_rows"] if row["phase"] == "periodic"]
+    final = [row for row in child["writer_rows"] if row["phase"] == "final"]
+    require([row["name"] for row in final] == list(NAMES) and all(row["passed"] for row in final),
+            "final writer order/preservation incomplete")
+    expected_count = 7 if variant == "candidate" and case.startswith("cancel") else COUNT
+    require([row["name"] for row in periodic] == list(NAMES[:expected_count]),
+            "periodic snapshot captured order/count differs")
+    if case.startswith("cancel"):
+        require(child.get("auto_cancellation_seen") is True, "cancellation propagation absent")
+    failed = [row for row in periodic if not row["passed"]]
+    if case == "writer-error":
+        require(len(failed) == 1 and failed[0]["name"] == NAMES[33]
+                and failed[0].get("prior_file_preserved") is True, "wrong writer-error outcome")
+    else:
+        require(not failed, "unexpected periodic writer failure")
+    expected_probes = 3 if case == "aggregate" else 1
+    require(len(probes) == expected_probes, "missing or duplicate client attempt")
+    expected_timeouts = case == "single" or (case == "aggregate" and variant == "original")
+    applied = child.get("pushes", [])
+    require(len(applied) == sum(p.get("acknowledged") is True for p in probes),
+            "application push count differs from acknowledged requests")
+    for probe in probes:
+        require(probe["open_timeout"] == 2 and probe["receive_timeout"] == 5,
+                "production protocol deadlines changed")
+        if expected_timeouts:
+            require(probe.get("error_type") == "TimeoutError"
+                    and probe.get("error") == "timed out while waiting for handshake response"
+                    and probe.get("application_sent") is False
+                    and probe.get("acknowledged") is False,
+                    "negative control did not reproduce an opening-handshake timeout")
+        else:
+            require(probe.get("passed") is True and probe.get("application_sent") is True
+                    and probe.get("acknowledged") is True, "positive protocol check failed")
+        if case in ("aggregate", "single"):
+            marker = probe.get("trigger")
+            require(marker and marker["phase"] == "periodic", "client batch trigger missing")
+            require(0 <= probe["started_mono"] - marker["mono"] <= .5,
+                    "client did not start promptly inside the intended delayed save")
+            end = next(row for row in events if row["event"] == "batch_end" and row["phase"] == "periodic")
+            require(probe["started_mono"] < end["mono"], "client started outside snapshot batch")
+            if not expected_timeouts:
+                require(probe["ack_mono"] < end["mono"], "push was acknowledged only after batch ended")
+    if case == "aggregate":
+        require(len(periodic) == COUNT and all(row["completed_mono"] - row["started_mono"] >= 20 / COUNT
+                                              for row in periodic), "aggregate delay was not injected")
+    if case == "single":
+        require(periodic[0]["completed_mono"] - periodic[0]["started_mono"] >= 3.2,
+                "single-save delay was not injected")
+    if case == "cancel-delayed-final":
+        require(all(row["completed_mono"] - row["started_mono"] >= 20 / COUNT for row in final),
+                "delayed final-save control absent")
+    return {"passed": True, "negative_control_expected": expected_timeouts,
+            "meaning": "private NumPy scheduling/preservation characterization; not deployment or MLX qualification"}
+
+
+def verify_retained_files(child, output):
+    output = Path(output).resolve()
+    records = [row["files"] for row in child["writer_rows"] if row["passed"]]
+    records.extend(child["roundtrip_files"].values())
+    for record in records:
+        for kind in ("npz", "thermostat"):
+            path = Path(record[kind + "_path"])
+            require(path.is_file() and not path.is_symlink() and path.resolve().is_relative_to(output),
+                    "retained snapshot outside owned output")
+            require(digest(path) == record[kind + "_sha256"], "retained snapshot hash changed")
+
+
+def verify_process_evidence(parent, child):
+    same_identity(parent.get("client_identity_before"), parent.get("client_identity_after"))
+    runtime = parent.get("interpreter")
+    require(isinstance(runtime, dict) and runtime == child.get("interpreter"), "interpreter binding missing/changed")
+    require(digest(parent["manifest"]) == parent["manifest_sha256"]
+            and read_json(parent["manifest"])["expected_interpreter"] == runtime,
+            "prepared interpreter provenance differs")
+    published = publication_proof(parent.get("initial_process_publication"), parent.get("command"), runtime,
+                                  parent.get("child_pid"), parent.get("case_started_mono"),
+                                  parent.get("case_deadline_mono"))
+    require(parent.get("initial_process_publication_proof") == published,
+            "initial metadata publication proof differs from raw observations")
+    same_identity(published["accepted_identity"], parent.get("child_identity_launched"))
+    proof = launch_transition(parent.get("child_identity_launched"), parent.get("child_identity_ready"),
+                              parent.get("command"), runtime)
+    require(parent.get("child_interpreter_transition") == proof, "initial interpreter transition proof differs")
+    first = parent.get("child_identity_ready")
+    same_identity(first, parent.get("child_identity_before_shutdown"))
+    for key in ("process_identity_before", "process_identity_after_listener", "process_identity_after_restore"):
+        same_identity(first, child.get(key))
+    require(first["pid"] == child.get("pid") == parent.get("child_pid"), "child PID differs from owned Popen child")
+    require(parent["client_identity_before"]["pid"] != first["pid"], "client ran inside service process")
+    require(all(isinstance(runtime.get(key), str) and runtime[key] for key in ("executable", "resolved", "sha256"))
+            and len(runtime["sha256"]) == 64, "exact interpreter provenance missing")
+    files = runtime.get("files")
+    require(isinstance(files, dict) and files and files.get(runtime["resolved"]) == runtime["sha256"]
+            and all(isinstance(value, str) and len(value) == 64 for value in files.values()),
+            "interpreter launcher/runtime file binding incomplete")

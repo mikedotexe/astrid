@@ -1,0 +1,279 @@
+{
+  "build_test_processes": {},
+  "completed_at": "2026-10-16T01:03:57.195871+00:00",
+  "conclusion": "Swap ended lower, but repeated pressure elevations prevented the required five-minute window. No GPU qualification was started or authorized automatically.",
+  "duration_s": 601.6032001671847,
+  "elevated_pressure_episodes": [
+    {
+      "last_elevated_sample_utc": "2026-10-16T00:56:00.601190+00:00",
+      "next_normal_sample_utc": "2026-10-16T00:56:05.599456+00:00",
+      "observed_span_s": 24.9997136592865,
+      "start_utc": "2026-10-16T00:55:35.601476+00:00",
+      "until_next_normal_sample_s": 29.997979879379272
+    },
+    {
+      "last_elevated_sample_utc": "2026-10-16T00:59:45.599749+00:00",
+      "next_normal_sample_utc": "2026-10-16T00:59:50.597954+00:00",
+      "observed_span_s": 59.99961996078491,
+      "start_utc": "2026-10-16T00:58:45.600129+00:00",
+      "until_next_normal_sample_s": 64.99782490730286
+    },
+    {
+      "last_elevated_sample_utc": "2026-10-16T01:00:40.599401+00:00",
+      "next_normal_sample_utc": "2026-10-16T01:00:45.598064+00:00",
+      "observed_span_s": 10.004462003707886,
+      "start_utc": "2026-10-16T01:00:30.594939+00:00",
+      "until_next_normal_sample_s": 15.003125190734863
+    },
+    {
+      "last_elevated_sample_utc": "2026-10-16T01:02:30.598611+00:00",
+      "next_normal_sample_utc": "2026-10-16T01:02:35.598705+00:00",
+      "observed_span_s": 44.99963688850403,
+      "start_utc": "2026-10-16T01:01:45.598974+00:00",
+      "until_next_normal_sample_s": 49.999730825424194
+    },
+    {
+      "last_elevated_sample_utc": "2026-10-16T01:03:30.597986+00:00",
+      "next_normal_sample_utc": "2026-10-16T01:03:35.597903+00:00",
+      "observed_span_s": 19.999456882476807,
+      "start_utc": "2026-10-16T01:03:10.598529+00:00",
+      "until_next_normal_sample_s": 24.99937391281128
+    }
+  ],
+  "final_cpu_receipt": {
+    "harness_files_reverified_after_observation": 11,
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/focused-tests-final-07.json",
+    "sha256": "51652181168727dc08b4ddfe3764454e61ff84c723dd6a973c8377dd30ca8f84",
+    "source_files_reverified_after_observation": 32
+  },
+  "longest_elevated_pressure_observed_s": 59.99961996078491,
+  "longest_eligible_window": {
+    "duration_s": 154.99735498428345,
+    "last_sample_utc": "2026-10-16T00:58:40.596811+00:00",
+    "passed": false,
+    "required_s": 300,
+    "rule": ">=300 consecutive observed seconds of pressure1, swap not above window's first sample, no cargo/rustc/target test process; sample gaps >15s invalidate",
+    "sample_indices": [
+      26,
+      57
+    ],
+    "start_utc": "2026-10-16T00:56:05.599456+00:00"
+  },
+  "next_step": "Root assessment required before any fresh offline pair; this observation does not satisfy the unchanged scheduling criterion.",
+  "observer_source": {
+    "note": "Copied from corrected host-window-01 observer before execution; only paths/provenance, screen-sharing metadata and first-eligible-window notification added.",
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/host-window-02-observer.py",
+    "sha256": "0da66c6aa1612a65f0f0a8519da5c7222fdcda9ce3205fc0945a3804dd6b99c3"
+  },
+  "operator_context": "User planned to close Remote Desktop. This process metadata does not verify the exact closure time or attribute memory changes to that action.",
+  "pressure_sample_counts": {
+    "1": 84,
+    "2": 37
+  },
+  "process_detection_scope": "Cargo/rustc executable names and binaries in target debug/release deps paths; excludes Python pytest and arbitrary other CPU activity. Only executable paths, no arbitrary full arguments, were captured.",
+  "production_identity_end": {
+    "astrid_provider": {
+      "pids": [
+        3893
+      ],
+      "port": 8090,
+      "processes": [
+        {
+          "executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+          "pid": 3893,
+          "started_local": "Wed Sep 30 14:29:07 2026"
+        }
+      ]
+    },
+    "astrid_reservoir": {
+      "pids": [
+        3888
+      ],
+      "port": 7881,
+      "processes": [
+        {
+          "executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+          "pid": 3888,
+          "started_local": "Wed Sep 30 14:29:07 2026"
+        }
+      ]
+    },
+    "ollama": {
+      "pids": [
+        35486
+      ],
+      "port": 11434,
+      "processes": [
+        {
+          "executable": "/Applications/Ollama.app/Contents/Resources/ollama",
+          "pid": 35486,
+          "started_local": "Thu Oct 15 13:14:29 2026"
+        }
+      ]
+    },
+    "spectral_bridge": {
+      "executable": "/Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server",
+      "pid": 82528,
+      "started_local": "Thu Oct 15 07:49:42 2026"
+    }
+  },
+  "production_identity_start": {
+    "astrid_provider": {
+      "pids": [
+        3893
+      ],
+      "port": 8090,
+      "processes": [
+        {
+          "executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+          "pid": 3893,
+          "started_local": "Wed Sep 30 14:29:07 2026"
+        }
+      ]
+    },
+    "astrid_reservoir": {
+      "pids": [
+        3888
+      ],
+      "port": 7881,
+      "processes": [
+        {
+          "executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+          "pid": 3888,
+          "started_local": "Wed Sep 30 14:29:07 2026"
+        }
+      ]
+    },
+    "ollama": {
+      "pids": [
+        35486
+      ],
+      "port": 11434,
+      "processes": [
+        {
+          "executable": "/Applications/Ollama.app/Contents/Resources/ollama",
+          "pid": 35486,
+          "started_local": "Thu Oct 15 13:14:29 2026"
+        }
+      ]
+    },
+    "spectral_bridge": {
+      "executable": "/Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server",
+      "pid": 82528,
+      "started_local": "Thu Oct 15 07:49:42 2026"
+    }
+  },
+  "production_identity_unchanged": true,
+  "production_mutations": 0,
+  "provider_health_failure_sample_indices": [],
+  "provider_worker_phase_counts": {
+    "generating": 43,
+    "ready": 78
+  },
+  "qualification_workloads_started": 0,
+  "raw_observation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/host-window-02.json",
+    "sha256": "2a17bd9cb50471c0ee0b76fa70db3227cf0cf1f35a7e5687f11cd373f6c20b45"
+  },
+  "reviewed_at": "2026-10-16T01:04:46.493887+00:00",
+  "sample_count": 121,
+  "sample_errors": [],
+  "sample_gap_s": {
+    "max": 5.005008220672607,
+    "min": 4.995130300521851
+  },
+  "schema": "mlx_host_qualification_window_review_v1",
+  "screen_sharing_processes": {
+    "18598": {
+      "cpu_percent": 1.3,
+      "executable": "/System/Library/CoreServices/RemoteManagement/screensharingd.bundle/Contents/MacOS/screensharingd",
+      "first_seen_utc": "2026-10-16T01:01:10.599264+00:00",
+      "last_seen_utc": "2026-10-16T01:03:55.597739+00:00",
+      "peak_cpu_percent": 3.7,
+      "peak_rss_bytes": 10813440,
+      "pid": 18598,
+      "ppid": 1,
+      "rss_bytes": 10321920,
+      "started_local": "Thu Oct 15 18:01:10 2026"
+    },
+    "18600": {
+      "cpu_percent": 11.9,
+      "executable": "/System/Library/CoreServices/RemoteManagement/ScreensharingAgent.bundle/Contents/MacOS/ScreensharingAgent",
+      "first_seen_utc": "2026-10-16T01:01:10.599264+00:00",
+      "last_seen_utc": "2026-10-16T01:03:55.597739+00:00",
+      "peak_cpu_percent": 23.7,
+      "peak_rss_bytes": 51544064,
+      "pid": 18600,
+      "ppid": 1,
+      "rss_bytes": 45203456,
+      "started_local": "Thu Oct 15 18:01:10 2026"
+    },
+    "967": {
+      "cpu_percent": 0.0,
+      "executable": "/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/MacOS/ARDAgent",
+      "first_seen_utc": "2026-10-16T00:53:55.596958+00:00",
+      "last_seen_utc": "2026-10-16T01:03:55.597739+00:00",
+      "peak_cpu_percent": 0.0,
+      "peak_rss_bytes": 7749632,
+      "pid": 967,
+      "ppid": 1,
+      "rss_bytes": 7700480,
+      "started_local": "Wed Sep 30 14:28:42 2026"
+    }
+  },
+  "screen_sharing_scope": "Matching process identity, CPU and RSS only; process presence or absence does not conclusively establish whether a remote session is active.",
+  "started_at": "2026-10-16T00:53:55.388150+00:00",
+  "steward_pause": {
+    "actor": "codex-mlx-upgrade",
+    "lease": null,
+    "pause_generation": 526,
+    "paused": true
+  },
+  "swap_bytes": {
+    "delta": -2764182650.8799973,
+    "final": 18284082626.56,
+    "initial": 21048265277.44,
+    "max": 22056733245.44,
+    "min": 17728924549.12
+  },
+  "system_cpu_percent": {
+    "idle_percent": {
+      "max": 83.54,
+      "min": 38.94
+    },
+    "system_percent": {
+      "max": 29.71,
+      "min": 4.54
+    },
+    "user_percent": {
+      "max": 37.29,
+      "min": 10.29
+    }
+  },
+  "vm_stat_bytes": {
+    "compressed_logical_bytes": {
+      "max": 34335375360,
+      "min": 14227914752
+    },
+    "compressor_bytes": {
+      "max": 27089256448,
+      "min": 13347078144
+    },
+    "free_bytes": {
+      "max": 5178851328,
+      "min": 61128704
+    },
+    "inactive_bytes": {
+      "max": 15072591872,
+      "min": 7711588352
+    },
+    "speculative_bytes": {
+      "max": 424345600,
+      "min": 4456448
+    },
+    "wired_bytes": {
+      "max": 32737755136,
+      "min": 11392712704
+    }
+  }
+}

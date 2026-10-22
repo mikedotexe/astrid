@@ -1,0 +1,61 @@
+{
+  "schema": "perception_camera_containment_readiness_review_v1",
+  "reviewed_at": "2026-10-16T01:41:07.580961+00:00",
+  "stage": "isolated CPU-only candidate; not deployed or hardware qualified",
+  "result": "No blocking finding for this stage",
+  "checks": {
+    "all_test_source_hashes_match": true,
+    "tests_passed": true,
+    "all18_owned_test_children_reported_reaped": true,
+    "test_parent_real_cv2_and_models_absent": true,
+    "only_capture_frame_ast_changed": true,
+    "candidate_workspace_absent": true
+  },
+  "test_evidence": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/containment-tests-02.json",
+    "sha256": "c3b376539e8c51c3fb1a02aa95836b4a3650845afe2b69695c6ea823ce865b86",
+    "tests": 20,
+    "owned_children": 18,
+    "wall_seconds": 0.6206412089522928
+  },
+  "source_hashes": {
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py": "4692f30fe56090490cc648b78447e993a368a5a148ef53a0b2e38d235caae34d",
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/host_audio_fallback.py": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69",
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/perception.py": "d842d08aa505836451c64e0ad29158d7610efc6828e54a2988ccfe8f28c648a8",
+    "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/test_camera_capture_containment.py": "5e2fadc465407167aca5f7530b506870733c1c51ed8b6da193028909f76c87f7"
+  },
+  "source_references": {
+    "parent_bounded_drain": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py:27-91",
+    "same_interpreter_and_camera": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py:94-99",
+    "worker_release_finally": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py:108-144",
+    "stdout_fd_isolation_and_close": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py:147-169",
+    "delegation_only": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/perception.py:125-129"
+  },
+  "observations": [
+    "One synchronous child per capture; parent never imports cv2; all successful bytes returned only after direct-child exit/reap.",
+    "16MiB retained-output cap with continued drain handles finite oversized stdout without pipe deadlock; stderr is inherited.",
+    "Dedicated non-inheritable JPEG descriptor is created before cv2 import; native fd1 diagnostics are redirected to stderr. Descriptor is closed on normal/error paths.",
+    "JPEG validation checks SOI/EOI envelope, not full JPEG decoding.",
+    "Existing blocking camera semantics preserved: no timeout, kill, terminate or retry introduced.",
+    "Immediate/repeated interruption inside wait can interrupt reaping; this is explicitly documented and is outside the demonstrated normal first-SIGINT asyncio cancellation boundary."
+  ],
+  "limits": [
+    "Reviewed source and retained CPU test evidence; did not rerun tests or call camera/native libraries.",
+    "Actual camera/TCC access, start latency, output equivalence and sustained native-memory containment remain unqualified until an approved later hardware window.",
+    "Camera process isolation limits capture-process allocations but does not prove the observed historical allocator cause or rule out other parent-memory growth."
+  ],
+  "baseline_preservation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/observations-post-perception-01/20261016T012057Z/soak_result.json",
+    "started_at": "2026-10-16T01:20:57.616782+00:00",
+    "state_at_review": "running",
+    "identity_file_count": 119,
+    "all119_hash_size_mtime_match": true,
+    "source_or_runtime_mutations": false,
+    "only_new_audit_file_written": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/audit.json",
+    "current_perception_process": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+    "last_verified_at": "2026-10-16T01:41:07.589289+00:00"
+  },
+  "runtime_mutations_performed": false,
+  "source_mutations_performed": false,
+  "reviewer": "mlx_readiness"
+}

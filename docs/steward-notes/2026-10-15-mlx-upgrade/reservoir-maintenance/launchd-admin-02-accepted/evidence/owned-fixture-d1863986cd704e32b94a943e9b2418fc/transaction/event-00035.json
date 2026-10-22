@@ -1,0 +1,1 @@
+{"operation":"release_hold","plan_sha256":"aac07df02cea30948774fa257153dbcd8eca17e93f0b21cdef64c2e761ff474b","previous_sha256":"d866fbeefe535c4eedcedad72c9ef4a69dfef8ca8d787dfc3b9f2648461ab015","result":{"released":true},"role":"provider","sequence":35,"type":"mutation_completed"}

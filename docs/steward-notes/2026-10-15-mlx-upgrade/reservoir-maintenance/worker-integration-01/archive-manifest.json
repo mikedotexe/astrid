@@ -1,0 +1,188 @@
+{
+  "schema": "owned_fixture_workers_completed_archive_v1",
+  "archived_at": "2026-10-16T03:40:54.438222+00:00",
+  "passed": true,
+  "scope": "actualownedstdlibworkers_syntheticfileIPC_cooperativesignals_only",
+  "children_reaped": 4,
+  "cycles": 2,
+  "force_used": false,
+  "launchd_qualified": false,
+  "real_reservoir_persistence_qualified": false,
+  "production_mutations": false,
+  "artifacts": [
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/qualify_fixture_workers.py",
+      "archive": "evidence/qualify_fixture_workers.py.txt",
+      "sha256": "acb52ba69b8a8114f8b0efc6b93f87aa77c1a9c5a4dea18c9f24755a496f1324",
+      "bytes": 14581
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-integration-01.json",
+      "archive": "evidence/owned-workers-integration-01.json",
+      "sha256": "288ce021a4d61e2b30f1dc7e7f0ee1a82961dca6b5903c855fd7666c3a7dad91",
+      "bytes": 27761
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-verification-01.json",
+      "archive": "evidence/owned-workers-verification-01.json",
+      "sha256": "e7e265127860c8e57cc83aee6ffe31c78bb81c435ea0a1b052526a395ce8029f",
+      "bytes": 2043
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-source-review-01.json",
+      "archive": "evidence/owned-workers-source-review-01.json",
+      "sha256": "b2113ff9dfb9844cadcab41c2543fbbfc774fc888cf5569224e45c031287c9cc",
+      "bytes": 1005
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/1-provider-spawn-intent.json",
+      "archive": "runtime/1-provider-spawn-intent.json",
+      "sha256": "b0ea367540a1242e5725855c3a2b5a9b0ed035241fc73fb25f582cd326ff0706",
+      "bytes": 704
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/1-provider.stderr",
+      "archive": "runtime/1-provider.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/1-provider.stdout",
+      "archive": "runtime/1-provider.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/1-reservoir-spawn-intent.json",
+      "archive": "runtime/1-reservoir-spawn-intent.json",
+      "sha256": "317668132b4c42afa6da0aa6a887809cdc8b4ee67e4d9723edb5308b6d46a679",
+      "bytes": 706
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/1-reservoir.stderr",
+      "archive": "runtime/1-reservoir.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/1-reservoir.stdout",
+      "archive": "runtime/1-reservoir.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/2-provider-spawn-intent.json",
+      "archive": "runtime/2-provider-spawn-intent.json",
+      "sha256": "ef69a3efcec6c315ba5a9ba9de497c12b00791f83509219a9fc3c6eab654eee9",
+      "bytes": 704
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/2-provider.stderr",
+      "archive": "runtime/2-provider.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/2-provider.stdout",
+      "archive": "runtime/2-provider.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/2-reservoir-spawn-intent.json",
+      "archive": "runtime/2-reservoir-spawn-intent.json",
+      "sha256": "b500caf35daa5e84d3278495799ded9d693a359f4aba74dcd004041f1c5d4b8a",
+      "bytes": 706
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/2-reservoir.stderr",
+      "archive": "runtime/2-reservoir.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/2-reservoir.stdout",
+      "archive": "runtime/2-reservoir.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/ack.provider-77803-1318329960840250.json",
+      "archive": "runtime/ack.provider-77803-1318329960840250.json",
+      "sha256": "cb536079076dbc7f66d36f1a47b050dba49a87426856cd26c178f83bef3d18b1",
+      "bytes": 120
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/ack.provider-77883-1318342261972958.json",
+      "archive": "runtime/ack.provider-77883-1318342261972958.json",
+      "sha256": "543d646bcdd030c9163bcb22a3ea6487da4354c8badb06a8f50a10cd67acc1ee",
+      "bytes": 120
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/completed-active-guard.json",
+      "archive": "runtime/completed-active-guard.json",
+      "sha256": "db06cc3a1b9170c1d23743a12a5df82b3c2e9636f6b15c330ca88aafdf8ead0c",
+      "bytes": 11814
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/cycle-1-receipt.json",
+      "archive": "runtime/cycle-1-receipt.json",
+      "sha256": "3b70a0be1a4cde9366083613ff71465f0cfd7eaefc77cd144d74cf89bdf7be76",
+      "bytes": 6352
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/cycle-2-receipt.json",
+      "archive": "runtime/cycle-2-receipt.json",
+      "sha256": "acad7ec68e862574b4c1d2bd405d3d17b2246ba572f5e6c2759b0297411a3009",
+      "bytes": 6352
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/final-result.json",
+      "archive": "runtime/final-result.json",
+      "sha256": "2cd463a0a550bffb71e5da66b63cff611fdcd478b345abef78ed386c3d4d9099",
+      "bytes": 21035
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/fixture.owner.json",
+      "archive": "runtime/fixture.owner.json",
+      "sha256": "8ea797b8a2becca4c83d47e8cc755889fd5109969ec437f522224801bbe058b0",
+      "bytes": 242
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/maintenance_fixture_worker.py",
+      "archive": "runtime/maintenance_fixture_worker.py.txt",
+      "sha256": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+      "bytes": 7142
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/provider.events.jsonl",
+      "archive": "runtime/provider.events.jsonl",
+      "sha256": "90a52721e584d20b195c1d41a1e6c147aeb4076c103ceb317c775aac1cafd576",
+      "bytes": 4089
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/request.provider-77803-1318329960840250.json",
+      "archive": "runtime/request.provider-77803-1318329960840250.json",
+      "sha256": "f2eb8c99972399be4b741ac3704efb342b535d6be2b8eaac10c7073c411d420a",
+      "bytes": 159
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/request.provider-77883-1318342261972958.json",
+      "archive": "runtime/request.provider-77883-1318342261972958.json",
+      "sha256": "e2b7d7c3568860ed7285abab036f4d8b8b03721ea77dcba368a3dce412d81515",
+      "bytes": 159
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/reservoir.events.jsonl",
+      "archive": "runtime/reservoir.events.jsonl",
+      "sha256": "9fb184ab66f55a82ac82671c80fccd59d7d2c7199ac425ef9a14a60b1c54c80d",
+      "bytes": 5156
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-6bc1283024024a53be0090debfaf4e00/state.json",
+      "archive": "runtime/state.json",
+      "sha256": "59ea9f4f2dd213f27a0933ebe125b631ece43d1dd4d8d2526503974f1723717c",
+      "bytes": 66
+    }
+  ]
+}

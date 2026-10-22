@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-17T01:42:58.613440+00:00",
+  "clarification": "Prior root AST count used test_ prefix and omitted test75_needs_exact_manifest_match_and_original_boundary. unittest default prefix is test; checkpoint03 count21 is correct. No tests have run; actual discovery receipt will remain authoritative.",
+  "counts_using_unittest_default_prefix_test": {
+    "test_owned_fixture_coordinator.py": 16,
+    "test_owned_fixture_pin.py": 8,
+    "test_owned_fixture_run.py": 21,
+    "test_owned_recovery_host.py": 17
+  },
+  "prior_root_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/root-source-review-01.json",
+    "sha256": "af444e4b0eeff92695fe030d43e30ddb88d33fea1edfc7e398ce7646027a8f13"
+  },
+  "schema": "fixture02_test_count_clarification_v1",
+  "source_checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/source-checkpoint-03.json",
+    "sha256": "8a2798806dd6524deb188bc64c531403652f65e07e53afdcef0f09900e00a68d"
+  },
+  "total_declared": 62
+}

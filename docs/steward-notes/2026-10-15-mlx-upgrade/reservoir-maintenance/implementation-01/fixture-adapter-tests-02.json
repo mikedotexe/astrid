@@ -1,0 +1,33 @@
+{
+  "schema": "reservoir_maintenance_fixture_cpu_tests_v1",
+  "started_at": "2026-10-16T03:33:21.273745+00:00",
+  "completed_at": "2026-10-16T03:33:21.507012+00:00",
+  "elapsed_seconds": 0.23314275010488927,
+  "command": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-I",
+    "-B",
+    "-c",
+    "import sys,unittest; sys.path.insert(0,'/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate'); suite=unittest.TestLoader().loadTestsFromNames(['test_reservoir_maintenance', 'test_reservoir_maintenance_state', 'test_maintenance_fixture_worker', 'test_qualify_reservoir_maintenance']); result=unittest.TextTestRunner(verbosity=2).run(suite); sys.exit(not result.wasSuccessful())"
+  ],
+  "returncode": 0,
+  "passed": true,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/qualify_reservoir_maintenance.py": "8d6a2bb549f4f9115285d0d1bdc5247b3d88a5c4cb135116ef8c17722c4bb329",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/reservoir_maintenance.py": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/reservoir_maintenance_state.py": "30fc7e3aa9e90719d89fc34f3dc509e49b6b9d95735af6f45c2cff826ed561fa",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/maintenance_fixture_worker.py": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_qualify_reservoir_maintenance.py": "d7ea6b81b645db1faa8b7f4647380276f8d887eb58cda3b158bee65a5f955eb5",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_reservoir_maintenance.py": "67275c384b058c2f90977d3ec8b60e29c1788d47f08cfa1f983c6dc31bfd0a15",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_reservoir_maintenance_state.py": "423c651b09e07476850d2fc1c648874dc66764a1ad2a024fb83435ed308e135e",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_maintenance_fixture_worker.py": "d7be17da230ccbe5a1852a30d0d72e2149d4a79993a7d08e78ff058018d563be",
+    "/Users/v/other/astrid/scripts/model_environment.py": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587"
+  },
+  "log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-adapter-tests-02.txt",
+    "sha256": "48cbdbc17b064ba99c8e344a4d969102eb9bc26177e31200c2572a0af171c183"
+  },
+  "scope": "Combined stdlib synthetic tests only; external host commands/signals are mocked; no owned host fixture, sudo, production service/API or model executed.",
+  "real_host_qualified": false,
+  "real_persistence_qualified": false
+}

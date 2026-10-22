@@ -1,0 +1,265 @@
+"""Tiny stdlib-only safety and result-classification tests; no real child."""
+import ast
+import copy
+import contextlib
+from datetime import datetime, timezone
+import io
+import json
+import hashlib
+from pathlib import Path
+import subprocess
+import shutil
+import sys
+import tempfile
+import types
+import unittest
+from unittest.mock import Mock, patch
+
+import qualify_restore as q
+import seed_fixture as seed
+
+
+def fake_admission():
+    gate = Mock(claimed=True)
+    gate.claim.return_value = {'path': '/fake-claim-never-used', 'sha256': 'a' * 64}
+    return gate
+
+
+class QualificationTests(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory(prefix='restore-qualification-unit-')
+        self.addCleanup(temp.cleanup); self.root = Path(temp.name).resolve()
+
+    def test_default_and_seed_default_never_launch_or_import_numeric(self):
+        with patch.object(q, 'execute', side_effect=AssertionError('execution forbidden')), \
+             patch.object(q.subprocess, 'Popen', side_effect=AssertionError('child forbidden')), \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(q.main([]), 0)
+            self.assertEqual(seed.main([]), 0)
+        self.assert_no_numeric()
+
+    def assert_no_numeric(self):
+        for name in ('numpy', 'torch', 'reservoir_service', 'mlx', 'mlx_lm', 'coremltools'):
+            self.assertNotIn(name, sys.modules)
+
+    def test_opt_in_without_release_refuses_before_children_or_writes(self):
+        with patch.object(q, 'execute', side_effect=AssertionError('execution forbidden')):
+            with self.assertRaisesRegex(ValueError, 'release and run ID'):
+                q.main(['--execute-cpu-qualification'])
+
+    def test_sparse_or_altered_preparation_rejected_without_numeric_import(self):
+        original = q.read(q.INPUTS); real_read = q.read
+        changes = [lambda row: row['source_manifest']['files'].pop('persistence.py'),
+                   lambda row: row['source_manifest']['files'].update({'reservoir_service.py': '0'*64}),
+                   lambda row: row['runtime_manifest']['packages'].pop('numpy'),
+                   lambda row: row['runtime_manifest']['interpreter_files'].clear(),
+                   lambda row: row['runtime_manifest']['pyvenv_cfg'].update(sha256='0'*64),
+                   lambda row: row['artifacts'].pop(str(q.ENV_HELPER)),
+                   lambda row: row['verbatim_copies'].clear()]
+        for change in changes:
+            value = copy.deepcopy(original); change(value)
+            with self.subTest(change=change), patch.object(q, 'read', side_effect=lambda path:
+                    value if Path(path) == q.INPUTS else real_read(path)), self.assertRaises((ValueError, KeyError)):
+                q.check()
+        self.assert_no_numeric()
+
+    def test_child_environment_strips_python_overrides_and_limits_threads(self):
+        with patch.dict(q.os.environ, {'PYTHONPATH': '/wrong', 'PYTHONHOME': '/wrong', 'OMP_NUM_THREADS': '32'}):
+            env = q.child_environment()
+        self.assertNotIn('PYTHONPATH', env); self.assertNotIn('PYTHONHOME', env)
+        self.assertTrue(all(env[key] == '1' for key in q.THREADS))
+
+    def test_child_natural_exit_is_reaped_and_no_signal_method_used(self):
+        process = Mock(pid=123); process.wait.return_value = 0
+        result = q.run_child(['never-executed-fake'], self.root, admission=fake_admission(), popen=Mock(return_value=process))
+        self.assertEqual(result['returncode'], 0); self.assertTrue(result['reaped'])
+        process.wait.assert_called_once_with(timeout=300)
+        process.kill.assert_not_called(); process.terminate.assert_not_called(); process.send_signal.assert_not_called()
+
+    def test_timeout_preserves_unresolved_child_and_never_kills(self):
+        process = Mock(pid=124); process.wait.side_effect = subprocess.TimeoutExpired('fake', 1)
+        process.poll.return_value = None
+        with self.assertRaises(subprocess.TimeoutExpired):
+            q.run_child(['never-executed-fake'], self.root, admission=fake_admission(), popen=Mock(return_value=process), timeout=1)
+        record = q.read(self.root / 'child-unresolved.json')
+        self.assertTrue(record['may_still_be_running']); self.assertFalse(record['next_children_permitted'])
+        process.kill.assert_not_called(); process.terminate.assert_not_called(); process.send_signal.assert_not_called()
+        self.assertFalse((self.root / 'child-exit.json').exists())
+
+    def test_interruption_retains_owned_child_without_signal(self):
+        process = Mock(pid=125); process.wait.side_effect = KeyboardInterrupt; process.poll.return_value = None
+        with self.assertRaises(KeyboardInterrupt):
+            q.run_child(['never-executed-fake'], self.root, admission=fake_admission(), popen=Mock(return_value=process))
+        self.assertTrue(q.read(self.root / 'child-unresolved.json')['may_still_be_running'])
+        process.kill.assert_not_called(); process.terminate.assert_not_called()
+
+    def rejection(self, error, code=1):
+        work = self.root / 'work'; work.mkdir(exist_ok=True)
+        comparison = work / 'comparison.json'
+        comparison.write_text(json.dumps({'passed': False, 'errors': [error]}))
+        witness = work / 'restore-witness.json'
+        witness.write_text(json.dumps({'passed': False, 'evidence': {'comparison': {'path': str(comparison)}}}))
+        return {'work_root': str(work)}, {'returncode': code}
+
+    def test_negative_controls_require_the_exact_expected_failure(self):
+        request, child = self.rejection('ValueError: exactly three thermostat sidecars required')
+        result = q.classify_case(None, 'malformed-sidecar', request, child, self.root, {})
+        self.assertTrue(result['passed']); self.assertTrue(result['expected_rejection'])
+        for error in ('MemoryError: allocation failed', 'FileNotFoundError: wrong file', 'ValueError: unknown failure'):
+            request, child = self.rejection(error)
+            with self.subTest(error=error), self.assertRaisesRegex(ValueError, 'wrong rejection'):
+                q.classify_case(None, 'malformed-sidecar', request, child, self.root, {})
+        request, child = self.rejection('ValueError: exactly three thermostat sidecars required', code=-9)
+        with self.assertRaisesRegex(ValueError, 'status'):
+            q.classify_case(None, 'malformed-sidecar', request, child, self.root, {})
+
+    def test_extra_failure_does_not_count_as_expected_rejection(self):
+        request, child = self.rejection('ValueError: exactly three thermostat sidecars required')
+        path = Path(request['work_root']) / 'comparison.json'
+        path.write_text(json.dumps({'passed': False, 'errors': ['ValueError: exactly three thermostat sidecars required', 'other']}))
+        with self.assertRaisesRegex(ValueError, 'extra/unclassified'):
+            q.classify_case(None, 'malformed-sidecar', request, child, self.root, {})
+
+    def test_seed_cpu_network_and_gpu_boundaries_are_explicit(self):
+        for name in ('mlx.core', 'mlx_lm', 'coremltools', 'mlx_reservoir'):
+            with self.assertRaises(ImportError): seed.CpuOnly().find_spec(name)
+        for event in ('socket.bind', 'socket.connect', 'socket.sendto', 'subprocess.Popen'):
+            with self.assertRaises(RuntimeError): seed.deny_external(event, ())
+        for path in (q.HERE / 'qualify_restore.py', q.HERE / 'seed_fixture.py'):
+            tree = ast.parse(path.read_text())
+            top_imports = [ast.unparse(node) for node in tree.body if isinstance(node, (ast.Import, ast.ImportFrom))]
+            self.assertFalse(any('numpy' in row or 'torch' in row or 'reservoir_service' in row for row in top_imports))
+            self.assertFalse(any(isinstance(node, ast.Attribute) and node.attr in
+                ('kill', 'terminate', 'send_signal', 'serve', 'run_worker', 'auto_snapshot_loop', 'rehearsal_loop')
+                for node in ast.walk(tree)))
+
+    def test_original_v1_lazy_lsm_origin_order_is_a_real_preexecution_blocker(self):
+        original = q.HERE.parent / 'production-candidate-01/restore_verifier.py'
+        with self.assertRaisesRegex(ValueError, 'precedes deferred LSM'):
+            q.verify_import_order(original.read_text(), (q.HERE / 'source/dual_ai_bridge.py').read_text())
+        self.assert_no_numeric()
+
+    def host_fixture(self):
+        ready = {'http_status': 200, 'body': {'ready': True, 'worker': {'phase': 'ready',
+                  'last_generation_error': None}, 'reservoir': {'status': 'connected'}}}
+        rows = [{'t_s': 1000 + index * 5, 'swap_bytes': 10, 'pressure_level': 1,
+                 'build_test_processes': [], 'readyz': copy.deepcopy(ready)} for index in range(61)]
+        raw = {'schema': 'reservoir_cpu_fixture_host_window_v1', 'state': 'completed',
+               'started_at': datetime.fromtimestamp(1000, timezone.utc).isoformat(),
+               'completed_at': datetime.fromtimestamp(1301, timezone.utc).isoformat(),
+               'production_identity_start': {'fixture': 1}, 'production_identity_end': {'fixture': 1},
+               'production_identity_unchanged': True, 'current_eligible_window_s': 300,
+               'five_minute_eligible_window_observed': True, 'samples': rows}
+        reference = {'path': '/synthetic/never-read.json', 'sha256': 'a'*64}
+        review = {'schema': 'reservoir_fixture_host_settle_review_v1', 'passed': True, 'raw': reference}
+        return raw, review, reference
+
+    def test_host_gate_recomputes_current_health_pressure_swap_and_gaps(self):
+        raw, review, reference = self.host_fixture()
+        self.assertEqual(q.validate_host_gate(raw, review, reference, now=1310)['current_eligible_window_s'], 300)
+        changes = [lambda row: row.update(state='running'),
+                   lambda row: row.update(production_identity_end={'fixture': 2}),
+                   lambda row: row['samples'][-1].update(pressure_level=2),
+                   lambda row: row['samples'][30].update(swap_bytes=11),
+                   lambda row: row['samples'][-1]['readyz']['body']['worker'].update(last_generation_error='failed'),
+                   lambda row: row['samples'][-1].update(build_test_processes=[{'pid': 1}]),
+                   lambda row: row['samples'].__delitem__(slice(20, 24))]
+        for change in changes:
+            altered = copy.deepcopy(raw); change(altered)
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                q.validate_host_gate(altered, review, reference, now=1310)
+        with self.assertRaisesRegex(ValueError, 'stale'):
+            q.validate_host_gate(raw, review, reference, now=2000)
+        with self.assertRaisesRegex(ValueError, 'passing bound'):
+            q.validate_host_gate(raw, dict(review, passed=False), reference, now=1310)
+
+    def test_release_binds_exact_inputs_harness_run_and_completed_gate(self):
+        raw, review, _ = self.host_fixture()
+        raw_path = self.root / 'synthetic-raw.json'; q.write(raw_path, raw)
+        review['raw'] = q.ref(raw_path)
+        review_path = self.root / 'synthetic-review.json'; q.write(review_path, review)
+        inputs = q.read(q.INPUTS)
+        release = {'schema': 'reservoir_restore_qualification_release_v2', 'accepted': True,
+            'reviewer': 'temporary stdlib unit fixture only', 'scope': 'synthetic_cpu_fixture_only',
+            'purpose': 'release_restore_qualification_cpu', 'run_id': 'unit-only', 'expires_wall': 1400,
+            'inputs': q.ref(q.INPUTS), 'artifacts': q.harness_hashes(), 'input_artifacts': inputs['artifacts'],
+            'host_gate_raw': q.ref(raw_path), 'host_gate_review': q.ref(review_path)}
+        path = self.root / 'unit-release.json'; q.write(path, release)
+        with patch.object(q.time, 'time', return_value=1310), patch.object(q.child_admission, 'validate_release_supervision'):
+            self.assertEqual(q.validate_release(path, inputs, 'unit-only'), release)
+            for key, bad in [('accepted', False), ('run_id', 'other'), ('artifacts', {}),
+                             ('input_artifacts', {}), ('purpose', 'other'), ('expires_wall', 1309)]:
+                altered = dict(release, **{key: bad}); path.write_text(json.dumps(altered))
+                with self.subTest(key=key), self.assertRaises(ValueError):
+                    q.validate_release(path, inputs, 'unit-only')
+        self.assertFalse((q.HERE / 'launch-guard.json').exists())
+
+    def test_initial_release_reference_cannot_be_extended_between_cases(self):
+        path = self.root / 'release-reference.json'
+        q.write(path, {'expires_wall': 1000, 'accepted': True})
+        original = q.ref(path)
+        self.assertEqual(q.check_ref(original)['expires_wall'], 1000)
+        path.write_text(json.dumps({'expires_wall': 2000, 'accepted': True}))
+        with self.assertRaisesRegex(ValueError, 'reference changed'):
+            q.check_ref(original)
+
+    def test_seed_child_failure_blocks_every_subsequent_child_and_retains_result(self):
+        with patch.object(q, 'HERE', self.root), patch.object(q, 'check', return_value={}), \
+             patch.object(q, 'validate_release', return_value={}), patch.object(q, 'load_verifier'), \
+             patch.object(q.child_admission, 'AdmissionRun'), \
+             patch.object(q, 'harness_hashes', return_value={}), \
+             patch.object(q, 'ref', side_effect=lambda path: {'path': str(path), 'sha256': 'a'*64}), \
+             patch.object(q, 'run_child', side_effect=subprocess.TimeoutExpired('owned fake', 300)) as child:
+            result = q.execute('only-run', self.root / 'release.json')
+        self.assertFalse(result['passed']); self.assertEqual(result['cases'], [])
+        child.assert_called_once()
+        self.assertTrue((self.root / 'launch-guard.json').exists())
+        self.assertTrue((self.root / 'runs/only-run/qualification.json').exists())
+
+    def test_missing_or_stale_release_refusal_preserves_evidence_without_child(self):
+        with patch.object(q, 'HERE', self.root), patch.object(q, 'check', return_value={}), \
+             patch.object(q, 'validate_release', side_effect=ValueError('host window stale')), \
+             patch.object(q, 'run_child', side_effect=AssertionError('child forbidden')) as child:
+            with self.assertRaisesRegex(ValueError, 'stale'):
+                q.execute('refused-run', self.root / 'release.json')
+        child.assert_not_called()
+        records = list(self.root.glob('refused-*.json')); self.assertEqual(len(records), 1)
+        self.assertEqual(q.read(records[0])['children_started'], 0)
+        self.assertFalse((self.root / 'launch-guard.json').exists())
+
+    def test_all_negative_mutations_stay_in_independent_private_copies(self):
+        source = self.root / 'original-source'; source.mkdir()
+        for name in ('reservoir_service.py', 'persistence.py'):
+            (source / name).write_text('# fake fixture source, never imported\n')
+        seed_state = self.root / 'seed/state'; seed_state.mkdir(parents=True)
+        (seed_state / 'qualification_numpy.npz').write_bytes(b'original fake payload')
+        (seed_state / 'qualification_numpy_thermostats.json').write_text('[1, 2, 3]\n')
+        (self.root / 'seed/schema-mismatch.npz').write_bytes(b'private schema-control payload')
+        def inventory(path):
+            return {'root': str(path), 'entries': {str(item.relative_to(path)): q.digest(item)
+                    for item in Path(path).rglob('*') if item.is_file()}}
+        before = inventory(seed_state); source_before = inventory(source)
+        def clone(src, dst, expected):
+            shutil.copytree(src, dst); return inventory(dst)
+        def canonical(value):
+            return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
+        fake = types.SimpleNamespace(RUNS=self.root / 'restore-runs', copy_tree=clone,
+            state=types.SimpleNamespace(inventory_tree=inventory, canonical_hash=canonical,
+                envelope=lambda context, kind, evidence: {'evidence': evidence, 'kind': kind}),
+            prepare_request=lambda context, witness, **kwargs: {'context': context, 'backup_witness': witness,
+                'work_root': str(kwargs['work_root']), **{k: v for k, v in kwargs.items() if k != 'work_root'}})
+        inputs = {'config': {'input_dim': 32, 'n_nodes': 192, 'backend': 'numpy'},
+            'source_manifest': {'root': str(source), 'files': {item.name: q.digest(item) for item in source.iterdir()}},
+            'runtime_manifest': {'interpreter_files': {'/fake/never-executed': 'a'*64},
+                                 'packages': {'numpy': {'version': 'original'}}}}
+        for case in q.CASES:
+            directory, path, request = q.prepare_case(fake, inputs, self.root, 'private-unit', case)
+            self.assertTrue(Path(request['backup_witness']['evidence']['backup_root']).is_relative_to(directory))
+            self.assertEqual(inventory(seed_state), before)
+            self.assertEqual(inventory(source), source_before)
+            self.assertEqual(inputs['runtime_manifest']['packages']['numpy']['version'], 'original')
+            if case == 'source-drift':
+                self.assertTrue(Path(request['source_manifest']['root']).is_relative_to(directory))
+
+
+if __name__ == '__main__': unittest.main(verbosity=2)

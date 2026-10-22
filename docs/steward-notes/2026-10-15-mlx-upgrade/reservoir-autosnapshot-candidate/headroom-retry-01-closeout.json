@@ -1,0 +1,62 @@
+{
+  "all_agent_tests_held": true,
+  "created_at": "2026-10-16T23:21:53.397868+00:00",
+  "evidence": {
+    "accepted_host08": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-root-review.json",
+      "sha256": "7b5060960f84fb1798e927664b058be2186b3872edc91a53de56597e73faa663"
+    },
+    "first_case_failure": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/first-real-case-root-review-01.json",
+      "sha256": "a55fbdbb6cfec618c2f49e7d50e0a16921f28b8a3b4c01e6b99e68ef8240e312"
+    },
+    "first_case_independent": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/first-real-case-failure-independent-review-01.json",
+      "sha256": "2c68380cc552cfc53d4ce8663d2fb9b4b572302363627ed411e6876e65e772db"
+    },
+    "future_consumer_alignment": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-candidate-04-v2-qualification-compatibility-review-01.json",
+      "sha256": "95e0f1ada8dfa3daa7cea91d9bffcc441b227f9366f189ddedbd89b92a005411"
+    },
+    "host09_independent": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-review.json",
+      "sha256": "f10d97356d967d7281190fcee314049bfff7478c5a5e168d474300ecd2479dac"
+    },
+    "host09_raw": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09.json",
+      "sha256": "0bad870ef7b342c6c6774c93ce79edc9cde21e677821bf1de844ed510ec551b5"
+    },
+    "host09_root": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-root-review.json",
+      "sha256": "f9c0d5c22e35ceac4b27e928f5cf53b1b01aa73fd1ce9b8feb68bf6d5eae2681"
+    },
+    "restore02_archive": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-maintenance/restore-qualification-preparation-02/archive-manifest.json",
+      "sha256": "71c71936a609051e3dfab120bc412e272e2a388759d1cc6ef30158b7f90e7b45"
+    },
+    "service_harness_v2_archive": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/harness-v2-preparation-01/archive-manifest.json",
+      "sha256": "3c24e2909d0e5674697d97bcc4004ce4709eb98f07acc935d9a6389591709904"
+    }
+  },
+  "followup": "active; no identical window under unchanged conditions; reassess only a meaningful change",
+  "host08_passed": true,
+  "host09_passed": false,
+  "initial_real_case_failed": true,
+  "limitations": [
+    "User cleanup preceded accepted08; no quantitative causal claim about remote desktop or unique reclaimed RAM.",
+    "Host09 independently failed pressure continuity even with1320.18MiB swap decrease,123successful health/identity samples and no detected build; normal final sample is not admission.",
+    "Original Python re-exec case remains failed. Newharness fix20tests and restoreadmission17tests are isolated preparation, not numerical/persistence/production qualification.",
+    "Frozen production04 remains disabled; final changed proof consumers and exactfinalreleasefixture still required after actualnumerical gates.",
+    "No measured MLX savings or expanded context capacity yet."
+  ],
+  "new_restore02_children": 0,
+  "new_service_v2_cases": 0,
+  "observer_or_numeric_processes_remaining": false,
+  "production_mutations": 0,
+  "production_qualified": false,
+  "schema": "reservoir_headroom_retry_closeout_v1",
+  "state": "preparation_complete_waiting_for_meaningful_host_headroom_change",
+  "steward_pause_generation": 528,
+  "user_trigger": "let's try again and i'll close remote desktop now"
+}

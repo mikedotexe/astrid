@@ -1,0 +1,201 @@
+{
+  "acceptance_and_limits": [
+    "Pass requires every planned real boundary observed, every continuation source/identity bound, no duplicate arm/signal/bootstrap/producer, original anchors/journal intact, expected state11/7 then22/7 and complete owned cleanup.",
+    "Record explicit coverage booleans: real_launchd_common_recovery, real_executor_lock_release, private_pin_primitive, production_pin_schedule=false, ProductionHost_executed=false, numeric_restore=false, production_qualified=false.",
+    "Old admin01 failure, its successful cleanup, admin02 pass and all frozen source/evidence remain immutable. A new failure does not invalidate their original scope, and their pass does not qualify new04 recovery.",
+    "This design writes no controller/source changes and launches no tests, children, jobs, probes, sudo or numerical code."
+  ],
+  "cleanup": [
+    "After accepted main completion, acquire the same root lock for an explicit separate bounded fixture-cleanup phase, with its own immutable action claims and current replacement identities. Do not resume or rewrite the completed original controller ledger.",
+    "Provider first: create a uniquely scoped owned cleanup guard, arm once, signal once, wait for six-second drain and second distinct acknowledged11-tick check-in. Only remove the exact verified no-listener holder. Then reservoir follows the same cooperative hold path and saves22/7.",
+    "Require main backup remains11/7, latest state is22/7, all request IDs are unique/applied once, both roles absent, all old/holder/replacement PIDs gone and remembered private ports unowned. Release only matching owned guards and preserve runtime/evidence directories.",
+    "An interruption during cleanup retains phase ledger, jobs and holds. The new adapter needs a reviewed exact-phase cleanup attach path before any admin run; it may use existing reviewed recovery patterns, not blind rerun of cleanup_success. No forced kill or worker bootout."
+  ],
+  "created_at": "2026-10-16T18:49:57.774715+00:00",
+  "final_release_sequencing": {
+    "allowed_now": "Source-only adapter preparation or an explicitly preparatory04 fixture remains useful with its limited source-bound claim. Preserve04 and earlier receipts. No flag or seam implementation is authorized by this design.",
+    "constraint": "Changing either false production flag, adding a pin seam, changing an adapter or any bound helper produces a new exact-source release. An owned04 pass cannot silently authorize the changed bytes.",
+    "frozen04_remains_unchanged": true,
+    "preparatory_fixture_result_is_not_final_production_acceptance": true,
+    "required_resolution": "Before final acceptance, run the exact-controller fixture against the final reviewed release closure, or first implement and review a versioned unchanged-byte release mechanism and qualify that exact mechanism. Current04 has no such enabling mechanism; this proposal does not assume one."
+  },
+  "initial_setup_boundary": [
+    "The exact maintenance plan cannot exist until both original fixture workers have real PID/start/argv identities. Initial private-job bootstrap therefore precedes Controller.run/ExecutionSession and must not use invented identities or production admission.",
+    "A single ordinary-user coordinator exclusively creates the new private root/owner marker and binds its own actual identity/boot plus exact generated targets. Each of the two initial bootstrap intents and raw outcomes is durable; both target jobs/listeners must be absent before their first launch. Existing root, setup claim or job never authorizes setup replay.",
+    "Require same-PID ready plus idle/restored events, then publish the exact plan and setup-complete receipt exclusively. No controller/resume executor may enter before that receipt; all later effects use the fixed root shared lock. An interrupted initial setup remains a separately inspected owned setup-recovery boundary; stop without launching a second job or fabricating main-phase history."
+  ],
+  "interruption_mechanism": [
+    "Review a finite injection manifest listing exact action and durable boundary once. A child executor exits itself with a dedicated expected status after an acknowledged boundary; it never signals or kills a worker to simulate failure.",
+    "Injection wrapper intercepts only fixture-owned Journal/RecoveryLedger append boundaries or adapter operation return boundaries. It cannot modify shared source, skip validation, fabricate results, or enable production.",
+    "Preserve actual executor PID/start/argv, chosen boundary, last completed raw evidence and missing-result state. Confirm executor natural exit before a new attach; the OS releases flock. A watchdog only reports/retains a still-running executor, never forces termination or starts a replacement.",
+    "Each continuation is a new ordinary-user executor: read-only inspection, expected hashes, then one explicit execute or reconcile request. The finite approved fixture sequence may request the next known step; unexpected/ambiguous outcomes stop immediately without retry.",
+    "Include a concurrent second caller while a first executor holds the real lock; require refusal before any claim/action. It receives no service-control authority and is never used to race mutation."
+  ],
+  "pre_admin_gates": [
+    "Root re-audits current ownership/foreign rollout completion and protected source/runtime identities. Historical pause generations are not permission; no new user permission is inherently required for already-authorized owned maintenance testing, but interactive sudo is an operational boundary.",
+    "Fresh source manifest plus independent review covers new adapter/inspector/injection/cleanup/pin sentinel, exact28-file04 closure, worker/hold source and all actual Python executable aliases. Guarded stdlib tests cover every refused boundary first.",
+    "Distinguish preparatory04 qualification from final release acceptance: future flag/seam/helper changes require the final-release sequencing rule below. Never carry an exact-source fixture claim across changed bound bytes.",
+    "Freeze an exact finite injection manifest and new evidence destination; refuse existing roots/labels/outputs, mismatched host boot or helpers. Confirm no unresolved prior fixture executor or job owned by this planned run.",
+    "Ordinary user Terminal only; narrow sudo applies solely to launchctl debug on generated fixture role labels. Inherit Terminal input, do not capture credentials, never sudo the whole driver. No command is authorized or provided by this design.",
+    "Bounded resources and watchdog with no escalation. No new real numeric or model test accompanies this fixture. Separate host/memory qualification remains required for numerical work."
+  ],
+  "production_executed": false,
+  "production_qualified": false,
+  "real_fixture_layout": [
+    "Fresh token and root for each attempted run; do not reuse either accepted or failed prior roots. Immutable owner, source manifest, test/review refs, original plists and originals/candidate marker files.",
+    "Reuse byte-identical accepted stdlib worker: private loopback OS-assigned sentinel ports, provider synthetic11-tick check-in with unique request ID, reservoir initial second handle7 and six-second final save. No model/package/numerical/service imports or real producer API.",
+    "Main identities, worker events, complete saved state, raw launchctl/ps/listener observations, held receipts, original journal, Host operations, execution sessions and recovery ledger are separate preserved evidence.",
+    "Fixture-local ownership fields are labeled as fixture ownership, never actual steward pause authority. Capture current external ownership/protected processes at a separate admission boundary after foreign work settles; do not bake historical526 or reported527 into future authority."
+  ],
+  "recommendation": [
+    "Keep all frozen04 bytes unchanged. Add a separately reviewed, generated-label owned recovery adapter and finite fixture driver in a new private directory; import exact04 Controller, ExecutionSession, resume_one, ledger and phase reconstruction as one verified module closure.",
+    "Use actual launchd jobs, actual owned worker/holder processes, real cooperative signals and actual executor process exits. Do not relabel existing inert fakes as OS recovery evidence.",
+    "Cover the production-only provider pin OS primitive separately with an explicitly private one-shot sentinel. Report exact04 production-pin schedule execution as false. No production flag patching, injected production admission, global path monkeypatch, or scope relabeling."
+  ],
+  "required_actual_OS_cases": [
+    {
+      "boundary": "After positive debug_result for provider but before original controller mutation_completed.",
+      "case": "fresh_to_recovery",
+      "continue": "New executor adopts the recorded positive arm, then a separate one-step signal. Assert arm count1.",
+      "observe": "Original exact worker remains; exact guard and rc0/argv/target record exist; fresh-run replay refuses."
+    },
+    {
+      "boundary": "After provider signal_sent but before recovery result; allow actual six-second check-in/drain and held replacement.",
+      "case": "signal_to_holder",
+      "continue": "Adopt signal result or owned-holder effect without a second signal; complete independent provider-drain witness before reservoir stop.",
+      "observe": "Original exit, one unique acknowledged11-tick request applied once by unchanged reservoir, exact no-listener holder, preserved signal time."
+    },
+    {
+      "boundary": "After exclusive provider-drain outer witness publication, then after verified provider-holder removal, before respective ledger results.",
+      "case": "witness_and_absence",
+      "continue": "Adopt exact evidence and absence only. No second capture, removal or generated acknowledgement.",
+      "observe": "Witness hashes/worker events and original offsets unchanged; removed PID/job/listener absent."
+    },
+    {
+      "boundary": "After single reservoir signal and completed six-second final save, before its holder/result acceptance.",
+      "case": "reservoir_final",
+      "continue": "Reconcile holder, final snapshot and removal; preserve independent backup11/7.",
+      "observe": "Both handles saved, state11/7, provider absent, old reservoir absent, exact holder. Duration exceeds configured launchd five-second timeout without bootout of worker."
+    },
+    {
+      "boundary": "After complete private JSON backup/restore receipt but before outer ledger acceptance.",
+      "case": "backup_restore_evidence",
+      "continue": "Read-only adoption. This is JSON fixture evidence, not numerical restore or real finite numeric-child qualification.",
+      "observe": "Exclusive complete outputs and exact input/output hash set; any deliberately partial output is refused."
+    },
+    {
+      "boundary": "After atomic replacement/fsync of private candidate source marker before completion record.",
+      "case": "installed_marker",
+      "continue": "Adopt applied source state without replacing again. Refuse arbitrary or partially written bytes.",
+      "observe": "Exact candidate bytes plus preserved original bytes, both roles parked, full fixture restore accepted."
+    },
+    {
+      "boundary": "After launchctl bootstrap returns and a new reservoir worker exists but before readiness completion.",
+      "case": "reservoir_bootstrap",
+      "continue": "Adopt current replacement without second bootstrap; then accept startup witness.",
+      "observe": "Retained birth/log boundary; exact new PID/start/argv, private sentinel ownership, same-PID restored event and state11/7."
+    },
+    {
+      "boundary": "After new provider starts before readiness completion, and after one guard release or final current-completion observation before ledger result.",
+      "case": "provider_bootstrap_and_completion",
+      "continue": "Adopt observed replacement/release/completion. Never restore state/history backwards. Finish with original journal unchanged and all injected claims explicitly resolved.",
+      "observe": "Exact provider plus reservoir identities/listeners, same-PID idle event, exact remaining/removed guards and original backup unchanged."
+    }
+  ],
+  "required_negative_cases_without_unnecessary_stateful_jobs": [
+    "Stdlib boundary tests first: foreign target/PID/start/argv, missing/changed guard, stale executor heads, rewritten anchors, partial outputs, unrelated protected identity/source drift and nonzero/unknown debug while original survives all refuse.",
+    "During actual fixture, demonstrate at least stale request and concurrent lock refusal against owned identities. Do not manufacture ambiguous launchctl outcomes merely to prove they are unknowable; controlled refusal tests plus actual successful recorded-result/holder adoption are sufficient.",
+    "A naturally occurring unknown debug outcome is a stop, not a reason for another attempt. Preserve exact guard/command/worker and provide separately reviewed owned reconciliation or cleanup."
+  ],
+  "schema": "reservoir_owned_recovery_fixture_design_v1",
+  "scope": "Real OS interruption/continuation qualification of exact04 common owned-fixture lifecycle, with new fixed-fixture Host adapter; separate private pin primitive coverage.",
+  "separate_private_pin_primitive": {
+    "cleanup": "Remove only this exact job after confirmed natural child exit, no PID and no listener; preserve all files. This is a separate stateless primitive, never bootout of a running worker.",
+    "combined_claim": "Together with unchanged04 production-pin phase tests, this provides separate OS primitive and state-machine evidence. It is not end-to-end real production-pin ordering or ProductionHost execution.",
+    "full_production_pin_schedule_executed": false,
+    "minimal_future_seam_if_full_real_pin_ordering_is_required": "A separately reviewed version must introduce an explicit finite owned-fixture restart policy, distinct from production admission, and bind its expected argv/phase in Controller/preflight plus checkpoint actions. The fixture worker must accept an inert pin argument. Preserve04 and keep production labels/gates unchanged. Do not implement this automatically; review whether compositional evidence is sufficient first.",
+    "reason": "reservoir_maintenance.py:218-245 leaves admission absent for owned_fixture; run:426 and recovery_phases.py:21 omit apply_provider_restart. No actual ProductionHost pin method or production phase executes in this fixture.",
+    "required_for_this_qualification_package": true,
+    "test": "Use a separate generated allowlisted .pin label and fresh private plist with a tiny reviewed stdlib one-shot argv sentinel. Preserve original plist; atomically replace only one inert --model argument with another absolute private sentinel path, fsync, interrupt controller after replacement, adopt exact applied bytes, then bootstrap once and verify actual recorded argv before natural child exit. Sentinel never opens a model or loads packages."
+  },
+  "source_evidence": {
+    "accepted_fixture": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/launchd-fixture-admin-02.json",
+      "sha256": "2620f9824fa1c5fc8f53396c022e55a5bc651a35b43a2637fbe1029e932d6f79"
+    },
+    "accepted_worker_IPC": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-workers-integration-01.json",
+      "sha256": "288ce021a4d61e2b30f1dc7e7f0ee1a82961dca6b5903c855fd7666c3a7dad91"
+    },
+    "disabled04_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-candidate-04-independent-review-01.json",
+      "sha256": "432c940e984b6a9ceeb728217f0a78c182b0f09df38d06fe36b6f2a5abba9e18"
+    },
+    "fixture_source_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-v2-independent-review-01.json",
+      "sha256": "99ee4a2f235daf41a0731f9f0f6169aa6f256de447256e4c72be66ed7e7e7a36"
+    },
+    "frozen04_sources": {
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/metadata_preflight.py": "3c2bce47648596f8988e0884081625f729d77856526c1b062f5078b68684d318",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_admission.py": "b2b67eb8941471eacffd44b2149e0e7b6aeb6e9df91c2e8be4adfc1c28580be9",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_host.py": "18bf34c606df39da65c4d7b392d51e88d7285b0048c032bf7a7877df9da9dfae",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_preflight.py": "0671c054eb6f37f122e1c61e26a91cf7e3e9e311266029008e87d7db11adef1b",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery.py": "893f70d91a8955df5e60cbacc3caf22dc08f2c1c8863677180a5cfc37a5f14d7",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_driver.py": "a092c51499c353b53ddf4c09a43cf2d308ce951a535274f652cf755fb815d904",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_inspect.py": "eaafdbbd0521c8a25468d0d40613fcc5e8d2be105b73a511089228dfbde5cdc3",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_restore_runner.py": "f7c9be6dffc8161af2d678bfd804e0642e31611b7877d55b98a71429e4bd903e",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_retained.py": "5c287b8757dfd7e8eb876fa8064edba7e4d51d11c179a0c3ed7274effe331a9b",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_ledger.py": "fd855cd1613e9fbab1a8e5ae8df4a144fc936bdb7fa5525f3bee0a4e8b03ee84",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_phases.py": "df6e3e959f79e560dfbe8904cbf9546b79e27b2819f7f5b8ab1aa89bb6917389",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance.py": "55e53b84d8caae818fc29fb997761c160cb296e2512207d4d9dbe48da15c5536",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_admission.py": "ff2b7fb1e8b62ddb7f4e1175cff462600a86447cc245b22cbb3acd4cc3c55d2c",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_controller.py": "6d7b05f415d033c164f85abdc22fbcbb7303f9fc2022f4fc03de6f68b4b7ba40",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_host.py": "37f234156c1eabd902faf26ce9ee5409841d5332b12218ba407a6b45658d8d61",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_preflight.py": "9be1f7c899493a64e8e324ae06947a26a82a73f0ea72bac45ab27792ba98b67d",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery.py": "5331b9ca3ae00e01e2e010aef52705e48e9beea4cfafbd3cfb543eaf355198a8",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_driver.py": "0a948bbce5d3f6dc77b82254ab5a5858db9626a9a6cd80d2f7569347fd6c6355",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_inspect.py": "5b5af27039762aa4527d89d16bce29005d434dc1da11db37e28eb560311f8fca",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_restore_runner.py": "82986ef70d485f73a11cbd8d02c074b6f910e39b6101bc20b79ab57c2b48b804",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_retained.py": "e9dea40dcd0ba6baeb5e67142dfcc605625cb15449588dc903632e5460a5dde7",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_recovery_phases.py": "3a4c17fc8ec0caaa61424028c28a208fac681c70a367e6bcd91cb48c1ee69d03",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_reservoir_maintenance_state.py": "5c896092de2a2da6351c7a05ffe78a080fcfd49e91630fd5764b6110a9075834",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_restore_verifier.py": "0494a6570245cfc2e6a76cd18188789130c7cedf3b1eb80743522e0e5e3f7522",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_transaction_execution.py": "996d4a57be06ff2055a292f06e83c38247685db8b3c6dc6fc2ace44dda91d44a",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/transaction_execution.py": "2b4e5ad98f4e920ceb67a161480afaffde9e6a44e3c9007645dc9e9445ccc4cb"
+    },
+    "old_fixture_sources": {
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/qualify_reservoir_maintenance.py": "0b0017649c2974eb7d64e91d6719a5e87b8367c1dc148f3c54dd704673bc6c36",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/reservoir_maintenance.py": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b"
+    },
+    "previous_cleanup_recovery": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-recovery-admin-01.json",
+      "sha256": "cd95fde6bd6bffb05bd5910c1fbce7702398c7e97f7d0f74c2ed5c3fd6b9b67b"
+    },
+    "recovery_interface": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/evidence/recovery-interface-01.json",
+      "sha256": "970be790e53ccc56d17a212f59e8d4a4b96be0fdab53189ad90d4fddaa258b15"
+    }
+  },
+  "status": "proposal_only_not_executable",
+  "tests_executed_for_this_design": false,
+  "why_new_adapter_is_required": {
+    "actual_ProductionHost_usable_with_synthetic_spec": false,
+    "new_adapter_contract": [
+      "scope=owned_fixture only; exact two role labels gui/<actual uid>/com.codex.reservoir-maintenance-fixture.<fresh token>.<role>; no production target resolver. Reject all canonical state, source, plist and model paths.",
+      "Single import closure rooted at frozen04, verified __file__ and SHA for every shared module. Reject preloaded alternate controller/driver modules. No alternate fake implementation of Controller.run, resume_one or the shared lock.",
+      "New private root/controller journal, immutable preparation/owner/worker originals and positive ready/event/log anchors; exact host uid/boot/OS and Python wrapper plus actual framework runtime hashes. Real PID/start/argv, listener and holder receipts for each observation.",
+      "executor_identity obtains actual current executor identity. Main lifecycle, recovery and cleanup action-capable adapter calls require the same active ExecutionSession once the exact plan exists. Initial setup is a separate exclusive fresh-root phase, described below; never invent old worker identities to create a preliminary maintenance plan.",
+      "Fresh and retained constructors are separate. Retained attach preserves original offsets/anchors/counters; recomputes inspector plus read_ledger and checkpoint_from_inspection under lock, checks all input hashes, both roles and prior witness semantics.",
+      "Owned inspector emits the real structure required by checkpoint_from_inspection: complete original/recovery/Host histories, exact roles/guards and installed variants, original capture anchors, output presence, signal wall boundaries, stable before/after identity and errors/unresolved. Witness evidence is explicitly owned_fixture_only.",
+      "Adapter reconciliation reads exact retained intents/results/current effects; it cannot arm, signal, bootstrap, overwrite a witness or restart a producer. A verified existing inner receipt may be exclusively copied unchanged to missing outer evidence, with proof."
+    ],
+    "reasons": [
+      "production_preflight.py:29-36,297-365 fixes the real state root, canonical LaunchAgents plists, source entrypoints, port7881, manifests and package closure. ProductionHost.target at118 fixes real labels and its two admission gates remain false.",
+      "ProductionHost/production_retained/production_recovery_inspect intentionally require real provider journal/QoS/health and numerical restore semantics. Redirecting globals or bypassing this validation would not be a valid fixture.",
+      "candidate-v2/qualify_reservoir_maintenance.py:103 provides proven OS primitives, but its controller is old, its journal child is transaction at521, and it has no executor_identity, retained inspector, checkpoint revalidation or reconciliation API. Reuse reviewed patterns/source, not unchanged capability claims."
+    ]
+  }
+}

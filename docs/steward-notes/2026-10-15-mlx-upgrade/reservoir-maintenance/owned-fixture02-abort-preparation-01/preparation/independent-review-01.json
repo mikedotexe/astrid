@@ -1,0 +1,84 @@
+{
+  "actual_abort_executed": false,
+  "actual_os_acceptance": false,
+  "approved": true,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/README.md": "d3f3b08a85a79773eb4fa187cfa832d3c4731784822c78bc596a760558856830",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_driver.py": "947e6ddde47f913c1f796b0171e6609d7befa817cdfe376f01815306e4b25d54",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_evidence.py": "7bbc9ce8d2154d5b4b732b18174ffba68e897457d869240232764c9d301b6c38",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_native.py": "4cbdefe3dc4795699d2ad1255f37c2b0cbba797ec32a2f86484728ccd1ba6405",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/target.json": "159cafb1804114dec016dbbfdccd425ba7aa2ebb76a2999c83f6b3e6e5cb57e6",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_driver.py": "5f1fdfdf8ad3c69a3f8f28471bf9c497f6d3ca0fb52a1deef219dcf4ec2384ce",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_evidence.py": "bea2755ccc298db9b0426f6ef5720ade8224f94491b856113a0bc65dcc7e4b9f",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_native.py": "2ffb9df3166e7c430cf2dda1c0a164faee3f24b0387da5217827901567b865db"
+  },
+  "checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/evidence/source-checkpoint-03.json",
+    "sha256": "d9606685415a990a135d2400db912a921e3d6692bb2073f660676bed6edd4137"
+  },
+  "checks": {
+    "core36_before_after_and_current_equal": true,
+    "eight_artifacts_and_six_executed_sources_exact": true,
+    "exact_53_test_names_and_results": true,
+    "host_boot_and_version_exact": true,
+    "old_parent_provider_and7_executors_absent": true,
+    "original141_before_after_equal": true,
+    "original_failed_fixture_remains_failed": true,
+    "pin_job_absent": true,
+    "preflight31_readonly_queries_naturally_reaped": true,
+    "protected261_unchanged_receipt_and_guard_verified": true,
+    "protected7_exact_raw_process_rows": true,
+    "provider_holder10721_exact_without_listener": true,
+    "reservoir9217_exact_sentinel50552": true,
+    "source297_mapping_digest_exact": true,
+    "unique11_tick_checkin_raw_refs_exact": true,
+    "zero_test_failures_errors_skips_or_forbidden_actions_imports": true
+  },
+  "core_after_tests": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-core-after-tests-01.json",
+    "sha256": "bdc733d843e165a008cfb8f251c4adb50157b7a4817f1fd3f029555056a64118"
+  },
+  "core_before_tests": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-core-before-tests-01.json",
+    "sha256": "9e4284ca99a3cdbad4c930fcdb564fa33272296570f857416bd0d541634112dd"
+  },
+  "cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-guarded-tests-01.json",
+    "sha256": "d3b2895217b84cff8e4c477e8d902fe33c8a2206322491c16db097eff39cb0b8"
+  },
+  "execution_performed_by_reviewer": false,
+  "mlx_qualified": false,
+  "preflight": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-preflight-01.json",
+    "sha256": "94bf0ca4165cbebb662de9bb53020c8d3299b19467008782a9a3aa549140a75a"
+  },
+  "preflight_stderr": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-preflight-01.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "production_qualified": false,
+  "reviewed_at": "2026-10-17T06:33:34.030060+00:00",
+  "reviewer": "mlx_integration",
+  "schema": "owned_fixture02_abort_independent_review_v1",
+  "scope": "exact_failed_fixture_abort_only",
+  "scope_limits": [
+    "The passing CPU suite is mock/private-file only, not actual service-control acceptance. This reviewer performed no tests, target imports, OS probes or controls.",
+    "Preflight proves retained observations at its recorded query times; runtime execution must repeat exact guards.",
+    "Lock inode, UID, selected Python alias/family, pause528/no lease, source297 and original141 checks are covered by the reviewed --check control path and its passing result; unlike process observations they have no separate raw OS query rows in this preflight.",
+    "State11/7 is currently evidenced by the applied check-in log; state.json has not yet been saved. Cooperative final save and exact per-handle proof remain mandatory before held-only removal.",
+    "Root must issue the exact scoped immutable release and final Terminal command; this review alone starts nothing and authorizes no production action.",
+    "A successful cleanup cannot certify its own executor absence. Independent post-Terminal closeout must verify it and all action children/jobs/ports absent; any unknown outcome remains retained without retry."
+  ],
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/evidence/independent-source-review-01.json",
+    "sha256": "88717620236d9deb301e2179583d4917fbacc6d1369a3eac0632380927af95ad"
+  },
+  "test_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-guarded-tests-01.txt",
+    "sha256": "d7280a9ae990d710c450c98731da3bbc88d63cb5dc5bac2d0c044afc5f1c40fe"
+  },
+  "test_plan": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-test-plan-01.json",
+    "sha256": "bda83b5fde8e731b9b80e295cf24d8dd9954d8917bb36245910b3eb3e189fe69"
+  }
+}

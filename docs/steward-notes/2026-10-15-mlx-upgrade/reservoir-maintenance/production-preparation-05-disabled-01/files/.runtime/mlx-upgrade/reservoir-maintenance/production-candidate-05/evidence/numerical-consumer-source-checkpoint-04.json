@@ -1,0 +1,44 @@
+{
+  "schema": "reservoir_numerical_consumer_source_checkpoint_v1",
+  "created_at": "2026-10-17T01:19:16.181458+00:00",
+  "status": "source_only_tests_unrun_review_pending",
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_admission.py": "6a047fc63f3a8cf05a865f72eb0f9c42b1cc58c5137eda86e85eb96d662253ed",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_restore_admission.py": "8ca6fd9139a788b9fca28895f8a98bc0697255afa57a846d722e7466b4719162",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_admission.py": "83c997249a72cbb6a8600a3b94a9845280e333c90fd81c461f5d814f8f2c3533",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_restore_admission.py": "1404e7b499770af296ad2aa86d16f6cca65d06379b02efb6a081b51d8549ca03",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_service_admission.py": "cd5f121aad506590aad66178579115de6ba4df9986b5ab29889ddcb22a542739"
+  },
+  "original04_all28_unchanged": true,
+  "production_flags_enabled": false,
+  "target_imports": 0,
+  "tests": 0,
+  "numerical_workloads": 0,
+  "live_actions": 0,
+  "scope": "Numerical evidence consumers only. Entrypoint/final fixture reader and preflight normalization are owned separately and not frozen by this receipt.",
+  "preserved_design": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-candidate-05-consumer-alignment-design-02.json",
+  "inventory_scope_clarification": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/protected-inventory-scope-clarification-01.json",
+    "sha256": "51e8f3afb51aa80220ec6a5067d43c97abaa51331cd6aea84f14cb27343c203e"
+  },
+  "correction": "Seven sampled whole-stack processes and eight production protected roles are distinct contracts. The source-parent-04 correction text was overbroad; original design02 and production PROTECTED are preserved.",
+  "changed_contracts": [
+    "Exact service v3 raw reviewer and restore02 qualifier paths",
+    "Two additional root-acceptance refs bound in preparation and execution review; existing five-reference controller return unchanged",
+    "Historical ten-child immutable admission chain and final06 raw coverage",
+    "Historical service one-use release chain and final05 raw coverage",
+    "Child start/exit admission_claim required",
+    "Legacy fixture acceptance removed; delegate to fixed separate final reader"
+  ],
+  "limits": [
+    "No current host eligibility or production authorization follows from historical numerical acceptance",
+    "Numerical oracles and source/package checks remain frozen original functions",
+    "No fixture or live production execution",
+    "New fake tests are not executed and cannot yet establish test acceptance"
+  ],
+  "previous_checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-consumer-source-checkpoint-03.json",
+    "sha256": "a605104a10392b56180da789a3abae6291b98ae7d216bca11f5c17f8b73c5e41"
+  },
+  "delta": "Added root-authorized inert production_fixture_history.py to required immutable execution helper closure. All tests remain unrun."
+}

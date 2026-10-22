@@ -1,0 +1,57 @@
+{
+  "schema": "mlx_upgrade_preparation_closeout_identity_v1",
+  "at": "2026-10-16T17:40:12.269028+00:00",
+  "scope": "read-only process identity and readiness; not baseline or host-window acceptance",
+  "reference": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/post-perception-baseline-preflight.json",
+    "sha256": "5c249bcd39c1df9a7da1a08cbfef96c58019d929e301a518e8dfa712be88b047"
+  },
+  "protected_processes": {
+    "22354": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+    "35486": "35486 35461 Thu Oct 15 13:14:29 2026     /Applications/Ollama.app/Contents/Resources/ollama serve",
+    "3888": "3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state",
+    "3893": "3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active",
+    "82314": "82314     1 Thu Oct 15 07:49:29 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60",
+    "82528": "82528     1 Thu Oct 15 07:49:42 2026     /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/writing-admission-guidance-20261014/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous"
+  },
+  "protected_exact_identities_unchanged": {
+    "22354": true,
+    "35486": true,
+    "3888": true,
+    "3893": true,
+    "82314": true,
+    "82528": true
+  },
+  "native_engine": {
+    "line": "35303     1 Thu Oct  1 11:16:53 2026     /Users/v/other/minime/minime/target/release/minime run --log-homeostat --eigenfill-target 0.6800 --warm-start-blend 0.55 --reg-tick-secs 0.5 --legacy-audio-synth-enabled false --legacy-video-synth-enabled false --ws-addr 127.0.0.1:7900 --sensory-ws-addr 127.0.0.1:7901 --av-ws-addr 127.0.0.1:7902 --enable-gpu-av",
+    "review": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/minime-engine-memory-static-review-01.json",
+      "sha256": "eca4c992fa2975c10320c4b0f4ac41361190f87fa7b0711d43119c21a260646f"
+    },
+    "identity_consistent": true
+  },
+  "readyz": {
+    "http_status": 200,
+    "body": {
+      "ready": true,
+      "status": "generating",
+      "model": "coupled-astrid",
+      "worker": {
+        "phase": "generating",
+        "heartbeat_age_ms": 21717.374,
+        "queue_depth": 0,
+        "queue_capacity": 4,
+        "last_generation_error": null
+      },
+      "reservoir": {
+        "status": "connected",
+        "operation": "pull_state",
+        "last_sync_unix_ms": 1792172390555
+      }
+    }
+  },
+  "live_source_package_state_changes": false,
+  "actual_numeric_cases_this_turn": 0,
+  "baseline_accepted": false,
+  "production_promoted": false
+}

@@ -1,0 +1,13 @@
+{
+  "failures": [],
+  "host_reinspection_performed": false,
+  "identity_file_count": 119,
+  "observed_health_ok": false,
+  "passed": true,
+  "qualified_observation": false,
+  "reviewer_sha256": "1fea36cfd32c4ab51e8761b11fac878155661c6ff55c5ae1bedb8e861bccabdb",
+  "sample_count": 240,
+  "schema": "astrid_observation_provenance_review_v1",
+  "source_record": "/Users/v/other/astrid/.runtime/mlx-upgrade/observations-post-perception-01/20261016T012057Z/soak_result.json",
+  "source_record_sha256": "0163de7a88bc7c5b75a44077660a6f4790dfa187ea293ba192f6fc6b8a1cc7f1"
+}

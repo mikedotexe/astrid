@@ -1,0 +1,142 @@
+{
+  "schema": "reservoir_autosnapshot_prototype_archive_v1",
+  "archived_at": "2026-10-16T03:00:28.648562+00:00",
+  "status": "prototype_only_not_deployed_or_real_service_persistence_accepted",
+  "source_directory": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate",
+  "copies": [
+    {
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/baseline/reservoir_service.py",
+      "archive_path": "baseline/reservoir_service.py.txt",
+      "reconstruction_path": "baseline/reservoir_service.py",
+      "bytes": 62641,
+      "sha256": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+      "copy_verified": true
+    },
+    {
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/baseline/persistence.py",
+      "archive_path": "baseline/persistence.py.txt",
+      "reconstruction_path": "baseline/persistence.py",
+      "bytes": 7438,
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+      "copy_verified": true
+    },
+    {
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/baseline/AGENTS.md",
+      "archive_path": "baseline/AGENTS.md.txt",
+      "reconstruction_path": "baseline/AGENTS.md",
+      "bytes": 14688,
+      "sha256": "8a1472db335677180180dd4c63f13d4cbb2a7ff91658b3f8ba97018e1e442fb5",
+      "copy_verified": true
+    },
+    {
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/reservoir_service.py",
+      "archive_path": "reservoir_service.py.txt",
+      "reconstruction_path": "reservoir_service.py",
+      "bytes": 63345,
+      "sha256": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da",
+      "copy_verified": true
+    },
+    {
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/test_autosnapshot_cooperative.py",
+      "archive_path": "test_autosnapshot_cooperative.py.txt",
+      "reconstruction_path": "test_autosnapshot_cooperative.py",
+      "bytes": 8772,
+      "sha256": "50cfa90f191308d5123b3c0fd741aaf904245e9d3882585d36f6961a3b15eb76",
+      "copy_verified": true
+    },
+    {
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/original-manifest.json",
+      "archive_path": "original-manifest.json",
+      "reconstruction_path": "original-manifest.json",
+      "bytes": 1349,
+      "sha256": "e3535f3bb45c528fec07cbeaf5d99bfebbbd083354f44f02a2b728600cfd2c7a",
+      "copy_verified": true
+    },
+    {
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/candidate-manifest.json",
+      "archive_path": "candidate-manifest.json",
+      "reconstruction_path": "candidate-manifest.json",
+      "bytes": 4301,
+      "sha256": "73712fe14a9558af156fd609ec1db78e3e9fcfc75a9f5607c34d8f959e74fd3f",
+      "copy_verified": true
+    },
+    {
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/autosnapshot-cooperative.patch",
+      "archive_path": "autosnapshot-cooperative.patch",
+      "reconstruction_path": "autosnapshot-cooperative.patch",
+      "bytes": 1321,
+      "sha256": "e54e052ae3519b5893b0b08ae02a362004571072562c92c2694563850071f01a",
+      "copy_verified": true
+    },
+    {
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/tests-01.json",
+      "archive_path": "tests-01.json",
+      "reconstruction_path": "tests-01.json",
+      "bytes": 1696,
+      "sha256": "c699b44c57127e9d9f3fa705a85deda992ca7733267c5f13f4b3297fb8a43fa2",
+      "copy_verified": true
+    },
+    {
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/tests-01.txt",
+      "archive_path": "tests-01.txt",
+      "reconstruction_path": "tests-01.txt",
+      "bytes": 1501,
+      "sha256": "0c45752b5d880fa5468920b73f8d95ff70064d9f3546df4b09b82ee2ec429ace",
+      "copy_verified": true
+    },
+    {
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/independent-review-01.json",
+      "archive_path": "independent-review-01.json",
+      "reconstruction_path": "independent-review-01.json",
+      "bytes": 4769,
+      "sha256": "522d694e51e13250bbedf4bb3324a1660df18b93c4ccc1fc9dc4c60723bd2ab3",
+      "copy_verified": true
+    },
+    {
+      "source_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/README.md",
+      "archive_path": "prototype-README.md",
+      "reconstruction_path": "README.md",
+      "bytes": 2565,
+      "sha256": "e588259f3d9c6afab65f6f1a3c57e14e4435bcfac49d466568ebd3486a260bfe",
+      "copy_verified": true
+    }
+  ],
+  "generated_files": {
+    "README.md": {
+      "bytes": 4279,
+      "sha256": "2fa2cd7c8ad6d1f13936f7343f7d3eeaa0dfb93ad232ad03b53601b3b75adf94"
+    }
+  },
+  "live_source_verification": [
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+      "expected_sha256": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+      "actual_sha256": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+      "size": 62641,
+      "mtime_ns": 1784235939440580538,
+      "hash_matches_original": true,
+      "mtime_ns_unchanged": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/persistence.py",
+      "expected_sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+      "actual_sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+      "size": 7438,
+      "mtime_ns": 1784235939440012915,
+      "hash_matches_original": true,
+      "mtime_ns_unchanged": true
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/AGENTS.md",
+      "expected_sha256": "8a1472db335677180180dd4c63f13d4cbb2a7ff91658b3f8ba97018e1e442fb5",
+      "actual_sha256": "8a1472db335677180180dd4c63f13d4cbb2a7ff91658b3f8ba97018e1e442fb5",
+      "size": 14688,
+      "mtime_ns": 1784235939432378277,
+      "hash_matches_original": true,
+      "mtime_ns_unchanged": true
+    }
+  ],
+  "receipts_preserved_byte_for_byte": true,
+  "tests_rerun_during_archive": false,
+  "production_or_runtime_actions": false
+}

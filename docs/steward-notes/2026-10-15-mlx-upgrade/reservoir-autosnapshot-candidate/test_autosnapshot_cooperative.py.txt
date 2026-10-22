@@ -1,0 +1,210 @@
+"""Stdlib-only tests; compile selected AST methods without importing the service."""
+
+import ast
+import asyncio
+import copy
+import types
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parent
+ORIGINAL = ast.parse((ROOT / "baseline/reservoir_service.py").read_text())
+CANDIDATE = ast.parse((ROOT / "reservoir_service.py").read_text())
+
+
+def service(tree):
+    return next(node for node in tree.body if isinstance(node, ast.ClassDef)
+                and node.name == "ReservoirService")
+
+
+def method(tree, name):
+    return next(node for node in service(tree).body
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and node.name == name)
+
+
+class Log:
+    def __init__(self):
+        self.errors = []
+
+    def error(self, template, name, error):
+        self.errors.append((template, name, type(error).__name__, str(error)))
+
+
+def extract(name, *, logger=None, async_module=asyncio, interval=60):
+    selected = copy.deepcopy(method(CANDIDATE, name))
+    namespace = {"asyncio": async_module, "log": logger or Log(),
+                 "AUTO_SNAPSHOT_INTERVAL": interval}
+    module = ast.Module(body=[selected], type_ignores=[])
+    exec(compile(ast.fix_missing_locations(module), str(ROOT / "reservoir_service.py"),
+                 "exec"), namespace)
+    return namespace[name]
+
+
+class FakeService:
+    def __init__(self, names=("third", "first", "second"), failure=None, mutate=False):
+        self.handles = dict.fromkeys(names)
+        self.calls = []
+        self.failure = failure
+        self.mutate = mutate
+
+    def snapshot_handle(self, name):
+        self.calls.append(name)
+        if self.mutate and len(self.calls) == 1:
+            self.handles["new-after-capture"] = None
+            self.handles.pop("first")
+        if name not in self.handles:
+            raise ValueError("missing handle: " + name)
+        if name == self.failure:
+            raise OSError("fake writer failure")
+        return {"type": "snapshot_response", "name": name, "path": "fake-only"}
+
+
+class SourceBoundaryTests(unittest.TestCase):
+    def test_only_new_method_and_autosnapshot_await_differ(self):
+        restored = copy.deepcopy(CANDIDATE)
+        klass = service(restored)
+        klass.body = [node for node in klass.body
+                      if getattr(node, "name", None) != "snapshot_all_cooperative"]
+        for index, node in enumerate(klass.body):
+            if getattr(node, "name", None) == "auto_snapshot_loop":
+                klass.body[index] = copy.deepcopy(method(ORIGINAL, "auto_snapshot_loop"))
+        self.assertEqual(ast.dump(ORIGINAL), ast.dump(restored))
+
+    def test_writer_sync_batch_and_final_shutdown_are_byte_identical(self):
+        before = (ROOT / "baseline/reservoir_service.py").read_text()
+        after = (ROOT / "reservoir_service.py").read_text()
+        for name in ("snapshot_handle", "snapshot_all", "run"):
+            with self.subTest(name=name):
+                self.assertEqual(ast.get_source_segment(before, method(ORIGINAL, name)),
+                                 ast.get_source_segment(after, method(CANDIDATE, name)))
+        final_calls = [node for node in ast.walk(method(CANDIDATE, "run"))
+                       if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                       and node.func.attr.startswith("snapshot_all")]
+        self.assertEqual([node.func.attr for node in final_calls], ["snapshot_all"])
+
+
+class CooperativeTests(unittest.IsolatedAsyncioTestCase):
+    async def test_exact_call_order_and_error_equivalence(self):
+        for failure in (None, "third", "first", "second"):
+            with self.subTest(failure=failure):
+                original, candidate = FakeService(failure=failure), FakeService(failure=failure)
+                sync_log, async_log = Log(), Log()
+                extract("snapshot_all", logger=sync_log)(original)
+                await extract("snapshot_all_cooperative", logger=async_log)(candidate)
+                self.assertEqual(candidate.calls, ["third", "first", "second"])
+                self.assertEqual(candidate.calls, original.calls)
+                self.assertEqual(async_log.errors, sync_log.errors)
+
+    async def test_captured_names_match_sync_when_registration_changes(self):
+        original, candidate = FakeService(mutate=True), FakeService(mutate=True)
+        sync_log, async_log = Log(), Log()
+        extract("snapshot_all", logger=sync_log)(original)
+        await extract("snapshot_all_cooperative", logger=async_log)(candidate)
+        self.assertEqual(candidate.calls, ["third", "first", "second"])
+        self.assertEqual(candidate.calls, original.calls)
+        self.assertEqual(async_log.errors, sync_log.errors)
+        self.assertNotIn("new-after-capture", candidate.calls)
+
+    async def test_another_ready_task_runs_inside_batch(self):
+        candidate = FakeService()
+        observed = []
+
+        async def companion():
+            observed.append(list(candidate.calls))
+            candidate.handles["added-by-other-task"] = None
+
+        other = asyncio.create_task(companion())
+        await extract("snapshot_all_cooperative")(candidate)
+        await other
+        self.assertEqual(observed, [["third"]])
+        self.assertEqual(candidate.calls, ["third", "first", "second"])
+
+    async def test_yields_after_error_before_next_handle(self):
+        candidate = FakeService(failure="third")
+        observed = []
+
+        async def companion():
+            observed.append(list(candidate.calls))
+
+        other = asyncio.create_task(companion())
+        await extract("snapshot_all_cooperative")(candidate)
+        await other
+        self.assertEqual(observed, [["third"]])
+        self.assertEqual(candidate.calls, ["third", "first", "second"])
+
+    async def test_external_cancellation_propagates_at_batch_yield(self):
+        candidate = FakeService()
+        logger = Log()
+        batch = asyncio.create_task(extract("snapshot_all_cooperative", logger=logger)(candidate))
+
+        async def cancel():
+            self.assertEqual(candidate.calls, ["third"])
+            batch.cancel()
+
+        canceller = asyncio.create_task(cancel())
+        with self.assertRaises(asyncio.CancelledError):
+            await batch
+        await canceller
+        self.assertEqual(candidate.calls, ["third"])
+        self.assertEqual(logger.errors, [])
+
+    async def test_per_handle_cancellation_is_not_logged_or_swallowed(self):
+        candidate = FakeService()
+        logger = Log()
+
+        def cancelled(name):
+            candidate.calls.append(name)
+            raise asyncio.CancelledError()
+
+        candidate.snapshot_handle = cancelled
+        with self.assertRaises(asyncio.CancelledError):
+            await extract("snapshot_all_cooperative", logger=logger)(candidate)
+        self.assertEqual(candidate.calls, ["third"])
+        self.assertEqual(logger.errors, [])
+
+    async def test_only_yields_between_handles_and_preserves_empty_batch(self):
+        for count in (0, 1, 2, 4):
+            with self.subTest(count=count):
+                sleeps = []
+
+                async def sleep(delay):
+                    sleeps.append(delay)
+
+                fake_asyncio = types.SimpleNamespace(sleep=sleep)
+                candidate = FakeService(names=[str(index) for index in range(count)])
+                await extract("snapshot_all_cooperative", async_module=fake_asyncio)(candidate)
+                self.assertEqual(sleeps, [0] * max(0, count - 1))
+                self.assertEqual(candidate.calls, list(candidate.handles))
+
+    async def test_autosnapshot_awaits_new_path_with_original_interval(self):
+        waits, calls = [], []
+        interval = object()
+        shutdown = asyncio.Event()
+
+        async def wait_for(awaitable, timeout):
+            awaitable.close()
+            waits.append(timeout)
+            if len(waits) == 1:
+                raise asyncio.TimeoutError()
+
+        async def cooperative():
+            calls.append("entered")
+            await asyncio.sleep(0)
+            calls.append("finished")
+
+        def forbidden_sync():
+            raise AssertionError("autosnapshot used the synchronous path")
+
+        fake = types.SimpleNamespace(_shutdown=shutdown, handles={"one": None},
+                                     snapshot_all=forbidden_sync,
+                                     snapshot_all_cooperative=cooperative)
+        fake_asyncio = types.SimpleNamespace(wait_for=wait_for, TimeoutError=asyncio.TimeoutError)
+        await extract("auto_snapshot_loop", async_module=fake_asyncio, interval=interval)(fake)
+        self.assertEqual(waits, [interval, interval])
+        self.assertEqual(calls, ["entered", "finished"])
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

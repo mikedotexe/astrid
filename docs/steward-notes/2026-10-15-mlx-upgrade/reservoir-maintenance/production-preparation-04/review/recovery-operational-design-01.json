@@ -1,0 +1,235 @@
+{
+  "adoption_rules": [
+    "Every adoption is a new, append-only recovery_reconciled receipt naming the original intent, observed effect, exact current identities/artifacts and rechecked prerequisites. It reports what is proven now, not an invented historical return code. No original record is rewritten and no external action is repeated.",
+    "Positive Host result exists, controller completion missing: revalidate that exact result/current predicate and adopt it without calling the Host mutation again.",
+    "Complete standalone witness exists, controller witness missing: validate all bindings/artifacts and semantic predicates, then adopt it without overwriting or recapturing from a new offset.",
+    "Exact owned holder now observed after an uncertain arm/signal outcome: require the qualified launcher/runtime, exact retained guard/label/PID/start/held receipt, old worker absent, no listeners and no concurrent transaction executor. Reconcile only the held effect; never rearm or resignal. If the old worker remains or the holder/provenance is incomplete, wait boundedly or stop for manual review.",
+    "Unknown holder removal with the exact job, old worker, holder PID and all target listeners now absent: reconcile only the parked effect with the matching retained removal intent/held identity. Never repeat bootout. Foreign surviving processes, listeners or publication gaps block.",
+    "Atomic install/pin intent lacks completion but canonical target is exactly the intended candidate/pinned bytes: under the corresponding stopped-service barrier, confirm unchanged original rollback copy, reviewed intended hash, no active old executor, source/package/config closure and every prerequisite witness. Reconcile the applied-file effect without writing or renaming again. Original, partial, foreign or changing bytes do not prove the intended effect and do not authorize replay; retain any temporary file.",
+    "Bootstrap intent lacks ready/completion record but the exact intended replacement is already healthy: require the fixed job to own that new PID/start/argv/listener, old worker absent, original intent/log anchor and birth boundary compatible, correct applied source/plist/runtime, no concurrent executor and full phase-specific startup/readiness proof. Reconcile the presently accepted replacement, without claiming an unrecorded launchctl return. Reservoir acceptance still requires complete per-handle restore logs and zero warnings; provider acceptance requires connected/error-free semantic readiness. Matching argv alone is insufficient.",
+    "Clean private-restore child exit (same PID/request/helper/backup), exact successful comparison/witness and no unresolved marker: revalidate via the existing verifier and adopt missing outer acceptance. No new numeric child. Running/unknown/failed child, request-only state, incomplete output or an unresolved marker remains blocked.",
+    "Partial backup/capture artifacts are retained, not accepted or overwritten. Validate/adopt complete artifacts where possible; incomplete artifacts need a separately reviewed new output identity from still-unchanged stopped inputs. Do not relabel them accepted.",
+    "Guard release intent with an already absent guard may be reconciled only after both exact replacement identities and readiness witnesses still pass and the released guard was previously proven ours. Do not recreate the guard or infer release from a foreign/missing ownership history."
+  ],
+  "created_at": "2026-10-16T18:13:39.390927+00:00",
+  "current_gaps": [
+    {
+      "finding": "The current planner deliberately stops before private restore and all install/pin/bootstrap stages; its token is not a durable execution ledger.",
+      "source": [
+        {
+          "line": 215,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_recovery.py",
+          "sha256": "970abaeb7eea7f23cd52d743da958021dafdf1a01bf72e70ac7e6768172ad5bc"
+        },
+        {
+          "line": 260,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_recovery.py",
+          "sha256": "970abaeb7eea7f23cd52d743da958021dafdf1a01bf72e70ac7e6768172ad5bc"
+        }
+      ]
+    },
+    {
+      "finding": "Controller.run rejects every existing transaction; no resume method reconstructs admission, receipts, parked roles, replacement identities or applied-input flags.",
+      "source": [
+        {
+          "line": 245,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/reservoir_maintenance.py",
+          "sha256": "09631605fcb28a6e9f8649980b729557a75a1c6c039775ff3c77f14f2c6487e8"
+        },
+        {
+          "line": 371,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/reservoir_maintenance.py",
+          "sha256": "09631605fcb28a6e9f8649980b729557a75a1c6c039775ff3c77f14f2c6487e8"
+        }
+      ]
+    },
+    {
+      "finding": "ProductionHost constructor validates original preparation and initializes counters/guards/anchors/state empty. It cannot be used unchanged after approved source/plist replacement.",
+      "source": [
+        {
+          "line": 73,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_host.py",
+          "sha256": "032ad961a339d7bdeb9a61dd7aecc7864f9dd3d8067dea33d733a549d1fcad56"
+        },
+        {
+          "line": 105,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_host.py",
+          "sha256": "032ad961a339d7bdeb9a61dd7aecc7864f9dd3d8067dea33d733a549d1fcad56"
+        }
+      ]
+    },
+    {
+      "finding": "Witness producers use exclusive fixed output paths. Repeating collect_witness after an interruption can collide with valid retained evidence or partial outputs; validate/adopt complete existing evidence instead.",
+      "source": [
+        {
+          "line": 278,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_host.py",
+          "sha256": "032ad961a339d7bdeb9a61dd7aecc7864f9dd3d8067dea33d733a549d1fcad56"
+        },
+        {
+          "line": 294,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_host.py",
+          "sha256": "032ad961a339d7bdeb9a61dd7aecc7864f9dd3d8067dea33d733a549d1fcad56"
+        }
+      ]
+    },
+    {
+      "finding": "bootstrap_original records intent, calls launchctl and waits for readiness before writing bootstrap_ready. A successful launch followed by interruption during loading lacks a durable command-return record. The inspector then correctly cannot classify that process as a recorded replacement.",
+      "source": [
+        {
+          "line": 400,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_host.py",
+          "sha256": "032ad961a339d7bdeb9a61dd7aecc7864f9dd3d8067dea33d733a549d1fcad56"
+        },
+        {
+          "line": 389,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_recovery_inspect.py",
+          "sha256": "d1c40638b2ec12c87d55a25f619016978e272928b3bf8e4258e4feef99589bd4"
+        }
+      ]
+    },
+    {
+      "finding": "The finite private restore runner refuses every prepared/attempted run; a clean natural exit with valid comparison can precede the outer Host/controller witness. Recovery needs read-only adoption of that success, never a second child.",
+      "source": [
+        {
+          "line": 51,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_restore_runner.py",
+          "sha256": "8b19eaa84b3ef19f99e80df3d7096a19150c1787ecf4fe48d61a75e7275c7a06"
+        },
+        {
+          "line": 93,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_restore_runner.py",
+          "sha256": "8b19eaa84b3ef19f99e80df3d7096a19150c1787ecf4fe48d61a75e7275c7a06"
+        },
+        {
+          "line": 286,
+          "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_recovery_inspect.py",
+          "sha256": "d1c40638b2ec12c87d55a25f619016978e272928b3bf8e4258e4feef99589bd4"
+        }
+      ]
+    }
+  ],
+  "failure_tests_before_live_drain": [
+    "Inject interruption before intent, after intent, after external effect, after Host result, after controller result and before in-memory flag update for arm/signal/remove/install/pin/bootstrap/release. Assert zero command replay. Positive exact effects may be explicitly reconciled; genuinely ambiguous observations remain blocked.",
+    "Run the actual finite controller with inert Host and resume at every known completed phase. Confirm first-only actions, preserved guards/anchors/offsets/wall boundaries/counters, exact applied versus rollback hashes and matching uninterrupted result.",
+    "Crash after complete capture/witness/backup publication but before outer journal acceptance: adoption revalidates exact existing bytes and performs no producer call. Partial/truncated/changed files fail without overwrite.",
+    "Private restore launch/start/no-exit, exit nonzero, missing or altered stdout/comparison, different PID/request/runtime, unresolved marker and backup drift all block. Complete clean exit plus valid retained witness can be adopted without invoking Popen.",
+    "After install/pin, test both durable completion and missing-completion/current-exact-effect reconciliation. Accept only intended canonical bytes plus stopped barrier and immutable originals; reject still-original/partial/foreign/changing bytes, active old executor and changed prerequisites.",
+    "For bootstrap result/ready-record gaps, exact job identity plus complete startup/readiness evidence may reconcile the existing replacement. Loaded/no-PID or absent-job gaps only wait/stop; wrong birth/PID/start/argv/listener, source/config drift, incomplete logs or unhealthy readiness block. No second bootstrap or signal.",
+    "After provider admission, advance the fake journal and reservoir state: recovery must not roll them back or require equality with pre-bootstrap bytes. It may only complete readiness/guard release.",
+    "Concurrent/stale/double resume claims fail before Host IO; interruption after a claim is not treated as proof that the action did not happen.",
+    "One actual owned stdlib launchd interruption/continuation fixture through the same recovery driver, including both service orderings and confirmed-bootstrap waiting, before claiming operational OS recovery. Preserve current passing fixture evidence; a new administrator run is needed only for the new recovery path, not for pure argument/phase tests.",
+    "Keep the real numeric restoration qualification separate: it still needs a genuinely passing host gate, reviewed root release and successful exact-runtime matrix before any live drain."
+  ],
+  "minimal_new_interfaces": [
+    "RetainedHost.from_verified_recovery(spec, inspection, accepted_results): a separate constructor that does not recapture anchors or call original-running preflight. Populate exact counter, guards, attempted/successful arms, signal identities/wall boundaries, receipts, full startup identity+original log anchor, source/plist flags and current approved immutable-file metadata. The present planner startup projection is only an anchor, not the full Host.startups record.",
+    "resume_one(expected_transaction, expected_phase, expected_evidence_head): acquire one per-transaction exclusive lock, revalidate current host/boot/pause owner/protected identities and approved closure, append a durable single-use claim, then perform one permitted first action or one evidence-based reconciliation. Never fall through multiple service mutations. An executor identity/begin receipt makes concurrent or still-running original callers explicit.",
+    "Append-only recovery checkpoint/result records bind the original plan/preparation, controller head, Host counter/head, current inspection hash and exact evidence adopted. Preserve all original failed/intention/result files. A reconciliation result is explicitly new observed evidence, not a fabricated historical mutation_completed event.",
+    "Continue the original monotonic Host operation numbering and extend the journal grammar explicitly for reviewed recovery checkpoints. Refuse duplicate claims, stale heads, concurrent controllers or an unresolved earlier action. Controller.run stays fresh-only.",
+    "Add a durable bootstrap_command_returned record immediately after launchctl returns, before readiness wait, and a wall-time boundary in bootstrap intent. A confirmed zero return supports continued observation; it never supports another bootstrap. If the command-result record is missing, only the separately verified exact ready replacement effect may be reconciled; absence or a pending publication gap is not proof of failure."
+  ],
+  "minimum_phase_table": [
+    {
+      "allowed_next": "If no debug intent ever exists, the first arm; if arm is durably successful and no signal intent exists, the first SIGTERM. After confirmed signal, only bounded wait/verify holder.",
+      "phase": "Original worker plus confirmed owned hold",
+      "required": "Same original PID/start/argv, exact guard, host/protected ownership and never-attempted action. Unknown debug or signal is not retried."
+    },
+    {
+      "allowed_next": "Validate existing complete log/QoS/journal evidence or produce it once; then remove only the exact verified provider holder.",
+      "phase": "Provider held / provider drain accepted",
+      "required": "Original idle anchor, original log/QoS offsets and prefix hashes, exact signal wall boundary, final generation-to-successful-push witness, old process absent, no holder listener."
+    },
+    {
+      "allowed_next": "Validate final batch/lifecycle evidence and remove only the verified reservoir holder.",
+      "phase": "Provider absent; reservoir held / final snapshot accepted",
+      "required": "Provider check-in remains accepted; same held-process/guard checks; complete final handle set, paths and sidecars."
+    },
+    {
+      "allowed_next": "Install the reviewed reservoir source once, only if install was never attempted.",
+      "phase": "Both parked; stopped backup and private restore accepted",
+      "required": "Complete stopped inventory including historical/quarantined/sidecar files, final active handles, immutable backup, real restore success with exact source/runtime/config/child provenance; no surviving numeric child or unresolved runner record."
+    },
+    {
+      "allowed_next": "First reservoir bootstrap only if no bootstrap intent exists.",
+      "phase": "Source installation durably completed",
+      "required": "Canonical source exactly candidate; original source and original plist retained; provider absent; canonical stopped state still equals accepted backup before first startup."
+    },
+    {
+      "allowed_next": "Continue readiness observation, then validate/adopt complete startup witness; do not bootstrap again.",
+      "phase": "Reservoir bootstrap command confirmed / replacement recorded",
+      "required": "Original bootstrap log offset, exact label/PID/start/argv/listener, full expected per-handle restore lines, correct config and no restore/thermostat errors. Preserve deterministic-path inference wording."
+    },
+    {
+      "allowed_next": "Apply the exact reviewed snapshot-pinned provider plist once if no pin intent exists.",
+      "phase": "Reservoir startup accepted; provider absent",
+      "required": "Original provider plist bytes still installed, rollback bytes retained, same reservoir identity, final coupling journal still unchanged before provider admission."
+    },
+    {
+      "allowed_next": "First provider bootstrap only if no bootstrap intent exists.",
+      "phase": "Provider pin durably completed",
+      "required": "Canonical plist exactly reviewed pin; all other launch settings unchanged, preserved original rollback bytes; original package/model/source closure remains bound."
+    },
+    {
+      "allowed_next": "Observe readiness and validate/adopt provider_ready; never repeat bootstrap.",
+      "phase": "Provider bootstrap confirmed / recorded replacement",
+      "required": "Exact pinned argv/PID/start/label/listener and connected/error-free semantic readiness. Provider admission may already have resumed: do not compare or restore the current journal/state to its pre-bootstrap bytes."
+    },
+    {
+      "allowed_next": "Release each remaining exact own guard once, then append completion.",
+      "phase": "Both replacement identities and provider_ready accepted",
+      "required": "Fresh process/listener/readiness checks; no unknown release intent. Already released guard is never recreated. No source/data rollback."
+    }
+  ],
+  "peer_check": "mlx_integration independently agreed with the narrow one-step design and emphasized unknown external-action outcomes, original anchors/wall times, partial artifacts, applied-vs-rollback bytes and an owned integrated interruption fixture.",
+  "practical_next_steps": [
+    "Create a new versioned candidate; preserve frozen03. Implement retained attach and disabled resume_one over the existing finite phase order, not a new service framework.",
+    "Add complete-result/witness adoption and the narrowly specified exact-effect reconciliations. Add immediate bootstrap-command-return evidence to reduce the largest avoidable ambiguity window.",
+    "Complete stdlib failure-boundary tests and independent review; run an owned integrated interruption/continuation fixture through the same recovery path before operational acceptance.",
+    "Keep concrete operator instructions for unsupported ambiguous states: preserve/reinspect the exact transaction, no automatic retry. A passing numeric matrix and fresh root release remain separate prerequisites for live drain."
+  ],
+  "production_ready": false,
+  "recommendation": "Add one explicit forward-only resume-one-step path in a new candidate. Reattach the retained transaction, adopt a completed effect only when exact current evidence plus the retained intent proves that effect, and perform at most one never-attempted next action. Never rerun Controller.run, replay an uncertain command or add a generic service manager.",
+  "review_scope": {
+    "new_processes": false,
+    "numeric_imports": false,
+    "service_probes": false,
+    "signals": false,
+    "source_changes": false,
+    "source_only": true
+  },
+  "schema": "reservoir_operational_recovery_design_v1",
+  "source_artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_host.py": "032ad961a339d7bdeb9a61dd7aecc7864f9dd3d8067dea33d733a549d1fcad56",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_preflight.py": "48c81c1b60d8c49b3c6de5738c3e114f5173ec438ea2d5de1fd42cd21916baef",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_recovery.py": "970abaeb7eea7f23cd52d743da958021dafdf1a01bf72e70ac7e6768172ad5bc",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_recovery_inspect.py": "d1c40638b2ec12c87d55a25f619016978e272928b3bf8e4258e4feef99589bd4",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_restore_runner.py": "8b19eaa84b3ef19f99e80df3d7096a19150c1787ecf4fe48d61a75e7275c7a06",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/reservoir_maintenance.py": "09631605fcb28a6e9f8649980b729557a75a1c6c039775ff3c77f14f2c6487e8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3"
+  },
+  "status": "proposal_only_not_implemented_or_executed",
+  "unsupported_ambiguous_states_and_manual_escape": [
+    {
+      "escape": "Retain guard and evidence; a bounded observation may reveal drain/owned holder. If not, stop for operator review of that exact label/identity. No guessed second debug, signal, kickstart or bootout.",
+      "state": "Old worker still alive after unknown debug/signal outcome"
+    },
+    {
+      "escape": "Bounded observation only. Do not treat absence as authorization to bootstrap again. Operator review may accept a newly proven ready replacement later; otherwise keep the state and report exact missing proof.",
+      "state": "Bootstrap intent but job absent, loaded/no PID, foreign process, or incomplete startup evidence"
+    },
+    {
+      "escape": "Do not repeat the atomic operation automatically. Preserve exact current bytes, owned temporary output and original intent for a separately reviewed bounded repair; no data rollback.",
+      "state": "Installed/pinned target still original, foreign or partial and command outcome unknown"
+    },
+    {
+      "escape": "Retain the child/output evidence and do not start another child or install. Natural completion may add usable positive evidence; otherwise explicit operator review is required. No force termination or retry loop.",
+      "state": "Restore child identity/exit unknown or failed; partial backup/restore output"
+    },
+    {
+      "escape": "No continuation under the stale plan. Produce a new reviewed alignment/authority decision; do not silently refresh anchors or widen the transaction.",
+      "state": "Any changed owner/boot/protected process, unknown guard, stale source/runtime, or canonical state drift before first startup"
+    }
+  ],
+  "updated_at": "2026-10-16T18:15:24.734566+00:00"
+}

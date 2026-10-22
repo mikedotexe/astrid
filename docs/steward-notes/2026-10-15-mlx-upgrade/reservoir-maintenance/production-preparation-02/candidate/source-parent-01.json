@@ -1,0 +1,70 @@
+{
+  "schema": "reservoir_production_candidate_source_copy_v1",
+  "created_at": "2026-10-16T17:33:30.209922+00:00",
+  "scope": "New unqualified source-only version; no prior receipts or acceptance relabeled",
+  "reason": "Prepare narrow deferred LSM-import ordering fix; frozen candidate01 and all evidence retained unchanged",
+  "files": [
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/metadata_preflight.py",
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/metadata_preflight.py",
+      "sha256": "3c2bce47648596f8988e0884081625f729d77856526c1b062f5078b68684d318"
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_host.py",
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/production_host.py",
+      "sha256": "d7b80c071ca1a279d95b237ce5b675865f85dc1c5f0c6565e0694ef09bace466"
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_preflight.py",
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/production_preflight.py",
+      "sha256": "3ded53f71a6d134640cb89a00ed9cf9c392a9709a8ac39eae67e2737250de1e5"
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_recovery_inspect.py",
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/production_recovery_inspect.py",
+      "sha256": "0ee592e768df9ebdab9994b41d9a921b99aaea8479e676abaa1cd5c586229311"
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance.py",
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/reservoir_maintenance.py",
+      "sha256": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b"
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance_state.py",
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/reservoir_maintenance_state.py",
+      "sha256": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594"
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/restore_verifier.py",
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/restore_verifier.py",
+      "sha256": "e363cc1144c7a92279a3bde5eabfcf7647d8ff6b8e56e445cfd7b560c21a8c16"
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_host.py",
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/test_production_host.py",
+      "sha256": "91787c5be064fba697ba393a4989fa1daa7619cd838ab0f82e6418973f121cf4"
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_preflight.py",
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/test_production_preflight.py",
+      "sha256": "782262b2267ab41e5040c817046f2e21106321e252dda7c86824aded3237045d"
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_recovery_inspect.py",
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/test_production_recovery_inspect.py",
+      "sha256": "ef1c9d9e2e91444f16c6776e8724381bc06f468f8f7b945d37557970c22d1af7"
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_reservoir_maintenance_state.py",
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/test_reservoir_maintenance_state.py",
+      "sha256": "5c896092de2a2da6351c7a05ffe78a080fcfd49e91630fd5764b6110a9075834"
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_restore_verifier.py",
+      "copy": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/test_restore_verifier.py",
+      "sha256": "7967d6dbfca9077026b29b615176c20649adf56031b5f719749180563cd94049"
+    }
+  ],
+  "production_execution_allowed": false,
+  "actual_numeric_execution": false
+}

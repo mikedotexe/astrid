@@ -1,0 +1,30 @@
+{
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/README.md": "086959e0acf719486b58f34cd86c8cdc7018acea91ac136fa9e259e55b2e93e1",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_driver.py": "318611857842c0e1962cf1aaa5a7e2ceb61a57a1e7e4a8b38c36222f87085d58",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_evidence.py": "7bbc9ce8d2154d5b4b732b18174ffba68e897457d869240232764c9d301b6c38",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_native.py": "4cbdefe3dc4795699d2ad1255f37c2b0cbba797ec32a2f86484728ccd1ba6405",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/target.json": "159cafb1804114dec016dbbfdccd425ba7aa2ebb76a2999c83f6b3e6e5cb57e6",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_driver.py": "9d4e07a7088bec2997d6bbe7cb8ebf4b28780d2b74e2ccf683f672a6517dd1a1",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_evidence.py": "bea2755ccc298db9b0426f6ef5720ade8224f94491b856113a0bc65dcc7e4b9f",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_native.py": "2ffb9df3166e7c430cf2dda1c0a164faee3f24b0387da5217827901567b865db"
+  },
+  "local_runtime_imports": [
+    "abort_driver",
+    "abort_native",
+    "abort_evidence"
+  ],
+  "os_queries_or_effects": false,
+  "production_qualified": false,
+  "schema": "owned_fixture02_abort_source_checkpoint_v1",
+  "source_only": true,
+  "status": "source_prepared_tests_unrun_execution_not_authorized",
+  "target_imports": false,
+  "test_count": 50,
+  "test_modules": {
+    "test_abort_driver": 13,
+    "test_abort_evidence": 11,
+    "test_abort_native": 26
+  },
+  "tests_run": false
+}

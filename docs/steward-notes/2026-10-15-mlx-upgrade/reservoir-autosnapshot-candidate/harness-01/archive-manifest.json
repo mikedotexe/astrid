@@ -1,0 +1,175 @@
+{
+  "schema": "reservoir_private_qualification_harness_archive_v1",
+  "created_at": "2026-10-16T03:39:22.258502+00:00",
+  "artifacts": [
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/common.py",
+      "archive": "common.py.txt",
+      "sha256": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+      "bytes": 4299
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/driver.py",
+      "archive": "driver.py.txt",
+      "sha256": "42dc76d5b90a7797ef89b88e1835661c851d85130d5df9d37dd72df6727da09d",
+      "bytes": 12046
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/fixture.py",
+      "archive": "fixture.py.txt",
+      "sha256": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+      "bytes": 2659
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/process_identity.py",
+      "archive": "process_identity.py.txt",
+      "sha256": "068da901598ff9cf982314f1cc0f4381a6e6e878143be5e52def59270871d0f2",
+      "bytes": 2571
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/protocol_client.py",
+      "archive": "protocol_client.py.txt",
+      "sha256": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+      "bytes": 2904
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/result_checks.py",
+      "archive": "result_checks.py.txt",
+      "sha256": "1242f173bd6c77fa1ed4f9bde9a9934845815aab9025aedf44c97f92117a3b86",
+      "bytes": 6627
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/review_matrix.py",
+      "archive": "review_matrix.py.txt",
+      "sha256": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+      "bytes": 4401
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/service_child.py",
+      "archive": "service_child.py.txt",
+      "sha256": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+      "bytes": 15760
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/snapshot_oracle.py",
+      "archive": "snapshot_oracle.py.txt",
+      "sha256": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+      "bytes": 5431
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/test_harness.py",
+      "archive": "test_harness.py.txt",
+      "sha256": "8b272aca672305744939d88b3e2599c7dedcf2405873c846289077b8c6283e47",
+      "bytes": 12091
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/README.md",
+      "archive": "README.md",
+      "sha256": "607f2c0099f3f5c6ae9e79e9d76e0b73a6468f4820c940e25691c90101c36f8d",
+      "bytes": 6783
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/cpu-tests-03.json",
+      "archive": "cpu-tests-03.json",
+      "sha256": "befc3ea373d8a57ee652f0b5f0d034227fd4e6455a1c110c693dfb6b883b4c87",
+      "bytes": 1859
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/cpu-tests-03.txt",
+      "archive": "cpu-tests-03.txt",
+      "sha256": "cf9fed22aa6e7a4921caa32b0458d4d14ddff513ca8f52a6cf0ad05b31909f07",
+      "bytes": 2271
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/independent-review-01.json",
+      "archive": "independent-review-01.json",
+      "sha256": "a4cab7e35b36eb0c27d78b6762474c1bf55891d8d4242945dfe56fe1a7d09e65",
+      "bytes": 8270
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/sources.json",
+      "archive": "prepared-01/sources.json",
+      "sha256": "826e6eb869262de8769bea5f812986eddfb8d675a83875eab03db067e70751f1",
+      "bytes": 3159
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/candidate/dual_ai_bridge.py",
+      "archive": "prepared-01/candidate/dual_ai_bridge.py.txt",
+      "sha256": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549",
+      "bytes": 27048
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/candidate/lsm_reservoir.py",
+      "archive": "prepared-01/candidate/lsm_reservoir.py.txt",
+      "sha256": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417",
+      "bytes": 8906
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/candidate/persistence.py",
+      "archive": "prepared-01/candidate/persistence.py.txt",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+      "bytes": 7438
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/candidate/rehearsal.py",
+      "archive": "prepared-01/candidate/rehearsal.py.txt",
+      "sha256": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093",
+      "bytes": 6448
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/candidate/reservoir_service.py",
+      "archive": "prepared-01/candidate/reservoir_service.py.txt",
+      "sha256": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da",
+      "bytes": 63345
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/candidate/triple_reservoir_coreml.py",
+      "archive": "prepared-01/candidate/triple_reservoir_coreml.py.txt",
+      "sha256": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8",
+      "bytes": 17872
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/original/dual_ai_bridge.py",
+      "archive": "prepared-01/original/dual_ai_bridge.py.txt",
+      "sha256": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549",
+      "bytes": 27048
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/original/lsm_reservoir.py",
+      "archive": "prepared-01/original/lsm_reservoir.py.txt",
+      "sha256": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417",
+      "bytes": 8906
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/original/persistence.py",
+      "archive": "prepared-01/original/persistence.py.txt",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+      "bytes": 7438
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/original/rehearsal.py",
+      "archive": "prepared-01/original/rehearsal.py.txt",
+      "sha256": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093",
+      "bytes": 6448
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/original/reservoir_service.py",
+      "archive": "prepared-01/original/reservoir_service.py.txt",
+      "sha256": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+      "bytes": 62641
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/original/triple_reservoir_coreml.py",
+      "archive": "prepared-01/original/triple_reservoir_coreml.py.txt",
+      "sha256": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8",
+      "bytes": 17872
+    }
+  ],
+  "stdlib_tests_passed": 17,
+  "modules_compiled": 10,
+  "real_cases_executed": false,
+  "production_qualified": false,
+  "preparation_sha256": "826e6eb869262de8769bea5f812986eddfb8d675a83875eab03db067e70751f1",
+  "execution": "Use original runtimeREADME command only after freshpassinghostwindow. Currentarchiveis source/test/reviewonly. Readypreparedinputs useexactpreservedsourceclosure andCPUinterpreterpackages.",
+  "reconstruct": "Verifyhashesandrestoretoexplicitlyownedrecordedsourcepaths; .py.txt filesloseonlyfinal.txt suffix. No production install. Existing evidence paths are retained; never overwrite old result directories."
+}

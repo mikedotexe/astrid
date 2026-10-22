@@ -1,0 +1,36 @@
+{
+  "schema": "reservoir_host_window_preflight_v1",
+  "at": "2026-10-16T19:01:20.890759+00:00",
+  "source_sha256": "005c5db21d9ff36dd2e867cb54a272cabdc2c1922f0a8bb0f0b5a7ddd5709d05",
+  "bindings_sha256": "beae54c2362ea251c6b5a1fc9dbdf78532fa65b498796b97c7515c2c7cd5f629",
+  "review_sha256": "a09def3ca1fa618caf3a22061ac265927e7a8d80e65f25d4d83b34419582f5a5",
+  "identity_file_drift": [],
+  "exact_process_identities_match": true,
+  "build_test_processes": [
+    "69038 68610 Fri Oct 16 12:01:20 2026     /Users/v/.rustup/toolchains/1.94.1-aarch64-apple-darwin/bin/cargo"
+  ],
+  "host_raw": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 11264.00M  used = 9614.50M  free = 1649.50M  (encrypted)\n",
+  "readyz": {
+    "http_status": 200,
+    "body": {
+      "ready": true,
+      "status": "generating",
+      "model": "coupled-astrid",
+      "worker": {
+        "phase": "generating",
+        "heartbeat_age_ms": 42634.093,
+        "queue_depth": 0,
+        "queue_capacity": 4,
+        "last_generation_error": null
+      },
+      "reservoir": {
+        "status": "connected",
+        "operation": "pull_state",
+        "last_sync_unix_ms": 1792177238260
+      }
+    }
+  },
+  "output_absent": true,
+  "observed_window_passed": false,
+  "ready_to_start_observation": false
+}

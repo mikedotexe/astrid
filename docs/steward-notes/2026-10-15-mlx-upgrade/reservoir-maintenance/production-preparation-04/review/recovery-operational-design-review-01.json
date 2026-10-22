@@ -1,0 +1,58 @@
+{
+  "accepted_for_disabled_isolated_implementation": true,
+  "design": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/recovery-operational-design-01.json",
+    "sha256": "b4bf4f1027760b6ccf710ef0396a54c1ef922a7a974bc1eaaa3ed874f9aa6cd9"
+  },
+  "findings": [
+    "The finite phase table covers original drain, held/parked state, complete witness adoption, private restore acceptance, source installation, reservoir startup, provider pin/startup and guard release.",
+    "Observed-effect reconciliation is a new append-only receipt with full current predicates; it neither fabricates a historical command return nor repeats the original action.",
+    "Unknown outcomes without sufficient positive effect evidence remain blocked. Original log/QoS anchors, signal wall times, rollback bytes, state and failures remain preserved. Provider-admitted history is never rolled back.",
+    "Complete existing witnesses and clean private-restore success can be adopted without rerunning exclusive producers or launching another child. Partial/unresolved outputs stay blocked and retained."
+  ],
+  "hard_design_blockers": [],
+  "implementation_requirements": [
+    "Fresh controller and resume_one must use the same per-transaction exclusion and durable executor identity; locking only resume does not exclude a live original caller.",
+    "Each one-step claim must bind controller and Host heads, immutable preparation/plan, boot/owner and exact evidence. Recheck under the lock before any Host action; interrupted claims never imply no external effect.",
+    "Extend inspector and journal grammar for reconciliation/claims/results together. Preserve monotonically increasing Host operations and original records; no fabricated mutation_completed event.",
+    "Retained attach must reconstruct full startup records and original coverage anchors without recapturing or weakening applied-versus-rollback validation.",
+    "Adoption requires every stated phase predicate, including old absence, exact ownership, stopped barrier where required, startup/semantic witnesses and no unresolved child. Hash or argv equality alone is insufficient.",
+    "Keep both execution flags disabled and no operational execute CLI until the integrated source, fake failures, actual owned interruption/continuation fixture and separate numerical prerequisites are accepted."
+  ],
+  "implementation_split": {
+    "independent_review": "Review frozen04 source, combined stdlib evidence and exact future fixture closure before operational acceptance.",
+    "readiness": "Version04 resume-one, append-only claims/reconciliation ledger, planner grammar and failure-boundary tests.",
+    "root": "Coordinate shared fresh/resume exclusion, exact integrated fixture and runtime qualification; numerical work remains separately gated.",
+    "upstream": "Retained Host attach, immediate bootstrap command-return receipt plus intent boundary, inspector alignment and focused tests."
+  },
+  "operational_recovery_qualified": false,
+  "production_execution_authorized": false,
+  "required_qualification": [
+    "Inert actual-controller continuation at every completed phase and interruption before/after intent/effect/Host/controller publication, with zero command replay.",
+    "Malformed, partial, changed, stale, concurrent and unresolved-child evidence rejection; provider history advanced after admission remains intact.",
+    "Actual owned stdlib launchd interruption/continuation through the exact new driver, including result-publication gaps, both service orderings, same-owner cleanup and no live labels.",
+    "Fresh passing host window and exact-runtime14-case service matrix plus9-case restore qualification remain separate before live drain."
+  ],
+  "review_actions": {
+    "numeric_imports": false,
+    "process_probes": false,
+    "service_actions": false,
+    "source_edits": false,
+    "source_reads_and_hashes_only": true,
+    "tests_run": false
+  },
+  "reviewed_at": "2026-10-16T18:17:17.643315+00:00",
+  "reviewer": "/root/mlx_integration",
+  "schema": "reservoir_operational_recovery_design_review_v1",
+  "scope": "Minimum forward-only retained-transaction recovery design; no implementation, OS recovery or production execution acceptance.",
+  "source_artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_host.py": "032ad961a339d7bdeb9a61dd7aecc7864f9dd3d8067dea33d733a549d1fcad56",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_preflight.py": "48c81c1b60d8c49b3c6de5738c3e114f5173ec438ea2d5de1fd42cd21916baef",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_recovery.py": "970abaeb7eea7f23cd52d743da958021dafdf1a01bf72e70ac7e6768172ad5bc",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_recovery_inspect.py": "d1c40638b2ec12c87d55a25f619016978e272928b3bf8e4258e4feef99589bd4",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/production_restore_runner.py": "8b19eaa84b3ef19f99e80df3d7096a19150c1787ecf4fe48d61a75e7275c7a06",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/reservoir_maintenance.py": "09631605fcb28a6e9f8649980b729557a75a1c6c039775ff3c77f14f2c6487e8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-03/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3"
+  }
+}

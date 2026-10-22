@@ -1,0 +1,85 @@
+{
+  "execution": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/generator-cpu-01/execution.json",
+    "sha256": "f58d363d38f253d735ff8fa1ca144a3d5fe9f953130cbe66188de6ec20163028"
+  },
+  "older_offline_results_accepted_by_current_harness": false,
+  "passed": true,
+  "review": "All stage traces preserve ordered processors, one-token lookahead relative to consumer feedback, bounded yields/cache progression and early-close stream restoration. Full stage supplies prefilled prompt history; stage2 needs actual coupled-output quality review.",
+  "reviewed_at": "2026-10-16T00:47:57.973775+00:00",
+  "schema": "mlx_generator_cpu_qualification_review_v1",
+  "scope": "Actual installed generate_step on deterministic CPU arrays; no Gemma checkpoint, GPU workload, reservoir mutation or production activation. This is one qualification gate, not complete package acceptance.",
+  "source_provenance_review": "Exact installed site-packages paths and selected wheel RECORD SHA256 entries required; independent peer review found no remaining blocker.",
+  "stage_results": [
+    {
+      "audit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/generator-cpu-01/baseline.json",
+        "sha256": "6387507f491cf00ea6133cd98f881028efd4d743196576682d760a9789f17a6d"
+      },
+      "checks": {
+        "bounded_yields": true,
+        "cache_progression": true,
+        "close_restores_stream": true,
+        "feedback_lookahead": true,
+        "package_history": true,
+        "processor_order": true
+      },
+      "expected_history_mode": "final_prompt_token_only",
+      "passed": true,
+      "stage": "baseline",
+      "versions": {
+        "mlx": "0.32.0",
+        "mlx-lm": "0.31.3",
+        "mlx-metal": "0.32.0"
+      }
+    },
+    {
+      "audit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/generator-cpu-01/core.json",
+        "sha256": "5e54a4f0a0784d1aa863cf374d41a988f6edaa0ecc7bcc078a2830dee4ea23f5"
+      },
+      "checks": {
+        "bounded_yields": true,
+        "cache_progression": true,
+        "close_restores_stream": true,
+        "feedback_lookahead": true,
+        "package_history": true,
+        "processor_order": true
+      },
+      "expected_history_mode": "final_prompt_token_only",
+      "passed": true,
+      "stage": "core",
+      "versions": {
+        "mlx": "0.32.4",
+        "mlx-lm": "0.31.3",
+        "mlx-metal": "0.32.4"
+      }
+    },
+    {
+      "audit": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/generator-cpu-01/full.json",
+        "sha256": "f0f22b119c482a21e421a59a8320512bcb7f3074d44d0bd3239bef351759f8c8"
+      },
+      "checks": {
+        "bounded_yields": true,
+        "cache_progression": true,
+        "close_restores_stream": true,
+        "feedback_lookahead": true,
+        "package_history": true,
+        "processor_order": true
+      },
+      "expected_history_mode": "full_prefilled_prompt",
+      "passed": true,
+      "stage": "full",
+      "versions": {
+        "mlx": "0.32.4",
+        "mlx-lm": "0.32.0",
+        "mlx-metal": "0.32.4"
+      }
+    }
+  ],
+  "tooling_tests": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/focused-tests-final-07.json",
+    "sha256": "51652181168727dc08b4ddfe3764454e61ff84c723dd6a973c8377dd30ca8f84"
+  }
+}

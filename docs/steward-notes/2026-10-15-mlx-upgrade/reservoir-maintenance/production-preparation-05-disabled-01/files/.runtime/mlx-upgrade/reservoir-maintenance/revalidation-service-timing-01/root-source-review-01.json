@@ -1,0 +1,23 @@
+{
+  "accepted_for_guard_tests": true,
+  "actual_timing_released": false,
+  "at": "2026-10-17T01:35:28.270587+00:00",
+  "limits": [
+    "Only one service review stage is covered. Complete production admission and physical I/O remain unmeasured.",
+    "Read charges are source-specific logical full-file sizes, not measured unique RAM or disk traffic."
+  ],
+  "observations": [
+    "Frozen target source and exact review call unchanged; full returned object equality required.",
+    "Exact per-path saved metadata/read/count/byte ceilings; one exclusive output; cooperative deadline, never forced interruption.",
+    "Root adds direct posix descriptor-write refusal alongside buffered writes; original draft retained.",
+    "Inert tests include actual pathlib byte/text profile accounting and denial boundaries; no target imports or payloads."
+  ],
+  "reviewer": "root",
+  "schema": "reservoir_service_timing_root_source_review_v1",
+  "source_files": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/design-01.json": "645437257d8f12f85904306aaa4455ccd43861eef9f401ee094c065e4ae1f219",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/test_timing_guard.py": "86fd19609903cb077811920fd4ff88fbaf060fa2db2c6cd4accd17a2c214fbd2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/time_service_review.py": "3acb70ced2ff9adef261897ec3d726a81646efdebe2b0943caa62beb464fe418",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-inputs-01.json": "5bbabc9c88080f4fd4c79c6224bbfe0b00c1064a4f7908451a97273214f24a14"
+  }
+}

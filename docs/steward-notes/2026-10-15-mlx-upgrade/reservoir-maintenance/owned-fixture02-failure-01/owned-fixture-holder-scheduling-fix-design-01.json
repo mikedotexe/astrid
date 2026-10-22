@@ -1,0 +1,74 @@
+{
+  "change": "In a separately versioned fixture parent, add a finite read-only readiness observation only before preparing the sealed held_verified reconciliation executor. Wait for exact owned holder/guard, old-process absence and no listener before capture of the authoritative inspection/checkpoint/expected heads. Do not change drain delay, control sequence, sealed result semantics or timeout budget.",
+  "created_at": "2026-10-17T06:08:41.343843+00:00",
+  "execution_authorized": false,
+  "failure_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-actual-failure-independent-review-01.json",
+    "sha256": "073610566bb9906bf3e8d076d08ed6e591932dc3bb8ac8ff6fef77285b7ac20e"
+  },
+  "focused_future_fake_cases": [
+    "Signal returns while original is still draining; several exact original observations then loaded/no-PID gap then owned holder. Expected heads are captured only from the held snapshot, one signal total, no control during wait.",
+    "Already-held role at phase start: no sleep, fresh locked heads, normal sealed reconciliation succeeds.",
+    "Holder PID exists before its held receipt is published: bounded observation waits for exact complete receipt, never assumes ready from PID alone.",
+    "Foreign worker/holder, wrong guard, old worker still present, unexpected listener, unloaded job, coordination/source/history drift all refuse before executor creation.",
+    "Bound expires while original is draining or publication incomplete: durable parent failure, no prepared/executed next child and no retry/control replay.",
+    "Holder/source/history changes after readiness but before child admission: existing stale-head/current-identity checks refuse, rather than refreshing or replaying automatically.",
+    "A deliberately naive post-claim wait regression must demonstrate that snapshot equality cannot be silently waived.",
+    "Verify parent read-only wait shares the established execution lock/executor identity and adds no unexpected raw sessions or broad mutation authority; raw consumer must validate any new observation/session records."
+  ],
+  "implemented": false,
+  "placement_and_guards": [
+    "The existing parent validates exact release/source/coordination and original-parent ownership, then establishes its action claim. For the selected held_verified step only, acquire the existing shared transaction lock/session and verify the accepted prior signal/debug records; observe the exact role until ready using the existing90-second bound or remaining original plan budget.",
+    "Each sample must reject foreign replacement, wrong/missing guard, extra listener, lost job or changed original identity. The precise recorded draining original and loaded/no-PID publication gap may remain pending; an already-held exact role completes immediately. No mutation, producer replay, additional signal, debug rearm, force or automatic retry is permitted.",
+    "After readiness, compute a fresh authoritative inspection and checkpoint/expected heads under the lock, binding the current holder and unchanged other-role/source/history state. Then prepare exactly one normal sealed executor request. The child still obtains its own session, recomputes and refuses stale heads; no bypass of snapshot equality.",
+    "Do not insert a sleep/wait solely inside adopt_operation after the pre-claim snapshot: final snapshot equality in fixture retained:352 and production retained:371 would reject the expected drain transition. A different refreshed-observation protocol would require explicit broader review and is unnecessary for this fixture fix.",
+    "Timeout or any malformed/foreign observation retains the parent claim/failure and stops. No arbitrary readiness sleep or increased timeout compensates for unknown state."
+  ],
+  "reviewer": "/root/mlx_integration",
+  "schema": "owned_fixture_future_holder_scheduling_design_v1",
+  "scope": "source_only_future_version_design",
+  "source_refs": {
+    "driver": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_recovery_driver.py",
+      "sha256": "a092c51499c353b53ddf4c09a43cf2d308ce951a535274f652cf755fb815d904"
+    },
+    "fake_tests": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/test_owned_recovery_host.py",
+      "sha256": "e3e43d76d3ceb0b01188fc0f2f6b5b3d0c9acb04a6de83738aa3047708da77ef"
+    },
+    "host": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_host.py",
+      "sha256": "0fa54ce45e72452fb01108360dc0c48aade212cfc47de77fdf0167a45aba286a"
+    },
+    "parent": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_run.py",
+      "sha256": "c5c7117abce79963d22aed713f9d3fee388b6d4d060eda71357ac29f52ac775d"
+    },
+    "phases": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/recovery_phases.py",
+      "sha256": "df6e3e959f79e560dfbe8904cbf9546b79e27b2819f7f5b8ab1aa89bb6917389"
+    },
+    "plan": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_plan.py",
+      "sha256": "6f49c5f5d7f9154e0a1b9e0a69171aa04a1125f8522ed63725087fbea6303c69"
+    },
+    "production_retained": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_retained.py",
+      "sha256": "5c287b8757dfd7e8eb876fa8064edba7e4d51d11c179a0c3ed7274effe331a9b"
+    },
+    "retained": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_retained.py",
+      "sha256": "d1b09bc4eae7f41593557fc028ee03289953c8a5b7c8f5cdb205d8807bfc70a2"
+    },
+    "worker": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py",
+      "sha256": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418"
+    }
+  },
+  "tests_run": false,
+  "versioning": [
+    "Keep fixture02, candidate05, original release and failure immutable. New fixture source/README/tests need new closure, guarded fake evidence and independent review.",
+    "If fixed paths or raw session/observation schema change, create a separately versioned production fixture consumer and review its exact contract; do not retarget frozen05 or reuse final-source acceptance.",
+    "A later exact final release and fresh actual owned fixture run must prove the changed closure. This proposal and a successful abort cleanup are not fixture qualification."
+  ]
+}

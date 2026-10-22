@@ -1,0 +1,149 @@
+{
+  "schema": "original_provider_model_resolution_review_v1",
+  "created_at": "2026-10-16T17:15:38.564911+00:00",
+  "reviewer": "Codex /root/mlx_integration independent source and AST/fake-file review",
+  "accepted": true,
+  "scope": "Narrow pinned-snapshot policy only; not production transaction or execution acceptance",
+  "production_execution_allowed": false,
+  "snapshot": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09",
+  "original_argv": [
+    "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+    "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+    "--port",
+    "8090",
+    "--coupling-strength",
+    "0.1",
+    "--model-memory-map",
+    "--model",
+    "mlx-community/gemma-4-12B-it-5bit",
+    "--model-qos-mode",
+    "active"
+  ],
+  "restart_process_argv": [
+    "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+    "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+    "--port",
+    "8090",
+    "--coupling-strength",
+    "0.1",
+    "--model-memory-map",
+    "--model",
+    "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09",
+    "--model-qos-mode",
+    "active"
+  ],
+  "original_launch_argv": [
+    "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+    "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+    "--port",
+    "8090",
+    "--coupling-strength",
+    "0.1",
+    "--model-memory-map",
+    "--model",
+    "mlx-community/gemma-4-12B-it-5bit",
+    "--model-qos-mode",
+    "active"
+  ],
+  "restart_launch_argv": [
+    "/Users/v/other/neural-triple-reservoir/.venv/bin/python",
+    "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+    "--port",
+    "8090",
+    "--coupling-strength",
+    "0.1",
+    "--model-memory-map",
+    "--model",
+    "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09",
+    "--model-qos-mode",
+    "active"
+  ],
+  "restart_policy": "After accepted reservoir restore/startup, while provider is still stopped and held, atomically install a reviewed provider plist whose only semantic delta is the model argument. Preserve original bytes before any change. Bootstrap using the pinned plist so the choice survives a later launchd reload or login. Confirm replacement identity, readiness, packages, pinned model inputs and reservoir continuity before releasing the maintenance transaction.",
+  "policy": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/provider-model-resolution-policy-01.json",
+    "sha256": "c4bc585c2a6d691e89193ea1cc9c71b4449499def98e4ae373c9fea9a7629e97"
+  },
+  "evidence": [
+    {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests-v2/original.json",
+      "sha256": "8c773b9bfc753ce6207883d71076441024f2f850bde31c17ca2fca5ae2aeabd0"
+    },
+    {
+      "path": "/Users/v/Library/LaunchAgents/com.reservoir.coupled-astrid.plist",
+      "sha256": "4d4bb17099f48b85e2cdcee7d343b4238253edb982fde67d3d9b1e5cad0152ec"
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+      "sha256": "d67a0704c7498c49ed0ac36ea5b3d161f74753419f823327f1b1572d9203610f"
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx_lm/utils.py",
+      "sha256": "ba0371e9c88d52b34d71271945c2394005fbcb2bfb2ee9f6f82d627a33b72422"
+    },
+    {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests-v2/original-launch-settings.json",
+      "sha256": "39619b0ec5f2f248694deeafb0e2303b42fa57e0ed30f1509fa7a7c1364ab6a9"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/provider-model-policy-ast-tests-01.json",
+      "sha256": "f463b0ea99fcb4c31abfbd28473dd53865e5e7b3caf50f0ac14d0e7006b01b3c"
+    },
+    {
+      "path": "/Users/v/other/astrid/scripts/model_environment.py",
+      "sha256": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587"
+    }
+  ],
+  "findings": [
+    "Exactly one argument changes: the sole --model value is replaced with the original manifest snapshot. Canonical launch plist keys, environment, working directory, logs, interpreter and remaining argv must remain identical.",
+    "The observed process uses the exact framework Python executable while the launch plist uses its venv alias. model_environment.command_matches accepts only that resolved interpreter family with an identical argument tail; this does not permit general executable substitution.",
+    "Existing local model paths bypass snapshot_download in the installed loader. The provider first reads that local config and still invokes its existing Gemma unified sanitize shim.",
+    "The current reviewed policy preserves original plist bytes for rollback provenance and requires a durable intent containing both rollback and applied pinned plist hashes before atomic replacement. The original mutable hub reference is not an automatic rollback target.",
+    "The prepared original manifest lists explicit defaults that are absent from the historical launch argv. Only its snapshot identity is substituted; this policy does not copy the manifest command wholesale into the production launch plist."
+  ],
+  "source_references": [
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+      "line": 228,
+      "claim": "Local config lookup before Hub fallback; same Gemma class override and sanitize shim."
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+      "line": 356,
+      "claim": "Model argument passed unchanged to existing mlx_load."
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx_lm/utils.py",
+      "line": 218,
+      "claim": "Existing Path avoids snapshot_download."
+    },
+    {
+      "path": "/Users/v/other/astrid/scripts/model_environment.py",
+      "line": 33,
+      "claim": "Narrow framework runtime/launch alias family; command tail equality."
+    }
+  ],
+  "validation": {
+    "ast_fake_tests_passed": 7,
+    "receipt": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/provider-model-policy-ast-tests-01.json",
+      "sha256": "f463b0ea99fcb4c31abfbd28473dd53865e5e7b3caf50f0ac14d0e7006b01b3c"
+    },
+    "checkpoint_rehashed_in_this_review": false,
+    "live_process_inspected_in_this_review": false
+  },
+  "required_before_production_enablement": [
+    "Revalidate the full original model manifest, package RECORD bytes, both interpreter executables and source closure immediately before any handoff; exact local snapshot must exist.",
+    "Finish and review fake transaction tests showing old drain identity is kept separate from pinned restart identity; original plist bytes and hash survive; applied restart hash is recorded before replacement; refusal/crash after each boundary leaves a reconstructible held state.",
+    "Review the minimal controller amendment for production scope and provider_restart_settings input binding. Current production-enable flag and controller admission both remain blocked.",
+    "Qualify durable retained-transaction reconstruction and an exact-phase recovery plan; in-memory anchors, guards and armed flags cannot substitute for recovery. Unknown override outcome must not automatically rearm, repeat a signal, or bootstrap.",
+    "Complete the actual frozen service matrix and separately execute the NEW restore_verifier using the installed original runtime against private preserved 192-node fixtures before production drain. A later stopped-production backup verification is a second check, not the first real execution.",
+    "Meet the existing quiet-host and memory gates before numerical qualification. No gate is waived by this policy review."
+  ],
+  "limitations": [
+    "Current process loaded bytes cannot be attested retroactively from its argv or today's files. Preserve separately reviewed source/model lineage and label inference honestly.",
+    "Original plist is a preserved rollback asset, not an instruction to restore a mutable model reference blindly after any subsequent accepted pin. Rollback of the maintenance repair uses current accepted checkpoint identity and does not roll back runtime state.",
+    "Static path handling and fake argument tests do not qualify real persistence, production maintenance or MLX generation. Existing accepted fixture binds unchanged launchd primitives only; any controller changes require an explicit equivalence review or additional fixture.",
+    "These seven tests do not load a real checkpoint or verify native generation, TCC, persistence or production restart behavior.",
+    "Historical loaded model/source bytes cannot be inferred conclusively from the old argv or present disk hashes."
+  ]
+}

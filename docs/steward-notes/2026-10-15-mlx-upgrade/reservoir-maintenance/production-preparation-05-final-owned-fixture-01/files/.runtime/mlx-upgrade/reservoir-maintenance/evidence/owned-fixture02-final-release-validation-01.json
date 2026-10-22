@@ -1,0 +1,31 @@
+{
+  "acceptance_elapsed_s": 0.04036020813509822,
+  "actual_os_fixture_executed": false,
+  "completed_at": "2026-10-17T02:02:44.109105+00:00",
+  "elapsed_s": 0.04037320800125599,
+  "executed_local_sources": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_cleanup.py": "5637d6269990e70b9ec0dbc6505173d891171f7dfbeca4c543ca4364c4097a66",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_coordinator.py": "8244b61c4fa980b67528f8ebeaa20b7ebe6c7ca45e8039e1493977c2ab5a07ba",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_pin.py": "99f2522f163ba303fd28b71d802dc5bcf749447b29a3f6449e9bccf5da0d2eca",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_plan.py": "6f49c5f5d7f9154e0a1b9e0a69171aa04a1125f8522ed63725087fbea6303c69",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_records.py": "728c1f178cb3a6f8e1a88f0229d8a691fb11d11bd8b090e07c480c0ec5b88300",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_core.py": "111041830169d70bafa98ab54bd2a6f4c76f7d26a7910dc3a68a984d53f2ab15",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_host.py": "0fa54ce45e72452fb01108360dc0c48aade212cfc47de77fdf0167a45aba286a"
+  },
+  "executor_steps": 71,
+  "final_source_files": 60,
+  "fixture_root_unused": true,
+  "guard_violations": [],
+  "inputs_sha256": "2ae353e1c80d5e40adabd4194b4aba9a355a3d2092105018cd23fec386595180",
+  "native_entrypoints_called": false,
+  "passed": true,
+  "production_qualified": false,
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-01.json",
+    "sha256": "aa1273e375e376d51ea70be44b1bbb684f1a0a5c3fc96a7ca0bb5bc192ee215c"
+  },
+  "result_path_unused": true,
+  "runner_sha256": "4a42bae6a894d23e43daa4d51eef3c7db693a6b3d83496fdf68d43e2d200367b",
+  "schema": "owned_fixture02_read_only_release_validation_v1",
+  "started_at": "2026-10-17T02:02:44.070814+00:00"
+}

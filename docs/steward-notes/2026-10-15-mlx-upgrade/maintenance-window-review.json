@@ -1,0 +1,113 @@
+{
+  "command_caveat": "Retained for review only. Revalidate exact PID/start, executable, source/config and owned transaction identities before any future action.",
+  "commands_not_executed": [
+    "python3 -B scripts/bridge_drain.py --pid 82528 --binary /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server --status-dir /Users/v/other/astrid/.runtime/bridge-lifecycle --timeout 1800 --request --ack \"MLX qualification maintenance window\"",
+    "bash scripts/build_bridge.sh --activate-stage /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01 --expected-pid 82528 --actor codex-mlx-upgrade --timeout-secs 1800 --ack \"Resume retained bridge after MLX qualification\""
+  ],
+  "current_identities": {
+    "bridge": 82528,
+    "minime_agent": 82314,
+    "mlx_provider": 3893,
+    "ollama": 35486,
+    "reservoir": 3888
+  },
+  "decision": "Retain current services; use low-load observation. Do not introduce speculative broad service interruption.",
+  "findings": [
+    {
+      "behavior": "SIGUSR1 closes producer admission, finishes accepted work, persists checkpoints and stops autonomous, maintenance and transport tasks. Drained process waits only for TERM/INT. No same-process resume exists; recovery requires a sanctioned retained-stage restart.",
+      "component": "bridge",
+      "loaded_source_hashes_match": true,
+      "source_refs": [
+        {
+          "line": 618,
+          "path": "capsules/spectral-bridge/src/main.rs"
+        },
+        {
+          "line": 687,
+          "path": "capsules/spectral-bridge/src/main.rs"
+        },
+        {
+          "line": 84,
+          "path": "capsules/spectral-bridge/src/lifecycle.rs"
+        }
+      ]
+    },
+    {
+      "behavior": "SIGTERM/INT closes admission, joins accepted workers, seals NEXT and exits. Existing launch hold blocks the replacement shell; it does not pause the current agent. The coordinator immediately releases its hold after verified drain and exposes no separate maintenance-window hold/resume CLI.",
+      "component": "minime_agent",
+      "launch_hold_present": false,
+      "lifecycle_contract": "agent_drain_v2",
+      "loaded_source_hashes_match": true,
+      "source_refs": [
+        {
+          "line": 23316,
+          "path": "/Users/v/other/minime/minime_autonomy/runtime.py"
+        },
+        {
+          "line": 23343,
+          "path": "/Users/v/other/minime/minime_autonomy/runtime.py"
+        },
+        {
+          "line": 12,
+          "path": "/Users/v/other/minime/scripts/launchd_autonomous_agent.sh"
+        },
+        {
+          "line": 197,
+          "path": "scripts/finish_minime_work.py"
+        },
+        {
+          "line": 202,
+          "path": "scripts/paired_minime_handoff.py"
+        }
+      ]
+    },
+    {
+      "behavior": "Existing wrappers require actor codex-astra-interactive; current codex-mlx-upgrade pause is rejected before signal. Ownership should be generalized explicitly, not impersonated.",
+      "component": "minime_maintenance_guard",
+      "source_refs": [
+        {
+          "line": 213,
+          "path": "scripts/restart_minime_agent.py"
+        }
+      ]
+    },
+    {
+      "behavior": "build_bridge.sh --drain-only passes legacy target/release binary, whereas current process uses retained stage. Exact executable validation rejects it. Direct bridge_drain.py supports the actual staged binary, but drain still requires restart to resume.",
+      "component": "bridge_drain_cli",
+      "source_refs": [
+        {
+          "line": 15,
+          "path": "scripts/build_bridge.sh"
+        },
+        {
+          "line": 143,
+          "path": "scripts/build_bridge.sh"
+        },
+        {
+          "line": 100,
+          "path": "scripts/bridge_drain.py"
+        }
+      ]
+    }
+  ],
+  "minimal_future_window": {
+    "limitations": [
+      "Minime restart requires fresh relevant baseline.",
+      "Agent hold does not guarantee Ollama memory release or prevent other consumers from using Ollama.",
+      "Reduced-contention measurements do not establish ordinary-production performance.",
+      "Bridge drain also closes its transport tasks and cannot meet a restart-free requirement."
+    ],
+    "requires_implementation": "Qualified Minime agent-only coordinator exposing separately owned drain/hold/resume phases and exact current stewardship identity. Retain native NEXT/worker outcome evidence. Keep engine, reservoir, bridge, feeder and sensory processes unchanged."
+  },
+  "mode": "read_only_source_and_runtime_metadata_review",
+  "recorded_at": "2026-10-16T00:37:18.244993+00:00",
+  "runtime_actions_performed": false,
+  "same_pid_pause_resume_supported": false,
+  "schema": "mlx_maintenance_window_review_v1",
+  "source_changes_performed": false,
+  "steward": {
+    "actor": "codex-mlx-upgrade",
+    "pause_generation": 526,
+    "paused": true
+  }
+}

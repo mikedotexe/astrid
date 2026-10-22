@@ -1,0 +1,181 @@
+{
+  "schema": "reservoir_maintenance_design_review_v1",
+  "reviewed_at": "2026-10-16T03:05:08.965007+00:00",
+  "reviewer": "codex mlx_readiness",
+  "status": "proposal_only_unresolved_not_executable",
+  "design": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/design-v1.json",
+    "sha256": "d89206c91b6343ab3278f2b651b011863697c822f804d36b4c0310326db97920"
+  },
+  "verdict": "The bounded two-service transaction is appropriate. Remove a mandatory production restore wrapper, avoid general service management, and separate host launchd qualification from deterministic state-preservation tests. Execution remains blocked on the listed evidence and recovery work.",
+  "recommended_simplifications": [
+    {
+      "id": "no_production_restore_wrapper_required",
+      "recommendation": "Run the actual restore implementation in an isolated process against an exclusive verified copy of stopped state, using the same interpreter, packages, source and config. Compare restored values to the documented restore semantics before starting tasks or a listener. Retain that result, recheck production input hashes immediately before bootstrap, and require complete startup per-handle success with zero restore errors or thermostat warnings before provider bootstrap.",
+      "reason": "run() invokes synchronous restore_all() before creating background tasks or entering serve(). Production already has restore-before-admission ordering; a wrapper would add another launch/provenance/recovery surface.",
+      "evidence_limit": "This establishes deterministic-path inference from identical inputs and implementations plus actual startup logs. It is not direct byte equality observed inside the production process. If such direct equality becomes a hard requirement, a narrowly scoped startup witness is a separate change.",
+      "source_refs": [
+        {
+          "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+          "lines": [
+            1430,
+            1449
+          ]
+        },
+        {
+          "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+          "lines": [
+            1086,
+            1096
+          ]
+        }
+      ]
+    },
+    {
+      "id": "final_handle_inventory_without_new_api",
+      "recommendation": "Retain a read-only list_handles response as an anchor, then reconcile all complete lifecycle logs through handler closure. Derive final batch names from both success and failure entries between the shutdown marker and final-complete marker; require no failures and one successful snapshot per final handle. Bind each final file and sidecar to that stopped batch.",
+      "reason": "The pre-stop API response alone can become stale. The final snapshot_all captures handles once and executes synchronously after serve closes; every attempted name is represented by a snapshot success or per-handle error log. No bridge/Rust or service API extension is needed when the complete interval is retained.",
+      "fail_closed": "Missing/truncated/rotated log coverage, ambiguous boundaries, unexplained lifecycle differences, or any snapshot failure leave final inventory unresolved. Never infer completeness from an old count or the generic final-complete line.",
+      "source_refs": [
+        {
+          "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+          "lines": [
+            635,
+            668
+          ]
+        },
+        {
+          "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+          "lines": [
+            675,
+            700
+          ]
+        },
+        {
+          "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+          "lines": [
+            988,
+            1001
+          ]
+        },
+        {
+          "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+          "lines": [
+            1078,
+            1084
+          ]
+        },
+        {
+          "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+          "lines": [
+            1225,
+            1260
+          ]
+        },
+        {
+          "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+          "lines": [
+            1448,
+            1458
+          ]
+        }
+      ]
+    },
+    {
+      "id": "focused_host_fixture_and_cpu_fault_tests",
+      "recommendation": "Keep the privileged owned fixture focused on OS-dependent two-label ordering, next-spawn override, a cooperative drain longer than five seconds, held identity, held-only removal, same original argv/settings restoration and owned cleanup. Put corrupt/missing snapshot rejection, hash drift, backup atomicity and driver-interruption state-machine cases in tiny deterministic CPU tests.",
+      "reason": "A privileged launchd fixture need not repeat every storage-validation permutation. Both evidence sets must bind the same final orchestrator/helpers; the existing administrator fixture alone is insufficient."
+    },
+    {
+      "id": "finite_transaction_only",
+      "recommendation": "Keep fixed production labels, ports, original configuration and per-role owned controls. Reuse frozen hash-bound identity/hold primitives without editing or bypassing model activation qualification. Do not add a generic daemon, permanent controller, bridge admission API, Rust changes, or automatic replay."
+    }
+  ],
+  "requirements_to_keep": [
+    "Provider generation/check-in completion must be positively accounted for before reservoir shutdown; _push_state catches failures, and journal entries are written before check-in.",
+    "Only direct cooperative signals to exact owned identities; no forced termination and no bootout of a live stateful process.",
+    "Use the established verified-holder boundary, immediate identity revalidation, durable phase records and absence checks. Keep holds and receipts for interruption recovery. A host fixture does not make the holder-check/bootout interval atomic; record the residual race accurately without expanding into generic service management.",
+    "Stopped-state exclusive backup with byte/hash checks, durable writes, full inventory including historic/quarantined files, and no state rollback after new writes.",
+    "No timeout change, handle deletion, replay of uncertain writes, package/model/sampling change, or restart of unrelated clients.",
+    "Exact old runtime/source alignment and original provider settings must be resolved before any signal. New source preparation and a fresh accepted passive baseline are required afterward."
+  ],
+  "restore_test_details": [
+    "Validate every top-level .npz that PersistenceManager.list_snapshots() will enumerate, not only the currently active API names. Historic snapshots can be restored by existing startup behavior; preserve and account for them rather than silently excluding them.",
+    "Preserve all sidecars and require the expected thermostat count and valid complete fields. restore_handle catches thermostat errors and still emits its restored log; zip() can also accept a short list without warning, so logs alone are insufficient to qualify sidecar contents.",
+    "Test actual restore semantics rather than demanding naive equality: event_seq is a maximum of saved/metadata/provenance values; provenance and histories use bounded rings; last-live time becomes elapsed monotonic age; thermostat loading may apply documented conversions.",
+    "The isolated verification copy must be disposable and independent because restore_handle can quarantine incompatible files. Do not point its PersistenceManager at production state.",
+    "Production startup acceptance needs each expected per-handle restored line, matching identity/config, and no restore failure or thermostat warning. The summary restored-count line is based on filenames and is not a success count."
+  ],
+  "source_refs_for_caveats": [
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+      "lines": [
+        970,
+        984
+      ],
+      "meaning": "Restore may quarantine incompatible files."
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+      "lines": [
+        1007,
+        1048
+      ],
+      "meaning": "Metadata, bounded history and elapsed-time restoration semantics."
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+      "lines": [
+        1050,
+        1076
+      ],
+      "meaning": "Thermostat zip/caught warnings precede restored-success logging."
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/persistence.py",
+      "lines": [
+        120,
+        174
+      ],
+      "meaning": "Real loader and enumeration behavior; load errors return None."
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+      "lines": [
+        887,
+        914
+      ],
+      "meaning": "Check-in success versus swallowed failure."
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py",
+      "lines": [
+        1245,
+        1255
+      ],
+      "meaning": "Journal update occurs before reservoir check-in."
+    }
+  ],
+  "bound_read_only_sources": {
+    "/Users/v/other/neural-triple-reservoir/reservoir_service.py": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+    "/Users/v/other/neural-triple-reservoir/persistence.py": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+    "/Users/v/other/neural-triple-reservoir/coupled_astrid_server.py": "d67a0704c7498c49ed0ac36ea5b3d161f74753419f823327f1b1572d9203610f"
+  },
+  "operations": {
+    "source_edits": 0,
+    "live_api_calls": 0,
+    "signals": 0,
+    "service_or_model_imports": 0,
+    "fixtures_or_tests_run": 0,
+    "written_artifacts": [
+      "design-review-readiness-01.json"
+    ]
+  },
+  "remaining_execution_blockers": [
+    "Provider check-in witness specification and qualification.",
+    "Exact final handle reconciliation implementation.",
+    "Actual isolated preservation/restore tests and startup log acceptance.",
+    "Current-host owned two-service fixture and CPU failure/recovery tests.",
+    "Pending override/interrupted transaction recovery and original runtime/source alignment."
+  ]
+}

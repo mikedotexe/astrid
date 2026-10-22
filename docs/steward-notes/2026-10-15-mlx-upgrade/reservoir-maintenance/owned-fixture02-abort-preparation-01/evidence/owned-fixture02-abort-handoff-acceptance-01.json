@@ -1,0 +1,59 @@
+{
+  "abort_root_absent": true,
+  "actual_abort_accepted": false,
+  "actual_abort_executed": false,
+  "command": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-terminal-command-01.txt",
+    "sha256": "1cb3ace6b95a0ed6fe69dcc6c88a13651317c470983dfd477b1a72fcabfd5238"
+  },
+  "command_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/evidence/exact-command-independent-review-01.json",
+    "sha256": "757788dc7d9eabaf1e73bbd5c683edb66ab06415e58866b88e14067876450b3c"
+  },
+  "external_action_reason": "Interactive administrator authentication is required only for the exact generated synthetic reservoir launchctl debug handoff. Do not elevate the whole controller.",
+  "failed_fixture_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-failed-run-root-review-01.json",
+    "sha256": "b2b29e7880cca25812e436657ee42cd34ffd30aa8cadc2547c3a7428a427111d"
+  },
+  "guarded_tests": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-guarded-tests-01.json",
+    "sha256": "d3b2895217b84cff8e4c477e8d902fe33c8a2206322491c16db097eff39cb0b8"
+  },
+  "host_repo_spot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-precommand-spot-01.json",
+    "sha256": "29f8c0563cf96d75d6e9d2b21477fd966a0e977dd11db4e6b4a5d460a4c41ed0"
+  },
+  "mlx_qualified": false,
+  "no_root_control_actions": true,
+  "on_return": "Inspect the new abort result, all raw ledgers/queries, exact saved11/7 bytes and both handles, original journal preservation and executor/action-child/job/port/guard absence. Independently review before closing cleanup. Any failure stays retained; never rerun this or the original command.",
+  "original_fixture_failed": true,
+  "other_automations_changed": false,
+  "preflight": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-preflight-01.json",
+    "sha256": "94bf0ca4165cbebb662de9bb53020c8d3299b19467008782a9a3aa549140a75a"
+  },
+  "preparation_accepted": true,
+  "prepared_at": "2026-10-17T06:36:05.337087+00:00",
+  "prepared_by": "root",
+  "production_qualified": false,
+  "read_only_validation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-release-validation-01.json",
+    "sha256": "26b44c009cd3fd0fedbb6d2a83c96d1191c7288d83a5cb911b033a2fbe797348"
+  },
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/evidence/abort-release-01.json",
+    "sha256": "bc7fe8c32e20f7e16a8f753315d27962fe583e6f7fe30565fbb76712f10fc02a"
+  },
+  "schema": "owned_fixture02_abort_handoff_acceptance_v1",
+  "scope": "exact_failed_fixture_abort_only",
+  "second_source_test_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-independent-review-01.json",
+    "sha256": "00d092b092b7580e0410a5d9ca36de22ed008a7cb2de0596ff681915e8232d64"
+  },
+  "source_test_preflight_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/evidence/independent-review-01.json",
+    "sha256": "258bfd70a692fbb15bea51673e3d374d7fdc615c554999c03579720fb0eb3993"
+  },
+  "state": "ready_for_user_terminal_authentication",
+  "steward_pause_generation": 528
+}

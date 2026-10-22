@@ -1,0 +1,101 @@
+{
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_host.py": "d7b80c071ca1a279d95b237ce5b675865f85dc1c5f0c6565e0694ef09bace466",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_preflight.py": "3ded53f71a6d134640cb89a00ed9cf9c392a9709a8ac39eae67e2737250de1e5",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance.py": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/restore_verifier.py": "e363cc1144c7a92279a3bde5eabfcf7647d8ff6b8e56e445cfd7b560c21a8c16",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_host.py": "91787c5be064fba697ba393a4989fa1daa7619cd838ab0f82e6418973f121cf4",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_preflight.py": "782262b2267ab41e5040c817046f2e21106321e252dda7c86824aded3237045d",
+    "/Users/v/other/astrid/scripts/model_environment.py": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587"
+  },
+  "controller_input_note": "REQUIRED_INPUTS is a subset check. The additive provider_restart_settings key already validates; no schema-key amendment is needed.",
+  "cpu_validation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production-host-cpu-tests-01.json",
+    "sha256": "e5708bcd73a9d76ab1b0066028f42e31f4ec95576eef43e5d7d315b7f06bf323"
+  },
+  "created_at": "2026-10-16T17:20:29.201399+00:00",
+  "durable_layout": {
+    "anchors": [
+      "provider-capture-anchor.json",
+      "reservoir-capture-anchor.json"
+    ],
+    "atomic_pin": "provider_snapshot_plist_intent binds original and restart hashes before replacement; bootstrap_intent binds applied_plist_sha256 and original_rollback_plist_sha256. Failed replacement leaves original bytes; failed bootstrap leaves exact pinned bytes plus original copy.",
+    "controller_journal": "Intended explicit child directory controller/ with exact plan.json and existing hash-chained event-NNNNN.json. No production journal is instantiated yet.",
+    "holders": [
+      "model_environment.py",
+      "hold-provider/",
+      "hold-reservoir/"
+    ],
+    "host_events": "host-operation-NNNNN.json: monotonically numbered exclusive owned records. signal_intent includes wall_time_ns equal to the final-file freshness boundary; debug intent records exact command before invocation.",
+    "owner": "owner.json: reservoir_production_owner_v1, transaction_id, actor, host_binding, preparation_sha256",
+    "transaction_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-transactions/<transaction_id>",
+    "witnesses": "<kind>-witness.json; provider/reservoir-drain.log and provider-drain-qos.jsonl; final-coupling-journal.json; stopped-backup/; reservoir-startup.log"
+  },
+  "entrypoints": {
+    "capture": "ProductionHost(spec).prepare_capture() is explicit, separate from check; private transaction writes plus read-only reservoir list_handles and provider healthz requests; never invoked in this preparation",
+    "execution_cli": null,
+    "host": "ProductionHost(spec, io=None, restore_runner=None); all mutation and witness methods refuse at _allow before I/O because PRODUCTION_EXECUTION_ENABLED=False",
+    "read_only_check": "production_preflight.py --preparation /absolute/new/spec.json; full metadata/code/package/model verification plus host/steward/process/launchd/listener inspection; no service API probes or writes",
+    "restore_runner": "Unimplemented external integration callback (context, backup_witness, spec) -> immutable actual restore receipt path; Host revalidates exact source/runtime bindings before and after restore_verifier.validate_restore_witness"
+  },
+  "evidence_semantics": [
+    "Provider positive idle/empty queue and unchanged log/QoS prefixes anchor a complete coverage window. It is not an admission barrier; subsequent work must be reconciled by complete drain logs, QoS and journal after old-process exit.",
+    "Successful final provider check-in is mandatory before reservoir signal. Journal advancement alone is insufficient because it precedes the swallowing push call.",
+    "Final inventory is reconciled through complete lifecycle/final-batch logs. Every final active handle must have a fresh top-level NPZ and thermostat sidecar in the stopped inventory; historical/quarantined files remain included.",
+    "Large logs are hashed in fixed-prefix streaming chunks at most 1 MiB. Appends after captured prefix are allowed; inode change, truncation, prefix rewrite and incomplete tails refuse. Only bounded captured tails may be loaded by semantic parsers.",
+    "Actual private restored state and all startup per-handle entity/backend/tick/mode lines must agree without restore/thermostat warnings. This is deterministic-path inference from exact stopped inputs and implementation, not direct live byte equality.",
+    "No forced stop, no live-worker bootout, no automatic repeated override/signal/replay, and no state rollback. Unknown outcomes retain guards and evidence for explicit reviewed recovery."
+  ],
+  "limitations": [
+    "A per-handle synchronous snapshot can still block the event loop; the repair yields between handles only.",
+    "Existing launchd holder check/control calls have an unavoidable narrow OS race; exact ownership guards and retained failure evidence remain mandatory.",
+    "Historical loaded Python/model bytes are not retroactively proven by present disk hashes; recorded deployment lineage is explicitly reviewed inference."
+  ],
+  "model_resolution_policy": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/provider-model-resolution-policy-01.json",
+    "sha256": "c4bc585c2a6d691e89193ea1cc9c71b4449499def98e4ae373c9fea9a7629e97"
+  },
+  "model_resolution_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/provider-model-resolution-review-01.json",
+    "sha256": "3224c7b1282df0c50e402de0938ead88febbe5be3e9bbca51c30ed1dfb9e176c"
+  },
+  "not_performed": [
+    "Production service API capture",
+    "Production mutation or signals",
+    "Launchd or sudo fixture",
+    "Actual numeric/model restore",
+    "Source or state deployment",
+    "Production controller enablement"
+  ],
+  "preparation_contract": {
+    "hash_projection": "preparation_digest excludes only execution_review to avoid a circular review hash; runtime_alignment and other input references remain bound",
+    "identity": "Exact fixed provider/reservoir labels, PID/start/argv/listener, current host boot and uid, pause actor/generation/no lease; seven protected process identities",
+    "interpreter_binding": "Canonical SHA256 of the full interpreter_files map, not a single launcher digest",
+    "originals": "Separate owned nofollow hash-bound original source and plist copies for both roles; equal canonical bytes before first operation",
+    "provenance": "Complete validated original model manifest, package RECORD content verification, actual interpreter family, immutable model snapshot, all canonical root Python sources matching preserved source closure, reviewed runtime-alignment inference",
+    "restart": "provider_restart_argv is observed process argv with only its one --model value pinned. provider_restart_plist preserves the original launch alias, every other argument and all plist keys; canonical installed plist is atomically replaced after accepted reservoir startup",
+    "restore": "Six exact source files: cooperative scheduler repair entrypoint plus five unchanged dependencies; original venv Python, complete installed package metadata/RECORD, pyvenv, and full interpreter map; configuration derived from exact original reservoir argv/defaults",
+    "schema": "reservoir_production_preparation_v1"
+  },
+  "production_execution_enabled": false,
+  "required_before_any_production_drain": [
+    "Fresh passing host-memory gate before actual numerical qualification.",
+    "Actual frozen real-service preservation/restore matrix, plus separate actual execution of the NEW restore_verifier in the installed original runtime against private preserved 192-node fixtures; neither CPU fake suite nor the earlier service matrix substitutes for verifier execution.",
+    "Accepted current exact original-runtime alignment/preparation, owned source/plist preservation, current fixture closure, source/runtime/model/package revalidation, and quiet positive capture boundaries.",
+    "Review of the minimal production controller amendments and narrow execution gate against exact helper hashes; current copied controller and Host remain disabled.",
+    "Durable retained-transaction inspection and explicit phase-specific recovery qualification. Existing Host state is in-memory; no production resume or automatic recovery driver exists.",
+    "External private restore runner integration and exact evidence validation before installing the repair; final stopped-production backup restore is a second validation after prequalification."
+  ],
+  "schema": "reservoir_production_host_interface_v1",
+  "stage": "reviewed isolated preparation and blocked Host candidate; no production preparation accepted or executed",
+  "state_restore_interface": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/state-restore-interface-01.json",
+    "sha256": "876fedf668f8f43dff891485655a995c2c870762cc72721ef1cc329139e32547"
+  },
+  "verified_remaining_controller_amendments": [
+    "Admit the exact fixed production scope and replace the fixture-only authorization prerequisite with reviewed preparation/execution evidence, preserving owned-holder checks.",
+    "After provider plist pin, invariant expected provider_settings must change to provider_restart_settings at the exact phase.",
+    "Provider replacement argv must equal the explicitly reviewed provider_restart_argv; old drain identity stays unchanged."
+  ]
+}

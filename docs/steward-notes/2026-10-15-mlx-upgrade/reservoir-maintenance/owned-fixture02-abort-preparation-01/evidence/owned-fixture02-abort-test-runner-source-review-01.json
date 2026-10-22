@@ -1,0 +1,37 @@
+{
+  "accepted_guard_structure": true,
+  "actual_os_acceptance": false,
+  "operations_by_reviewer": {
+    "process_queries": 0,
+    "runner_edits": 0,
+    "service_calls": 0,
+    "signals": 0,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "production_qualified": false,
+  "remaining_pre_run_checks": [
+    "Final root-owned test plan does not exist at this review checkpoint; its expected count/modules/source map/interpreter closure/protected files/original inventory require final review against authored tests.",
+    "Conditional compatibility point: if authored helpers/tests use os.fdopen(fd, writable_mode), the current integer-FD rejection can cause a legitimate scratch-write refusal. Only a uniquely matched regular nonsymlink scratch-file inode could be allowed; do not allow arbitrary integer descriptors. No such invocation was executed to test this.",
+    "Audit hooks constrain the reviewed fake-test call path; they are not a general isolation sandbox for arbitrary hostile Python."
+  ],
+  "resolved_finding": {
+    "issue": "Original writable() allowed exact result paths for both symlink creation and unrestricted later write opens, allowing a result-path symlink to escape scratch confinement.",
+    "resolution": "writable() now accepts scratch paths only. The open-event branch separately allows only exact output paths after tests, with O_CREAT|O_EXCL, canonical parent and no lexisting leaf. Output paths receive no mutation or symlink permission."
+  },
+  "reviewed_at": "2026-10-17T06:16:05.870641+00:00",
+  "reviewed_guards": [
+    "Before target import, verifies runner/plan-provided source hashes, selected interpreter membership and family hashes, protected closure and exact original inventory; creates one fresh private scratch directory and sets tempfile.tempdir.",
+    "Local project exec must match the bound source map at execution time. Numerical/hardware/service import roots and process/socket/ctypes/signal audit events are refused; tests must use inert fakes.",
+    "Scratch write paths resolve within the scratch root. Relative dir_fd mutation paths require exactly one current scratch-directory dev/inode match. Leaf-only unlink/rmdir/rename handling can remove a symlink without granting writes to its target. Foreign integer descriptors are not accepted.",
+    "Checks expected positive test count, exact modules from final plan, successful suite with no skips/forbidden actions/imports, unchanged source/protected hashes and unchanged original inventory. Output log and receipt are new exclusive files."
+  ],
+  "reviewer": "codex-mlx-upstream",
+  "runner": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture02_abort_tests_01.py",
+    "sha256": "84d63c78c6059111e99881e9a60898a9d10ad9da5986d21fb5ed477e5d3b882b"
+  },
+  "schema": "owned_fixture02_abort_test_runner_source_review_v1",
+  "scope": "static_guard_review_pending_final_test_plan_and_author_source",
+  "test_execution_authorized": false
+}

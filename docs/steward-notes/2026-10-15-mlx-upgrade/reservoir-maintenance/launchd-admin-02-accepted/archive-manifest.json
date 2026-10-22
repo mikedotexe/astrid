@@ -1,0 +1,1405 @@
+{
+  "schema": "accepted_owned_launchd_fixture_archive_v1",
+  "created_at": "2026-10-16T16:59:29.697095+00:00",
+  "scope": "Owned fake two-service launchd lifecycle and recovered cleanup only; production/real persistence/MLX unqualified",
+  "accepted": true,
+  "production_qualified": false,
+  "files": [
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py",
+      "relative_path": "candidate-v2/maintenance_fixture_worker.py",
+      "sha256": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+      "bytes": 7142
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/qualify_reservoir_maintenance.py",
+      "relative_path": "candidate-v2/qualify_reservoir_maintenance.py",
+      "sha256": "0b0017649c2974eb7d64e91d6719a5e87b8367c1dc148f3c54dd704673bc6c36",
+      "bytes": 31724
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/recover_owned_fixture.py",
+      "relative_path": "candidate-v2/recover_owned_fixture.py",
+      "sha256": "f88247e4e611f9bb1291af4b805511cead8477e4dac5277de18d80655ba85b5e",
+      "bytes": 19985
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/recovery-target.json",
+      "relative_path": "candidate-v2/recovery-target.json",
+      "sha256": "dc7feaef1c7b983fb283049793aca3c941ca26db764a33e146727919cfa2e92b",
+      "bytes": 21415
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/reservoir_maintenance.py",
+      "relative_path": "candidate-v2/reservoir_maintenance.py",
+      "sha256": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b",
+      "bytes": 23609
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/test_maintenance_fixture_worker.py",
+      "relative_path": "candidate-v2/test_maintenance_fixture_worker.py",
+      "sha256": "d7be17da230ccbe5a1852a30d0d72e2149d4a79993a7d08e78ff058018d563be",
+      "bytes": 4019
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/test_qualify_reservoir_maintenance.py",
+      "relative_path": "candidate-v2/test_qualify_reservoir_maintenance.py",
+      "sha256": "efae01a20ef28da4115d2e34ea545124138c2b20a0fabbc45576617f12961c7b",
+      "bytes": 13625
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/test_recover_owned_fixture.py",
+      "relative_path": "candidate-v2/test_recover_owned_fixture.py",
+      "sha256": "da8e8387bc6f9e3a54507e902659053c14433f55924a24cfacf3c1d4b31fcc5d",
+      "bytes": 15740
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/test_reservoir_maintenance.py",
+      "relative_path": "candidate-v2/test_reservoir_maintenance.py",
+      "sha256": "67275c384b058c2f90977d3ec8b60e29c1788d47f08cfa1f983c6dc31bfd0a15",
+      "bytes": 18129
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/maintenance_fixture_worker.py",
+      "relative_path": "candidate/maintenance_fixture_worker.py",
+      "sha256": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+      "bytes": 7142
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/qualify_reservoir_maintenance.py",
+      "relative_path": "candidate/qualify_reservoir_maintenance.py",
+      "sha256": "8d6a2bb549f4f9115285d0d1bdc5247b3d88a5c4cb135116ef8c17722c4bb329",
+      "bytes": 30801
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/reservoir_maintenance.py",
+      "relative_path": "candidate/reservoir_maintenance.py",
+      "sha256": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b",
+      "bytes": 23609
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_maintenance_fixture_worker.py",
+      "relative_path": "candidate/test_maintenance_fixture_worker.py",
+      "sha256": "d7be17da230ccbe5a1852a30d0d72e2149d4a79993a7d08e78ff058018d563be",
+      "bytes": 4019
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_qualify_reservoir_maintenance.py",
+      "relative_path": "candidate/test_qualify_reservoir_maintenance.py",
+      "sha256": "d7ea6b81b645db1faa8b7f4647380276f8d887eb58cda3b158bee65a5f955eb5",
+      "bytes": 10702
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_reservoir_maintenance.py",
+      "relative_path": "candidate/test_reservoir_maintenance.py",
+      "sha256": "67275c384b058c2f90977d3ec8b60e29c1788d47f08cfa1f983c6dc31bfd0a15",
+      "bytes": 18129
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-recovery-admin-01.json",
+      "relative_path": "evidence/fixture-recovery-admin-01.json",
+      "sha256": "cd95fde6bd6bffb05bd5910c1fbce7702398c7e97f7d0f74c2ed5c3fd6b9b67b",
+      "bytes": 2551
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-recovery-independent-review-01.json",
+      "relative_path": "evidence/fixture-recovery-independent-review-01.json",
+      "sha256": "a5917de34e6dfaffb83ab29195e095c3d63d641fc6020553a2d3fd26885324a5",
+      "bytes": 6068
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-recovery-protected-identities-01.json",
+      "relative_path": "evidence/fixture-recovery-protected-identities-01.json",
+      "sha256": "1de020474b8cf72fb07df0f1f37edca94d531547704addb7a3dae1f09285f052",
+      "bytes": 2863
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-v2-independent-review-01.json",
+      "relative_path": "evidence/fixture-v2-independent-review-01.json",
+      "sha256": "99ee4a2f235daf41a0731f9f0f6169aa6f256de447256e4c72be66ed7e7e7a36",
+      "bytes": 3371
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-v2-recovery-tests-02.json",
+      "relative_path": "evidence/fixture-v2-recovery-tests-02.json",
+      "sha256": "f0336d123698341d8af4fdba9b4a0ffb3b1813fd8998659ac567ee552ab474f3",
+      "bytes": 3104
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-v2-recovery-tests-02.txt",
+      "relative_path": "evidence/fixture-v2-recovery-tests-02.txt",
+      "sha256": "332c72c04799012c948018e3c7abb8cdb49ac30825e034c81d90b163dccaafc6",
+      "bytes": 14652
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/launchd-fixture-admin-01.json",
+      "relative_path": "evidence/launchd-fixture-admin-01.json",
+      "sha256": "9c37ee486cf38c860b63301ea6d287752644750b34f37f4088a8438aefd24dca",
+      "bytes": 5319
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/launchd-fixture-admin-02.json",
+      "relative_path": "evidence/launchd-fixture-admin-02.json",
+      "sha256": "2620f9824fa1c5fc8f53396c022e55a5bc651a35b43a2637fbe1029e932d6f79",
+      "bytes": 4418
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/ack.provider-74933-1359333898171958.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/ack.provider-74933-1359333898171958.json",
+      "sha256": "572aa5e9b66f4dd2ce7f39eb43d059b68cbcd41a1a1f991f2cd144017447ebc7",
+      "bytes": 120
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/ack.provider-76512-1359352346972750.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/ack.provider-76512-1359352346972750.json",
+      "sha256": "722ad35e0990b3675ee25d0467d9b5d6ec138600240e71a06b3b176d7a62cf45",
+      "bytes": 120
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/fixture.owner.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/fixture.owner.json",
+      "sha256": "a3572d6536f9614d9e5a64a1ba02a0c6fe5dccfbec0b1e89c8b0d75c85096cfc",
+      "bytes": 235
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/hold-provider/held/75572.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/hold-provider/held/75572.json",
+      "sha256": "f1754b3f40393970ff4c07338b2201c15a9b08de7facefe17050893d31bc3594",
+      "bytes": 421
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/hold-provider/held/77047.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/hold-provider/held/77047.json",
+      "sha256": "0c158c598196326c0fddd2bf972b158122d3135cb8547f6a5dda728790d2e94f",
+      "bytes": 424
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/hold-reservoir/held/76127.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/hold-reservoir/held/76127.json",
+      "sha256": "bc9db13cf760b0df4cf99ed7dcb2dbd3ea268890e431578cb21e73a314264e9d",
+      "bytes": 421
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/hold-reservoir/held/96352.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/hold-reservoir/held/96352.json",
+      "sha256": "151fdc1f4ea7cb6d5f8f5ee975c0c95459cef8ad884b963da325f3b723459ca6",
+      "bytes": 424
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00001.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00001.json",
+      "sha256": "b2df151377904b8439c65f0f2c2730de784a28947917c01941c4731915b1bf84",
+      "bytes": 82
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00002.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00002.json",
+      "sha256": "f98b8d210ede2bad2ddb551082d5fbd880162b8c27745e1d73bc7ff1f3e00a0f",
+      "bytes": 659
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00003.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00003.json",
+      "sha256": "68a55c38b1268e82ba8a5ef13683e3b3db2b9df648e08d067a4ac9ea89856d77",
+      "bytes": 81
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00004.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00004.json",
+      "sha256": "ca6181a3d115b4de9b143f272a913ec986f41c6ba228150a36338455bfd75f08",
+      "bytes": 657
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00005.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00005.json",
+      "sha256": "3f6da1af6ba27b30aaf9e4f3a7bc7a316e05f1f12ee03fe6bb784faf10655a6c",
+      "bytes": 205
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00006.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00006.json",
+      "sha256": "dbeae3c600a5d2f5326da7279f1d30bf225897bfe7d9787637cdb6854911c55f",
+      "bytes": 701
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00007.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00007.json",
+      "sha256": "4542c1f7e17e55521cef10fa7123c3a86fa3c188f2856c3704654c6278641b34",
+      "bytes": 91
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00008.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00008.json",
+      "sha256": "a78bc94b79997403c39af9048453e8af3cdc9dd85a2ccac3c17dc02cedf1fc7f",
+      "bytes": 673
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00009.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00009.json",
+      "sha256": "b94ba3ffb45d4208638dcc897bad385aeca8a5acb4d54cd494f175f63cbe7d42",
+      "bytes": 653
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00010.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00010.json",
+      "sha256": "514dabd5cf315906beec1f86352e4852d2993c85d13af220b602869f125794fa",
+      "bytes": 643
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00011.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00011.json",
+      "sha256": "754b256d66b75157d9a89f0e11206ff8a30345af678f43d908c3833fcb9fa75a",
+      "bytes": 639
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00012.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00012.json",
+      "sha256": "2f4ea57bdd7afbcac63af699e39c461052e287057c031e144eab9a876c2fe2ea",
+      "bytes": 205
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00013.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00013.json",
+      "sha256": "1dfe6d14bb4b11fc3ce3b5531b729b743fd42f3ef2612a887efaf55dce44211e",
+      "bytes": 704
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00014.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00014.json",
+      "sha256": "f0767130658eee4df5bea39e3e960aa2964e556c45c14441fd3a220aedaf5247",
+      "bytes": 93
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00015.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00015.json",
+      "sha256": "4dd8ce206c61885106354eb6bfc2ba18e1be7740f506b461e11123fa104814fe",
+      "bytes": 676
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00016.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00016.json",
+      "sha256": "d903a8369c1543b974c4da932337f01e56983baef057410f15da55865b6e79af",
+      "bytes": 655
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00017.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00017.json",
+      "sha256": "467b9cc9f8aa8057129f277e6cced2c1e7bfbf1db37fb9f1c8c71ea029ca50eb",
+      "bytes": 645
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00018.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00018.json",
+      "sha256": "359f3af590094e5a93ea61cb2a5b72f0da8e46824865e7d8cadd8eb409683290",
+      "bytes": 641
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00019.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00019.json",
+      "sha256": "a5a9a84e779668e684b2c8cceaded106997d17462507ef97192909802fa0ebf8",
+      "bytes": 82
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00020.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00020.json",
+      "sha256": "b72cddd2aff01cd163d106db0de41217c3b153b82e41a0f375be734ed2f257ea",
+      "bytes": 659
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00021.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00021.json",
+      "sha256": "02e8a845a78afc76acb141f0675ea2f46508a6563245e3c1b1ac70c51f863b96",
+      "bytes": 80
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00022.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00022.json",
+      "sha256": "3bd68ed7467fbca7e4602da5033ca537be7e518fa02f33f17fb3d786ca6c6c07",
+      "bytes": 656
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00023.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00023.json",
+      "sha256": "f3ec46798d35e422343bc2198ceec7b73235cc32b55a2f80eab062a8b89ee6a2",
+      "bytes": 208
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00024.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00024.json",
+      "sha256": "aa061d9b4a2183ee0410642c8dee4b136dcd04f84f31447dac1a5072b8612150",
+      "bytes": 700
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00025.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00025.json",
+      "sha256": "14d976c0ae2836b0fae513a908ac69e25071f654e120cd99cb77d7fae7deb0e1",
+      "bytes": 92
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00026.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00026.json",
+      "sha256": "16596157bdbca2b5888fe6788e517cdddfcf85e8421b5bde6d4ec0a403b4e1e1",
+      "bytes": 674
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00027.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00027.json",
+      "sha256": "6c344276a67c32c286dbf8e48f47cef93a11506e7f27a1af57d647b4ddd6f3d5",
+      "bytes": 653
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00028.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00028.json",
+      "sha256": "f2fc0ccfc7405a69c859007cb40e5dfc2ac752b068273a2c889cd538fcbf7d98",
+      "bytes": 291
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00029.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00029.json",
+      "sha256": "eff20e35633f6237704e3ace07bf41cedcff6c55ce47cdc60b2b6da1b4ab9238",
+      "bytes": 643
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00030.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00030.json",
+      "sha256": "1d86d5fe36a05eeb2096b6ade69faff04bca14fd40a20682777bd64b4b57a7f9",
+      "bytes": 639
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00031.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00031.json",
+      "sha256": "a0d1117362d9a5ed997e173c17ae4a3f899033c5495fdc93207ce082461ee414",
+      "bytes": 209
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00032.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00032.json",
+      "sha256": "7acc3b477c3e11e9c438ac3f9eb1670f13b7974774bcb16765df9f10b90c8233",
+      "bytes": 723
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00033.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00033.json",
+      "sha256": "002822a767116f47c9c5cd0afd9901ffb61b98047425053c106d470395a72166",
+      "bytes": 207
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00034.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00034.json",
+      "sha256": "a473f2c83e2416f5406cb6b5d45dd3e653d7839c03c5cd558b2db3af268b6da5",
+      "bytes": 282
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00035.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00035.json",
+      "sha256": "3e51ee93914d00fe3bea88e991537cd7c7a3c2527615c7282eff71830e35aafd",
+      "bytes": 720
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00036.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00036.json",
+      "sha256": "62c7d075303594fce546bc6baf191c7d68ffc077b11e854b2a31ac433ed426b9",
+      "bytes": 178
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00037.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00037.json",
+      "sha256": "e4ca0de74e1b6598b689f3d7017c688a5a1a286118833dfb73892e86dbbed085",
+      "bytes": 673
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00038.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00038.json",
+      "sha256": "92004d86b2d0ec496e86089e0fadf0bb36536c608da649fcab3bb2931e240ce7",
+      "bytes": 655
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00039.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00039.json",
+      "sha256": "353e94c0260505b14f3f81f0c7f47b13a5cd674e4fbf48f6354be344d5e3c29b",
+      "bytes": 643
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00040.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00040.json",
+      "sha256": "1248b24305e3bdfa29269fd95dd898f43048187a17b863b738053bfa97039076",
+      "bytes": 640
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00041.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00041.json",
+      "sha256": "a59fbba161eb0257364b27f3eb642545f4040edb25aa0bf1fc7a88ffc95ec891",
+      "bytes": 266
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/maintenance_fixture_worker.py",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/maintenance_fixture_worker.py",
+      "sha256": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+      "bytes": 7142
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/model-never-opened.sentinel",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/model-never-opened.sentinel",
+      "sha256": "3eb134fc6cbf749e6a755423f195ba5f6d0a9027e57fca882075b26800b88229",
+      "bytes": 32
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/model_environment.py",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/model_environment.py",
+      "sha256": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+      "bytes": 15235
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/preserved-state.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/preserved-state.json",
+      "sha256": "3b80389821271032a06532d30ad929e17f2c33d8b88c56913c943e311b652333",
+      "bytes": 61
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/provider.events.jsonl",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/provider.events.jsonl",
+      "sha256": "3c287248aa3e133c85a070eb2b11ea12be2f63ff1598c4706382a73adf74a1fd",
+      "bytes": 4088
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/provider.plist",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/provider.plist",
+      "sha256": "5a3326aa6ee03ccdf530a05c4222b58e4f9812332134ccf92ae1b70ebcdbab2d",
+      "bytes": 1694
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/provider.stderr",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/provider.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/provider.stdout",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/provider.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/recovery.lock",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/recovery.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/request.provider-74933-1359333898171958.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/request.provider-74933-1359333898171958.json",
+      "sha256": "eeba3da1438b6e68479c9c3259831b2d286f8adc6664343d3c20039abb0509d5",
+      "bytes": 159
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/request.provider-76512-1359352346972750.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/request.provider-76512-1359352346972750.json",
+      "sha256": "957935574670a1a5622af34406985dd2fdd191941c2adc5c2f05b7d4ca5c64d4",
+      "bytes": 159
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/reservoir-repair.marker",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/reservoir-repair.marker",
+      "sha256": "8fbc73e27d7a41a992255ffe559852e989ca14016d83d8b3130dadf592cfaf21",
+      "bytes": 24
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/reservoir-source.marker",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/reservoir-source.marker",
+      "sha256": "8fbc73e27d7a41a992255ffe559852e989ca14016d83d8b3130dadf592cfaf21",
+      "bytes": 24
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/reservoir.events.jsonl",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/reservoir.events.jsonl",
+      "sha256": "f989fe3ae145c4a2cf93c27c3d130525e9800fdceabf7b4ba71506d25d140496",
+      "bytes": 5157
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/reservoir.plist",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/reservoir.plist",
+      "sha256": "7c3d146e766e9a5fe7d6c0b9d525125075140d52207a5173b7a43fa1df1f620b",
+      "bytes": 1698
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/reservoir.stderr",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/reservoir.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/reservoir.stdout",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/reservoir.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/state.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/state.json",
+      "sha256": "59ea9f4f2dd213f27a0933ebe125b631ece43d1dd4d8d2526503974f1723717c",
+      "bytes": 66
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00001.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00001.json",
+      "sha256": "c645cd3485ac0796f6e92433cc2f5f82b63ec2c56c3a8110e44eb8132554f8ca",
+      "bytes": 528
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00002.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00002.json",
+      "sha256": "db0ba5c64bf9f79e47ea16b22c50bfac346bc14ed29c6c6e206510e2c5efed58",
+      "bytes": 250
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00003.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00003.json",
+      "sha256": "7a3c79512d95097913a3f8f71b79a8982989a8761d251b2237530ec834ecbc64",
+      "bytes": 392
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00004.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00004.json",
+      "sha256": "d9a37f463886248130431a27e832ad9a7c1a8429647e8115b7551a95006184cc",
+      "bytes": 253
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00005.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00005.json",
+      "sha256": "3e2c57259683168f0e96a5b8ddde2f01e4e8da890fc528c926ac96306eb7895c",
+      "bytes": 457
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00006.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00006.json",
+      "sha256": "0fad5031d85eca0fda9fa881ba50cc7c782bdaed374534826f32cb7b95ecf667",
+      "bytes": 250
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00007.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00007.json",
+      "sha256": "c318499253218a6ffcd7a1ef2c21f6d03c5d2ac779948aa601fd5d66074adbf3",
+      "bytes": 879
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00008.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00008.json",
+      "sha256": "46826cd68685b638fd2eceaaa2dbaf55d0693ad45ecb18eff7c5140963034df4",
+      "bytes": 781
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00009.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00009.json",
+      "sha256": "1a24ef191041f38ce95f8b28a1a83628b31f89daed1f48508b2ffa6e2fe3e601",
+      "bytes": 2999
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00010.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00010.json",
+      "sha256": "d36a8b07077b5b26993ac8e718e74f6ed9c629a42a86e65849cc854ea427c41a",
+      "bytes": 251
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00011.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00011.json",
+      "sha256": "2277ff1556132c4ae4a6c971fb7bb440034b9d6caada20742a46c88b6760a2ad",
+      "bytes": 832
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00012.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00012.json",
+      "sha256": "78fce93b8c3cde91e5b3919f6a640da1b0b2b6f60c823349a50aaf01e6da73db",
+      "bytes": 220
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00013.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00013.json",
+      "sha256": "0e0f233594c8d4fc6c2520cfa6e13678fbd25764866c5af45299336549acb9ea",
+      "bytes": 252
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00014.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00014.json",
+      "sha256": "f848c13bff29ad4d0af51044631b509a6ee437bbf115a7851700eb9371f36a89",
+      "bytes": 394
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00015.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00015.json",
+      "sha256": "a47cf62af61e1dbd18db69be0076195abe13069319b2606c0f9e12cef82ed5ed",
+      "bytes": 255
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00016.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00016.json",
+      "sha256": "4ca9a1ccf69444a389e2c1d9e6b9778d4ba546005c027db5972f6c7a7782a423",
+      "bytes": 460
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00017.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00017.json",
+      "sha256": "197020c58ccb7dab7c2cda92d93d15b75fab1b96fd20318ca4a8324b3bf47adb",
+      "bytes": 252
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00018.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00018.json",
+      "sha256": "99061a129e0e01186bc54270a918220a54b03ae30ba9c1025ebb90049ba7dfe0",
+      "bytes": 882
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00019.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00019.json",
+      "sha256": "7770b2983a16d8ac9c1916053c33a0e1715cf082b21d619ca1932085d4a12fd5",
+      "bytes": 784
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00020.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00020.json",
+      "sha256": "1b13c908fde16a3a9a9bd5188a14710900d1999dbec15ee9bc40d95053e011b9",
+      "bytes": 3310
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00021.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00021.json",
+      "sha256": "211ef280d6e6505fca4dfb1a60a25eefc23a509aae3cbcd1a21a1c8bcbb0b67e",
+      "bytes": 252
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00022.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00022.json",
+      "sha256": "d0890fd6821254961e41102bef3a43824f2bf66375ece62c93b21243986a6971",
+      "bytes": 834
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00023.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00023.json",
+      "sha256": "a053ce142c7d865869e113e5cfba77f9db4ce2d12cbe94bc17c9e8030d54fba0",
+      "bytes": 221
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00024.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00024.json",
+      "sha256": "f402e0df28199851da387827a3e3ace87f5611610ae1f6ae5875be07a69bad41",
+      "bytes": 1073
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00025.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00025.json",
+      "sha256": "4eb13f80c6a8eb6b15a9c8597dde86838d8cf1c0d7bc43a931c6863c1f9c1ec2",
+      "bytes": 1260
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00026.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00026.json",
+      "sha256": "41e2d9071724b8166bc523c25fcbf3796283aca0ce9801ac015da9e5c18247b8",
+      "bytes": 248
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00027.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00027.json",
+      "sha256": "b33a897704ac2ae5de224077dda22107dbb55fbf0d7df8c4d210376d3196c6f1",
+      "bytes": 377
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00028.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00028.json",
+      "sha256": "2a60cc65e15e7ae43f766aa5a18013e141af3c2088621d4f6153548810bb7a9e",
+      "bytes": 259
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00029.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00029.json",
+      "sha256": "7a8d2d3d4b9417da1f9fcf077852ca78394dd41d4c88e31d7cad7f24847153b4",
+      "bytes": 851
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00030.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00030.json",
+      "sha256": "45647871f19f3a8e49e413dcc3f6425545b9c7583be505e57505a60bed80d461",
+      "bytes": 2423
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00031.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00031.json",
+      "sha256": "968628beb584e8b7a570b00884041f6c2b8d2e97646b6f088a4edcb2d2f9539a",
+      "bytes": 258
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00032.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00032.json",
+      "sha256": "2ee81c742d5ecb294de4a70633fcff108626ded8402e8ee80f4323442e999524",
+      "bytes": 849
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00033.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00033.json",
+      "sha256": "e9653e9d3536ea9f17709c8a19849cb0ac24e709e0fa5871f8ba26fc615e602c",
+      "bytes": 2351
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00034.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00034.json",
+      "sha256": "e38ecf871d95cf2bd70f8c1d68f07d8a84da8fad7849b34478d61aaa4b645f97",
+      "bytes": 252
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00035.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00035.json",
+      "sha256": "ea6f8996bd2f0b4b317c763e35fcdbe2ec80d9b7c83f499cd16d3b02bf4c2978",
+      "bytes": 282
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00036.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00036.json",
+      "sha256": "3d84703fcced081d2ca7f00f015847db70ad5e1fad5ed4448e360f102a9ce8cb",
+      "bytes": 253
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00037.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00037.json",
+      "sha256": "cedfc185201a15ee52ba266c55be8173e43c4ce38a59dd959c688d9cae7942cf",
+      "bytes": 283
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00038.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/event-00038.json",
+      "sha256": "658e2cd9a4bff4db5ab0d143a36150e64fffc7f3c760b2b7b14e7999db347724",
+      "bytes": 2219
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/plan.json",
+      "relative_path": "evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/transaction/plan.json",
+      "sha256": "8411cdbe38e4c417512aa7f0eb0ee21eff19abfdd6bdf93e1283763c9013fa3f",
+      "bytes": 2442
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/ack.provider-96402-1365871845979958.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/ack.provider-96402-1365871845979958.json",
+      "sha256": "940e5f1906d218c3970b0aff233f3414855c005b3cc59663841a6d3c7f7e1c45",
+      "bytes": 120
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/ack.provider-97743-1365887317269208.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/ack.provider-97743-1365887317269208.json",
+      "sha256": "4044166c6b49bb108530be5503eba98c3894edc05a6ee4e97f71eb6267329fb6",
+      "bytes": 120
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/fixture.owner.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/fixture.owner.json",
+      "sha256": "899e9973616ebf4dba0ccd9338241a333e552c6ce58c6cb05a16abfc2c505b12",
+      "bytes": 235
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/hold-provider/held/96943.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/hold-provider/held/96943.json",
+      "sha256": "8ed2e41dd440c036cc2483caf38b045b51d25d80825f65e47fea93b5242ed926",
+      "bytes": 421
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/hold-provider/held/98323.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/hold-provider/held/98323.json",
+      "sha256": "734630314a001d618098e689c9431404e6b7187a0fde7af02397c99a72a7d544",
+      "bytes": 424
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/hold-reservoir/held/97479.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/hold-reservoir/held/97479.json",
+      "sha256": "3081680062541115eec302cb753766cae07bda118af4b20a66baed01701be67b",
+      "bytes": 421
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/hold-reservoir/held/98749.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/hold-reservoir/held/98749.json",
+      "sha256": "8d01d4c9e353ecb4513f5fd54c6849a9aa67c26f924b1b4277ab4d31d8bd44e2",
+      "bytes": 424
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00001.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00001.json",
+      "sha256": "6896192e2b4f4132fe5a26bf4d97fbc1f03ab0178cf72c6d0c6a9b470d828607",
+      "bytes": 82
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00002.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00002.json",
+      "sha256": "22030333f337a0b85e345cf848c179e7a721fecdd5280fc4a995a2ef488d6adc",
+      "bytes": 659
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00003.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00003.json",
+      "sha256": "3035141d7a46dfb4825e3813e97c6255ac39ff0eab6fd38c814e4ea6f27e7d5f",
+      "bytes": 81
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00004.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00004.json",
+      "sha256": "3b32522fc86927432e7b9d54a062bbc136cbe0d9f2120e7cffaad6f96376cd6c",
+      "bytes": 657
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00005.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00005.json",
+      "sha256": "2356ea58644bac0a54c419410ff737c41709282a0a7d58c1c9ef17bd4b81371c",
+      "bytes": 205
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00006.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00006.json",
+      "sha256": "4760ce5d357b9e151b9f14f2420291c6f3df80ad7532da2a5e119fd7f00be8e1",
+      "bytes": 701
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00007.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00007.json",
+      "sha256": "7de1682a64e049504325c25546ec8678b5751ed0806d50206ce6531ecd0def6d",
+      "bytes": 92
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00008.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00008.json",
+      "sha256": "e562594a90c6a57f46a9c2d40ea56825586fa37183c8bf0b52a43baea041204f",
+      "bytes": 674
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00009.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00009.json",
+      "sha256": "2224dbbb5940835ddbbdefe86792fd4e026e657a862def6145bcc0994bbef730",
+      "bytes": 653
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00010.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00010.json",
+      "sha256": "796db51e1372f833c72191b89418122e4de6e58e986331a583a7b92f3e666b51",
+      "bytes": 643
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00011.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00011.json",
+      "sha256": "96280f06bda841376254ecff2eb783c7e525f77e152c3ffee5ec8329620cd43c",
+      "bytes": 639
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00012.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00012.json",
+      "sha256": "ae4815afd92a85eefdc056ccbea2f8cd50e51ebd567758512b38a0f40dc92d42",
+      "bytes": 206
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00013.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00013.json",
+      "sha256": "81785d84e3960f5e9769a01a69df9676ca03383015d745a86b760809ad35fb07",
+      "bytes": 704
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00014.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00014.json",
+      "sha256": "27531f70a8147111dd0db75e9581dfa091bcdede545bc16915f59712e3e68ae9",
+      "bytes": 92
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00015.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00015.json",
+      "sha256": "59840c0c0edcf2b2329262472106769c36155e5ea9825053c1382511f3143c44",
+      "bytes": 676
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00016.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00016.json",
+      "sha256": "f39d6a82a9e1822dcc33ca3a32042b8c05ff8b4358366e74f7ae04697de53836",
+      "bytes": 652
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00017.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00017.json",
+      "sha256": "7d6a0d2d541430f3a0a76a4abe190a8ef0a168011fcca21211b2de8b12343516",
+      "bytes": 645
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00018.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00018.json",
+      "sha256": "512e259f89d9704d4cc1fc4776e211282d49a978eb27a07769b29db33ae1b9a3",
+      "bytes": 641
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00019.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00019.json",
+      "sha256": "e41ef43b75a8348fa9ba86664e7ba76d688356707eb4af7ce58b586624fa7c43",
+      "bytes": 82
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00020.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00020.json",
+      "sha256": "58e8fe496a6548dd44e0e75c6e95578dcef5afc85b6db7072a478f007246a633",
+      "bytes": 659
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00021.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00021.json",
+      "sha256": "edd21f4d67d98f1363c466662927da64f94056f10366e59160de329c1ba8cd7e",
+      "bytes": 80
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00022.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00022.json",
+      "sha256": "0677ef78cb2f23b7a3fba1828892545ad6b0b4fd74c2789646be4e9af80f1dbe",
+      "bytes": 656
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00023.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00023.json",
+      "sha256": "d9152c7c274663a3c96c9f8339bbac4788c02cddde137b3cbe84362a921b58be",
+      "bytes": 208
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00024.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00024.json",
+      "sha256": "ebc3522b23ecc91f784923acb38bfac80cb6b7f399480a356cc5ea63be2f110a",
+      "bytes": 698
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00025.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00025.json",
+      "sha256": "fa3a29d2aa604f96cf59da35f922d2c0b685a0bcb101f849b34b715afa5aa2f9",
+      "bytes": 92
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00026.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00026.json",
+      "sha256": "1608555b703dfffca9c424e7fb15a1ef70efd41f3b426da4d51d474e08d7525c",
+      "bytes": 674
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00027.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00027.json",
+      "sha256": "6f269aab5b00a84dffb43357e567411840a901487e22fc4779945df3f81dee1f",
+      "bytes": 653
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00028.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00028.json",
+      "sha256": "34789e253c01d0e533247381209fa35131246f8647a4d5975ec214877505f281",
+      "bytes": 643
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00029.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00029.json",
+      "sha256": "132b83fb80bdb5249ca31194497173de9af24bedf12a9f97b0212bfe9fcab5cd",
+      "bytes": 639
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00030.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00030.json",
+      "sha256": "37dfd430d364f9719e10d671b333a4a0ca0fa00773373b99ecdad4e88b57a0ce",
+      "bytes": 208
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00031.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00031.json",
+      "sha256": "089ce1b50fc9fcd212357621b85068ba10e4f8114c9c98bfbbda6ec4b09911f6",
+      "bytes": 702
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00032.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00032.json",
+      "sha256": "e52a074a8805064f58d19cfbd83b16303b8ce49a4374d6b551ed41a5a8775255",
+      "bytes": 93
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00033.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00033.json",
+      "sha256": "4a2ec8868b7044e948a5967e80c229038d24b9776630dbec0ca0dd0b21c72cc2",
+      "bytes": 676
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00034.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00034.json",
+      "sha256": "49df45fca54f047f861951c542b11488eb1780a5a4c216bc3b8baf5fde4b6e9f",
+      "bytes": 655
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00035.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00035.json",
+      "sha256": "064fd56195fb89021f87fa0b5838c6b704e6c8da804c53f694a97a145bcbca0b",
+      "bytes": 645
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00036.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/host-operation-00036.json",
+      "sha256": "7c32523ffcb938a45e7f1c204efc7923d08736cd1e556d5beca6a67151e32a6d",
+      "bytes": 641
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/maintenance_fixture_worker.py",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/maintenance_fixture_worker.py",
+      "sha256": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+      "bytes": 7142
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/model-never-opened.sentinel",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/model-never-opened.sentinel",
+      "sha256": "3eb134fc6cbf749e6a755423f195ba5f6d0a9027e57fca882075b26800b88229",
+      "bytes": 32
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/model_environment.py",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/model_environment.py",
+      "sha256": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+      "bytes": 15235
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/preserved-state.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/preserved-state.json",
+      "sha256": "3b80389821271032a06532d30ad929e17f2c33d8b88c56913c943e311b652333",
+      "bytes": 61
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/provider.events.jsonl",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/provider.events.jsonl",
+      "sha256": "7ceac0333d3f176d6cf34bb8a295b5ddad039477e63c3f565105e83edbb6ca92",
+      "bytes": 4088
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/provider.plist",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/provider.plist",
+      "sha256": "3356e125dfcfa0f60196d4b61add205f72c217878a20f1c6cb2e46669d4bfa59",
+      "bytes": 1694
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/provider.stderr",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/provider.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/provider.stdout",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/provider.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/request.provider-96402-1365871845979958.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/request.provider-96402-1365871845979958.json",
+      "sha256": "004288ce4a09ff24bed79a6d503d075727633c06a2f5c4de923cc9912cfd5212",
+      "bytes": 159
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/request.provider-97743-1365887317269208.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/request.provider-97743-1365887317269208.json",
+      "sha256": "c869690246f1ea74f3b7f96b396c4e70c3677e1e230122d38bacc34932879fb4",
+      "bytes": 159
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir-repair.marker",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir-repair.marker",
+      "sha256": "8fbc73e27d7a41a992255ffe559852e989ca14016d83d8b3130dadf592cfaf21",
+      "bytes": 24
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir-source.marker",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir-source.marker",
+      "sha256": "8fbc73e27d7a41a992255ffe559852e989ca14016d83d8b3130dadf592cfaf21",
+      "bytes": 24
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir.events.jsonl",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir.events.jsonl",
+      "sha256": "f7b25fe653e5c2f252ac229ad6c44036a52b4aedf10c0cccc2fd18f9938bc06c",
+      "bytes": 5156
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir.plist",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir.plist",
+      "sha256": "5d19cfb0b2c45fc3da64ce94c5dac67a207cafa110b399391bd8720e9e628bae",
+      "bytes": 1698
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir.stderr",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir.stdout",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/reservoir.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/state.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/state.json",
+      "sha256": "59ea9f4f2dd213f27a0933ebe125b631ece43d1dd4d8d2526503974f1723717c",
+      "bytes": 66
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00001.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00001.json",
+      "sha256": "12a14ddc4e14908e5b5e135266bb43d6538cf8b2cb1e030ae3fac1b48a17d947",
+      "bytes": 528
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00002.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00002.json",
+      "sha256": "cd321aa2884670837ade2978873d8c37fc4c8680e18576d0a79cb5b29825fb13",
+      "bytes": 250
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00003.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00003.json",
+      "sha256": "06a40e1122f36a21b67be2092e2da39f8c3a5553147318cb4b4a5a113054be61",
+      "bytes": 392
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00004.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00004.json",
+      "sha256": "ff61c48c0bcac33fe85c07eafea79fc1bb5e82974dce701f0ddae410fcb08748",
+      "bytes": 253
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00005.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00005.json",
+      "sha256": "cf81442aaf3877f384a8d98905aa977cb59bf1ac81119e0606faf7894ff805b6",
+      "bytes": 457
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00006.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00006.json",
+      "sha256": "143ce48e4e4324047356f90d717bc270d3e82ee9c4b904b4e76b1438da24b21f",
+      "bytes": 250
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00007.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00007.json",
+      "sha256": "84f0da546ba4d17c34399f7e3fc6f904a2204197272fea837e5d8c8af1ead0b5",
+      "bytes": 879
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00008.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00008.json",
+      "sha256": "2e31dd977339da874aaa83845a4858a2a2f32075cbef2a8fc668983d587adee8",
+      "bytes": 781
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00009.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00009.json",
+      "sha256": "9d113c9030d0723420547b340b7577f618e446800abcdcec9a6c61fe2bbb23b7",
+      "bytes": 2999
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00010.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00010.json",
+      "sha256": "59b7e9fe3251bc6908d03f67122be4d7047831dac6f736a85766f24768c8a3d1",
+      "bytes": 251
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00011.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00011.json",
+      "sha256": "09a2e29fd096f2afbfc19c550316f305b851b7c91e5b6f2e15797f92dc94f803",
+      "bytes": 832
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00012.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00012.json",
+      "sha256": "32916ebdc9be2d151d4ea67aa161ce4ae4e5313b9a88f91d79a3a49c0aff2413",
+      "bytes": 220
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00013.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00013.json",
+      "sha256": "ba8e329e2747091572f2cc7dc35c57d65eed9537754cc44773445135b930d3eb",
+      "bytes": 252
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00014.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00014.json",
+      "sha256": "b2c5f00b20e4b1d22fa60ce7a0608bb18890d019d1975551ba1b164c01108af0",
+      "bytes": 394
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00015.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00015.json",
+      "sha256": "65498441634db0ab668bb622648329a1571fff8097b69c76059e16a01ca9b4a1",
+      "bytes": 255
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00016.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00016.json",
+      "sha256": "48436f81f40668f907cb6f8c5b53c87fc74946cec0aae40b351233ea294ed323",
+      "bytes": 460
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00017.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00017.json",
+      "sha256": "ce219f9a79e1c1c7d5e64cb02f0bc8bcd7b109f1b187b86992e53abff2cb6e3b",
+      "bytes": 252
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00018.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00018.json",
+      "sha256": "0aa8a1842bbab3fbe2b7f65f1bcf9864b499659bc7b3665b594424dcefde70cc",
+      "bytes": 882
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00019.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00019.json",
+      "sha256": "9f6bb408211e844e6609d7bde7d0eb74e67a6841b78ec206d121944d0dc52d3c",
+      "bytes": 784
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00020.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00020.json",
+      "sha256": "6b14eee2070387965abeb284bf24891833cc6a6c69e7e71d24d9134b5f1614a4",
+      "bytes": 3311
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00021.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00021.json",
+      "sha256": "5b0491110fb1673f5204ef44b9b5397d1159775606fc39447fcba9c3cfe37def",
+      "bytes": 252
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00022.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00022.json",
+      "sha256": "40378189a254a9e26c247d758888d66a6d2b68774bc1363d17c93a528c07957d",
+      "bytes": 834
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00023.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00023.json",
+      "sha256": "1dea3cce4aa78e4805cc2ed3374c222f0bf72315a93462b9f3554cb89794df74",
+      "bytes": 221
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00024.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00024.json",
+      "sha256": "7537ac682c50cba94d0e6ac7bd53dd3540d22cf8dfdc4c31223b3e2b1a016cda",
+      "bytes": 1073
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00025.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00025.json",
+      "sha256": "57e59852d28b19395e4304d3f66895037288d5d072f4d06be50a04a525eb7cf6",
+      "bytes": 1260
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00026.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00026.json",
+      "sha256": "ac560c1bee557076edd1b80855a9c8df9a2ace172608176c8eed1acd591dc0da",
+      "bytes": 248
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00027.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00027.json",
+      "sha256": "5067bd2db37b36e397957d64295907827de7b06df3db57d1117ca72b8958bbe6",
+      "bytes": 377
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00028.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00028.json",
+      "sha256": "e63a5715b558055094c67db22f305e3667504899d7b913dd95063c4d7f6cd957",
+      "bytes": 259
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00029.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00029.json",
+      "sha256": "dbc4a28609e38f4c9481e94bcd32cb247864d99e42dbb85bdcc41a0b3a3e537d",
+      "bytes": 851
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00030.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00030.json",
+      "sha256": "f0958b1995ee91ecd295ad586ecd47bc52492a3d4437141a2160173865ecc89a",
+      "bytes": 2422
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00031.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00031.json",
+      "sha256": "bc3bc6ef164502cbb688bef8b4cd17f211155a1dd40db76fe68aff07547cf027",
+      "bytes": 258
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00032.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00032.json",
+      "sha256": "fff9ed9f7a72f5a0f27d109fe029ee95fa8e09034f3fbc8bc118176ab3a9cb07",
+      "bytes": 849
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00033.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00033.json",
+      "sha256": "63be20cac87de08d7dd59c3f2e6b230d15611839e6f8ea7179ae49afbc5118c7",
+      "bytes": 2351
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00034.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00034.json",
+      "sha256": "d2eaa8b037d15a9a9e561b8a678ee31cd78aa5c87f09bbee16f058c15aec1902",
+      "bytes": 252
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00035.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00035.json",
+      "sha256": "3c320c8af0f95ec185ff923c4e55ee9fe4ec47126fde778fe00dd395e381b885",
+      "bytes": 282
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00036.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00036.json",
+      "sha256": "af183b81ed201cf6d1c7287c3acaf011c42159c2338941d2312ffe3f6910e576",
+      "bytes": 253
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00037.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00037.json",
+      "sha256": "2948b76bca3e59b9ffb5d790a86d36c2129987ddce32f79a584998a7b8948ded",
+      "bytes": 283
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00038.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/event-00038.json",
+      "sha256": "af813d23970c6cce71c8186d49a4923771acc8b08c9147fbbf40925171d5b668",
+      "bytes": 2219
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/plan.json",
+      "relative_path": "evidence/owned-fixture-d1863986cd704e32b94a943e9b2418fc/transaction/plan.json",
+      "sha256": "72ee514f43558d49159308bb262e284b82dc633ee9195c68e0d29b4940803717",
+      "bytes": 2442
+    },
+    {
+      "source": "/Users/v/other/astrid/scripts/model_environment.py",
+      "relative_path": "external-helpers/model_environment.py",
+      "sha256": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+      "bytes": 15235
+    },
+    {
+      "source": "/Users/v/other/neural-triple-reservoir/persistence.py",
+      "relative_path": "external-helpers/persistence.py",
+      "sha256": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+      "bytes": 7438
+    },
+    {
+      "source": "/Users/v/other/neural-triple-reservoir/reservoir_service.py",
+      "relative_path": "external-helpers/reservoir_service.py",
+      "sha256": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+      "bytes": 62641
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/launchd-fixture-admin-02-independent-qualification.json",
+      "relative_path": "evidence/launchd-fixture-admin-02-independent-qualification.json",
+      "sha256": "76e96366b284afdb233ab9e8499ac46c8d5bcec965c7198ede38fe8c89c413ac",
+      "bytes": 106050
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/user-fixture-continuation-intake-01.json",
+      "relative_path": "evidence/user-fixture-continuation-intake-01.json",
+      "sha256": "661e4b734bf0535838e236e6b6f29b2f7487c34b09376fc2225bc8fcaa9b5fed",
+      "bytes": 3060
+    }
+  ],
+  "external_identity_hashes": {
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python": "7ecc1ecbf9daa9303c4bf502ff62ffdd9010ed5c08729d470ae9380c10ce1211",
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43"
+  }
+}

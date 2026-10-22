@@ -1,0 +1,40 @@
+{
+  "accepted_for_read_only_observation": true,
+  "approved": true,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-05-observer.py": "d487413ba3282bc700b6854c1de2521f87055b574acef142e311055f07af44bd",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-06-bindings.json": "776c33ec3421fcc12d7baecc8099eeec68021a24ae394c33a8b543d2da2fe0cc",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-06-observer.py": "63464bfd2f7f82ccdce13d8c1a3a959093dcb28d9a334b8430dcf5b81fe4f169"
+  },
+  "current_execution_gate": {
+    "authorized_by_this_review": false,
+    "observation": "Reported by parent, not independently process-probed by reviewer.",
+    "reason": "Parent reports foreign Cargo/rustc/target-test children in truthful-return-20261016 worktree at18:10UTC. Observer has not started. Defer this observation until foreign activity ceases and meaningful headroom persists; do not alter foreign processes."
+  },
+  "delta": [
+    "Fresh exclusive output host-settle-06.json; predecessor is historical host-settle-05.json.",
+    "Original six exact PID/PPID/start/argv bindings preserved; native Minime engine is seventh. Seven engine binary/configuration file hashes and immutable binding hash checked at start, each sample and end.",
+    "Native engine launchd PID must remain35303. Per-sample exact identity equality, provider HTTP200 ready=true and reservoir connected are required for every clean sample."
+  ],
+  "limitations": [
+    "Source review only; actual host-window result and current conditions need separate acceptance. Sampling is discrete and sequential, not continuous identity or readiness assurance.",
+    "610 seconds is the loop deadline, not a hard wall-clock deadline; bounded final sampling/identity calls can extend total duration."
+  ],
+  "numeric_execution_authorized": false,
+  "production_mutations": 0,
+  "reviewed_at": "2026-10-16T18:11:21.860115+00:00",
+  "reviewer": "/root/mlx_integration",
+  "schema": "reservoir_host_window_source_review_v1",
+  "source_executed_by_reviewer": false,
+  "syntax_valid": true,
+  "unchanged_rules": [
+    "Current eligible window at least300 observed seconds; pressure1; swap not above first sample; no detected Cargo/rustc/target test process.",
+    "Sample gaps greater than15 seconds invalidate; nominal cadence5 seconds; nominal maximum observation610 seconds checked between bounded sampling calls.",
+    "No numerical/model imports, service mutation, process signal or child qualification workload. Read-only OS accounting, launchctl print, listener inspection and local provider readyz GET; private observation result writes only.",
+    "Both earlier passive observations must be completed; this observer does not accept the failed MLX baseline or authorize numerical execution."
+  ],
+  "verified_counts": {
+    "engine_identity_files": 7,
+    "protected_exact_processes": 7
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/README.md": "9945427d018d69a5183197907cb3dd70c7c4155fa2bb35aa049c1bd33579f645",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/inputs.json": "f830793317e866c30f02770581713ff171e5309c36362c4f2f44c069090ab6e7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/qualify_restore.py": "33bb2f958fc5ec1c6c2eee37d729447f603d68d0872e8bff4284829c1094f4d8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/seed_fixture.py": "4a3507615ff5a8f25f9fcd8d0ca592beee14820c1a591045446fc0a8e190c7b8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/test_qualification.py": "a2fe486ee0d4b44140dcad23c570addd3eefc5910cfe9ccf1ad61ffc975f9b57"
+  },
+  "artifacts_unchanged": true,
+  "blocked_operation_attempts": [],
+  "change_since_previous": "Immutable initial release reference is rechecked before each verifier child and at completion; seed also checks guard release hash. Explicit continuous-monitoring limitation documented.",
+  "default_check": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/default-check-02.json",
+    "sha256": "9dc41072be3da69091cfc2d4f39ccf0baef0435d9e169f55f69d3593d837bc81"
+  },
+  "elapsed_seconds": 0.19333425001241267,
+  "errors": 0,
+  "failures": 0,
+  "finished_at": "2026-10-16T17:41:27.723065+00:00",
+  "forbidden_imports": [],
+  "input_artifact_count": 129,
+  "inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/inputs.json",
+    "sha256": "f830793317e866c30f02770581713ff171e5309c36362c4f2f44c069090ab6e7"
+  },
+  "log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/cpu-tests-02.txt",
+    "sha256": "ba97054842b93b1d6531f32b17f5f89a259b50a6d924b55628f518fe5ce6ddb3"
+  },
+  "no_launch_guard_exists": true,
+  "no_release_exists": true,
+  "original_verifier_preserved": true,
+  "passed": true,
+  "planned_cases": [
+    "complete",
+    "missing-sidecar",
+    "malformed-sidecar",
+    "corrupt-npz",
+    "schema-mismatch",
+    "config-mismatch",
+    "source-drift",
+    "package-drift",
+    "backup-drift"
+  ],
+  "previous_cpu_evidence": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/cpu-tests-01.json",
+    "sha256": "212204601a9f045e73997283fba1faf05cd4c1f7951f4e40fb30bd7fe2625056"
+  },
+  "production_qualified": false,
+  "python": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+  "python_sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43",
+  "python_version": "3.14.3 (main, Feb  3 2026, 15:32:20) [Clang 17.0.0 (clang-1700.6.3.2)]",
+  "real_numerical_executed": false,
+  "schema": "reservoir_restore_qualification_cpu_tests_v1",
+  "scope": "stdlib fake files and child objects only; audit hook rejects subprocess/network/signal operations",
+  "selected_verifier_equals_v2": true,
+  "started_at": "2026-10-16T17:41:27.529595+00:00",
+  "superseded_inputs_archive": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/superseded-v1/archive-manifest.json",
+    "sha256": "fdfc502e7117b8c1d70e9cd752ffb264a14cb2753430062b72b26578dc7ff098"
+  },
+  "tests": 17
+}

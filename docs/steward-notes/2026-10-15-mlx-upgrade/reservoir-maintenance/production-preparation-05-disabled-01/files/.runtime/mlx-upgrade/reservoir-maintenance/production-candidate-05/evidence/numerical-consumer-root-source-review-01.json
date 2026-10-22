@@ -1,0 +1,32 @@
+{
+  "actual_numeric_revalidation": false,
+  "approved_test_scope": [
+    "test_production_admission",
+    "test_production_restore_admission",
+    "test_production_service_admission"
+  ],
+  "checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/numerical-consumer-source-checkpoint-04.json",
+    "sha256": "6dfab43bfedb67c218c652cc4255511ff2ad2b829f3cbca6c1c8c41a2f2fa8ea"
+  },
+  "checks": [
+    "Exact service v3 frozen raw oracles and source/package/runtime equality preserved",
+    "Exact restore02 frozen nine-case semantics preserved",
+    "Ten immutable request/permit/claim/child/coverage chains and raw final06 prefix cross-checked",
+    "Service14 sequential one-use releases and raw final05 coverage independently checked",
+    "Historical expiry evaluated at recorded claim and child starts; no current permission",
+    "Original five-reference controller return unchanged; extra root acceptances bound in execution review",
+    "No observer/numeric/OS action or production flag enabled"
+  ],
+  "passed_source_review": true,
+  "production_qualified": false,
+  "resolved_findings": [
+    "Fixed origin validation for final fixture reader",
+    "Fixed origin validation for loaded restore authority reader"
+  ],
+  "reviewed_at": "2026-10-17T01:20:39.946189+00:00",
+  "reviewer": "root",
+  "schema": "reservoir_production05_numeric_source_root_review_v1",
+  "scope": "versioned historical numerical proof consumers only",
+  "tests_pending": true
+}

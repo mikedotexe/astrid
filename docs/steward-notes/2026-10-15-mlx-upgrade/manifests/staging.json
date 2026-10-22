@@ -1,0 +1,29 @@
+{
+  "activation_authorized_by_this_receipt": false,
+  "completed_at": "2026-10-15T20:46:56.195825+00:00",
+  "manifests": {
+    "baseline": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests/baseline.json",
+      "release_id": "20261015-mlx-upgrade-baseline",
+      "sha256": "c4f19af0358ecfc57ec3ac09ba02e086c9092d34d0056e7670a12ff6cc2d4aa1"
+    },
+    "core": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests/core.json",
+      "release_id": "20261015-mlx-upgrade-core",
+      "sha256": "a2993b7e006a3899c08e8e9a408af8f272b3fcbc30a4325ff63d12305cc57311"
+    },
+    "full": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests/full.json",
+      "release_id": "20261015-mlx-upgrade-full",
+      "sha256": "afbba198133d584179257a42734f938f47014bca5b3d25045bf45cae67e4a0ed"
+    },
+    "original": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests/original.json",
+      "release_id": "20261015-mlx-upgrade-original",
+      "sha256": "8d9ad3bcfa45576b4cc856a3f31e38d3eb7255abe43f8a7a968ab9220d841793"
+    }
+  },
+  "preparation_sha256": "e656028cf9a9ec157cca78150edf6ee5020f5535e356b01a717b7d1e87452936",
+  "production_modified": false,
+  "schema": "mlx_staged_manifests_v1"
+}

@@ -1,0 +1,93 @@
+{
+  "approved_source": true,
+  "binding": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-bindings.json",
+    "sha256": "6b92de441dac3730c047c0111a850527dfff0739048d0db6b23f50d16054d2f6"
+  },
+  "binding_checks": {
+    "all_referenced_preparation_and_history_hashes_verified": true,
+    "exact_process_count": 7,
+    "file_count": 237,
+    "identity_listener_launchd_and_pause_maps_equal07_and10": true,
+    "metadata_changes_only": [
+      "created_at",
+      "preceding_accepted_window",
+      "previous_binding",
+      "previous_completed_observation",
+      "reason"
+    ],
+    "ownership_reaudit_is_retained_historical_evidence_not_fresh_preflight": true,
+    "pause_generation": 528
+  },
+  "created_at": "2026-10-17T00:01:41.004585+00:00",
+  "exact_equivalence": "Byte-for-byte equal to approved10 after only output10\u219211, binding10\u219211 path/hash and previous completed09\u219210 substitutions.",
+  "limits": [
+    "Preparation approval only. Freeze and independently review the concrete v3 repair, serialized tests and prepared inputs before any new observation; all agents must hold tests during observation and numerical work.",
+    "Root must revalidate current ownership/runtime/health and host state with fresh preflight. Retained10 headroom/ownership references are historical, not fresh admission or a claim of unchanged present host state.",
+    "Accepted10 and failed v2 evidence remain immutable. A completed11 needs independent strict ending-window review; source approval alone permits neither numerical work nor live changes."
+  ],
+  "observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-observer.py",
+    "sha256": "ea290b954f4d888a3f8ec18e8762b747983a5b41af03d5be83576d552619a663"
+  },
+  "outputs_absent": true,
+  "ownership_reaudit": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-ownership-reaudit.json",
+    "sha256": "a7e066c1af8b28ed6b1a48e3cb512652fa67692faf2ebc38a4b13b240984bd11"
+  },
+  "preceding_accepted_window": {
+    "independent_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-review.json",
+      "sha256": "576a4ab3b5c2b2151169823dc4eac5069aa142a809c9a334275b941482c8241e"
+    },
+    "raw": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10.json",
+      "sha256": "1ae9817de06591336cbfa3eb266217168d69ec9c73cb73092e881543ae51da9b"
+    },
+    "root_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-root-review.json",
+      "sha256": "14d520242fa771f69968647d8b66d07da74ff899ac836a985c699e0bcf9cb61c"
+    }
+  },
+  "preceding_failed_window": {
+    "independent_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-review.json",
+      "sha256": "f10d97356d967d7281190fcee314049bfff7478c5a5e168d474300ecd2479dac"
+    },
+    "raw": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09.json",
+      "sha256": "0bad870ef7b342c6c6774c93ce79edc9cde21e677821bf1de844ed510ec551b5"
+    },
+    "root_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-root-review.json",
+      "sha256": "f9c0d5c22e35ceac4b27e928f5cf53b1b01aa73fd1ce9b8feb68bf6d5eae2681"
+    }
+  },
+  "prior_observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-observer.py",
+    "sha256": "ff4c0f5ba7d0587440e554393abe19bbd3dabd0300f3ec677f1311562d91cc93"
+  },
+  "prior_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-10-source-review.json",
+    "sha256": "6ff6e65e5e5f6c92caa5d16820b62a2cbc5d868fd1f7e21d50a38acd5182f20b"
+  },
+  "reviewer": "mlx_integration",
+  "rules_preserved": [
+    "300 current consecutive observed seconds of pressure1; no positive adjacent-sample swap increase and no increase over window-start swap; no detected builds/tests; healthy readyz and connected reservoir.",
+    "Strict0<samplegap<=15seconds; unchanged per-sample protected237file/sevenprocess checks and final identity verification. Nominal5second cadence and610second maximum loop plus bounded probe overhead.",
+    "Exclusive unused output, atomic private evidence saves and read-only host/health sampling; no model/numerical imports, service changes, forced termination or case starts."
+  ],
+  "schema": "reservoir_host_window_source_review_v1",
+  "scope": {
+    "bound_live_file_contents_rehashed_by_reviewer": false,
+    "numerical_work_authorized": false,
+    "observer_or_monitor_executed": false,
+    "production_mutations": false,
+    "review_only": true,
+    "runtime_probes_executed": false,
+    "target_source_imported": false,
+    "tests_executed": false
+  },
+  "status": "accepted_source_only_not_executed",
+  "unresolved_source_blockers": []
+}

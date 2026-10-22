@@ -1,0 +1,49 @@
+{
+  "schema": "reservoir_production_combined_stdlib_tests_v1",
+  "started_at": "2026-10-16T17:30:00.827326+00:00",
+  "completed_at": "2026-10-16T17:30:01.236525+00:00",
+  "duration_s": 0.4090835000388324,
+  "exit_code": 0,
+  "tests_run": 77,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "passed": true,
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-I",
+    "-B",
+    "-c",
+    "import sys, importlib.abc, unittest, json\nsys.path.insert(0, sys.argv[1])\nclass DenyNumeric(importlib.abc.MetaPathFinder):\n def find_spec(self, fullname, path=None, target=None):\n  if fullname.split('.')[0] in {'numpy','torch','mlx','mlx_lm','coremltools','sklearn','websockets'}:raise AssertionError('forbidden real import: '+fullname)\nsys.meta_path.insert(0,DenyNumeric())\ndef audit(event,args):\n if event in {'subprocess.Popen','os.kill','os.killpg','socket.connect','socket.bind'}:raise AssertionError('forbidden live action: '+event)\nsys.addaudithook(audit)\nsuite=unittest.defaultTestLoader.discover(sys.argv[1], pattern='test_*.py')\nr=unittest.TextTestRunner(verbosity=2).run(suite)\nprint(json.dumps({'tests_run':r.testsRun,'failures':len(r.failures),'errors':len(r.errors),'skipped':len(r.skipped),'passed':r.wasSuccessful()}))\nraise SystemExit(0 if r.wasSuccessful() else 1)\n",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01"
+  ],
+  "cwd": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01",
+  "interpreter": {
+    "path": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "resolved": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43"
+  },
+  "source_hashes": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/metadata_preflight.py": "3c2bce47648596f8988e0884081625f729d77856526c1b062f5078b68684d318",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_host.py": "d7b80c071ca1a279d95b237ce5b675865f85dc1c5f0c6565e0694ef09bace466",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_preflight.py": "3ded53f71a6d134640cb89a00ed9cf9c392a9709a8ac39eae67e2737250de1e5",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_recovery_inspect.py": "0ee592e768df9ebdab9994b41d9a921b99aaea8479e676abaa1cd5c586229311",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance.py": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/restore_verifier.py": "e363cc1144c7a92279a3bde5eabfcf7647d8ff6b8e56e445cfd7b560c21a8c16",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_host.py": "91787c5be064fba697ba393a4989fa1daa7619cd838ab0f82e6418973f121cf4",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_preflight.py": "782262b2267ab41e5040c817046f2e21106321e252dda7c86824aded3237045d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_recovery_inspect.py": "ef1c9d9e2e91444f16c6776e8724381bc06f468f8f7b945d37557970c22d1af7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_reservoir_maintenance_state.py": "5c896092de2a2da6351c7a05ffe78a080fcfd49e91630fd5764b6110a9075834",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_restore_verifier.py": "7967d6dbfca9077026b29b615176c20649adf56031b5f719749180563cd94049"
+  },
+  "source_unchanged": true,
+  "log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/combined-stdlib-tests-01.log",
+    "sha256": "ecdabfd214285c64e18e7a9678b305e77c8261d8d9bf9419655b1ae0e8b9a79b"
+  },
+  "scope": "77 isolated stdlib tests; audit hooks deny subprocesses, signals, bind/connect and real numeric/model/network-package imports in the test child",
+  "actual_numeric_execution": false,
+  "production_qualified": false,
+  "production_mutations": false
+}

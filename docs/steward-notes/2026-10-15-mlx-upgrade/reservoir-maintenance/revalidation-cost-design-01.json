@@ -1,0 +1,3540 @@
+{
+  "actual_validation_executed": false,
+  "bounds_and_unmeasured": [
+    "No actual 14-case or nine-case run directory exists; retained snapshot NPZ sizes, compression ratio, real logs and final complete proof size remain unmeasured. No production preparation/execution_review exists, so complete immutable/reviewer map size is unknown.",
+    "inventory_tree reads each file fully (256 MiB individual limit, 2 GiB cumulative content limit), with before/after identity checks. Each inventory hashes every file; it does not reuse hashes. Total cap is checked after reading the current file. Successful-tree content is <=2 GiB; failure can have read more before refusal.",
+    "Known 11 restore proof inventory passes per admission imply up to 22 GiB of successful-tree content reads at existing generic caps, not a realistic synthetic fixture size estimate. Do not allocate at that cap to measure.",
+    "Snapshot reviewer common.digest uses read_bytes, so its transient allocation includes the full individual file. No explicit snapshot-size cap is applied by that reader. Metadata must be checked before any future timing run.",
+    "Retained log revalidation hashes the entire original prefix and captured span, then rereads the saved span. Current log stat sizes do not establish future anchor offsets, drift, or exact replay cost.",
+    "For model snapshot M, attach costs one mandatory M pass; each resumed step costs at least three M passes before its action, and reconciliation adds one M pass. Original model metadata gives M=8,267,162,080 logical bytes; these are repeated userspace reads, not unique physical disk traffic.",
+    "Distinct paths can alias files; wheel RECORD has five repeated resolved-path entries here. OS filesystem cache, compressed memory, APFS clones, page residency, concurrent work and changes after stat can substantially alter actual I/O and timing. No cache flushing, cache policy change or validation weakening is proposed.",
+    "All conclusions describe the frozen disabled code. Both production execution flags stay false. Static cost evidence does not establish safe maintenance duration."
+  ],
+  "call_graph": [
+    {
+      "conditional_counts": "Each valid preparation includes three model-snapshot payload passes: immutable loop, original manifest loop, model_snapshot group loop. One wheel RECORD payload pass.",
+      "entry": "ProductionHost.__init__ -> validate_preparation",
+      "reads": "Entire immutable_files; validate_closure -> model_environment.validate_manifest -> every original-manifest artifact and verify_packages; input_hashes -> each input-group artifact again."
+    },
+    {
+      "entry": "ProductionHost.prepare_capture -> check_only -> validate_preparation",
+      "reads": "Repeats the preceding preparation route. Explicit standalone check_only would add another route; it is not counted in the fresh scenario below."
+    },
+    {
+      "entry": "Controller.preflight -> Host.production_admission -> validate_admission",
+      "reads": "Raw integrated prerequisite proof re-review; no full model payload pass directly unless execution-review artifacts include model files."
+    },
+    {
+      "entry": "Host mutation or collect_witness -> _allow -> production_admission -> validate_admission",
+      "reads": "Full raw prerequisite proof re-review on every action. _ownership/_input_hashes separately stat immutable files and hash four current canonical source/plist files; they do not hash all model weights."
+    },
+    {
+      "counts": {
+        "case_receipts": 14,
+        "harness_hashes_calls": 15,
+        "raw_child_events_service_log_hashes": 42,
+        "six_source_file_passes": 14,
+        "snapshot_file_digest_calls_from_frozen_runner": 11040
+      },
+      "entry": "validate_admission -> validate_service_matrix -> review_matrix.review",
+      "reads": "Admission references 14 receipts; raw reviewer reads/references them again. Manifest is hashed in reviewer and again in admission for each case. Repeated helper hashes and fixture/reviewer artifact maps add small or as-yet-unknown closures."
+    },
+    {
+      "counts": {
+        "case_backup_inventory_tree_passes": 9,
+        "complete_wheel_RECORD_payload_passes": 1,
+        "positive_witness_backup_inventory_tree_passes": 1,
+        "seed_inventory_tree_passes": 1
+      },
+      "entry": "validate_admission -> validate_restore_result -> q.check + nine classify_case calls",
+      "reads": "The complete case calls validate_restore_witness -> check_inputs -> inventory_tree and check_runtime -> verify_packages. Negative cases re-read exact rejection evidence and their retained inputs; they do not execute actual restores or scan all package payloads."
+    },
+    {
+      "counts": {
+        "scoped_restore_reader_source_passes": 2,
+        "scoped_service_reader_source_passes": 2,
+        "whole_execution_review_artifact_passes": 2
+      },
+      "entry": "validate_admission -> hash_files(review.artifacts), validate_fixture, modules",
+      "reads": "Fixture executable/artifact maps and fixture-review artifact map each hashed once; five principal proof refs rehashed at end. Exact additional artifact bytes unknown until reviewed preparation exists."
+    },
+    {
+      "counts": {
+        "additional_allow_admissions": 4,
+        "child_package_payload_checks": 2,
+        "parent_package_payload_checks": 2
+      },
+      "entry": "FiniteRestoreRunner.__call__",
+      "reads": "Four parked barriers each call _allow. Parent checks packages before launch and revalidates the successful witness after exit; actual child checks packages before/after restore. Host.collect_witness separately validates returned witness once more."
+    },
+    {
+      "counts": {
+        "allow_admissions": 2,
+        "package_payload_checks_in_runner": 1
+      },
+      "entry": "FiniteRestoreRunner.adopt_existing",
+      "reads": "Two parked barriers; exact successful witness validation. Caller validate_existing_witness validates same witness once more. No child replay."
+    },
+    {
+      "entry": "retained Host attach -> validate_retained",
+      "reads": "One full immutable closure scan, including model snapshot; also preserved/current variant bytes and anchor refs. No fresh capture."
+    },
+    {
+      "counts": {
+        "full_immutable_closure_passes_before_action": 3
+      },
+      "entry": "resume_one -> recovery_inspection -> retained.revalidate",
+      "reads": "First inspector full scan, explicit rehash of all inspected artifact references, then second inspector full scan. Accepted prior witnesses revalidated by dependency: backup tree once, private restore backup/package scan once, log prefix+span rereads. One full admission follows; executing a Host action adds its ordinary admission/barriers."
+    },
+    {
+      "counts": {
+        "additional_immutable_closure_passes": 1
+      },
+      "entry": "retained.reconcile -> validate_retained",
+      "reads": "One more full immutable scan after a reconciliation claim. Additional witness/adopt checks depend on exact phase."
+    }
+  ],
+  "coordination": {
+    "foreign_rollout_active_per_root": true,
+    "foreign_steward_pause_generation": 527,
+    "restriction": "No canonical source/docs/index, service, numeric, probe, child, or process-control activity. This new ignored evidence JSON is the only authored artifact."
+  },
+  "created_at": "2026-10-16T18:51:36.549720+00:00",
+  "execution_authorized": false,
+  "finite_measurement_plan_not_executed": [
+    {
+      "limit": "One inventory; no automatic repeats.",
+      "prerequisite": "Foreign paired rollout and ownership settle; root explicitly releases a bounded read-only measurement scope with fresh source/manifest binding. No concurrent deployment or numerical experiment.",
+      "stage": 1,
+      "work": "Metadata-only budget inventory first: exact source hashes, all referenced paths, stat identities/sizes, duplicate visits, package RECORD inventory and available proof counts. Reject unexpected scope or large-file growth before payload reads."
+    },
+    {
+      "limit": "At most one pass per released stage; no package/model import, service query, child, forced cache flush, warmup loop, or inference. Metadata-only results cannot substitute for these timings.",
+      "prerequisite": "Before raw proofs exist, a separately approved finite payload-read budget for current prepared closure; keep all Host/action/probe paths unreachable.",
+      "stage": 2,
+      "work": "Use a new isolated stdlib-only measurement wrapper around unchanged pure read/hash functions. Measure one prepared restore q.check closure (about 3.58 MB artifact loop plus small duplicate reads), then optionally one verify_packages pass and one model-artifact pass only with explicit root release for those byte budgets. Preserve success/failure and exact scanned bytes."
+    },
+    {
+      "limit": "No controller/Host actions or live inspector invocation; no acceptance manufactured if timeout/budget refusal. Report partial trace and do not retry automatically.",
+      "prerequisite": "Actual14-case, actual nine-case and exact04 fixture accepted and retained; exact reviewed preparation available; host eligible and coordination settled.",
+      "stage": 3,
+      "work": "One exact-source read-only validate_admission timing, with nested counters/timers for service matrix, restore result, package payloads, tree inventories, fixture/helpers. Instrument wrappers must call original validators unchanged and propagate every refusal. Record elapsed monotonic, process CPU, read calls/bytes, maximum individual file size, before/after identities and hashes, and machine/measurement context."
+    },
+    {
+      "limit": "One measured path per named phase, independently scoped; no production drain to obtain a benchmark.",
+      "prerequisite": "Retained exact04 owned fixture interrupted at reviewed representative phases; root releases an inert-I/O replay of its read-only evidence paths.",
+      "stage": 4,
+      "work": "Measure attach/inspector/revalidate/reconciliation validation stages using fixed owned fixture observations with all mutating/probe/child entrypoints blocked. Do not substitute arbitrary mocked passed proof wrappers. Also collect actual phase timings during later explicitly released exact04 OS fixture."
+    },
+    {
+      "limit": "No timing extrapolation treated as a guarantee; retain measured and unmeasured components separately.",
+      "prerequisite": "Stage timings and actual exact04 fixture evidence are complete.",
+      "stage": 5,
+      "work": "Root reviews a conservative maintenance-duration budget including repeated validation, legitimate service drain/load, startup and disk/cache uncertainty before any live drain. If scans are material, propose separately reviewed changes; this design does not cache, remove or weaken any validation."
+    }
+  ],
+  "function_line_map": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/metadata_preflight.py": {
+      "archive_metadata": [
+        87
+      ],
+      "bounded_bytes": [
+        55
+      ],
+      "distribution": [
+        154
+      ],
+      "finite": [
+        103
+      ],
+      "identity": [
+        29
+      ],
+      "main": [
+        113
+      ],
+      "npy_member": [
+        60
+      ],
+      "require": [
+        32
+      ],
+      "sidecar_metadata": [
+        98
+      ],
+      "stable_read": [
+        35
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_admission.py": {
+      "file_hash": [
+        32
+      ],
+      "finite": [
+        51
+      ],
+      "hash_files": [
+        55
+      ],
+      "modules": [
+        63
+      ],
+      "ref": [
+        47
+      ],
+      "reference": [
+        37
+      ],
+      "validate_admission": [
+        296
+      ],
+      "validate_case_inputs": [
+        139
+      ],
+      "validate_child": [
+        120
+      ],
+      "validate_fixture": [
+        263
+      ],
+      "validate_restore_result": [
+        162
+      ],
+      "validate_service_matrix": [
+        89
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_host.py": {
+      "__init__": [
+        73
+      ],
+      "_absent": [
+        284
+      ],
+      "_allow": [
+        212
+      ],
+      "_coverage": [
+        305
+      ],
+      "_input_hashes": [
+        126
+      ],
+      "_ownership": [
+        138
+      ],
+      "_startup_witness": [
+        475
+      ],
+      "apply_provider_restart": [
+        398
+      ],
+      "arm_next_spawn": [
+        249
+      ],
+      "bootstrap_original": [
+        429
+      ],
+      "collect_witness": [
+        321
+      ],
+      "control": [
+        114
+      ],
+      "create_hold": [
+        239
+      ],
+      "event": [
+        234
+      ],
+      "executor_identity": [
+        95
+      ],
+      "from_verified_recovery": [
+        90
+      ],
+      "hold_argv": [
+        122
+      ],
+      "inspect": [
+        154
+      ],
+      "inspect_role": [
+        163
+      ],
+      "install_repair": [
+        378
+      ],
+      "prepare_capture": [
+        193
+      ],
+      "production_admission": [
+        227
+      ],
+      "ready": [
+        456
+      ],
+      "reconcile_recovery": [
+        110
+      ],
+      "recovery_inspection": [
+        100
+      ],
+      "release_hold": [
+        488
+      ],
+      "remove_held": [
+        290
+      ],
+      "revalidate_recovery": [
+        106
+      ],
+      "signal_stop": [
+        267
+      ],
+      "stamp": [
+        26
+      ],
+      "startup_log": [
+        41
+      ],
+      "target": [
+        118
+      ],
+      "verify_final_files": [
+        61
+      ],
+      "wait_for": [
+        31
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_preflight.py": {
+      "all_listeners": [
+        246
+      ],
+      "capture_span": [
+        129
+      ],
+      "check_log": [
+        114
+      ],
+      "check_only": [
+        477
+      ],
+      "command": [
+        210
+      ],
+      "cursor": [
+        92
+      ],
+      "hash_prefix": [
+        120
+      ],
+      "health": [
+        275
+      ],
+      "host": [
+        263
+      ],
+      "idle_health": [
+        156
+      ],
+      "input_hashes": [
+        458
+      ],
+      "job": [
+        230
+      ],
+      "list_handles": [
+        286
+      ],
+      "listeners": [
+        241
+      ],
+      "load_hold": [
+        58
+      ],
+      "main": [
+        501
+      ],
+      "open_log": [
+        105
+      ],
+      "pinned_argv": [
+        419
+      ],
+      "preparation_digest": [
+        351
+      ],
+      "process": [
+        213
+      ],
+      "provider_anchor": [
+        165
+      ],
+      "reference": [
+        65
+      ],
+      "reservoir_anchor": [
+        177
+      ],
+      "reservoir_config": [
+        357
+      ],
+      "role": [
+        252
+      ],
+      "sha": [
+        50
+      ],
+      "stable_bytes": [
+        73
+      ],
+      "stewardship": [
+        268
+      ],
+      "validate_closure": [
+        371
+      ],
+      "validate_engine_inputs": [
+        342
+      ],
+      "validate_preparation": [
+        297
+      ],
+      "validate_provider_restart": [
+        425
+      ],
+      "validate_restore_inputs": [
+        437
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery.py": {
+      "controller_state": [
+        62
+      ],
+      "digest": [
+        28
+      ],
+      "host_state": [
+        120
+      ],
+      "plan_resume": [
+        264
+      ],
+      "reconstruct": [
+        142
+      ],
+      "require": [
+        23
+      ],
+      "schedule": [
+        41
+      ],
+      "validate_proposal": [
+        287
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_driver.py": {
+      "execute_one": [
+        92
+      ],
+      "expected_heads": [
+        20
+      ],
+      "host_history": [
+        24
+      ],
+      "hydrate_controller": [
+        45
+      ],
+      "resume_one": [
+        121
+      ],
+      "span": [
+        36
+      ],
+      "validate_phase_observation": [
+        53
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_inspect.py": {
+      "__init__": [
+        44
+      ],
+      "absent": [
+        46
+      ],
+      "action_id": [
+        223
+      ],
+      "all_listeners": [
+        418
+      ],
+      "anchors": [
+        152
+      ],
+      "classify_roles": [
+        431
+      ],
+      "command": [
+        407
+      ],
+      "controller_records": [
+        177
+      ],
+      "cursor_shape": [
+        146
+      ],
+      "fail": [
+        34
+      ],
+      "finish": [
+        87
+      ],
+      "health": [
+        416
+      ],
+      "host_records": [
+        217
+      ],
+      "inspect": [
+        550
+      ],
+      "list_handles": [
+        417
+      ],
+      "main": [
+        662
+      ],
+      "output_presence": [
+        523
+      ],
+      "private_directory": [
+        98
+      ],
+      "read": [
+        50
+      ],
+      "ref": [
+        83
+      ],
+      "references": [
+        169
+      ],
+      "restore_execution": [
+        328
+      ],
+      "retained_recovery": [
+        535
+      ],
+      "snapshot": [
+        424
+      ],
+      "stamp": [
+        38
+      ],
+      "validate_recovery_spans": [
+        496
+      ],
+      "validate_retained": [
+        104
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_restore_runner.py": {
+      "__call__": [
+        115
+      ],
+      "__init__": [
+        33
+      ],
+      "_barrier": [
+        36
+      ],
+      "adopt_existing": [
+        41
+      ],
+      "child_environment": [
+        23
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_retained.py": {
+      "attach": [
+        20
+      ],
+      "bootstrap_effect": [
+        230
+      ],
+      "context_for": [
+        98
+      ],
+      "healthy": [
+        215
+      ],
+      "ready_identity": [
+        221
+      ],
+      "reconcile": [
+        265
+      ],
+      "require_session": [
+        45
+      ],
+      "revalidate": [
+        52
+      ],
+      "validate_existing_witness": [
+        133
+      ],
+      "validate_span": [
+        115
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_ledger.py": {
+      "__init__": [
+        73
+      ],
+      "append": [
+        88
+      ],
+      "read_ledger": [
+        43
+      ],
+      "retained_session": [
+        26
+      ],
+      "session_shape": [
+        14
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_phases.py": {
+      "actions": [
+        9
+      ],
+      "add": [
+        11
+      ],
+      "apply_result": [
+        49
+      ],
+      "checkpoint_from_inspection": [
+        245
+      ],
+      "context": [
+        28
+      ],
+      "ledger_prefix": [
+        154
+      ],
+      "original_prefix": [
+        117
+      ],
+      "validate_span": [
+        224
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance.py": {
+      "__init__": [
+        124,
+        249
+      ],
+      "_run_fresh": [
+        389
+      ],
+      "absent": [
+        313
+      ],
+      "append": [
+        147
+      ],
+      "apply_provider_restart": [
+        168
+      ],
+      "arm_next_spawn": [
+        163
+      ],
+      "bootstrap_original": [
+        169
+      ],
+      "canonical": [
+        42
+      ],
+      "check_target": [
+        175
+      ],
+      "collect_witness": [
+        166
+      ],
+      "context": [
+        291
+      ],
+      "create_hold": [
+        162
+      ],
+      "digest": [
+        46
+      ],
+      "executor_identity": [
+        159
+      ],
+      "hash_value": [
+        50
+      ],
+      "held": [
+        317
+      ],
+      "identity": [
+        54
+      ],
+      "inspect": [
+        160
+      ],
+      "inspect_recovery": [
+        465
+      ],
+      "inspect_role": [
+        161
+      ],
+      "install_repair": [
+        167
+      ],
+      "invariant": [
+        265
+      ],
+      "main": [
+        492
+      ],
+      "monotonic": [
+        171
+      ],
+      "mutate": [
+        283
+      ],
+      "preflight": [
+        218
+      ],
+      "production_admission": [
+        158
+      ],
+      "read_record": [
+        92
+      ],
+      "ready_identity": [
+        365
+      ],
+      "release_hold": [
+        170
+      ],
+      "remove_held": [
+        165
+      ],
+      "remove_holder": [
+        358
+      ],
+      "require": [
+        37
+      ],
+      "run": [
+        371
+      ],
+      "signal_stop": [
+        164
+      ],
+      "sleep": [
+        172
+      ],
+      "stop_into_hold": [
+        343
+      ],
+      "sync_dir": [
+        102
+      ],
+      "validate_plan": [
+        64
+      ],
+      "validate_production_admission": [
+        190
+      ],
+      "view": [
+        260
+      ],
+      "wait_held": [
+        333
+      ],
+      "witness": [
+        300
+      ],
+      "write_new": [
+        110
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance_state.py": {
+      "_coverage": [
+        80
+      ],
+      "_identity": [
+        44
+      ],
+      "_qos_selected": [
+        97
+      ],
+      "_read": [
+        49
+      ],
+      "_sync_directory": [
+        280
+      ],
+      "_walk_error": [
+        247
+      ],
+      "_write_exclusive": [
+        288
+      ],
+      "artifact": [
+        74
+      ],
+      "backup_stopped_tree": [
+        301
+      ],
+      "canonical_hash": [
+        21
+      ],
+      "envelope": [
+        31
+      ],
+      "inventory_tree": [
+        251
+      ],
+      "prepare_restore_request": [
+        357
+      ],
+      "require": [
+        26
+      ],
+      "verify_final_snapshot": [
+        197
+      ],
+      "verify_provider_drain": [
+        149
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/restore_verifier.py": {
+      "check_inputs": [
+        150
+      ],
+      "check_runtime": [
+        192
+      ],
+      "compare_handle": [
+        292
+      ],
+      "copy_tree": [
+        163
+      ],
+      "deny_network": [
+        354
+      ],
+      "descriptor": [
+        235
+      ],
+      "digest": [
+        50
+      ],
+      "emit": [
+        373
+      ],
+      "execute_private_restore": [
+        326
+      ],
+      "file_content": [
+        78
+      ],
+      "find_spec": [
+        321
+      ],
+      "finite": [
+        204
+      ],
+      "implementation": [
+        66
+      ],
+      "load_environment_helper": [
+        185
+      ],
+      "main": [
+        462
+      ],
+      "option": [
+        128
+      ],
+      "prepare_request": [
+        137
+      ],
+      "read_expected": [
+        241
+      ],
+      "read_json": [
+        61
+      ],
+      "reference": [
+        55
+      ],
+      "thermostat_expected": [
+        208
+      ],
+      "valid_json": [
+        224
+      ],
+      "validate_request": [
+        84
+      ],
+      "validate_restore_witness": [
+        413
+      ],
+      "verify_hashes": [
+        70
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_admission.py": {
+      "child": [
+        154
+      ],
+      "classify": [
+        142
+      ],
+      "fake_modules": [
+        148,
+        291
+      ],
+      "save": [
+        54
+      ],
+      "save_review": [
+        350
+      ],
+      "setUp": [
+        47,
+        77,
+        201,
+        229,
+        268,
+        316
+      ],
+      "test_aliases_and_import_path_restored_on_success_and_error": [
+        17
+      ],
+      "test_backup_drift_accepts_only_exact_extra_file": [
+        217
+      ],
+      "test_bad_scope_or_no_final_revalidation_refuses": [
+        171
+      ],
+      "test_boolean_service_or_restore_summary_cannot_pass": [
+        39
+      ],
+      "test_changed_distribution_artifact_refuses": [
+        309
+      ],
+      "test_changed_stream_or_unresolved_child_refuses": [
+        65
+      ],
+      "test_different_installed_runtime_or_source_refuses": [
+        176
+      ],
+      "test_different_prepared_source_or_original_runtime_refuses": [
+        304
+      ],
+      "test_exact_bound_envelope_invokes_all_raw_validators": [
+        353
+      ],
+      "test_exact_child_pid_bound_to_restore_comparison": [
+        186
+      ],
+      "test_exact_fake_controller_and_cleanup_review": [
+        252
+      ],
+      "test_expired_historical_launch_refuses_but_old_completion_is_allowed": [
+        191
+      ],
+      "test_full_synthetic_shape_revalidates_all_nine_cases": [
+        163
+      ],
+      "test_historical_different_controller_is_not_integrated_qualification": [
+        253
+      ],
+      "test_integrated_helper_drift_refuses_before_proof_readers": [
+        360
+      ],
+      "test_missing_duplicate_or_reordered_case_refuses": [
+        165
+      ],
+      "test_missing_or_altered_exit_receipt_refuses": [
+        71
+      ],
+      "test_missing_or_changed_review_binding_refuses": [
+        357
+      ],
+      "test_natural_exit_and_exact_retained_records": [
+        59
+      ],
+      "test_negative_backup_hashes_remain_bound": [
+        213
+      ],
+      "test_no_numerical_modules_imported": [
+        42
+      ],
+      "test_no_proof_can_substitute_another_model_path": [
+        364
+      ],
+      "test_other_root_or_missing_cleanup_is_not_accepted": [
+        260
+      ],
+      "test_partial_or_falsely_renamed_success_refuses": [
+        297
+      ],
+      "test_raw_reviewer_disagreement_refuses": [
+        301
+      ],
+      "test_reader_must_be_bound_before_import": [
+        34
+      ],
+      "test_source_drift_exact_comment_and_other_sources_preserved": [
+        222
+      ],
+      "test_source_interpreter_and_all_four_cpu_package_artifacts_bound": [
+        295
+      ],
+      "test_wrong_exit_pid_argv_overlap_reaping_fail": [
+        60
+      ],
+      "test_wrong_positive_child_or_missing_raw_stream_refuses": [
+        181
+      ],
+      "validate": [
+        58,
+        162,
+        251
+      ],
+      "write": [
+        152,
+        249,
+        293,
+        348
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_controller.py": {
+      "__init__": [
+        29
+      ],
+      "admission": [
+        16
+      ],
+      "apply_provider_restart": [
+        36
+      ],
+      "bootstrap_original": [
+        42
+      ],
+      "executor_identity": [
+        34
+      ],
+      "fail": [
+        98
+      ],
+      "install_repair": [
+        49
+      ],
+      "production_admission": [
+        32
+      ],
+      "run_enabled_fake": [
+        61
+      ],
+      "setUp": [
+        55
+      ],
+      "test_bootstrap_failure_never_releases_holds_or_replays": [
+        105
+      ],
+      "test_default_refuses_before_any_host_call": [
+        63
+      ],
+      "test_early_provider_plist_change_refused_before_bootstrap": [
+        87
+      ],
+      "test_exact_production_sequence_and_original_drain_identity": [
+        67
+      ],
+      "test_invalid_applied_receipt_does_not_advance_controller": [
+        92
+      ],
+      "test_model_substitution_cannot_change_other_arguments": [
+        80
+      ],
+      "test_plist_completion_journal_failure_keeps_unresolved_intent": [
+        96
+      ],
+      "test_target_never_broadens_to_foreign_label_or_uid": [
+        83
+      ],
+      "test_unreviewed_or_incomplete_admission_refused": [
+        76
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_host.py": {
+      "setUp": [
+        13
+      ],
+      "test_bootstrap_requires_distinct_process_identity_with_exact_arguments": [
+        190
+      ],
+      "test_controller_still_rejects_production_scope": [
+        39
+      ],
+      "test_debug_requires_terminal_exact_worker_and_records_uncertainty": [
+        60
+      ],
+      "test_every_final_active_handle_needs_fresh_snapshot_and_sidecar": [
+        105
+      ],
+      "test_every_mutation_and_witness_remains_blocked_before_actions": [
+        30
+      ],
+      "test_failed_restore_or_arbitrary_callback_cannot_install": [
+        179
+      ],
+      "test_live_worker_can_never_be_booted_out": [
+        76
+      ],
+      "test_provider_pin_is_atomic_and_bootstrap_failure_preserves_exact_evidence": [
+        119
+      ],
+      "test_release_requires_current_readiness_even_with_prior_passed_receipt": [
+        214
+      ],
+      "test_reservoir_signal_requires_positive_provider_checkin_and_absence": [
+        43
+      ],
+      "test_same_named_holder_does_not_hide_surviving_old_worker": [
+        82
+      ],
+      "test_startup_accepts_complete_per_handle_semantics_not_count": [
+        91
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_preflight.py": {
+      "activity": [
+        99
+      ],
+      "append": [
+        66,
+        115
+      ],
+      "closure_fixture": [
+        182
+      ],
+      "crossing": [
+        107
+      ],
+      "reference": [
+        224
+      ],
+      "setUp": [
+        18
+      ],
+      "test_append_during_prefix_hash_is_not_read_into_anchor": [
+        64
+      ],
+      "test_approval_hash_projection_is_not_circular": [
+        132
+      ],
+      "test_complete_manifest_closure_rejects_sparse_groups_and_missing_sources": [
+        239
+      ],
+      "test_config_is_derived_from_original_argv": [
+        140
+      ],
+      "test_default_check_performs_no_service_probe_or_output_write": [
+        146
+      ],
+      "test_default_host_io_supports_read_only_retained_holder_listener_check": [
+        260
+      ],
+      "test_large_prefix_is_streamed_even_when_tail_bound_is_tiny": [
+        47
+      ],
+      "test_native_engine_binding_is_distinct_and_complete": [
+        36
+      ],
+      "test_pid_reuse_or_query_error_is_not_process_absence": [
+        267
+      ],
+      "test_private_restore_rejects_transitive_source_or_runtime_drift": [
+        250
+      ],
+      "test_provider_activity_or_queue_during_anchor_refuses": [
+        94
+      ],
+      "test_provider_pin_changes_only_model_value_and_keeps_wrapper_alias": [
+        164
+      ],
+      "test_provider_positive_idle_anchor_and_exact_identity": [
+        87
+      ],
+      "test_reservoir_anchor_rejects_lifecycle_crossing_inventory": [
+        105
+      ],
+      "test_reservoir_short_reads_are_completed": [
+        113
+      ],
+      "test_symlink_log_and_excess_tail_refuse": [
+        124
+      ],
+      "test_truncated_rewritten_rotated_and_partial_logs_refuse": [
+        76
+      ],
+      "traced": [
+        53
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery.py": {
+      "assert_blocked": [
+        61
+      ],
+      "held": [
+        23
+      ],
+      "park": [
+        51
+      ],
+      "report": [
+        17
+      ],
+      "reservoir_held": [
+        58
+      ],
+      "setUp": [
+        13
+      ],
+      "state": [
+        20
+      ],
+      "test_absent_job_does_not_resolve_unrecorded_removal": [
+        147
+      ],
+      "test_altered_controller_chain_and_reordered_prefix_refuse": [
+        136
+      ],
+      "test_before_hold_and_before_verified_holder_are_unsupported": [
+        103
+      ],
+      "test_both_parked_only_proposes_backup_revalidation": [
+        94
+      ],
+      "test_changed_artifact_or_host_operation_invalidates_proposal": [
+        175
+      ],
+      "test_changed_source_or_pinned_plist_is_not_inferred_completed": [
+        191
+      ],
+      "test_each_remove_durable_boundary_blocks_until_complete": [
+        108
+      ],
+      "test_foreign_holder_and_pid_reuse_refuse": [
+        154
+      ],
+      "test_missing_or_started_restore_inspection_always_blocks": [
+        182
+      ],
+      "test_no_input_mutation_and_no_io_or_execution_surface": [
+        203
+      ],
+      "test_no_original_anchor_reset_or_proposal_reuse": [
+        165
+      ],
+      "test_protected_stewardship_and_observation_change_block": [
+        197
+      ],
+      "test_provider_holder_preserves_exact_counters_guards_and_offsets": [
+        68
+      ],
+      "test_reservoir_holder_requires_provider_park_and_retained_checkin": [
+        87
+      ],
+      "test_schedule_matches_actual_controller03_success_with_inert_host": [
+        215
+      ],
+      "test_signal_intent_and_host_result_without_controller_completion_block": [
+        126
+      ],
+      "test_terminal_failure_keeps_known_holder_but_no_automatic_authority": [
+        131
+      ],
+      "test_unknown_debug_result_and_claimed_auth_refusal_never_rearm": [
+        118
+      ],
+      "test_verified_checkin_is_required_before_holder_removal_proposal": [
+        82
+      ],
+      "witness": [
+        42
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_driver.py": {
+      "__init__": [
+        22
+      ],
+      "advance": [
+        152
+      ],
+      "apply_provider_restart": [
+        80
+      ],
+      "arm_next_spawn": [
+        83
+      ],
+      "bootstrap_original": [
+        88
+      ],
+      "checkpoint": [
+        142
+      ],
+      "collect_witness": [
+        74
+      ],
+      "event": [
+        35
+      ],
+      "fail": [
+        199,
+        215
+      ],
+      "reconcile_recovery": [
+        92
+      ],
+      "recovery_inspection": [
+        43
+      ],
+      "revalidate_recovery": [
+        66
+      ],
+      "setUp": [
+        134
+      ],
+      "step": [
+        146
+      ],
+      "test_absent_effect_before_command_remains_blocked_without_retry": [
+        236
+      ],
+      "test_accepted_late_history_is_never_rolled_back": [
+        262
+      ],
+      "test_all_phases_one_step_each_preserve_original_anchors_and_journal": [
+        159
+      ],
+      "test_claim_write_failure_has_no_action_and_next_explicit_attempt_allowed": [
+        197
+      ],
+      "test_default_disabled_before_lock_host_or_ledger": [
+        183
+      ],
+      "test_every_completed_effect_can_be_adopted_after_result_write_failure": [
+        207
+      ],
+      "test_full_original_controller_schedule_matches_pure_reconstruction": [
+        268
+      ],
+      "test_other_role_protected_or_source_drift_refuses_before_claim": [
+        243
+      ],
+      "test_owned_fixture_uses_same_full_driver_without_production_flag": [
+        174
+      ],
+      "test_partial_backup_or_restore_never_restarts_producer": [
+        255
+      ],
+      "test_stale_heads_and_change_during_revalidate_no_action_claim": [
+        188
+      ],
+      "test_unknown_armed_outcome_while_original_alive_never_resignals": [
+        228
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_inspect.py": {
+      "__init__": [
+        9
+      ],
+      "all_listeners": [
+        19
+      ],
+      "cursor": [
+        72
+      ],
+      "debug": [
+        90
+      ],
+      "done": [
+        82
+      ],
+      "event": [
+        74
+      ],
+      "guard": [
+        73
+      ],
+      "hold": [
+        87
+      ],
+      "holder": [
+        102
+      ],
+      "host": [
+        15,
+        78,
+        268
+      ],
+      "intent": [
+        81
+      ],
+      "make": [
+        64
+      ],
+      "process": [
+        18
+      ],
+      "ref": [
+        67
+      ],
+      "report": [
+        83
+      ],
+      "restore_launch": [
+        161
+      ],
+      "restore_start_exit": [
+        181
+      ],
+      "role": [
+        17
+      ],
+      "save_spec": [
+        69
+      ],
+      "setUp": [
+        22
+      ],
+      "sha": [
+        66
+      ],
+      "signal": [
+        97
+      ],
+      "stewardship": [
+        16
+      ],
+      "test_alias_change_and_absence_change_are_detected": [
+        260
+      ],
+      "test_bootstrap_command_return_is_recorded_separately_from_readiness": [
+        277
+      ],
+      "test_bound_model_alias_allowed_but_record_symlink_refuses": [
+        255
+      ],
+      "test_chain_owner_anchor_and_host_sequence_corruption_refuse": [
+        244
+      ],
+      "test_cli_without_args_and_ast_cannot_mutate": [
+        325
+      ],
+      "test_debug_result_before_controller_completion_is_unresolved": [
+        117
+      ],
+      "test_debug_without_result_stays_unresolved_even_with_owned_holder": [
+        113
+      ],
+      "test_empty_transaction_and_execution_review_exclusion": [
+        110
+      ],
+      "test_held_removal_intent_keeps_debug_uncertain_until_results": [
+        127
+      ],
+      "test_install_bytes_never_resolve_missing_operation_result": [
+        134
+      ],
+      "test_missing_holder_receipt_or_foreign_guard_cannot_verify": [
+        234
+      ],
+      "test_missing_or_altered_witness_refuses": [
+        238
+      ],
+      "test_missing_signal_wall_time_is_not_invented": [
+        124
+      ],
+      "test_new_record_during_observation_is_inconclusive": [
+        266
+      ],
+      "test_outer_restore_witness_requires_recorded_clean_exit": [
+        223
+      ],
+      "test_partial_outputs_are_reconciliation_only_without_replaying_producer": [
+        294
+      ],
+      "test_plist_and_bootstrap_before_after_records_and_pending_pid": [
+        139
+      ],
+      "test_plist_completion_requires_separate_action_and_exact_restart_argv": [
+        153
+      ],
+      "test_read_only_io_rejects_mutations_and_service_requests": [
+        318
+      ],
+      "test_recovery_action_result_must_match_its_actual_host_result_span": [
+        303
+      ],
+      "test_restore_binding_pid_and_log_mutations_refuse": [
+        215
+      ],
+      "test_restore_launch_and_child_start_always_block_until_exit_and_outer_witness": [
+        190
+      ],
+      "test_restore_nonzero_or_unresolved_marker_never_implies_reaped_success": [
+        200
+      ],
+      "test_restore_request_only_or_child_without_launch_not_retryable": [
+        209
+      ],
+      "test_signal_before_and_after_result_never_authorizes_retry": [
+        119
+      ],
+      "test_unknown_disk_bytes_are_reported_without_loaded_source_inference": [
+        252
+      ],
+      "test_wrong_holder_interpreter_family_is_unknown": [
+        231
+      ],
+      "valid": [
+        108
+      ],
+      "write": [
+        68
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_restore_runner.py": {
+      "finish": [
+        51,
+        169
+      ],
+      "patcher": [
+        36
+      ],
+      "run_restore": [
+        68
+      ],
+      "setUp": [
+        17
+      ],
+      "test_actual_backup_helper_layout_is_accepted": [
+        115
+      ],
+      "test_adopt_complete_success_without_second_child_or_producer": [
+        191
+      ],
+      "test_adopt_missing_or_unreaped_exit_cannot_infer_process_success": [
+        198
+      ],
+      "test_adopt_rejects_uncertain_marker_changed_request_and_other_child": [
+        208
+      ],
+      "test_adopt_requires_both_parked_barriers_and_same_runtime": [
+        223
+      ],
+      "test_child_environment_removes_python_overrides": [
+        234
+      ],
+      "test_default_production_gate_refuses_before_file_or_child": [
+        71
+      ],
+      "test_exact_launch_and_natural_reap_bind_owned_result": [
+        78
+      ],
+      "test_existing_work_or_foreign_verifier_refused": [
+        133
+      ],
+      "test_foreign_backup_and_source_refused": [
+        106
+      ],
+      "test_foreign_interpreter_refused_before_request_or_spawn": [
+        101
+      ],
+      "test_interruption_and_uncertain_launch_keep_intent": [
+        158
+      ],
+      "test_missing_or_invalid_witness_never_accepts": [
+        175
+      ],
+      "test_no_second_run_even_after_success": [
+        96
+      ],
+      "test_nonzero_exit_retains_failed_record_and_blocks_retry": [
+        140
+      ],
+      "test_post_child_input_drift_blocks_acceptance": [
+        186
+      ],
+      "test_post_child_service_barrier_failure_blocks_acceptance": [
+        180
+      ],
+      "test_timeout_retains_owned_child_and_no_force": [
+        148
+      ],
+      "test_unrelated_witness_pid_is_rejected": [
+        168
+      ],
+      "witness": [
+        58
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_retained.py": {
+      "claim": [
+        68
+      ],
+      "create_guard": [
+        194
+      ],
+      "fake_arm": [
+        226
+      ],
+      "reconcile": [
+        76
+      ],
+      "setUp": [
+        20
+      ],
+      "stub": [
+        54
+      ],
+      "test_arbitrary_checkpoint_cannot_hydrate": [
+        123
+      ],
+      "test_bootstrap_birth_boundary_and_exact_listener_are_required": [
+        142
+      ],
+      "test_claim_must_bind_validated_checkpoint_and_current_session": [
+        107
+      ],
+      "test_default_gate_blocks_before_ledger_or_live_io": [
+        79
+      ],
+      "test_every_accepted_witness_and_replacement_is_revalidated": [
+        130
+      ],
+      "test_exact_holder_resolves_effect_without_claiming_signal_or_rearming": [
+        84
+      ],
+      "test_provider_ready_adoption_does_not_compare_current_journal": [
+        158
+      ],
+      "test_removed_holder_needs_exact_intent_and_no_survivor": [
+        99
+      ],
+      "test_revalidate_recomputes_and_reserves_unknown_signal_attempt": [
+        113
+      ],
+      "test_span_validation_preserves_original_offset_and_detects_prefix_rewrite": [
+        172
+      ],
+      "test_surviving_original_or_missing_intent_cannot_adopt_holder": [
+        93
+      ],
+      "test_two_steps_share_real_ledger_host_and_inspector_without_original_journal_rewrite": [
+        184
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_recovery_phases.py": {
+      "change": [
+        47
+      ],
+      "changed": [
+        19
+      ],
+      "fail": [
+        58,
+        69
+      ],
+      "prepared": [
+        14
+      ],
+      "test_claim_context_and_double_claim_refused": [
+        40
+      ],
+      "test_executor_and_host_span_mutations_refused_after_rechaining": [
+        28
+      ],
+      "test_failed_claim_cannot_be_converted_to_ordinary_success": [
+        45
+      ],
+      "test_hard_interrupt_with_no_failure_record_still_cannot_replay": [
+        56
+      ],
+      "test_result_write_is_durable_even_when_session_end_write_fails": [
+        67
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_reservoir_maintenance_state.py": {
+      "barrier": [
+        193
+      ],
+      "context": [
+        17
+      ],
+      "coverage": [
+        41
+      ],
+      "failed_walk": [
+        252
+      ],
+      "fake_state": [
+        183
+      ],
+      "final": [
+        151
+      ],
+      "interrupt": [
+        279
+      ],
+      "provider": [
+        52
+      ],
+      "qos": [
+        23
+      ],
+      "setUp": [
+        30
+      ],
+      "test_absence_and_ownership_required_before_backup_creation": [
+        212
+      ],
+      "test_backup_never_overwrites_or_nests_in_source": [
+        220
+      ],
+      "test_backup_preserves_all_bytes_and_timestamps": [
+        199
+      ],
+      "test_changed_source_keeps_partial_backup_without_success_receipt": [
+        260
+      ],
+      "test_coverage_identity_bytes_anchor_and_exit_are_required": [
+        129
+      ],
+      "test_final_failure_missing_name_or_generic_complete_is_insufficient": [
+        169
+      ],
+      "test_final_set_reconciles_lifecycle_and_ignores_earlier_snapshot": [
+        164
+      ],
+      "test_generation_error_duplicate_or_unresolved_qos_blocks": [
+        118
+      ],
+      "test_interrupted_copy_retains_evidence_and_never_returns_success": [
+        275
+      ],
+      "test_journal_or_qos_success_does_not_replace_checkin": [
+        111
+      ],
+      "test_late_waiter_bookkeeping_keeps_one_successful_generation": [
+        75
+      ],
+      "test_late_waiters_cannot_reopen_unknown_old_or_failed_work": [
+        84
+      ],
+      "test_lifecycle_change_during_final_or_missing_end_blocks": [
+        175
+      ],
+      "test_missing_or_mismatched_acknowledgement_blocks": [
+        101
+      ],
+      "test_provider_empty_drain_requires_no_selected_work": [
+        95
+      ],
+      "test_provider_pairs_work_with_explicit_pending_rejection": [
+        66
+      ],
+      "test_restore_interface_is_explicitly_not_acceptance": [
+        290
+      ],
+      "test_special_artifact_is_rejected_without_waiting_for_a_writer": [
+        243
+      ],
+      "test_symlinks_hardlinks_and_oversized_files_rejected": [
+        229
+      ],
+      "test_traversal_failure_is_not_silently_an_empty_directory": [
+        249
+      ],
+      "test_truncated_log_and_forged_qos_receipt_block": [
+        142
+      ],
+      "write": [
+        36
+      ],
+      "write_then_change": [
+        264
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_restore_verifier.py": {
+      "__init__": [
+        20
+      ],
+      "accepted_fixture": [
+        150
+      ],
+      "asarray": [
+        27
+      ],
+      "checked_require": [
+        240
+      ],
+      "constructor": [
+        233
+      ],
+      "import_boundary": [
+        196
+      ],
+      "request": [
+        76
+      ],
+      "round": [
+        21
+      ],
+      "setUp": [
+        63
+      ],
+      "test_actual_origin_block_accepts_lazy_import_and_rejects_missing_or_shadow": [
+        225
+      ],
+      "test_backup_file_drift_rejected": [
+        136
+      ],
+      "test_complete_origin_check_follows_construction_before_state_use": [
+        207
+      ],
+      "test_false_or_incomplete_restore_witness_cannot_pass": [
+        189
+      ],
+      "test_floor_tail_and_full_fields": [
+        36
+      ],
+      "test_gpu_imports_guarded_without_loading_packages": [
+        55
+      ],
+      "test_independent_copy_keeps_every_file_and_file_timestamp": [
+        140
+      ],
+      "test_input_hash_drift_rejected": [
+        125
+      ],
+      "test_live_or_reused_unsafe_paths_and_config_rejected": [
+        113
+      ],
+      "test_nested_nonfinite_metadata_rejected": [
+        51
+      ],
+      "test_numeric_imports_are_inside_explicit_execute_only": [
+        255
+      ],
+      "test_prepare_is_explicitly_unexecuted_and_accepts_interpreter_group": [
+        107
+      ],
+      "test_self_consistent_changed_supporting_source_rejected": [
+        129
+      ],
+      "test_thermostat_incomplete_nonfinite_shapes_rejected": [
+        43
+      ],
+      "test_witness_requires_complete_semantics_files_and_fresh_runtime": [
+        170
+      ],
+      "thermostat": [
+        30
+      ],
+      "tolist": [
+        22
+      ],
+      "write": [
+        73
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_transaction_execution.py": {
+      "fail": [
+        65
+      ],
+      "guarded_event": [
+        108
+      ],
+      "session": [
+        23
+      ],
+      "setUp": [
+        17
+      ],
+      "test_begin_write_failure_releases_lock_and_never_enters": [
+        63
+      ],
+      "test_exception_has_durable_identity_without_success_inference": [
+        38
+      ],
+      "test_foreign_executor_and_shared_or_symlink_lock_refused": [
+        51
+      ],
+      "test_fresh_owned_fixture_and_resume_share_same_lock": [
+        101
+      ],
+      "test_ledger_requires_active_lock_and_retained_exact_executor": [
+        79
+      ],
+      "test_plan_boot_root_mode_session_mutations_are_refused": [
+        92
+      ],
+      "test_recovery_history_blocks_fresh_even_with_empty_original_journal": [
+        127
+      ],
+      "test_replaced_lock_is_detected_before_action": [
+        72
+      ],
+      "test_same_process_and_independent_lock_fd_exclusion": [
+        26
+      ],
+      "test_stale_fresh_journal_refuses_before_second_host_action": [
+        119
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/transaction_execution.py": {
+      "__enter__": [
+        54
+      ],
+      "__exit__": [
+        85
+      ],
+      "__init__": [
+        45
+      ],
+      "controller_session": [
+        101
+      ],
+      "private_root": [
+        21
+      ],
+      "require_active": [
+        30
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/qualify_restore.py": {
+      "check": [
+        111
+      ],
+      "check_ref": [
+        82
+      ],
+      "child_environment": [
+        240
+      ],
+      "classify_case": [
+        330
+      ],
+      "context_for": [
+        272
+      ],
+      "digest": [
+        53
+      ],
+      "execute": [
+        363
+      ],
+      "harness_hashes": [
+        87
+      ],
+      "load_verifier": [
+        229
+      ],
+      "main": [
+        420
+      ],
+      "prepare_case": [
+        290
+      ],
+      "read": [
+        64
+      ],
+      "ref": [
+        58
+      ],
+      "require": [
+        48
+      ],
+      "run_child": [
+        249
+      ],
+      "validate_host_gate": [
+        173
+      ],
+      "validate_release": [
+        211
+      ],
+      "verify_import_order": [
+        93
+      ],
+      "write": [
+        71
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/reservoir_maintenance_state.py": {
+      "_coverage": [
+        80
+      ],
+      "_identity": [
+        44
+      ],
+      "_qos_selected": [
+        97
+      ],
+      "_read": [
+        49
+      ],
+      "_sync_directory": [
+        280
+      ],
+      "_walk_error": [
+        247
+      ],
+      "_write_exclusive": [
+        288
+      ],
+      "artifact": [
+        74
+      ],
+      "backup_stopped_tree": [
+        301
+      ],
+      "canonical_hash": [
+        21
+      ],
+      "envelope": [
+        31
+      ],
+      "inventory_tree": [
+        251
+      ],
+      "prepare_restore_request": [
+        357
+      ],
+      "require": [
+        26
+      ],
+      "verify_final_snapshot": [
+        197
+      ],
+      "verify_provider_drain": [
+        149
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/restore_verifier.py": {
+      "check_inputs": [
+        150
+      ],
+      "check_runtime": [
+        192
+      ],
+      "compare_handle": [
+        292
+      ],
+      "copy_tree": [
+        163
+      ],
+      "deny_network": [
+        354
+      ],
+      "descriptor": [
+        235
+      ],
+      "digest": [
+        50
+      ],
+      "emit": [
+        373
+      ],
+      "execute_private_restore": [
+        326
+      ],
+      "file_content": [
+        78
+      ],
+      "find_spec": [
+        321
+      ],
+      "finite": [
+        204
+      ],
+      "implementation": [
+        66
+      ],
+      "load_environment_helper": [
+        185
+      ],
+      "main": [
+        462
+      ],
+      "option": [
+        128
+      ],
+      "prepare_request": [
+        137
+      ],
+      "read_expected": [
+        241
+      ],
+      "read_json": [
+        61
+      ],
+      "reference": [
+        55
+      ],
+      "thermostat_expected": [
+        208
+      ],
+      "valid_json": [
+        224
+      ],
+      "validate_request": [
+        84
+      ],
+      "validate_restore_witness": [
+        413
+      ],
+      "verify_hashes": [
+        70
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/seed_fixture.py": {
+      "deny_external": [
+        23
+      ],
+      "execute": [
+        28
+      ],
+      "find_spec": [
+        18
+      ],
+      "main": [
+        125
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/test_qualification.py": {
+      "assert_no_numeric": [
+        35
+      ],
+      "canonical": [
+        237
+      ],
+      "clone": [
+        235
+      ],
+      "host_fixture": [
+        136
+      ],
+      "inventory": [
+        231
+      ],
+      "rejection": [
+        90
+      ],
+      "setUp": [
+        23
+      ],
+      "test_all_negative_mutations_stay_in_independent_private_copies": [
+        223
+      ],
+      "test_child_environment_strips_python_overrides_and_limits_threads": [
+        60
+      ],
+      "test_child_natural_exit_is_reaped_and_no_signal_method_used": [
+        66
+      ],
+      "test_default_and_seed_default_never_launch_or_import_numeric": [
+        27
+      ],
+      "test_extra_failure_does_not_count_as_expected_rejection": [
+        110
+      ],
+      "test_host_gate_recomputes_current_health_pressure_swap_and_gaps": [
+        151
+      ],
+      "test_initial_release_reference_cannot_be_extended_between_cases": [
+        191
+      ],
+      "test_interruption_retains_owned_child_without_signal": [
+        83
+      ],
+      "test_missing_or_stale_release_refusal_preserves_evidence_without_child": [
+        212
+      ],
+      "test_negative_controls_require_the_exact_expected_failure": [
+        98
+      ],
+      "test_opt_in_without_release_refuses_before_children_or_writes": [
+        39
+      ],
+      "test_original_v1_lazy_lsm_origin_order_is_a_real_preexecution_blocker": [
+        130
+      ],
+      "test_release_binds_exact_inputs_harness_run_and_completed_gate": [
+        170
+      ],
+      "test_seed_child_failure_blocks_every_subsequent_child_and_retains_result": [
+        200
+      ],
+      "test_seed_cpu_network_and_gpu_boundaries_are_explicit": [
+        117
+      ],
+      "test_sparse_or_altered_preparation_rejected_without_numeric_import": [
+        44
+      ],
+      "test_timeout_preserves_unresolved_child_and_never_kills": [
+        73
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/common.py": {
+      "__init__": [
+        99
+      ],
+      "check_imports": [
+        85
+      ],
+      "check_source": [
+        63
+      ],
+      "close": [
+        108
+      ],
+      "digest": [
+        33
+      ],
+      "emit": [
+        103
+      ],
+      "find_spec": [
+        79
+      ],
+      "finite": [
+        55
+      ],
+      "harness_hashes": [
+        59
+      ],
+      "read_events": [
+        112
+      ],
+      "read_json": [
+        51
+      ],
+      "require": [
+        28
+      ],
+      "write_json": [
+        37
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/driver.py": {
+      "main": [
+        192
+      ],
+      "prepare": [
+        27
+      ],
+      "private_path": [
+        21
+      ],
+      "run": [
+        70
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/fixture.py": {
+      "fill": [
+        13
+      ],
+      "push_payload": [
+        47
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/process_identity.py": {
+      "identity": [
+        22
+      ],
+      "interpreter": [
+        52
+      ],
+      "interpreter_paths": [
+        40
+      ],
+      "parse_identity": [
+        13
+      ],
+      "same_identity": [
+        30
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/protocol_client.py": {
+      "probe": [
+        11
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/result_checks.py": {
+      "verify_process_evidence": [
+        88
+      ],
+      "verify_result": [
+        10
+      ],
+      "verify_retained_files": [
+        76
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/review_matrix.py": {
+      "main": [
+        63
+      ],
+      "review": [
+        15
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/service_child.py": {
+      "__init__": [
+        26
+      ],
+      "auto": [
+        117
+      ],
+      "begin": [
+        89
+      ],
+      "control": [
+        207
+      ],
+      "cooperative": [
+        106
+      ],
+      "delayed_save": [
+        76
+      ],
+      "end": [
+        94
+      ],
+      "exercise": [
+        150
+      ],
+      "install": [
+        135
+      ],
+      "main": [
+        291
+      ],
+      "owned_serve": [
+        195
+      ],
+      "push": [
+        126
+      ],
+      "restore": [
+        144
+      ],
+      "restore_cycles": [
+        256
+      ],
+      "snapshot": [
+        41
+      ],
+      "synchronous": [
+        98
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/snapshot_oracle.py": {
+      "compare_fields": [
+        57
+      ],
+      "descriptor": [
+        13
+      ],
+      "expected_payload": [
+        29
+      ],
+      "thermostat_signature": [
+        22
+      ],
+      "verify_files": [
+        72
+      ],
+      "verify_restored": [
+        94
+      ]
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/test_harness.py": {
+      "bad_timeout": [
+        62
+      ],
+      "fake_result": [
+        22
+      ],
+      "lost_ack": [
+        63
+      ],
+      "lost_final": [
+        61
+      ],
+      "missing_files": [
+        65
+      ],
+      "missing_fixture": [
+        64
+      ],
+      "missing_restore": [
+        60
+      ],
+      "reader": [
+        107
+      ],
+      "test_all_planned_cases_have_distinct_expected_outcomes": [
+        52
+      ],
+      "test_cancellation_and_single_delay_evidence_required": [
+        83
+      ],
+      "test_child_and_driver_have_no_forced_termination": [
+        189
+      ],
+      "test_event_reader_does_not_parse_partial_record": [
+        177
+      ],
+      "test_file_hashes_and_owned_paths_required": [
+        91
+      ],
+      "test_framework_runtime_requires_both_exact_files": [
+        117
+      ],
+      "test_gpu_guard_and_private_output": [
+        170
+      ],
+      "test_incomplete_matrix_cannot_be_accepted": [
+        49
+      ],
+      "test_incomplete_or_weakened_receipts_fail": [
+        59
+      ],
+      "test_late_trigger_and_after_batch_ack_fail": [
+        77
+      ],
+      "test_negative_control_cannot_hide_application_send": [
+        72
+      ],
+      "test_no_missing_or_changed_snapshot_fields": [
+        147
+      ],
+      "test_process_evidence_requires_both_separate_stable_processes": [
+        129
+      ],
+      "test_readonly_process_reader_and_strict_parse": [
+        105
+      ],
+      "test_request_has_native_full_state_and_quiet_hint": [
+        183
+      ],
+      "test_tests_import_no_real_service_or_numeric_packages": [
+        203
+      ],
+      "test_thermostat_digest_binds_values_and_order": [
+        161
+      ]
+    },
+    "/Users/v/other/astrid/scripts/model_environment.py": {
+      "absolute_path": [
+        92
+      ],
+      "assert_hold": [
+        269
+      ],
+      "atomic_json": [
+        62
+      ],
+      "command_matches": [
+        46
+      ],
+      "create_hold": [
+        255
+      ],
+      "digest": [
+        28
+      ],
+      "hold_record": [
+        245
+      ],
+      "interpreter_paths": [
+        33
+      ],
+      "launch": [
+        280
+      ],
+      "main": [
+        313
+      ],
+      "normalized_name": [
+        110
+      ],
+      "option": [
+        101
+      ],
+      "process_start": [
+        86
+      ],
+      "read_json": [
+        53
+      ],
+      "release_hold": [
+        274
+      ],
+      "selected_release": [
+        234
+      ],
+      "selection": [
+        228
+      ],
+      "sync_directory": [
+        78
+      ],
+      "validate_manifest": [
+        164
+      ],
+      "verify_packages": [
+        115
+      ]
+    }
+  },
+  "measured_metadata_extents": {
+    "current_log_sizes_stat_only": {
+      "/Users/v/other/neural-triple-reservoir/logs/coupled-astrid.log": {
+        "bytes": 192057230,
+        "exists": true,
+        "kind": "file",
+        "mtime_ns": 1792176678447500204
+      },
+      "/Users/v/other/neural-triple-reservoir/logs/reservoir-service.log": {
+        "bytes": 2859716117,
+        "exists": true,
+        "kind": "file",
+        "mtime_ns": 1792176678447488079
+      },
+      "/Users/v/other/neural-triple-reservoir/workspace/model_qos_receipts.jsonl": {
+        "bytes": 241214267,
+        "exists": true,
+        "kind": "file",
+        "mtime_ns": 1792176678436342193
+      }
+    },
+    "model_snapshot": {
+      "files": [
+        {
+          "bytes": 17466,
+          "device": 16777234,
+          "inode": 95392387,
+          "mtime_ns": 1780641215236339287,
+          "path": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09/chat_template.jinja",
+          "symlink": true
+        },
+        {
+          "bytes": 5415,
+          "device": 16777234,
+          "inode": 103349870,
+          "mtime_ns": 1780947799318684911,
+          "path": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09/config.json",
+          "symlink": true
+        },
+        {
+          "bytes": 260,
+          "device": 16777234,
+          "inode": 95392396,
+          "mtime_ns": 1780641215261570617,
+          "path": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09/generation_config.json",
+          "symlink": true
+        },
+        {
+          "bytes": 5336113416,
+          "device": 16777234,
+          "inode": 103349885,
+          "mtime_ns": 1780948363071155100,
+          "path": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09/model-00001-of-00002.safetensors",
+          "symlink": true
+        },
+        {
+          "bytes": 2898716981,
+          "device": 16777234,
+          "inode": 103349888,
+          "mtime_ns": 1780948092029832055,
+          "path": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09/model-00002-of-00002.safetensors",
+          "symlink": true
+        },
+        {
+          "bytes": 135329,
+          "device": 16777234,
+          "inode": 103349893,
+          "mtime_ns": 1780947799722421881,
+          "path": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09/model.safetensors.index.json",
+          "symlink": true
+        },
+        {
+          "bytes": 868,
+          "device": 16777234,
+          "inode": 95392407,
+          "mtime_ns": 1780641215293847178,
+          "path": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09/processor_config.json",
+          "symlink": true
+        },
+        {
+          "bytes": 32169626,
+          "device": 16777234,
+          "inode": 95392424,
+          "mtime_ns": 1780641225978763978,
+          "path": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09/tokenizer.json",
+          "symlink": true
+        },
+        {
+          "bytes": 2719,
+          "device": 16777234,
+          "inode": 95392422,
+          "mtime_ns": 1780641215391695188,
+          "path": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09/tokenizer_config.json",
+          "symlink": true
+        }
+      ],
+      "logical_bytes_per_pass": 8267162080,
+      "paths": 9,
+      "root": "/Users/v/.cache/huggingface/hub/models--mlx-community--gemma-4-12B-it-5bit/snapshots/a2fa92fa5bdba1fc4be9d927a5d5188c17d87d09",
+      "symlink_paths": 9
+    },
+    "original_manifest_artifacts": {
+      "logical_bytes": 8271514275,
+      "paths": 175
+    },
+    "package_payload": {
+      "distribution_extents": {
+        "aiohappyeyeballs-2.6.1.dist-info": {
+          "hashed_entries": 11,
+          "logical_bytes": 40336
+        },
+        "aiohttp-3.13.3.dist-info": {
+          "hashed_entries": 83,
+          "logical_bytes": 1829563
+        },
+        "aiosignal-1.4.0.dist-info": {
+          "hashed_entries": 8,
+          "logical_bytes": 16634
+        },
+        "annotated_doc-0.0.4.dist-info": {
+          "hashed_entries": 9,
+          "logical_bytes": 8905
+        },
+        "anyio-4.13.0.dist-info": {
+          "hashed_entries": 50,
+          "logical_bytes": 457348
+        },
+        "attrs-26.1.0.dist-info": {
+          "hashed_entries": 36,
+          "logical_bytes": 231123
+        },
+        "cattrs-26.1.0.dist-info": {
+          "hashed_entries": 57,
+          "logical_bytes": 250906
+        },
+        "certifi-2026.2.25.dist-info": {
+          "hashed_entries": 11,
+          "logical_bytes": 279736
+        },
+        "click-8.3.1.dist-info": {
+          "hashed_entries": 23,
+          "logical_bytes": 387747
+        },
+        "coremltools-9.0.dist-info": {
+          "hashed_entries": 677,
+          "logical_bytes": 12158306
+        },
+        "filelock-3.25.2.dist-info": {
+          "hashed_entries": 17,
+          "logical_bytes": 79838
+        },
+        "frozenlist-1.8.0.dist-info": {
+          "hashed_entries": 11,
+          "logical_bytes": 183971
+        },
+        "fsspec-2026.3.0.dist-info": {
+          "hashed_entries": 62,
+          "logical_bytes": 732927
+        },
+        "h11-0.16.0.dist-info": {
+          "hashed_entries": 18,
+          "logical_bytes": 102693
+        },
+        "hf_xet-1.4.2.dist-info": {
+          "hashed_entries": 8,
+          "logical_bytes": 7588805
+        },
+        "httpcore-1.0.9.dist-info": {
+          "hashed_entries": 37,
+          "logical_bytes": 285071
+        },
+        "httpx-0.28.1.dist-info": {
+          "hashed_entries": 31,
+          "logical_bytes": 293409
+        },
+        "huggingface_hub-1.8.0.dist-info": {
+          "hashed_entries": 180,
+          "logical_bytes": 2498724
+        },
+        "idna-3.11.dist-info": {
+          "hashed_entries": 14,
+          "logical_bytes": 353138
+        },
+        "jinja2-3.1.6.dist-info": {
+          "hashed_entries": 32,
+          "logical_bytes": 494554
+        },
+        "joblib-1.5.3.dist-info": {
+          "hashed_entries": 144,
+          "logical_bytes": 918835
+        },
+        "markdown_it_py-4.0.0.dist-info": {
+          "hashed_entries": 76,
+          "logical_bytes": 223847
+        },
+        "markupsafe-3.0.3.dist-info": {
+          "hashed_entries": 12,
+          "logical_bytes": 72796
+        },
+        "mdurl-0.1.2.dist-info": {
+          "hashed_entries": 12,
+          "logical_bytes": 22522
+        },
+        "mlx-0.32.0.dist-info": {
+          "hashed_entries": 42,
+          "logical_bytes": 1804843
+        },
+        "mlx_lm-0.31.3.dist-info": {
+          "hashed_entries": 192,
+          "logical_bytes": 1546520
+        },
+        "mlx_metal-0.32.0.dist-info": {
+          "hashed_entries": 406,
+          "logical_bytes": 188357867
+        },
+        "mpmath-1.3.0.dist-info": {
+          "hashed_entries": 93,
+          "logical_bytes": 1942522
+        },
+        "multidict-6.7.1.dist-info": {
+          "hashed_entries": 12,
+          "logical_bytes": 171671
+        },
+        "networkx-3.6.1.dist-info": {
+          "hashed_entries": 602,
+          "logical_bytes": 6978486
+        },
+        "numpy-2.4.3.dist-info": {
+          "hashed_entries": 913,
+          "logical_bytes": 19422771
+        },
+        "packaging-26.0.dist-info": {
+          "hashed_entries": 25,
+          "logical_bytes": 274976
+        },
+        "pip-26.0.dist-info": {
+          "hashed_entries": 475,
+          "logical_bytes": 5436020
+        },
+        "propcache-0.4.1.dist-info": {
+          "hashed_entries": 14,
+          "logical_bytes": 174609
+        },
+        "protobuf-7.34.1.dist-info": {
+          "hashed_entries": 60,
+          "logical_bytes": 1573046
+        },
+        "pyaml-26.2.1.dist-info": {
+          "hashed_entries": 14,
+          "logical_bytes": 68638
+        },
+        "pygments-2.19.2.dist-info": {
+          "hashed_entries": 346,
+          "logical_bytes": 4467160
+        },
+        "pyyaml-6.0.3.dist-info": {
+          "hashed_entries": 25,
+          "logical_bytes": 604277
+        },
+        "regex-2026.2.28.dist-info": {
+          "hashed_entries": 11,
+          "logical_bytes": 1249596
+        },
+        "rich-14.3.3.dist-info": {
+          "hashed_entries": 106,
+          "logical_bytes": 1236642
+        },
+        "safetensors-0.7.0.dist-info": {
+          "hashed_entries": 15,
+          "logical_bytes": 1070453
+        },
+        "scikit_learn-1.8.0.dist-info": {
+          "hashed_entries": 961,
+          "logical_bytes": 29658552
+        },
+        "scipy-1.17.1.dist-info": {
+          "hashed_entries": 1424,
+          "logical_bytes": 70362343
+        },
+        "sentencepiece-0.2.1.dist-info": {
+          "hashed_entries": 16,
+          "logical_bytes": 3537080
+        },
+        "setuptools-81.0.0.dist-info": {
+          "hashed_entries": 459,
+          "logical_bytes": 3607251
+        },
+        "shellingham-1.5.4.dist-info": {
+          "hashed_entries": 14,
+          "logical_bytes": 17427
+        },
+        "sympy-1.14.0.dist-info": {
+          "hashed_entries": 1572,
+          "logical_bytes": 26696811
+        },
+        "threadpoolctl-3.6.0.dist-info": {
+          "hashed_entries": 6,
+          "logical_bytes": 66156
+        },
+        "tokenizers-0.22.2.dist-info": {
+          "hashed_entries": 30,
+          "logical_bytes": 8506296
+        },
+        "torch-2.11.0.dist-info": {
+          "hashed_entries": 12413,
+          "logical_bytes": 343513869
+        },
+        "tqdm-4.67.3.dist-info": {
+          "hashed_entries": 41,
+          "logical_bytes": 222783
+        },
+        "transformers-5.4.0.dist-info": {
+          "hashed_entries": 2255,
+          "logical_bytes": 41125798
+        },
+        "typer-0.24.1.dist-info": {
+          "hashed_entries": 24,
+          "logical_bytes": 263926
+        },
+        "typing_extensions-4.15.0.dist-info": {
+          "hashed_entries": 6,
+          "logical_bytes": 177708
+        },
+        "websockets-16.0.dist-info": {
+          "hashed_entries": 60,
+          "logical_bytes": 678307
+        },
+        "yarl-1.23.0.dist-info": {
+          "hashed_entries": 18,
+          "logical_bytes": 311738
+        }
+      },
+      "distribution_record_files": 56,
+      "environment": "/Users/v/other/neural-triple-reservoir/.venv",
+      "hashed_record_entries_per_successful_pass": 24269,
+      "logical_bytes_per_successful_pass": 794637876,
+      "record_metadata_bytes": 2510747,
+      "unhashed_record_rows_skipped_by_validator": 659,
+      "unique_resolved_path_bytes": 794622062,
+      "unique_resolved_paths": 24264
+    },
+    "proof_availability": {
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/launch-guard.json": {
+        "exists": false
+      },
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/runs": {
+        "exists": false
+      },
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/active-run.json": {
+        "exists": false
+      },
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/run.lock": {
+        "exists": false
+      },
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/runs": {
+        "exists": false
+      }
+    },
+    "restore_check_prepared_artifacts": {
+      "logical_bytes_per_artifact_loop": 3581076,
+      "note": "q.check checks this closure plus several repeated small references. It does not itself scan wheel payloads or all model weights.",
+      "paths": 129
+    }
+  },
+  "metadata_inputs": [
+    {
+      "bytes": 36339,
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/manifests-v2/original.json",
+      "sha256": "8c773b9bfc753ce6207883d71076441024f2f850bde31c17ca2fca5ae2aeabd0"
+    },
+    {
+      "bytes": 3159,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/prepared-01/sources.json",
+      "sha256": "826e6eb869262de8769bea5f812986eddfb8d675a83875eab03db067e70751f1"
+    },
+    {
+      "bytes": 52013,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/inputs.json",
+      "sha256": "f830793317e866c30f02770581713ff171e5309c36362c4f2f44c069090ab6e7"
+    }
+  ],
+  "metadata_method": {
+    "description": "Read small JSON and bounded RECORD metadata; use Path.stat/resolve for RECORD-listed payloads and manifest artifacts. Hash only source, JSON and RECORD metadata (8 MiB per-file read ceiling); no payload files opened. RECORD identity checked before/after each metadata read. Payload stat entries are an asynchronous metadata observation, not content or runtime alignment verification.",
+    "errors": [],
+    "payload_stat_inventory_sha256": "00ddc0f6b1070dae130da50e369466ad22e41ecb20203f70b5eef61b2218b24b",
+    "record_refs": [
+      {
+        "bytes": 1017,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/aiohappyeyeballs-2.6.1.dist-info/RECORD",
+        "sha256": "b4935c6efbf4163023b59715e3b481f2cbae9d20e36670ab17c05dee52fc9c99"
+      },
+      {
+        "bytes": 6957,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/aiohttp-3.13.3.dist-info/RECORD",
+        "sha256": "17617e2a25f5d81eb7a2c3a8112eed48aa3ab14de1addcea628caf2f9cbf384f"
+      },
+      {
+        "bytes": 734,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/aiosignal-1.4.0.dist-info/RECORD",
+        "sha256": "b9a6cd07dac78298d856613e8140b7da26b20506ed07747802bd513bf9b3ea35"
+      },
+      {
+        "bytes": 848,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info/RECORD",
+        "sha256": "1d924fb80688852ae450acc786e6fcd63a752dd045e2f1e4ec7341367fac06a8"
+      },
+      {
+        "bytes": 4097,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/anyio-4.13.0.dist-info/RECORD",
+        "sha256": "5d19a4761ae4d4a40d0297e51bc7833cc5539b279107bb7e7f29bd4b40157c19"
+      },
+      {
+        "bytes": 2742,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/attrs-26.1.0.dist-info/RECORD",
+        "sha256": "6b0b326d4b4ee0fac27909ac7cbb066fc4bdf8e93d87031e27e770db059e5a04"
+      },
+      {
+        "bytes": 4508,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/cattrs-26.1.0.dist-info/RECORD",
+        "sha256": "75549af30ffc3e86cd2a5f8028a0b1389870261906c40ae9ac421f73a953786b"
+      },
+      {
+        "bytes": 963,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/certifi-2026.2.25.dist-info/RECORD",
+        "sha256": "869e66946b9242b6256e868fdfb1430958b90d87d11a81852e001da79768fe4b"
+      },
+      {
+        "bytes": 1808,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/click-8.3.1.dist-info/RECORD",
+        "sha256": "dff6b00633c0a5e3c58114a465b95b8f570cdabe98e59d713b53d700066bbf41"
+      },
+      {
+        "bytes": 77477,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/coremltools-9.0.dist-info/RECORD",
+        "sha256": "69869a2fdb05d7092ca1236e40009c22b680cb2c94256fbdb556e5ff827d71b2"
+      },
+      {
+        "bytes": 1403,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/filelock-3.25.2.dist-info/RECORD",
+        "sha256": "ec8da5a8f1de34112bce8140001a695f931ca132b164b68609f0215547d47d0d"
+      },
+      {
+        "bytes": 1011,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/frozenlist-1.8.0.dist-info/RECORD",
+        "sha256": "e8a81aedb662eb6d0586bdbd7d78c70ab4853bad46bd06ba303eb8144ecd2a21"
+      },
+      {
+        "bytes": 5230,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/fsspec-2026.3.0.dist-info/RECORD",
+        "sha256": "cb75af5dc05f77f012aa3d97ee31399cbaf2bfff06592f04f729f9bf452e9a44"
+      },
+      {
+        "bytes": 1412,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/h11-0.16.0.dist-info/RECORD",
+        "sha256": "3779e13c17d8e21c769ed9ee8780af123cc3f8656185f5f8d3af258ff5639b3e"
+      },
+      {
+        "bytes": 737,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/hf_xet-1.4.2.dist-info/RECORD",
+        "sha256": "f2c2a58125ce6a14a68689c6c9e7305de76cd9a33b20eeeeda478c647b800572"
+      },
+      {
+        "bytes": 3123,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/httpcore-1.0.9.dist-info/RECORD",
+        "sha256": "67cb4644d84fef1df8c5a0862c57c3380eff058a153bac7a4ba2722779982554"
+      },
+      {
+        "bytes": 2469,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/httpx-0.28.1.dist-info/RECORD",
+        "sha256": "cc0e84d59d112d0ac49803460457d94ae53590e5d672014adda601f13d3a82bd"
+      },
+      {
+        "bytes": 17886,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/huggingface_hub-1.8.0.dist-info/RECORD",
+        "sha256": "a25d8b03250075005d253b7f21581a82ef5824f46ca728d3a6f2d72987dda2ae"
+      },
+      {
+        "bytes": 1104,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/idna-3.11.dist-info/RECORD",
+        "sha256": "79efb65013667addf948f9d8012fbfc14985853d44beed44bed34eff0256bb1b"
+      },
+      {
+        "bytes": 2512,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/jinja2-3.1.6.dist-info/RECORD",
+        "sha256": "4551b3fb657b85a9f01e961c0f8a235da65d758149b619400211964b3ac02bdc"
+      },
+      {
+        "bytes": 14398,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/joblib-1.5.3.dist-info/RECORD",
+        "sha256": "de09a1190b65801ed7ada8395671b94da2278e33d15356223b2b2d3201180e76"
+      },
+      {
+        "bytes": 6830,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/markdown_it_py-4.0.0.dist-info/RECORD",
+        "sha256": "51675063c7d94dd5d16f81108483ec541045ea9640a3abeaec32c8f0b9b5283b"
+      },
+      {
+        "bytes": 1083,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/markupsafe-3.0.3.dist-info/RECORD",
+        "sha256": "a700c61cc26f1410beeefba1dcb4fc63bf7d7da103e3d3ad7c34445463fa40b8"
+      },
+      {
+        "bytes": 958,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mdurl-0.1.2.dist-info/RECORD",
+        "sha256": "9a1b05128e711beabd7684e116fcf408ce8cff7ef10e7e8b359b248924fe529c"
+      },
+      {
+        "bytes": 5217,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx-0.32.0.dist-info/RECORD",
+        "sha256": "bfd9d2986db56b636355baf89409d2e98bb6c6e13bbb1ff2fe7983009dc6f71c"
+      },
+      {
+        "bytes": 24821,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx_lm-0.31.3.dist-info/RECORD",
+        "sha256": "856ac360b2ef6c6d608041b6014e6b0e78cd91a45186abba451d2115107501dd"
+      },
+      {
+        "bytes": 42165,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mlx_metal-0.32.0.dist-info/RECORD",
+        "sha256": "b520edf87ba3606ab90494ad62079b3aa6abd1f6558e2a8f92383354a2dc6fa9"
+      },
+      {
+        "bytes": 7849,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/mpmath-1.3.0.dist-info/RECORD",
+        "sha256": "09cbd04e87d0c5ab64aab08291b31883e4ea27e8d2c640710e0beb1995e86b9b"
+      },
+      {
+        "bytes": 1069,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/multidict-6.7.1.dist-info/RECORD",
+        "sha256": "ec855bc522f72fd804a273e502d891f1c2ce30ec44ee37a8f11335aafb9cd09f"
+      },
+      {
+        "bytes": 60311,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/networkx-3.6.1.dist-info/RECORD",
+        "sha256": "f6833bb525b720a7809dd6280817601af3dbd78efef02d9e55d4b887ec1f52da"
+      },
+      {
+        "bytes": 84465,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/numpy-2.4.3.dist-info/RECORD",
+        "sha256": "de5a3ebd77db9fdad1be313f5e0dc0efde41a365bb9b85db0413228b906276dc"
+      },
+      {
+        "bytes": 2113,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/packaging-26.0.dist-info/RECORD",
+        "sha256": "f50503333aae9517807d2fb4d81fc27cb60aa644666f50176812626d6224ce5d"
+      },
+      {
+        "bytes": 68630,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pip-26.0.dist-info/RECORD",
+        "sha256": "b205a73cacb7bab526a49483b58d93ad2ca7f1ada89da868310f7535e4ec2d69"
+      },
+      {
+        "bytes": 1246,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/propcache-0.4.1.dist-info/RECORD",
+        "sha256": "7b0ba8494b6a7115db9c187e75125e1ede979a9add6345c53d6c429eb7746d0c"
+      },
+      {
+        "bytes": 5482,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/protobuf-7.34.1.dist-info/RECORD",
+        "sha256": "d270dcc9903a6f6ea064b40dfdf4b0109c49dd22d325d60d0ebf6ea086424f2b"
+      },
+      {
+        "bytes": 1186,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pyaml-26.2.1.dist-info/RECORD",
+        "sha256": "0e7032a7278f82020250c37e97d8009e37fd06dcf279f91c224e9d27019f5793"
+      },
+      {
+        "bytes": 28752,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pygments-2.19.2.dist-info/RECORD",
+        "sha256": "21ba68f7707348817880b074b36da563351dfa6c025a58c3a34ab68e5ec8416f"
+      },
+      {
+        "bytes": 1960,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/pyyaml-6.0.3.dist-info/RECORD",
+        "sha256": "4e259774348bac93724047fa3547e03b71cbe2b7d37ca39be41513355d9cf36a"
+      },
+      {
+        "bytes": 989,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/regex-2026.2.28.dist-info/RECORD",
+        "sha256": "0f3802e152cc78fa5bc7aed4944943c710533b375d96617bcf97b9dacb4aca6a"
+      },
+      {
+        "bytes": 8232,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/rich-14.3.3.dist-info/RECORD",
+        "sha256": "919f7287cc0daa38df531e192153320900e2958bcde34376491cfbd0ef917266"
+      },
+      {
+        "bytes": 1300,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/safetensors-0.7.0.dist-info/RECORD",
+        "sha256": "5d8916eb0feddc1c5cab6b77346aa789da3795e9ad29bb77f051b6f6c77417fd"
+      },
+      {
+        "bytes": 95703,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scikit_learn-1.8.0.dist-info/RECORD",
+        "sha256": "67c2b20eced607115a1e4e0eb4d4884c6f2c5134f55fc6876865366b12ea6854"
+      },
+      {
+        "bytes": 134748,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/scipy-1.17.1.dist-info/RECORD",
+        "sha256": "e174d14bd3b244718d9a1261552b10a0caaf3b700871ca04b1244f385c38aa2c"
+      },
+      {
+        "bytes": 1544,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/sentencepiece-0.2.1.dist-info/RECORD",
+        "sha256": "d6abe3025a8d7353199272f17c837a9be9b899b36432e3e914043e8f01e22a2d"
+      },
+      {
+        "bytes": 45219,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/setuptools-81.0.0.dist-info/RECORD",
+        "sha256": "4e3509e7d32802228e4217bac52f22eb1b4b361c9eaba63f7ab04e110dda09b5"
+      },
+      {
+        "bytes": 1236,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/shellingham-1.5.4.dist-info/RECORD",
+        "sha256": "2a878ed08ec32adc6b08a9b6a83754cd7c30ffb8a67e26527292456da9ff2fee"
+      },
+      {
+        "bytes": 145612,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/sympy-1.14.0.dist-info/RECORD",
+        "sha256": "dd53f5311ea1cc074aed7e6bc8fab12714c0c53008df89f9ab40242685ed439b"
+      },
+      {
+        "bytes": 588,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/threadpoolctl-3.6.0.dist-info/RECORD",
+        "sha256": "21fd60a7b59ad0785db0d87b7f45a58b9c6961097749168c577efa5b1619e95e"
+      },
+      {
+        "bytes": 2788,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/tokenizers-0.22.2.dist-info/RECORD",
+        "sha256": "7e9c1a66e84e32b385ec4accd9bc8b8ff8394e8b2f5825e48ac7293739aa86ad"
+      },
+      {
+        "bytes": 1323516,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/torch-2.11.0.dist-info/RECORD",
+        "sha256": "86a1a151360af9798a6fd303e327d9c006ddd46e31a8b2596ce8c488c20162ae"
+      },
+      {
+        "bytes": 3154,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/tqdm-4.67.3.dist-info/RECORD",
+        "sha256": "ba0b4e06a3363e9f78f1698bf85f35a5f6e6512a38f18cc43d9dedb4ddd3e9e3"
+      },
+      {
+        "bytes": 240517,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/transformers-5.4.0.dist-info/RECORD",
+        "sha256": "4052c3c74703f8feae2d689ed6a875edc8a3a3f9eb2f622e36db8afa2b302195"
+      },
+      {
+        "bytes": 1892,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/typer-0.24.1.dist-info/RECORD",
+        "sha256": "aad706a8b079fff2e7e78a7e769d2cbe069324f51b239dd387b40777c6c6ef1c"
+      },
+      {
+        "bytes": 623,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/typing_extensions-4.15.0.dist-info/RECORD",
+        "sha256": "c42db5851c3a20efb41dbe1a0d03c18db577a5449c7e685f6b139df34b98e62f"
+      },
+      {
+        "bytes": 5047,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/websockets-16.0.dist-info/RECORD",
+        "sha256": "0bef97bddb1426da52237d953406b7d563af9b274610ce2473779af1439ff186"
+      },
+      {
+        "bytes": 1466,
+        "path": "/Users/v/other/neural-triple-reservoir/.venv/lib/python3.12/site-packages/yarl-1.23.0.dist-info/RECORD",
+        "sha256": "7db23501a4d6c9d014f570c07a2b1c6c5704324a99b57310713936e64162392a"
+      }
+    ]
+  },
+  "payload_hashing_performed": false,
+  "production_qualified": false,
+  "schema": "reservoir_revalidation_cost_design_v1",
+  "scope": "static_source_and_bounded_metadata_only",
+  "service_snapshot_digest_derivation": {
+    "candidate_cancel_periodic_pairs": 7,
+    "cases": [
+      {
+        "case": "normal",
+        "npz_or_thermostat_digest_calls": 816,
+        "successful_snapshot_pairs": 408,
+        "variant": "original"
+      },
+      {
+        "case": "aggregate",
+        "npz_or_thermostat_digest_calls": 816,
+        "successful_snapshot_pairs": 408,
+        "variant": "original"
+      },
+      {
+        "case": "aggregate",
+        "npz_or_thermostat_digest_calls": 816,
+        "successful_snapshot_pairs": 408,
+        "variant": "original"
+      },
+      {
+        "case": "single",
+        "npz_or_thermostat_digest_calls": 816,
+        "successful_snapshot_pairs": 408,
+        "variant": "original"
+      },
+      {
+        "case": "writer-error",
+        "npz_or_thermostat_digest_calls": 814,
+        "successful_snapshot_pairs": 407,
+        "variant": "original"
+      },
+      {
+        "case": "cancel",
+        "npz_or_thermostat_digest_calls": 816,
+        "successful_snapshot_pairs": 408,
+        "variant": "original"
+      },
+      {
+        "case": "cancel-delayed-final",
+        "npz_or_thermostat_digest_calls": 816,
+        "successful_snapshot_pairs": 408,
+        "variant": "original"
+      },
+      {
+        "case": "normal",
+        "npz_or_thermostat_digest_calls": 816,
+        "successful_snapshot_pairs": 408,
+        "variant": "candidate"
+      },
+      {
+        "case": "aggregate",
+        "npz_or_thermostat_digest_calls": 816,
+        "successful_snapshot_pairs": 408,
+        "variant": "candidate"
+      },
+      {
+        "case": "aggregate",
+        "npz_or_thermostat_digest_calls": 816,
+        "successful_snapshot_pairs": 408,
+        "variant": "candidate"
+      },
+      {
+        "case": "single",
+        "npz_or_thermostat_digest_calls": 816,
+        "successful_snapshot_pairs": 408,
+        "variant": "candidate"
+      },
+      {
+        "case": "writer-error",
+        "npz_or_thermostat_digest_calls": 814,
+        "successful_snapshot_pairs": 407,
+        "variant": "candidate"
+      },
+      {
+        "case": "cancel",
+        "npz_or_thermostat_digest_calls": 626,
+        "successful_snapshot_pairs": 313,
+        "variant": "candidate"
+      },
+      {
+        "case": "cancel-delayed-final",
+        "npz_or_thermostat_digest_calls": 626,
+        "successful_snapshot_pairs": 313,
+        "variant": "candidate"
+      }
+    ],
+    "final_pairs_per_case": 102,
+    "handles": 102,
+    "normal_periodic_pairs": 102,
+    "note": "Expected exact frozen-runner outputs; admission requires periodic/final coverage but reads every supplied successful row, so this is not a size cap on arbitrary malicious evidence.",
+    "roundtrip_pairs_per_case": 102,
+    "seed_pairs_per_case": 102,
+    "total_digest_calls": 11040,
+    "writer_error_periodic_failed_pairs_excluded": 1
+  },
+  "source_refs": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/metadata_preflight.py": {
+      "bytes": 12399,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/metadata_preflight.py",
+      "sha256": "3c2bce47648596f8988e0884081625f729d77856526c1b062f5078b68684d318"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_admission.py": {
+      "bytes": 24191,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_admission.py",
+      "sha256": "b2b67eb8941471eacffd44b2149e0e7b6aeb6e9df91c2e8be4adfc1c28580be9"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_host.py": {
+      "bytes": 30328,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_host.py",
+      "sha256": "18bf34c606df39da65c4d7b392d51e88d7285b0048c032bf7a7877df9da9dfae"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_preflight.py": {
+      "bytes": 28872,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_preflight.py",
+      "sha256": "0671c054eb6f37f122e1c61e26a91cf7e3e9e311266029008e87d7db11adef1b"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery.py": {
+      "bytes": 19760,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery.py",
+      "sha256": "893f70d91a8955df5e60cbacc3caf22dc08f2c1c8863677180a5cfc37a5f14d7"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_driver.py": {
+      "bytes": 13161,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_driver.py",
+      "sha256": "a092c51499c353b53ddf4c09a43cf2d308ce951a535274f652cf755fb815d904"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_inspect.py": {
+      "bytes": 49003,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_inspect.py",
+      "sha256": "eaafdbbd0521c8a25468d0d40613fcc5e8d2be105b73a511089228dfbde5cdc3"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_restore_runner.py": {
+      "bytes": 12331,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_restore_runner.py",
+      "sha256": "f7c9be6dffc8161af2d678bfd804e0642e31611b7877d55b98a71429e4bd903e"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_retained.py": {
+      "bytes": 26564,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_retained.py",
+      "sha256": "5c287b8757dfd7e8eb876fa8064edba7e4d51d11c179a0c3ed7274effe331a9b"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_ledger.py": {
+      "bytes": 5616,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_ledger.py",
+      "sha256": "fd855cd1613e9fbab1a8e5ae8df4a144fc936bdb7fa5525f3bee0a4e8b03ee84"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_phases.py": {
+      "bytes": 21079,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_phases.py",
+      "sha256": "df6e3e959f79e560dfbe8904cbf9546b79e27b2819f7f5b8ab1aa89bb6917389"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance.py": {
+      "bytes": 28725,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance.py",
+      "sha256": "55e53b84d8caae818fc29fb997761c160cb296e2512207d4d9dbe48da15c5536"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance_state.py": {
+      "bytes": 20175,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance_state.py",
+      "sha256": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/restore_verifier.py": {
+      "bytes": 31763,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/restore_verifier.py",
+      "sha256": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_admission.py": {
+      "bytes": 29310,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_admission.py",
+      "sha256": "ff2b7fb1e8b62ddb7f4e1175cff462600a86447cc245b22cbb3acd4cc3c55d2c"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_controller.py": {
+      "bytes": 8243,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_controller.py",
+      "sha256": "6d7b05f415d033c164f85abdc22fbcbb7303f9fc2022f4fc03de6f68b4b7ba40"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_host.py": {
+      "bytes": 15030,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_host.py",
+      "sha256": "37f234156c1eabd902faf26ce9ee5409841d5332b12218ba407a6b45658d8d61"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_preflight.py": {
+      "bytes": 18854,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_preflight.py",
+      "sha256": "9be1f7c899493a64e8e324ae06947a26a82a73f0ea72bac45ab27792ba98b67d"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery.py": {
+      "bytes": 14505,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery.py",
+      "sha256": "5331b9ca3ae00e01e2e010aef52705e48e9beea4cfafbd3cfb543eaf355198a8"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_driver.py": {
+      "bytes": 17991,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_driver.py",
+      "sha256": "0a948bbce5d3f6dc77b82254ab5a5858db9626a9a6cd80d2f7569347fd6c6355"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_inspect.py": {
+      "bytes": 29623,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_inspect.py",
+      "sha256": "5b5af27039762aa4527d89d16bce29005d434dc1da11db37e28eb560311f8fca"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_restore_runner.py": {
+      "bytes": 15148,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_restore_runner.py",
+      "sha256": "82986ef70d485f73a11cbd8d02c074b6f910e39b6101bc20b79ab57c2b48b804"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_retained.py": {
+      "bytes": 17992,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_retained.py",
+      "sha256": "e9dea40dcd0ba6baeb5e67142dfcc605625cb15449588dc903632e5460a5dde7"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_recovery_phases.py": {
+      "bytes": 4642,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_recovery_phases.py",
+      "sha256": "3a4c17fc8ec0caaa61424028c28a208fac681c70a367e6bcd91cb48c1ee69d03"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_reservoir_maintenance_state.py": {
+      "bytes": 16133,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_reservoir_maintenance_state.py",
+      "sha256": "5c896092de2a2da6351c7a05ffe78a080fcfd49e91630fd5764b6110a9075834"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_restore_verifier.py": {
+      "bytes": 16791,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_restore_verifier.py",
+      "sha256": "0494a6570245cfc2e6a76cd18188789130c7cedf3b1eb80743522e0e5e3f7522"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_transaction_execution.py": {
+      "bytes": 7330,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_transaction_execution.py",
+      "sha256": "996d4a57be06ff2055a292f06e83c38247685db8b3c6dc6fc2ace44dda91d44a"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/transaction_execution.py": {
+      "bytes": 4937,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/transaction_execution.py",
+      "sha256": "2b4e5ad98f4e920ceb67a161480afaffde9e6a44e3c9007645dc9e9445ccc4cb"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/qualify_restore.py": {
+      "bytes": 26826,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/qualify_restore.py",
+      "sha256": "33bb2f958fc5ec1c6c2eee37d729447f603d68d0872e8bff4284829c1094f4d8"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/reservoir_maintenance_state.py": {
+      "bytes": 20175,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/reservoir_maintenance_state.py",
+      "sha256": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/restore_verifier.py": {
+      "bytes": 31763,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/restore_verifier.py",
+      "sha256": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/seed_fixture.py": {
+      "bytes": 8587,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/seed_fixture.py",
+      "sha256": "4a3507615ff5a8f25f9fcd8d0ca592beee14820c1a591045446fc0a8e190c7b8"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/test_qualification.py": {
+      "bytes": 16956,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-01/test_qualification.py",
+      "sha256": "a2fe486ee0d4b44140dcad23c570addd3eefc5910cfe9ccf1ad61ffc975f9b57"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/common.py": {
+      "bytes": 4299,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/common.py",
+      "sha256": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/driver.py": {
+      "bytes": 12046,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/driver.py",
+      "sha256": "42dc76d5b90a7797ef89b88e1835661c851d85130d5df9d37dd72df6727da09d"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/fixture.py": {
+      "bytes": 2659,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/fixture.py",
+      "sha256": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/process_identity.py": {
+      "bytes": 2571,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/process_identity.py",
+      "sha256": "068da901598ff9cf982314f1cc0f4381a6e6e878143be5e52def59270871d0f2"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/protocol_client.py": {
+      "bytes": 2904,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/protocol_client.py",
+      "sha256": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/result_checks.py": {
+      "bytes": 6627,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/result_checks.py",
+      "sha256": "1242f173bd6c77fa1ed4f9bde9a9934845815aab9025aedf44c97f92117a3b86"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/review_matrix.py": {
+      "bytes": 4401,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/review_matrix.py",
+      "sha256": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/service_child.py": {
+      "bytes": 15760,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/service_child.py",
+      "sha256": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/snapshot_oracle.py": {
+      "bytes": 5431,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/snapshot_oracle.py",
+      "sha256": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae"
+    },
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/test_harness.py": {
+      "bytes": 12091,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/test_harness.py",
+      "sha256": "8b272aca672305744939d88b3e2599c7dedcf2405873c846289077b8c6283e47"
+    },
+    "/Users/v/other/astrid/scripts/model_environment.py": {
+      "bytes": 15235,
+      "path": "/Users/v/other/astrid/scripts/model_environment.py",
+      "sha256": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587"
+    }
+  },
+  "successful_fresh_scenario": {
+    "additional_package_payload_scans": {
+      "Host_returned_successful_witness_check": 1,
+      "fresh_private_restore_child_before_after": 2,
+      "fresh_private_restore_parent_precheck": 1,
+      "runner_successful_witness_check": 1,
+      "two_preparation_validations": 2
+    },
+    "assumptions": [
+      "One valid original preparation; exact prerequisites already accepted and retained; every validator reaches successful completion.",
+      "Fresh route is Host construction, one prepare_capture, one Controller.run, no failures, retries, recovery, extra standalone checks, or operator invocations.",
+      "Two stop_into_hold paths each call create_hold/arm_next_spawn/signal_stop/remove_held (8 mutations); install repair (1), bootstrap two services (2), apply provider restart (1), release two guards (2): 14 mutations.",
+      "Six witnesses: provider_drain, final_snapshot, backup, private_restore, startup, provider_ready.",
+      "Each of 14 mutations and six witness producers calls _allow once; private restore adds four runner barriers; controller preflight calls admission once: 14+6+4+1=25."
+    ],
+    "full_admission_calls": 25,
+    "limits": "Conditional source-derived counts, not an executed trace or universal upper bound. Failed validation exits early. Future artifact maps, repeated refs, extra operator calls, or different recovery phases can add reads. No elapsed time, physical I/O, cache-hit, CPU, RSS, pressure or duration claim follows from these counts.",
+    "matrix_snapshot_digest_calls_inside_admissions": 276000,
+    "package_hashed_entry_visits_inside_admissions": 606725,
+    "package_logical_bytes_inside_admissions": 19865946900,
+    "package_payload_scans_inside_admissions": 25,
+    "preparation_model_snapshot_logical_bytes": 49602972480,
+    "preparation_model_snapshot_passes": 6,
+    "restore_proof_inventory_tree_passes_inside_admissions": 275,
+    "total_package_logical_bytes_including_those_routes": 25428412032,
+    "total_package_payload_scans_including_those_routes": 32
+  },
+  "timing_measured": false
+}

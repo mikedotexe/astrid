@@ -1,0 +1,196 @@
+{
+  "accepted_mlx_baseline": false,
+  "all_children_controller_supervisor_absent": [
+    63186,
+    63309,
+    63348,
+    63467,
+    63623,
+    63828,
+    63961,
+    64217,
+    64410,
+    64513,
+    64791,
+    64890
+  ],
+  "all_claim_observed_hashes_resolve_to_exact_immutable_snapshots": true,
+  "created_at": "2026-10-17T01:01:23.456864+00:00",
+  "final_monitor": {
+    "all_actual_intervals_bracketed": true,
+    "all_pressure_normal": true,
+    "build_health_identity_errors": 0,
+    "completed_at": "2026-10-17T01:00:36.260170+00:00",
+    "duration_s": 248.70238154218532,
+    "invalid_sample_gaps": 0,
+    "max_gap_s": 5.008905410766602,
+    "min_gap_s": 1.7320566177368164,
+    "positive_consecutive_swap_increases": 0,
+    "samples": 51,
+    "started_at": "2026-10-17T00:56:27.559088+00:00",
+    "state": "completed",
+    "swap_end_bytes": 11354966589.44,
+    "swap_start_bytes": 11371743805.44
+  },
+  "final_supervision": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-06.json",
+    "sha256": "2950999c67d65f3d4ce96ef5d31e4fea5f413e0dac49b8fc593126a13905ba5c"
+  },
+  "host_admission": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12-root-review.json",
+    "sha256": "ea980ba0be7a8017344a2c3cd23ebac8a9a9ddafe63b77898b565f5a111f7864"
+  },
+  "independent_final_review_pending": true,
+  "limits": [
+    "Synthetic stored NumPy/LSM-shadow semantics only; not unstored trajectories, production stopped backup, live drain/check-in, ProductionHost, OS recovery or deployment.",
+    "Supervisor qualification_cases_started field is observer control counter, not number of root-owned children; ten actual child intervals independently bracketed.",
+    "No causal RAM reclamation, MLX memory savings or larger-context claim."
+  ],
+  "owned_finish": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-06-stop.json",
+    "sha256": "ac526f74953c3b23b840cbfa17e08827a089b33880b26f2dd14ed9a4f6d54565"
+  },
+  "passed": true,
+  "production_qualified": false,
+  "protected_files": 237,
+  "protected_processes": 7,
+  "qualification": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/qualification.json",
+    "sha256": "023ea4a004d64b841f8bc381b86cc62d24648e521dbb0c4832e4e85563209a2c"
+  },
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-release-01.json",
+    "sha256": "aea951252c7ace3477be4106abec05672c23888284a74bade24b1da44f541733"
+  },
+  "repos": {
+    "/Users/v/other/astrid": {
+      "head": "297023ab75ebdc1ee0beb28848d8b50fb4965191",
+      "staged_paths": "",
+      "status_porcelain": " M CHANGELOG.md\n M docs/astrid-mlx-upgrade-runbook.md\n M scripts/astrid_live_soak.py\n M scripts/astrid_mlx_soak_compare.py\n M scripts/astrid_model_canary.py\n M scripts/capture_stack_receipt.sh\n M scripts/test_astrid_live_soak.py\n M scripts/test_astrid_mlx_soak_compare.py\n?? docs/steward-notes/2026-10-15-inbox-format-repair.json\n?? docs/steward-notes/2026-10-15-mlx-upgrade/\n?? docs/steward-notes/2026-10-15-perception-memory/\n?? scripts/astrid_mlx_candidate.py\n?? scripts/astrid_mlx_embedding_gate.py\n?? scripts/astrid_mlx_fixture.py\n?? scripts/astrid_mlx_generator_contract.py\n?? scripts/astrid_mlx_memory.py\n?? scripts/astrid_soak_observer.py\n?? scripts/astrid_soak_performance.py\n?? scripts/model_environment.py\n?? scripts/model_environment_activate.py\n?? scripts/model_qualification.py\n?? scripts/model_runtime_identity.py\n?? scripts/prepare_mlx_environments.py\n?? scripts/qualify_mlx_offline.py\n?? scripts/qualify_mlx_packages.py\n?? scripts/qualify_model_launchd_handoff.py\n?? scripts/stage_mlx_manifests.py\n?? scripts/test_astrid_mlx_candidate.py\n?? scripts/test_astrid_mlx_embedding_gate.py\n?? scripts/test_astrid_mlx_generator_contract.py\n?? scripts/test_astrid_mlx_shutdown.py\n?? scripts/test_astrid_soak_observer.py\n?? scripts/test_model_environment.py\n?? scripts/test_model_environment_activate.py\n?? scripts/test_model_qualification.py\n?? scripts/test_model_runtime_identity.py\n?? scripts/test_prepare_mlx_environments.py\n?? scripts/test_qualify_mlx_packages.py\n?? scripts/test_qualify_model_launchd_handoff.py\n?? scripts/test_stage_mlx_manifests.py\n"
+    },
+    "/Users/v/other/minime": {
+      "head": "b8d47c7ad7adbf21b17f19942e6d3489b4ed65fb",
+      "staged_paths": "",
+      "status_porcelain": ""
+    }
+  },
+  "root_child_reviews": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/00-seed-root-review.json",
+      "sha256": "3cf94834a34bbbadd9d9d9f045ba7519f63becc26a657002a5c2080f63806e31"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/01-complete-root-review.json",
+      "sha256": "e96a5f55b0e0552f32220a13f057d96d8332e8f7775f70c49e4f4de42c5831ae"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/02-missing-sidecar-root-review.json",
+      "sha256": "1ccb8e168fc840b13c38e3c8a3ba11f052c5d4396787e0ac5f9d79213c503f8a"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/03-malformed-sidecar-root-review.json",
+      "sha256": "6ff19fab8007697f92a9dbd669577562c04bc92f5977fdb37fd3708fc02e9f48"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/04-corrupt-npz-root-review.json",
+      "sha256": "792b22d755618e2079f4d093db2bdd5991fa54a4c43a8db817f69edf690c4776"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/05-schema-mismatch-root-review.json",
+      "sha256": "ba50f328233bdf72ef9c2da52dde1bb2b6116d4f5de83d40c93a1072f1ee9474"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/06-config-mismatch-root-review.json",
+      "sha256": "156f89fb9d96d92e94f177107a210281b54411093798755530a38f87d7222680"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/07-source-drift-root-review.json",
+      "sha256": "a67e0ac4a2af6b19402a53d74a53a1d8c70d40d53036cc6673a916ed4f0e5303"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/08-package-drift-root-review.json",
+      "sha256": "d5e7b0d65505b308e896a1cf3225eed679512eba5bbb44019428777c6ffbfa0d"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/admissions/09-backup-drift-root-review.json",
+      "sha256": "73a072597640a6c9d68f592779b73f4063578d3ced8880539abed4f693cdeae5"
+    }
+  ],
+  "root_preclose": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-matrix-preclose-01.json",
+    "sha256": "ac300f1ed8c7e66c9637b8d4047a8c3f1a1026048a4e9494812ec8b046126e0a"
+  },
+  "schema": "reservoir_restore_numeric_root_review_v1",
+  "scope": "synthetic_cpu_fixture_only",
+  "seed_and_cases": [
+    {
+      "case": "seed",
+      "duration_s": 8.022742748260498,
+      "pid": 63348,
+      "returncode": 0
+    },
+    {
+      "case": "complete",
+      "duration_s": 8.741702795028687,
+      "pid": 63467,
+      "returncode": 0
+    },
+    {
+      "case": "missing-sidecar",
+      "duration_s": 5.798638105392456,
+      "pid": 63623,
+      "returncode": 1
+    },
+    {
+      "case": "malformed-sidecar",
+      "duration_s": 5.28617787361145,
+      "pid": 63828,
+      "returncode": 1
+    },
+    {
+      "case": "corrupt-npz",
+      "duration_s": 5.6633079051971436,
+      "pid": 63961,
+      "returncode": 1
+    },
+    {
+      "case": "schema-mismatch",
+      "duration_s": 5.6588499546051025,
+      "pid": 64217,
+      "returncode": 1
+    },
+    {
+      "case": "config-mismatch",
+      "duration_s": 0.08704900741577148,
+      "pid": 64410,
+      "returncode": 1
+    },
+    {
+      "case": "source-drift",
+      "duration_s": 0.09281420707702637,
+      "pid": 64513,
+      "returncode": 1
+    },
+    {
+      "case": "package-drift",
+      "duration_s": 2.4264988899230957,
+      "pid": 64791,
+      "returncode": 1
+    },
+    {
+      "case": "backup-drift",
+      "duration_s": 0.08336496353149414,
+      "pid": 64890,
+      "returncode": 1
+    }
+  ],
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/independent-source-review-01.json",
+    "sha256": "65c745f321c12ac2d88e50b45711c7437f49dac300f168a6905d92ae518cb89e"
+  },
+  "steward_pause_generation": 528,
+  "supervision_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-run06-source-review-01.json",
+    "sha256": "96c44dbf8631210d476865a7be0d305bdcca8d56df91e4efc6057757a5c6998d"
+  }
+}

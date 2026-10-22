@@ -1,0 +1,38 @@
+{
+  "accepted_for_one_instrumented_stage_cost": true,
+  "at": "2026-10-17T01:42:58.599231+00:00",
+  "checks": {
+    "exact_accepted_return": true,
+    "exact_budget": true,
+    "passed_without_error_or_violations": true,
+    "per_path_counts": true,
+    "post_stage_health": true,
+    "post_stage_identity": true,
+    "source_and_input_match": true
+  },
+  "instrumented_review_elapsed_s": 10.055310708004981,
+  "limitations": [
+    "One instrumented service proof-review invocation; not full05 admission or complete maintenance duration.",
+    "Logical full-file charges are not physical IO or unique memory reclaimed.",
+    "Before and after host spots are not continuous coverage or numeric admission.",
+    "No timing rerun, cache flush, numerical child or production action occurred."
+  ],
+  "logical_full_file_bytes": 4715809975,
+  "post_stage_spot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/post-stage-host-spot-01.json",
+    "sha256": "f7e9195912755ef2081991cf268b889deee938907a79e691f8c35210945cdd69"
+  },
+  "production_qualified": false,
+  "read_opens": 11569,
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/root-release-01.json",
+    "sha256": "bec8d732013e2d8d87798525f75409fafe2f9c6b1ff98eaf8d0062b172a8dd98"
+  },
+  "result": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/revalidation-service-timing-01/timing-result-01.json",
+    "sha256": "0a0f5ffb85992ed6704234c6c6d02e87cffce25c7eb67ae6528bc7dff8fae151"
+  },
+  "reviewer": "root",
+  "schema": "service_review_timing_root_result_review_v1",
+  "total_elapsed_s": 13.18111200002022
+}

@@ -1,0 +1,56 @@
+{
+  "accepted_mlx_baseline": false,
+  "binding": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-bindings.json",
+    "sha256": "6b92de441dac3730c047c0111a850527dfff0739048d0db6b23f50d16054d2f6"
+  },
+  "build_test_activity_samples": 0,
+  "completed_at": "2026-10-17T00:10:57.577937+00:00",
+  "created_at": "2026-10-17T00:15:00.128474+00:00",
+  "current_eligible_window_s": 300.0078670978546,
+  "duration_s": 302.06362899998203,
+  "final_sample_to_completion_s": 2.0539438724517822,
+  "health_failure_samples": 0,
+  "identity_checks_passed": 61,
+  "invalid_gaps": 0,
+  "launch": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-launch-01.json",
+    "sha256": "21e69dc6be047a94a7d9c35b23a8fbca41c99c7ac449e2e913d1170805cf8640"
+  },
+  "longest_eligible_window_s": 300.0078670978546,
+  "max_sample_gap_s": 5.008145093917847,
+  "min_sample_gap_s": 4.99180006980896,
+  "numerical_cases_authorized": false,
+  "observation_errors": [],
+  "observer_absent": true,
+  "passed": true,
+  "positive_consecutive_swap_increases": 0,
+  "preflight": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-preflight-01.json",
+    "sha256": "91a7a9792edb64e5d014247f2152f2720b494720cf8789bf5102ca2e77691a9a"
+  },
+  "pressure_counts": {
+    "1": 61
+  },
+  "production_mutations": 0,
+  "protected_files": 237,
+  "protected_processes": 7,
+  "raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11.json",
+    "sha256": "c80c7f34ddb58cad86d9c9f5aa397347e105c2b723d8d1c0cc87f72faadb61d2"
+  },
+  "reviewer": "root",
+  "samples": 61,
+  "schema": "reservoir_host_root_raw_assessment_v1",
+  "source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-observer.py",
+    "sha256": "ea290b954f4d888a3f8ec18e8762b747983a5b41af03d5be83576d552619a663"
+  },
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-11-source-review.json",
+    "sha256": "eea9e12f1fa86ddaa7677be7f99a8a132cae092956d7d5e6d2f51b7bd496f55b"
+  },
+  "state": "completed",
+  "swap_end_bytes": 11598236221.44,
+  "swap_start_bytes": 11623402045.44
+}

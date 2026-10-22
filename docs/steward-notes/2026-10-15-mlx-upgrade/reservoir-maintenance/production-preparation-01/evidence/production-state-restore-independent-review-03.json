@@ -1,0 +1,63 @@
+{
+  "schema": "reservoir_production_state_restore_independent_review_v1",
+  "created_at": "2026-10-16T17:17:34.022700+00:00",
+  "reviewer": "Codex /root/mlx_integration",
+  "accepted_for_blocked_preparation": true,
+  "production_execution_allowed": false,
+  "numeric_qualification_accepted": false,
+  "scope": "Independent static/API/semantic-contract review of frozen state helper and private restore verifier; no actual service or numerical execution",
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_reservoir_maintenance_state.py": "5c896092de2a2da6351c7a05ffe78a080fcfd49e91630fd5764b6110a9075834",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/restore_verifier.py": "e363cc1144c7a92279a3bde5eabfcf7647d8ff6b8e56e445cfd7b560c21a8c16",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_restore_verifier.py": "7967d6dbfca9077026b29b615176c20649adf56031b5f719749180563cd94049"
+  },
+  "cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/state-restore-cpu-tests-01.json",
+    "sha256": "50b2b1d87829c7fe97e2a99d7874ddfe66db1c291848127125b2616bab3be125"
+  },
+  "interface": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/state-restore-interface-01.json",
+    "sha256": "876fedf668f8f43dff891485655a995c2c870762cc72721ef1cc329139e32547"
+  },
+  "original_helper": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/reservoir_maintenance_state.py",
+    "sha256": "30fc7e3aa9e90719d89fc34f3dc509e49b6b9d95735af6f45c2cff826ed561fa"
+  },
+  "resolved_findings": [
+    "Copy comparison preserves all file bytes/hash/mtime while excluding non-semantic directory timestamps.",
+    "Full launcher/framework executable map, exact plan and request hashes, old argv/default-derived config, backup and repair bindings agree.",
+    "All five unchanged supporting modules are independently hard-pinned; self-consistent changed persistence.py manifests reject.",
+    "Expected restored names independently cover every top-level backup NPZ. Complete 22 stored-field descriptors, thermostat semantics, history bounds, elapsed-time reconstruction and post-file preservation are mandatory.",
+    "Prepared requests remain passed:false. Actual witness acceptance requires request/comparison/log artifacts and fresh source/runtime/package RECORD checks. Host integration must bind the manifests to complete original preparation.",
+    "QoS late waiter bookkeeping is restricted to the latest successful single-worker completion. It cannot replace full generation/push acknowledgement pairs or selected/completed accounting.",
+    "Final-save witness reconciles handle lifecycle and exact per-handle final set; failure or generic completion banner alone cannot pass.",
+    "Actual restore uses an independent private copy and synchronous restore_all without service loop. GPU/model imports and network activity are blocked; warning/quarantine/stored-file change rejects. Default CLI does not execute it."
+  ],
+  "required_before_production_drain": [
+    "Pass the separate frozen real-service 14-case matrix under existing memory/headroom gates; no real case is accepted by this review.",
+    "Separately execute this NEW restore_verifier with actual installed original Python/packages against private preserved 192-node fixtures, including positive and corruption/unsupported-state negative controls, before production drain. Later verification of the stopped production backup is a second check, not its first numerical qualification.",
+    "Finish final hash-bound production preflight/Host review and fake tests: full closure, streamed log spans, complete final-handle backup, original versus pinned settings and exact applied/rollback plist intent hashes.",
+    "Qualify retained-transaction read-only reconstruction and an exact-phase recovery plan. Current in-memory guards/anchors/armed flags are insufficient; controller rejects nonempty journals and current fixture recovery scope is not production recovery.",
+    "Unknown override outcomes must not automatically rearm, repeat signals or bootstrap. Failure receipts alone do not qualify recoverability.",
+    "Both execution blocks remain: false production Host flag and fixture-only controller admission. Any future amendment requires explicit review and fixture/equivalence evidence.",
+    "After any later stopped-production backup, require actual verifier success on that immutable backup and complete new-PID per-handle startup evidence before provider resumes. Preserve all failure artifacts.",
+    "Concrete backend coverage: root metadata preflight found 99 NumPy and 3 lsm_shadow persisted handles at 192 nodes, schema 2/fingerprint ee0427f612dfb485. NEW-verifier qualification must cover both NumPy and lsm_shadow, including stored LSM histories/thermostats, before drain. The separate matrix uses 102 NumPy handles and cannot establish those 3 LSM preservation semantics."
+  ],
+  "limits": [
+    "The 34 tests are stdlib fake/AST checks reported by the author; this review verified frozen receipt/source hashes but did not rerun numerical code.",
+    "Private deterministic restore plus exact source/runtime/inputs and startup logs supports the accepted preservation inference; it is not direct live-memory equality or a requirement for a permanent production wrapper.",
+    "Only persisted public NumPy/LSM fields under documented conversions are covered; unstored LSM internal trajectories are not claimed preserved.",
+    "The production Host/preflight remain separately reviewed mutable work; this receipt does not approve their operational execution.",
+    "No live source, state, package, controller pause, launchd job or process changed."
+  ],
+  "supersedes": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-state-restore-independent-review-02.json",
+    "sha256": "e87716f87b414a4fa8db314cfa94f7ef8595824bb4c21b28167dc44758621842",
+    "reason": "Correct the descriptive field count to the actual22-key NPZ set; no code or acceptance change."
+  },
+  "metadata_preflight": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/metadata-preflight-01.json",
+    "sha256": "645d14db4c694ec42168d722733aa3bb858d0e50a8e0303d3449b2d08e79424b"
+  }
+}

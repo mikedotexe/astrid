@@ -1,0 +1,187 @@
+{
+  "points": [
+    {
+      "event": "host:debug_result",
+      "id": "fresh-provider-arm",
+      "match": {
+        "role": "provider"
+      },
+      "stream": "host"
+    },
+    {
+      "event": "signal_stop:provider",
+      "id": "main-signal-stop-provider",
+      "match": {
+        "action_id": "signal_stop:provider"
+      },
+      "stream": "action_return"
+    },
+    {
+      "event": "witness:provider_drain",
+      "id": "main-witness-provider-drain",
+      "match": {
+        "action_id": "witness:provider_drain"
+      },
+      "stream": "action_return"
+    },
+    {
+      "event": "remove_held:provider",
+      "id": "main-remove-held-provider",
+      "match": {
+        "action_id": "remove_held:provider"
+      },
+      "stream": "action_return"
+    },
+    {
+      "event": "signal_stop:reservoir",
+      "id": "main-signal-stop-reservoir",
+      "match": {
+        "action_id": "signal_stop:reservoir"
+      },
+      "stream": "action_return"
+    },
+    {
+      "event": "witness:final_snapshot",
+      "id": "main-witness-final-snapshot",
+      "match": {
+        "action_id": "witness:final_snapshot"
+      },
+      "stream": "action_return"
+    },
+    {
+      "event": "witness:backup",
+      "id": "main-witness-backup",
+      "match": {
+        "action_id": "witness:backup"
+      },
+      "stream": "action_return"
+    },
+    {
+      "event": "witness:private_restore",
+      "id": "main-witness-private-restore",
+      "match": {
+        "action_id": "witness:private_restore"
+      },
+      "stream": "action_return"
+    },
+    {
+      "event": "install_repair",
+      "id": "main-install-repair",
+      "match": {
+        "action_id": "install_repair"
+      },
+      "stream": "action_return"
+    },
+    {
+      "event": "host:bootstrap_command_returned",
+      "id": "main-bootstrap-original-reservoir",
+      "match": {
+        "role": "reservoir"
+      },
+      "stream": "host"
+    },
+    {
+      "event": "host:bootstrap_command_returned",
+      "id": "main-bootstrap-original-provider",
+      "match": {
+        "role": "provider"
+      },
+      "stream": "host"
+    },
+    {
+      "event": "release_hold:provider",
+      "id": "main-release-hold-provider",
+      "match": {
+        "action_id": "release_hold:provider"
+      },
+      "stream": "action_return"
+    },
+    {
+      "event": "completed",
+      "id": "main-completed",
+      "match": {
+        "action_id": "completed"
+      },
+      "stream": "action_return"
+    },
+    {
+      "event": "signal_stop:provider",
+      "id": "cleanup-signal-stop-provider",
+      "match": {
+        "action_id": "signal_stop:provider"
+      },
+      "stream": "cleanup_return"
+    },
+    {
+      "event": "cleanup_witness:provider",
+      "id": "cleanup-cleanup-witness-provider",
+      "match": {
+        "action_id": "cleanup_witness:provider"
+      },
+      "stream": "cleanup_return"
+    },
+    {
+      "event": "remove_held:provider",
+      "id": "cleanup-remove-held-provider",
+      "match": {
+        "action_id": "remove_held:provider"
+      },
+      "stream": "cleanup_return"
+    },
+    {
+      "event": "signal_stop:reservoir",
+      "id": "cleanup-signal-stop-reservoir",
+      "match": {
+        "action_id": "signal_stop:reservoir"
+      },
+      "stream": "cleanup_return"
+    },
+    {
+      "event": "cleanup_witness:reservoir",
+      "id": "cleanup-cleanup-witness-reservoir",
+      "match": {
+        "action_id": "cleanup_witness:reservoir"
+      },
+      "stream": "cleanup_return"
+    },
+    {
+      "event": "remove_held:reservoir",
+      "id": "cleanup-remove-held-reservoir",
+      "match": {
+        "action_id": "remove_held:reservoir"
+      },
+      "stream": "cleanup_return"
+    },
+    {
+      "event": "release_hold:provider",
+      "id": "cleanup-release-hold-provider",
+      "match": {
+        "action_id": "release_hold:provider"
+      },
+      "stream": "cleanup_return"
+    },
+    {
+      "event": "complete",
+      "id": "cleanup-complete",
+      "match": {
+        "action_id": "complete"
+      },
+      "stream": "cleanup_return"
+    },
+    {
+      "event": "plist_replaced",
+      "id": "pin-replace_plist",
+      "match": {},
+      "stream": "pin"
+    },
+    {
+      "event": "bootstrap_returned",
+      "id": "pin-bootstrap",
+      "match": {},
+      "stream": "pin"
+    }
+  ],
+  "production_qualified": false,
+  "schema": "owned_fixture_injections_v1",
+  "scope": "owned_fixture_only"
+}

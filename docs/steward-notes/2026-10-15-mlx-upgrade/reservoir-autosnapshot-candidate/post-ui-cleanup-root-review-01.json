@@ -1,0 +1,52 @@
+{
+  "all237_file_and7_process_bindings_match": true,
+  "all_agent_tests_held": true,
+  "both_indexes_clean": true,
+  "build_test_processes": [],
+  "created_at": "2026-10-16T22:36:50.821628+00:00",
+  "followup": {
+    "automation_id": "astrid-mlx-qualification",
+    "next_action": "Quiet passive reassessment for a meaningful later headroom change; no repeated identical preflight/window under unchanged conditions.",
+    "pending_user_action": null,
+    "prompt_sha256": "225c9279a0ed17adf6b8ba0b3f2855b8e74d8fdc3e139a6606f931982327123e",
+    "status": "ACTIVE",
+    "updated_at": 1792190179587
+  },
+  "health_ready": true,
+  "initial_post_cleanup_spot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/post-ui-cleanup-headroom-01.json",
+    "sha256": "c576819f538a5e06045e7e85256f49666fcd070450aa26f57f831c083a86d63d"
+  },
+  "limits": [
+    "A targeted renderer measurement fell57.8MiB while that exact process remained; the sample does not identify an unused window or unique RAM reclaimed.",
+    "Neither full process accounting nor the perception observer was repeated.",
+    "No process was restarted, signalled, unloaded or reconfigured."
+  ],
+  "numerical_cases_started": 0,
+  "observer_started": false,
+  "old_failures_preserved": true,
+  "passed": false,
+  "pause_generation": 528,
+  "preflight": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-preflight-02.json",
+    "sha256": "8cefce94bef512a3501bf22d3805f8729e19d46ccad60dcb9d438dc2b1050bab"
+  },
+  "production_mutations": 0,
+  "reason": "The user confirmed UI closure, but the fresh complete preflight found pressure2. The earlier normal-pressure spot and lower absolute swap do not waive the startup gate. No observed qualification window exists.",
+  "repo_head_and_status_unchanged": true,
+  "reviewer": "root",
+  "schema": "reservoir_host_window_preflight_review_v1",
+  "setup_parse_error_preserved": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-preflight-setup-error-01.json",
+    "sha256": "4c801d0076bb9281e32c28e587d238dd9a21c8b206bf22f98ecec501ae4b923d"
+  },
+  "state": "preflight_refused_observer_not_started",
+  "swap_change_from_investigation_mib": -334.94,
+  "swap_mib": 14551.5,
+  "targeted_renderer_accounting": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/post-ui-cleanup-renderer-01.json",
+    "sha256": "bb1437c2cc35cc45cf48598c40d082644eb31d3a721ad883b758d13d49a67476"
+  },
+  "ui_reclaim_causality_established": false,
+  "user_cleanup_confirmed": true
+}

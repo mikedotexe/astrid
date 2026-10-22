@@ -1,0 +1,589 @@
+"""Pure fixture history reconstruction; no Host or OS control modules imported."""
+from __future__ import annotations
+import hashlib
+import json
+from pathlib import Path
+import plistlib
+import re
+
+from production_fixture_admission import (FIXTURE, HOLD, ROLES, STATE11, STATE22, WITNESSES, PAIR, OP,
+    require, digest, identity, finite, sha_value, process_matches, ordered_records, fixture_chain, loaded_origins,
+    check_coordination_observation)
+
+
+def check_injection_boundary(files, root, base, point, ack, start_ns, end_ns):
+    boundary = files.ref(ack['boundary']); path = Path(ack['boundary']['path'])
+    require(path.is_relative_to(root) and all(boundary.get(k) == v for k,v in point['match'].items()),
+            'injection boundary differs')
+    if point['stream'] == 'host':
+        operation = point['event'].removeprefix('host:')
+        require(operation in ('debug_result','bootstrap_command_returned') and path.parent == root
+                and re.fullmatch(r'host-operation-[0-9]{5}\.json',path.name)
+                and boundary.get('operation') == operation
+                and type(boundary.get('wall_time_ns')) is int and start_ns <= boundary['wall_time_ns'] <= end_ns,
+                'injection is not the exact Host operation boundary')
+    elif point['stream'] == 'pin':
+        name = {'plist_replaced':'plist-replaced.json','bootstrap_returned':'bootstrap-return.json'}.get(point['event'])
+        require(name is not None and path == root/'pin'/name, 'injection is not the exact pin boundary')
+    else:
+        require(point['stream'] in ('action_return','cleanup_return') and path == base/'observed-return.json'
+                and boundary.get('original_function_completed') is True and isinstance(boundary.get('result'),dict),
+                'interruption lacks actual completed return boundary')
+    return boundary
+
+def check_executors(files, fixture, release, steps, injections):
+    root = Path(fixture['root']); rows = fixture['executors']; out = {}; prior_end = None
+    require(isinstance(rows, list) and len(rows) == len(steps), 'complete finite executor schedule required')
+    for index, (entry, step) in enumerate(zip(rows, steps)):
+        require(entry['step'] == step, 'executor schedule changed')
+        base = root/'executors'/step['id']
+        values = {}
+        for key, name in (('request', 'request.json'), ('launch', 'launch.json'), ('created', 'child-created.json'),
+                          ('self_start', 'self-start.json'), ('exit', 'exit.json')):
+            require(entry[key]['path'] == str(base/name), 'executor reference outside exact step')
+            values[key] = files.ref(entry[key])
+        request, launch, created, start, end = (values[k] for k in ('request', 'launch', 'created', 'self_start', 'exit'))
+        loaded_origins(start,release)
+        ident = identity(start['identity']); argv = [release['python'], '-B', str(FIXTURE/'owned_fixture_coordinator.py'),
+                                                   '--executor-request', str(base/'request.json')]
+        require(request.get('schema') == 'owned_fixture_executor_request_v1' and request['step'] == step
+                and request['release'] == fixture['release'] and request['root'] == str(root)
+                and request['coordinator_identity'] == fixture['parent']['identity'], 'executor request binding differs')
+        require(launch.get('schema') == 'owned_fixture_executor_launch_v1'
+                and launch['request'] == entry['request'] and launch['release'] == fixture['release']
+                and launch['argv'] == argv and launch['coordinator_identity'] == fixture['parent']['identity']
+                and launch['automatic_retry_permitted'] is False, 'executor launch binding differs')
+        require(created == {'pid': ident['pid'], 'argv': argv, 'launch': entry['launch']}
+                and start['request'] == entry['request'] and start['release'] == fixture['release']
+                and process_matches(ident['argv'], argv, release['python_files'], release['python']), 'executor actual identity differs')
+        require(end.get('schema') == 'owned_fixture_executor_exit_v1' and end['start'] == start
+                and end['pid'] == ident['pid'] and end['returncode'] == step['expected_exit']
+                and end['reaped'] is True and end['timed_out'] is False and end['signals_sent'] == 0,
+                'executor lacks exact natural reap')
+        times = [launch['started_wall_time_ns'], start['started_wall_time_ns'], end['completed_wall_time_ns']]
+        require(all(type(t) is int and t > 0 for t in times) and times == sorted(times), 'executor times out of order')
+        check_coordination_observation(start,release,times[1],times[2])
+        if index > 1: require(prior_end <= times[0], 'mutation executors overlapped')
+        prior_end = max(prior_end or 0, times[-1])
+        for key in ('stdout', 'stderr'):
+            require(end[key]['path'] == str(base/key), 'executor stream path differs'); files.ref(end[key], object=False)
+        require(not (base/'unresolved.json').exists(), 'unresolved executor retained')
+        expected_previous = []
+        for j, previous in enumerate(rows[:index]):
+            if index == 1 and j == 0:
+                expected_previous.append({'kind': 'live_nonmutating_lock_holder', 'step_id': steps[j]['id'],
+                    'held': previous['lock_held'], 'start': previous['self_start'], 'launch': previous['launch']})
+            else:
+                expected_previous.append({'kind': 'naturally_reaped_executor', 'step_id': steps[j]['id'], 'exit': previous['exit']})
+        require(request['previous_steps'] == expected_previous, 'executor predecessor/reap references differ')
+        if step['injection']:
+            ack = files.ref(entry['injection_ack']); point = next(p for p in injections['points'] if p['id'] == step['injection'])
+            loaded_origins(ack,release)
+            require(entry['injection_ack']['path'] == str(base/'injection-ack.json') and entry.get('result') is None
+                    and ack.get('schema') == 'owned_fixture_injection_ack_v1' and ack['point'] == point
+                    and ack['manifest'] == release['injections'] and ack['executor_identity'] == ident
+                    and ack['expected_exit_code'] == 75 and ack['signals_sent_by_injection'] == 0
+                    and ack['original_validation_replaced'] is False, 'planned interruption acknowledgement differs')
+            check_injection_boundary(files,root,base,point,ack,times[1],times[2])
+        elif step['kind'] not in ('lock_hold', 'lock_refusal'):
+            require(entry.get('injection_ack') is None and entry['result']['path'] == str(base/'result.json'), 'unexpected injection/result')
+            result = files.ref(entry['result'])
+            loaded_origins(result,release)
+            require(result.get('production_qualified') is False and isinstance(result.get('result'), dict), 'executor result differs')
+            values['result'] = result['result']
+        require(ident['pid'] not in {v['identity']['pid'] for v in out.values()}, 'executor PID reused')
+        values.update(identity=ident, step=step, entry=entry); out[step['id']] = values
+    holder, refusal = (out[steps[i]['id']] for i in (0, 1))
+    held = files.ref(rows[0]['lock_held']); refused = files.ref(rows[1]['lock_refusal']); released = files.ref(rows[0]['release_lock'])
+    require(held['identity'] == holder['identity'] and held['request'] == rows[0]['request']
+            and held['service_actions_permitted'] is False and refused.get('passed') is True
+            and refused.get('action_performed') is False and 'transaction already executing' in refused.get('reason', '')
+            and released == {'holder_request': rows[0]['request'], 'refusal_exit': rows[1]['exit']}
+            and holder['self_start']['started_wall_time_ns'] < refusal['launch']['started_wall_time_ns']
+            < refusal['exit']['completed_wall_time_ns'] < holder['exit']['completed_wall_time_ns'], 'shared-lock refusal pair differs')
+    files.ref(held['session_begin'])
+    return out
+
+
+def parent_intervals(rows):
+    """Only the three observed parent phases use the shared execution lock."""
+    names = ('cleanup_initialize', 'pin_initialize', 'finalize'); intervals = {}
+    for name in names:
+        claims = [row for row in rows if row.get('action') == name and row.get('type') == 'claim']
+        results = [row for row in rows if row.get('action') == name and row.get('type') == 'result']
+        require(len(claims) == len(results) == 1, 'parent session phase missing or repeated')
+        claim, result = claims[0], results[0]
+        require(result.get('claim_sha256') == digest(claim)
+                and all(type(row.get('wall_time_ns')) is int and row['wall_time_ns'] > 0 for row in (claim,result))
+                and claim['wall_time_ns'] <= result['wall_time_ns'], 'parent session phase interval differs')
+        intervals[name] = (claim['wall_time_ns'], result['wall_time_ns'])
+    require(all(intervals[left][1] <= intervals[right][0] for left,right in zip(names,names[1:])),
+            'parent session phase intervals overlap')
+    return intervals
+
+
+def check_sessions(files, root, plan, executors, parent, parent_rows):
+    known = {digest(v['identity']): v for v in executors.values()}; sessions = {}; expected = set()
+    intervals = parent_intervals(parent_rows); parent_sessions = {}
+    directory = root/'execution-sessions'
+    paths = sorted(directory.iterdir())
+    for path in (p for p in paths if p.name.endswith('-begin.json')):
+        begin = files.json(path); ident = identity(begin['executor_identity']); sid = begin.get('session_id')
+        require(re.fullmatch('[a-f0-9]{32}', sid or '') and path.name == sid+'-begin.json'
+                and begin.get('schema') == 'reservoir_execution_session_v1' and begin['root'] == str(root)
+                and begin['transaction_id'] == plan['transaction_id'] and begin['plan_sha256'] == digest(plan)
+                and begin['host_binding'] == plan['host_binding'] and begin['mode'] in ('fresh', 'resume_one'), 'shared executor session differs')
+        executor = known.get(digest(ident))
+        require(executor is not None or ident == parent, 'unknown executor session')
+        begin_time = begin.get('started_wall_time_ns')
+        require(type(begin_time) is int and begin_time > 0, 'invalid session start time')
+        if executor:
+            require(executor['self_start']['started_wall_time_ns'] <= begin_time
+                    <= executor['exit']['completed_wall_time_ns']
+                    and begin['mode'] == ('fresh' if executor['step']['kind'] == 'fresh' else 'resume_one'),
+                    'session outside executor lifetime or mode')
+        else:
+            matching = [name for name,(start,end) in intervals.items() if start <= begin_time <= end]
+            require(len(matching) == 1 and matching[0] not in parent_sessions and begin['mode'] == 'resume_one',
+                    'parent session outside exact phase or repeated')
+            parent_sessions[matching[0]] = begin
+        expected.add(path)
+        end_path = path.with_name(sid+'-end.json')
+        if end_path.exists():
+            end = files.json(end_path)
+            end_time = end.get('completed_wall_time_ns')
+            require(end.get('schema') == 'reservoir_execution_session_end_v1' and end['session_id'] == sid
+                    and end['begin_sha256'] == digest(begin) and end['executor_identity'] == ident
+                    and end['transaction_id'] == plan['transaction_id'] and end['external_action_success_inferred'] is False
+                    and type(end_time) is int and end_time >= begin_time and end.get('error_type') is None,
+                    'session end differs')
+            require(end_time <= (executor['exit']['completed_wall_time_ns'] if executor
+                                else intervals[matching[0]][1]), 'session end after reap or parent phase')
+            expected.add(end_path)
+        else: require(executor is not None and executor['step']['expected_exit'] == 75, 'unexplained unclosed executor session')
+        sessions[digest(begin)] = begin
+    require(set(paths) == expected, 'orphan or unknown execution session file')
+    require(set(parent_sessions) == set(intervals), 'exact three parent sessions required')
+    for row in executors.values():
+        count = sum(s['executor_identity'] == row['identity'] for s in sessions.values())
+        require(count == (0 if row['step']['kind'] == 'lock_refusal' else 1), 'executor shared-lock session count differs')
+    return sessions
+
+
+def read_host_history(files, root, *, cleanup=False):
+    base = root/'cleanup' if cleanup else root
+    rows = ordered_records(files, base, 'host-operation-*.json', prefix='host-operation-')
+    pairs = {}; open_key = None
+    for row in rows:
+        op, role = row.get('operation'), row.get('role')
+        require(role in (*ROLES, None) and finite(row.get('monotonic'))
+                and type(row.get('wall_time_ns')) is int and row['wall_time_ns'] > 0, 'Host record role/time differs')
+        if op in PAIR:
+            key = (op, role); require(key not in pairs, 'Host producer intent replayed')
+            pairs[key] = {'intent': row, 'result': None, 'command': None}; open_key = key
+        elif op == 'bootstrap_command_returned':
+            key = ('bootstrap_intent', role); require(key in pairs and pairs[key]['command'] is None, 'bootstrap command return differs')
+            pairs[key]['command'] = row
+        else:
+            require(op in PAIR.values(), 'unknown Host operation')
+            key = (next(k for k, v in PAIR.items() if v == op), role)
+            require(key in pairs and pairs[key]['result'] is None and key == open_key, 'Host result ordering differs')
+            require(row['authority'] == pairs[key]['intent']['authority'], 'Host result action authority differs')
+            pairs[key]['result'] = row; open_key = None
+    return rows, pairs
+
+
+def check_core_history(files, root, plan, spec, executors, sessions):
+    controller = ordered_records(files, root/'controller', 'event-*.json', prefix='event-')
+    require(files.json(root/'controller/plan.json') == plan, 'original controller plan differs')
+    previous = digest(plan)
+    for i, row in enumerate(controller, 1):
+        require(row['sequence'] == i and row['previous_sha256'] == previous and row['plan_sha256'] == digest(plan), 'controller chain differs')
+        previous = digest(row)
+    require([r['type'] for r in controller] == ['preflight', 'mutation_intent', 'mutation_completed', 'mutation_intent']
+            and controller[0]['receipt']['passed'] is True
+            and controller[0]['receipt']['execution_scope'] == 'owned_fixture'
+            and controller[0]['receipt'].get('production_admission') is None
+            and all(r.get('operation') == 'create_hold' and r.get('role') == 'provider' for r in controller[1:3])
+            and controller[3].get('operation') == 'arm_next_spawn' and controller[3].get('role') == 'provider',
+            'fresh interruption did not retain exact controller prefix')
+    guard = {'schema': 'model_environment_hold_v1', 'transaction_id': plan['transaction_id'], 'actor': plan['actor']}
+    require(controller[2]['result'] == {'guard': guard}, 'original provider hold differs')
+    host, pairs = read_host_history(files, root)
+    header = files.json(root/'recovery/header.json'); rows = ordered_records(files, root/'recovery', 'event-*.json', prefix='event-')
+    require(header == {'schema': 'reservoir_recovery_ledger_v1', 'root': str(root), 'transaction_id': plan['transaction_id'],
+                       'plan_sha256': digest(plan), 'preparation_sha256': digest(spec), 'original_controller_head_sha256': previous},
+            'recovery did not preserve original anchors')
+    accepted = {}; claims = {}; pending = []; ledger_prev = digest(header); receipts = {}; replacements = {}; holders = {}
+    resume = [v for v in executors.values() if v['step']['kind'] == 'resume_one']; cursor = 0
+    authority = {('controller', digest(row)): row for row in controller}
+    for i, row in enumerate(rows, 1):
+        require(cursor < len(resume), 'extra recovery records'); executor = resume[cursor]; step = executor['step']
+        action = step['action_id']; op, _, role = action.partition(':'); role = role or None
+        wanted_op = None if op == 'witness' else op
+        require(row.get('schema') == 'reservoir_recovery_event_v1' and row['sequence'] == i
+                and row['previous_sha256'] == ledger_prev and row['transaction_id'] == plan['transaction_id']
+                and row['plan_sha256'] == digest(plan) and row['action_id'] == action
+                and row['operation'] == wanted_op and row['role'] == (None if op == 'witness' else role)
+                and row.get('witness') == (role if op == 'witness' else None)
+                and row.get('executor_session') in sessions.values()
+                and row['executor_session']['executor_identity'] == executor['identity'], 'recovery chain/action/session differs')
+        preceding_head = ledger_prev; ledger_prev = digest(row); kind = row['type']
+        if kind in ('action_claim', 'reconciliation_claim'):
+            require(kind == ('action_claim' if step['mode'] == 'execute' else 'reconciliation_claim')
+                    and (not pending or kind == 'reconciliation_claim'), 'recovery re-executed uncertain action')
+            bindings = {'plan_sha256': digest(plan), **{r+'_old_identity_sha256': digest(plan['roles'][r]['identity']) for r in ROLES}}
+            if action == 'witness:backup': bindings['final_snapshot_sha256'] = digest(receipts['final_snapshot'])
+            if action == 'witness:private_restore': bindings.update(backup_sha256=digest(receipts['backup']), repair_source_sha256=plan['input_hashes']['reservoir_candidate'], interpreter_sha256=plan['input_hashes']['interpreter'], configuration_sha256=plan['input_hashes']['reservoir_settings'])
+            if action == 'witness:startup': bindings.update(private_restore_sha256=digest(receipts['private_restore']), reservoir_new_identity_sha256=digest(replacements['reservoir']))
+            if action == 'witness:provider_ready': bindings.update(startup_sha256=digest(receipts['startup']), provider_new_identity_sha256=digest(replacements['provider']))
+            require(row['context'] == {'transaction_id': plan['transaction_id'], 'plan': plan, 'bindings': bindings,
+                    'execution_scope': 'owned_fixture', 'production_qualified': False, 'receipts': receipts}, 'recovery context lost accepted evidence')
+            count = row['host_before_count']; require(type(count) is int and 0 <= count <= len(host)
+                    and row['host_before_sha256'] == digest(host[:count]) and sha_value(row['checkpoint_sha256'])
+                    and sha_value(row['inspection_sha256']), 'recovery claim Host head differs')
+            expected_heads = {'controller_head_sha256':previous, 'host_operations_sha256':row['host_before_sha256'],
+                              'recovery_head_sha256':digest(plan) if i == 1 else preceding_head,
+                              'inspection_sha256':row['inspection_sha256']}
+            require(executor['request']['expected_heads'] == expected_heads, 'recovery request used stale/different raw heads')
+            claims[ledger_prev] = row; pending.append(ledger_prev); authority[('recovery', ledger_prev)] = row
+            if step['expected_exit'] == 75: cursor += 1
+            continue
+        require(kind == ('action_result' if step['mode'] == 'execute' else 'reconciliation_result')
+                and row['claim_sha256'] == pending[-1] and row['executor_session'] == claims[pending[-1]]['executor_session'], 'recovery result lacks exact claim')
+        claim = claims[pending[-1]]; span = row['host_operations']; first, last = span['before_count'], span['after_count']
+        require(first == claim['host_before_count'] and first <= last <= len(host)
+                and span['before_sha256'] == digest(host[:first]) and span['after_sha256'] == digest(host[:last])
+                and len(span['appended']) == last-first, 'recovery Host span differs')
+        for number, ref in enumerate(span['appended'], first+1):
+            require(ref['path'] == str(root/f'host-operation-{number:05d}.json') and ref['record_sha256'] == digest(host[number-1]), 'Host span row differs')
+            files.ref({'path': ref['path'], 'sha256': ref['sha256']})
+        if kind == 'reconciliation_result':
+            proof = row['reconciliation']
+            require(first == last and row['resolves_claims'] == pending and proof.get('schema') == 'reservoir_recovery_reconciliation_v1'
+                    and proof.get('passed') is True and proof['action_id'] == action and proof['transaction_id'] == plan['transaction_id']
+                    and proof['plan_sha256'] == digest(plan) and proof['checkpoint_sha256'] == claim['checkpoint_sha256']
+                    and proof['inspection_sha256'] == claim['inspection_sha256'] and proof['result'] == row['result']
+                    and isinstance(proof.get('evidence'),dict), 'recovery adoption proof differs')
+        else: require(pending == [row['claim_sha256']], 'ordinary result resolved uncertainty')
+        result = row['result']; accepted[action] = result
+        wrapper = executor['result']
+        require(wrapper.get('schema') == 'reservoir_recovery_step_v1' and wrapper['action_id'] == action
+                and wrapper['record_sha256'] == ledger_prev and wrapper['recovery_head_sha256'] == ledger_prev
+                and wrapper['result'] == result and wrapper['automatic_next_action'] is False, 'executor result is not exact ledger acceptance')
+        if op == 'witness':
+            require(result.get('schema') == 'reservoir_maintenance_witness_v1' and result['kind'] == role
+                    and result['passed'] is True and result['bindings'] == claim['context']['bindings']
+                    and result['transaction_id'] == plan['transaction_id']
+                    and result['evidence']['scope'] == 'owned_fixture_only' and result['evidence']['production_qualified'] is False
+                    and files.json(root/(role+'-witness.json')) == result, 'witness acceptance differs')
+            receipts[role] = result
+        elif op == 'held_verified': holders[role] = identity(result['identity'])
+        elif op == 'bootstrap_original':
+            replacements[role] = identity(result['identity'])
+            require(result['identity']['argv'] == plan['roles'][role]['identity']['argv']
+                    and result['identity'] != plan['roles'][role]['identity'], 'replacement differs')
+        elif op == 'create_hold': require(result == {'guard': guard}, 'new guard differs')
+        elif op == 'arm_next_spawn': require(result.get('armed') is True, 'debug arm not confirmed')
+        elif op == 'signal_stop':
+            if result.get('effect') == 'owned_holder_observed':
+                require(kind == 'reconciliation_result' and result['original_identity'] == plan['roles'][role]['identity']
+                        and result['guard'] == guard and identity(result['identity']) != result['original_identity'], 'signal effect adoption differs')
+            else: require(result == {'signal': 'SIGTERM', 'identity': plan['roles'][role]['identity'], 'force_used': False}, 'signal result differs')
+        elif op == 'remove_held': require(result['removed_identity'] == holders[role], 'removed holder differs')
+        elif op == 'job_absent': require(result['absent'] is True, 'absence not proven')
+        elif op == 'install_repair': require(result['source_sha256'] == plan['input_hashes']['reservoir_candidate'], 'installed source differs')
+        elif op == 'release_hold': require(result['released'] is True, 'guard release missing')
+        elif op == 'completed': require(result.get('schema') == 'reservoir_maintenance_result_v1'
+                and result['transaction_id'] == plan['transaction_id'] and result['status'] == 'verified' and result['plan_sha256'] == digest(plan)
+                and result['witness_hashes'] == {k: digest(v) for k, v in receipts.items()}
+                and all(result[r] == replacements[r] for r in ROLES) and result['force_used'] is False
+                and result['runtime_state_rollback'] is False and result['execution_scope'] == 'owned_fixture', 'main completion differs')
+        else: raise ValueError('unreviewed recovery action')
+        pending = []; cursor += 1
+    require(cursor == len(resume) and not pending and list(receipts) == list(WITNESSES) and 'completed' in accepted, 'main recovery incomplete')
+    for row in host:
+        source = authority.get((row['authority']['stream'], row['authority']['record_sha256']))
+        base = row['operation'] if row['operation'] in PAIR else 'bootstrap_intent' if row['operation'] == 'bootstrap_command_returned' else next(k for k,v in PAIR.items() if v == row['operation'])
+        action = OP[base]+(':'+row['role'] if row['role'] else '')
+        require(source is not None and row['authority']['action_id'] == action
+                and (source.get('action_id') == action or source.get('operation') == OP[base] and source.get('role') == row['role']), 'Host operation lacks exact action authority')
+    return {'controller': controller, 'controller_head': previous, 'recovery': rows, 'recovery_head': ledger_prev,
+            'receipts': receipts, 'replacements': replacements, 'holders': holders, 'host': host, 'pairs': pairs}
+
+
+def check_workers(files, root, plan, main):
+    expected_phases = {
+        'provider': ['started', 'idle', 'generation_admitted', 'stop_received', 'checkin_sent', 'checkin_acknowledged', 'drained'],
+        'reservoir': ['started', 'restored', 'checkin_applied', 'stop_received', 'final_snapshot_started', 'handle_saved', 'handle_saved', 'final_snapshot_complete', 'drained']}
+    logs = {}; checkins = []
+    for role in ROLES:
+        raw = files.read(root/(role+'.events.jsonl'), content=True)
+        require(raw.endswith(b'\n'), 'partial worker event log')
+        rows = [json.loads(line) for line in raw.splitlines()]
+        require(len(rows) == 2*len(expected_phases[role]) and all(r.get('token') == plan['transaction_id'] and r.get('role') == role for r in rows), 'extra/foreign worker event')
+        require(all(finite(r.get('monotonic')) for r in rows) and [r['monotonic'] for r in rows] == sorted(r['monotonic'] for r in rows), 'worker time order differs')
+        logs[role] = rows
+        for cycle, ident in enumerate((plan['roles'][role]['identity'], main['replacements'][role])):
+            selected = [r for r in rows if r.get('pid') == ident['pid']]
+            require([r['phase'] for r in selected] == expected_phases[role]
+                    and selected[0]['argv'] == ident['argv'][1:] and selected[0]['cwd'] == str(root), 'worker process/history differs')
+            state = STATE11 if cycle == 0 else STATE22
+            if role == 'provider':
+                request_id = selected[2]['request_id']; require(isinstance(request_id, str) and re.fullmatch(r'provider-\d+-\d+', request_id), 'invalid check-in identity')
+                require(all(r.get('request_id') == request_id for r in selected[2:])
+                        and selected[2]['ticks'] == selected[5]['ticks'] == 11
+                        and selected[4]['monotonic']-selected[3]['monotonic'] >= 5.9, 'provider did not preserve admitted work')
+                request = files.json(root/('request.'+request_id+'.json')); ack = files.json(root/('ack.'+request_id+'.json'))
+                require(request == {'token': plan['transaction_id'], 'request_id': request_id, 'handle': 'fixture_astrid', 'ticks': 11, 'provider_pid': ident['pid']}
+                        and ack == {'token': plan['transaction_id'], 'request_id': request_id, 'ticks': 11, 'ok': True}, 'request/ACK differs')
+                checkins.append(request_id)
+            else:
+                require(selected[1]['state'] == ({'fixture_astrid': {'ticks': 0}, 'fixture_minime': {'ticks': 7}} if cycle == 0 else STATE11)
+                        and selected[2]['state'] == selected[7]['state'] == state
+                        and selected[4]['monotonic']-selected[3]['monotonic'] >= 5.9
+                        and selected[4]['handles'] == sorted(state)
+                        and {r['name']: r['value'] for r in selected[5:7]} == state, 'cooperative final snapshot/state differs')
+    require(len(set(checkins)) == 2 and [r['request_id'] for r in logs['reservoir'] if r['phase'] == 'checkin_applied'] == checkins
+            and {p.name for p in root.glob('request.*.json')} == {'request.'+r+'.json' for r in checkins}
+            and {p.name for p in root.glob('ack.*.json')} == {'ack.'+r+'.json' for r in checkins}, 'check-in missing or replayed')
+    backup = files.json(root/'fixture-backup.json'); restored = files.json(root/'fixture-private-restore.json')
+    require(backup.get('scope') == 'owned_fixture_only' and backup['expected_state'] == STATE11
+            and backup['all_synthetic_history_included'] is True
+            and set(backup['files']) == {'state.json', 'request.'+checkins[0]+'.json', 'ack.'+checkins[0]+'.json'}, 'main backup inventory differs')
+    for name, record in backup['files'].items():
+        expected = STATE11 if name == 'state.json' else files.json(root/name)
+        require(record['value'] == expected and record['sha256'] == hashlib.sha256((json.dumps(expected, sort_keys=True)+'\n').encode()).hexdigest(), 'retained original backup bytes differ')
+    require(restored == {'state': STATE11, 'backup_sha256': digest(backup), 'json_only': True, 'numeric_qualification': False}
+            and files.json(root/'state.json') == STATE22, 'private fixture restore/final state differs')
+    for role, kind in (('provider', 'provider_drain'), ('reservoir', 'final_snapshot')):
+        evidence = main['receipts'][kind]['evidence']; details = files.ref(evidence['retained'])
+        require(details == evidence['details'] and details['identity'] == plan['roles'][role]['identity']
+                and details['events'] == [r for r in logs[role] if r['pid'] == details['identity']['pid']]
+                and details['expected_state'] == STATE11 and details['drain_exceeds_five_seconds'] is True,
+                'main witness lacks exact raw worker history')
+        if role == 'provider':
+            files.ref(details['request']); files.ref(details['ack'])
+            require(details['request_id'] == checkins[0] and details['applied_event'] == logs['reservoir'][2], 'main check-in witness differs')
+        else: require(details['state']['sha256'] == backup['files']['state.json']['sha256'], 'historical final state was not preserved')
+    require(files.ref(main['receipts']['backup']['evidence']['backup']) == backup
+            and files.ref(main['receipts']['private_restore']['evidence']['restore']) == restored, 'accepted backup/restore reference differs')
+    for role, kind in (('reservoir', 'startup'), ('provider', 'provider_ready')):
+        details = main['receipts'][kind]['evidence']['details']
+        require(files.ref(main['receipts'][kind]['evidence']['retained']) == details
+                and details['identity'] == main['replacements'][role] and details['ready'] is True
+                and details['events'] == [r for r in logs[role] if r['pid'] == details['identity']['pid']][:2], 'same-PID replacement readiness differs')
+    return logs, checkins, backup
+
+
+def check_cleanup(files, root, plan, main, executors, logs):
+    context = files.json(root/'cleanup/context.json')
+    require(files.json(root/'cleanup-context-intent.json') == context
+            and context.get('schema') == 'owned_fixture_cleanup_context_v1'
+            and context['root'] == str(root) and context['token'] == plan['transaction_id']
+            and context['main_plan_sha256'] == digest(plan)
+            and context['main_heads'] == {'controller_head_sha256': main['controller_head'], 'recovery_head_sha256': main['recovery_head']}
+            and context['main_identities'] == main['replacements'] and context['main_backup'] == main['receipts']['backup']
+            and context['expected_ticks'] == STATE22 and context['production_qualified'] is False,
+            'cleanup rewrote main anchors or backup')
+    inspection = files.ref(context['main_inspection'])
+    require(inspection['controller']['events'] == main['controller'] and inspection['host_operations']['events'] == main['host']
+            and inspection['recovery_ledger']['records'] == main['recovery']
+            and inspection['recovery_ledger']['head_sha256'] == main['recovery_head'], 'cleanup main observation changed')
+    header = files.json(root/'cleanup/header.json'); rows = ordered_records(files, root/'cleanup', 'event-*.json', prefix='event-')
+    require(header == {'schema': 'owned_fixture_ledger_v1', 'name': 'cleanup', 'binding': {'context_sha256': digest(context)}}, 'cleanup header differs')
+    steps = [v for v in executors.values() if v['step']['kind'] == 'cleanup']
+    expected = list(dict.fromkeys(v['step']['action_id'] for v in steps)); done, head = fixture_chain(header, rows, expected)
+    check_step_claims(rows, steps, 'cleanup')
+    guard = {'schema': 'model_environment_hold_v1', 'transaction_id': plan['transaction_id']+'-cleanup', 'actor': 'owned-fixture-cleanup'}
+    require(context['guard'] == guard, 'cleanup guard differs')
+    for role in ROLES:
+        ident = main['replacements'][role]; holder = identity(done['held_verified:'+role]['identity'])
+        require(holder != ident and done['create_hold:'+role]['guard'] == guard
+                and done['arm_next_spawn:'+role]['armed'] is True
+                and done['remove_held:'+role]['removed_identity'] == holder
+                and done['job_absent:'+role]['absent'] is True and done['release_hold:'+role]['released'] is True, 'cleanup holder/removal differs')
+        signal = done['signal_stop:'+role]
+        require(signal == {'signal': 'SIGTERM', 'identity': ident, 'force_used': False}
+                or signal == {'effect': 'owned_holder_observed', 'identity': holder, 'original_identity': ident, 'guard': guard}, 'cleanup signal/effect differs')
+        witness = files.json(root/'cleanup'/(role+'-drain-witness.json'))
+        require(done['cleanup_witness:'+role] == witness and witness.get('schema') == 'owned_fixture_cleanup_witness_v1'
+                and witness['passed'] is True and witness['context_sha256'] == digest(context)
+                and witness['main_backup_unchanged'] is True and witness['details']['identity'] == ident
+                and witness['details']['events'] == [r for r in logs[role] if r['pid'] == ident['pid']]
+                and witness['details']['expected_state'] == STATE22, 'cleanup drain witness differs')
+    for action in ('final_state', 'complete'):
+        value = done[action]
+        require(value['passed'] is True and value['both_jobs_absent'] is True and value['all_owned_pids_absent'] is True
+                and value['all_ports_unowned'] is True and value['final_state'] == STATE22 and value['main_backup_unchanged'] is True
+                and value['unique_applied_checkins'] == 2 and value['force_used'] is False, 'cleanup completion differs')
+    host, pairs = read_host_history(files, root, cleanup=True)
+    authorities = {digest(r): r for r in rows if r['type'] == 'claim'}
+    for event in host:
+        source = authorities.get(event['authority']['record_sha256'])
+        require(event['authority']['stream'] == 'cleanup' and source is not None
+                and source['action'] == event['authority']['action_id'], 'cleanup Host operation lacks exact producer claim')
+    return {'context': context, 'rows': rows, 'done': done, 'head': head, 'host': host, 'pairs': pairs}
+
+
+def check_step_claims(rows, steps, name):
+    cursor = 0
+    for executor in steps:
+        step = executor['step']; claim = rows[cursor]; cursor += 1
+        require(claim['action'] == step['action_id'] and claim['type'] == ('claim' if step['mode'] == 'execute' else 'reconcile_claim')
+                and claim['executor_identity'] == executor['identity'], name+' claim/executor schedule differs')
+        if step['expected_exit'] != 75:
+            result = rows[cursor]; cursor += 1
+            require(result['claim_sha256'] == digest(claim) and result['result'] == executor['result']['result']
+                    and executor['result']['head_sha256'] == digest(result), name+' executor acceptance differs')
+    require(cursor == len(rows), 'extra '+name+' ledger history')
+
+
+def check_setup(files, fixture, release, plan, spec):
+    root = Path(fixture['root']); token = fixture['transaction_id']; uid = fixture['host_binding']['uid']
+    owner = files.json(root/'setup-owner.json')
+    require(owner == {'schema': 'owned_fixture_setup_owner_v1', 'token': token, 'root': str(root), 'uid': uid,
+            'host_binding': fixture['host_binding'], 'coordinator_identity': fixture['parent']['identity'],
+            'release_ref': fixture['release'], 'targets': release['fixture']['targets'], 'python': release['python']}, 'setup ownership differs')
+    require(files.json(root/'fixture.owner.json') == {'schema': 'reservoir_maintenance_owned_fixture_v1',
+            'token': token, 'root': str(root), 'uid': uid}, 'private worker owner differs')
+    for name, source in (('model_environment.py',str(HOLD)),
+                         ('maintenance_fixture_worker.py',str(FIXTURE.parent/'candidate/maintenance_fixture_worker.py')),
+                         ('owned_pin_sentinel.py',str(FIXTURE/'owned_pin_sentinel.py')),
+                         ('owned_fixture_records.py',str(FIXTURE/'owned_fixture_records.py'))):
+        require(files.read(root/name) == release['artifacts'][source], 'private copied helper differs')
+    wanted_inputs = {'provider_source':files.read(root/'maintenance_fixture_worker.py'),
+        'provider_settings':files.read(root/'provider.plist'), 'provider_packages':digest('owned stdlib only'),
+        'model_snapshot':files.read(root/'model-never-opened.sentinel'),
+        'reservoir_source':hashlib.sha256(b'original fixture marker\n').hexdigest(),
+        'reservoir_candidate':files.read(root/'reservoir-repair.marker'), 'reservoir_settings':files.read(root/'reservoir.plist'),
+        'interpreter':digest(release['python_files']), 'helpers':digest(release['artifacts']),
+        'fixture':release['artifacts'][str(FIXTURE/'owned_recovery_host.py')]}
+    require(plan['input_hashes'] == wanted_inputs and files.read(root/'reservoir-source.marker') == wanted_inputs['reservoir_candidate']
+            and files.read(root/'reservoir-repair.marker',content=True) == b'repaired fixture marker\n'
+            and files.read(root/'model-never-opened.sentinel',content=True) == b'never open as a model\n', 'synthetic original/repaired input closure differs')
+    header = files.json(root/'setup/header.json'); rows = ordered_records(files, root/'setup', 'event-*.json', prefix='event-')
+    require(header == {'schema': 'owned_fixture_ledger_v1', 'name': 'setup', 'binding': {
+            'owner_sha256': digest(owner), 'release_sha256': fixture['release']['sha256']}}, 'setup ledger binding differs')
+    done, head = fixture_chain(header, rows, ['bootstrap:reservoir', 'bootstrap:provider'])
+    require([r['type'] for r in rows] == ['claim', 'result', 'claim', 'result'], 'full fixture setup may not hide an interrupted/retried bootstrap')
+    setup_host = ordered_records(files, root/'setup-host', 'host-operation-*.json', prefix='host-operation-')
+    require(len(setup_host) == 6, 'setup Host history incomplete')
+    for ordinal, role in enumerate(('reservoir', 'provider')):
+        claim = rows[ordinal*2]; result = done['bootstrap:'+role]; ident = identity(result['identity'])
+        argv = [release['python'], str(root/'maintenance_fixture_worker.py'), '--root', str(root), '--token', token,
+                '--role', role, '--drain-seconds', '6.0']
+        require(claim['executor_identity'] == fixture['parent']['identity'] and claim['expected_argv'] == argv
+                and claim['target'] == release['fixture']['targets'][role]
+                and claim['plist_ref']['path'] == str(root/(role+'.plist'))
+                and result['ready'] is True and plan['roles'][role]['identity'] == ident
+                and process_matches(ident['argv'], argv, release['python_files'], release['python']), 'setup identity/argv differs')
+        settings = plistlib.loads(files.read(root/(role+'.plist'), claim['plist_ref']['sha256'], content=True))
+        require(settings == {'Label': release['fixture']['targets'][role].split('/')[-1], 'ProgramArguments': argv,
+                'WorkingDirectory': str(root), 'RunAtLoad': True, 'KeepAlive': True, 'ThrottleInterval': 1, 'ExitTimeOut': 5,
+                'StandardOutPath': str(root/(role+'.stdout')), 'StandardErrorPath': str(root/(role+'.stderr'))}, 'setup plist differs')
+        intent, command, ready = setup_host[ordinal*3:ordinal*3+3]
+        require([r['operation'] for r in (intent, command, ready)] == ['bootstrap_intent', 'bootstrap_command_returned', 'bootstrap_ready']
+                and all(r['role'] == role for r in (intent, command, ready)) and intent['claim_sha256'] == digest(claim)
+                and intent['expected_argv'] == argv and command['returncode'] == 0 and ready['identity'] == ident
+                and ready['sentinel_port'] == result['sentinel_port'] == spec['anchors'][role]['sentinel_port'], 'setup actual bootstrap evidence differs')
+        anchor = spec['anchors'][role]; raw = files.read(root/(role+'.events.jsonl'), content=True); log = anchor['log']
+        require(anchor['identity'] == ident and log['path'] == str(root/(role+'.events.jsonl'))
+                and type(log['start_offset']) is int and 0 < log['start_offset'] <= len(raw)
+                and hashlib.sha256(raw[:log['start_offset']]).hexdigest() == log['prefix_sha256'], 'original log anchor lost')
+        require(files.seen[log['path']]['stamp'][:2] == (log['device'], log['inode']), 'original log inode replaced')
+    complete = files.json(root/'setup-complete.json')
+    require(complete.get('schema') == 'owned_fixture_setup_complete_v1' and complete['owner_sha256'] == digest(owner)
+            and complete['setup_head_sha256'] == head and files.ref(complete['plan_ref']) == plan
+            and files.ref(complete['spec_ref']) == spec
+            and complete['identities'] == {r: plan['roles'][r]['identity'] for r in ROLES}, 'setup completion differs')
+    return {'owner': owner, 'header': header, 'rows': rows, 'head': head}
+
+
+def check_host_effects(files, root, plan, main, cleanup, release):
+    """Every stateful control has one exact owned intent, never force/foreign targets."""
+    for scope in (main, cleanup):
+        cleaning = scope is cleanup
+        guard = cleanup['context']['guard'] if cleaning else {'schema': 'model_environment_hold_v1', 'transaction_id': plan['transaction_id'], 'actor': plan['actor']}
+        old = main['replacements'] if cleaning else {r: plan['roles'][r]['identity'] for r in ROLES}
+        holders = {r: cleanup['done']['held_verified:'+r]['identity'] for r in ROLES} if cleaning else main['holders']
+        expected = {(op, role) for role in ROLES for op in ('hold_intent','debug_intent','signal_intent','held_bootout_intent','hold_release_intent')}
+        if not cleaning: expected |= {('install_intent', None), ('bootstrap_intent', 'provider'), ('bootstrap_intent', 'reservoir')}
+        require(set(scope['pairs']) == expected, 'Host producer set differs from finite lifecycle')
+        for (operation, role), pair in scope['pairs'].items():
+            intent, result = pair['intent'], pair['result']
+            if operation in ('hold_intent', 'debug_intent', 'hold_release_intent'): require(intent['guard'] == guard, 'Host guard differs')
+            if operation in ('debug_intent', 'signal_intent'):
+                require(intent['identity'] == old[role], 'Host controlled an unowned worker')
+            if operation == 'debug_intent':
+                wanted = ['--program', release['python'], '--', str(root/'model_environment.py'), 'launch',
+                          '--control-root', str(root/('hold-'+role)), '--hold-only', guard['transaction_id']]
+                require(intent['arguments'] == wanted and result is not None and result['returncode'] == 0, 'debug override not exact/confirmed')
+            if operation == 'signal_intent': require(intent['signal'] == 'SIGTERM' and result is not None
+                    and result['signal'] == 'SIGTERM' and result['identity'] == old[role], 'cooperative signal evidence differs')
+            if operation == 'held_bootout_intent': require(intent['identity'] == holders[role]
+                    and result is not None and result['identity'] == holders[role], 'bootout did not target exact holder')
+            if operation == 'install_intent': require(intent['target'] == str(root/'reservoir-source.marker')
+                    and intent['source_sha256'] == plan['input_hashes']['reservoir_candidate']
+                    and result is not None and result['source_sha256'] == intent['source_sha256'], 'private marker install differs')
+            if operation == 'bootstrap_intent':
+                require(intent['expected_argv'][1:] == old[role]['argv'][1:]
+                        and intent['original_rollback_plist_sha256'] == intent['applied_plist_sha256'] == plan['input_hashes'][role+'_settings']
+                        and pair['command'] is not None and pair['command']['returncode'] == 0,
+                        'replacement launch differs')
+            if operation != 'bootstrap_intent': require(result is not None, 'unresolved actual Host operation')
+        for role in ROLES:
+            argv = [release['python'],str(root/'model_environment.py'),'launch','--control-root',str(root/('hold-'+role)),
+                    '--hold-only',guard['transaction_id']]
+            require(process_matches(holders[role]['argv'],argv,release['python_files'],release['python']), 'held process argv/owner differs')
+
+
+def check_pin(files, root, plan, release, executors):
+    header = files.json(root/'pin/header.json'); inputs = files.json(root/'pin/inputs.json')
+    target = release['fixture']['targets']['pin']
+    binding = {'token': plan['transaction_id'], 'plan_sha256': digest(plan), 'target': target, 'scope': 'private_pin_primitive_only'}
+    require(inputs['binding'] == binding and header == {'schema': 'owned_fixture_ledger_v1', 'name': 'pin', 'binding': binding}
+            and inputs['production_pin_schedule_executed'] is False, 'pin ownership differs')
+    require(inputs['original']['path'] == str(root/'pin/original.plist') and inputs['candidate']['path'] == str(root/'pin/candidate.plist')
+            and inputs['sentinel']['path'] == str(root/'owned_pin_sentinel.py')
+            and inputs['record_helper']['path'] == str(root/'owned_fixture_records.py'), 'pin input paths differ')
+    original = plistlib.loads(files.read(root/'pin/original.plist', inputs['original']['sha256'], content=True))
+    applied = plistlib.loads(files.read(root/'pin/candidate.plist', inputs['candidate']['sha256'], content=True))
+    before = original['ProgramArguments']; after = applied['ProgramArguments']
+    require(before.count('--model') == 1, 'pin original model option ambiguous'); index = before.index('--model')+1
+    expected = dict(original); expected['ProgramArguments'] = list(before); expected['ProgramArguments'][index] = str(root/'pin/model-b.sentinel')
+    require(before[index] == str(root/'pin/model-a.sentinel') and applied == expected
+            and original['Label'] == target.split('/')[-1] and original['KeepAlive'] is False
+            and original['WorkingDirectory'] == str(root) and after[0] == release['python']
+            and after[1] == str(root/'owned_pin_sentinel.py')
+            and files.read(root/'pin/active.plist') == inputs['candidate']['sha256'], 'pin changed more than private model path')
+    require(applied == {'Label':target.split('/')[-1], 'ProgramArguments':[release['python'],str(root/'owned_pin_sentinel.py'),
+        '--root',str(root),'--token',plan['transaction_id'],'--model',str(root/'pin/model-b.sentinel'),
+        '--output',str(root/'pin/sentinel-exit-intent.json')], 'WorkingDirectory':str(root),'RunAtLoad':True,'KeepAlive':False,
+        'StandardOutPath':str(root/'pin/stdout'),'StandardErrorPath':str(root/'pin/stderr')}, 'private pin settings differ')
+    for key in ('sentinel', 'record_helper'): files.ref(inputs[key], object=False)
+    rows = ordered_records(files, root/'pin', 'event-*.json', prefix='event-')
+    done, head = fixture_chain(header, rows, ['replace_plist','bootstrap','verify_exit','remove_absent_job','complete'])
+    steps = [v for v in executors.values() if v['step']['kind'] == 'pin']; check_step_claims(rows, steps, 'pin')
+    replaced = files.json(root/'pin/plist-replaced.json'); boot = files.json(root/'pin/bootstrap-return.json')
+    removed = files.json(root/'pin/remove-return.json'); sentinel = files.json(root/'pin/sentinel-exit-intent.json')
+    require(replaced == {'active': {'path': str(root/'pin/active.plist'), 'sha256': inputs['candidate']['sha256']}, 'candidate': inputs['candidate']}
+            and boot['target'] == removed['target'] == target and boot['outcome']['returncode'] == removed['outcome']['returncode'] == 0,
+            'pin actual atomic replacement/bootstrap/removal missing')
+    require(sentinel['token'] == plan['transaction_id'] and sentinel['model_argument'] == str(root/'pin/model-b.sentinel')
+            and process_matches(sentinel['argv'], after, release['python_files'], release['python'])
+            and sentinel['model_opened'] is False and sentinel['listener_opened'] is False and sentinel['numeric_imported'] is False
+            and type(sentinel['pid']) is int and sentinel['pid'] > 1, 'pin sentinel performed real work or differs')
+    observed = done['verify_exit']['observation']
+    require(done['verify_exit']['passed'] is True and observed['job_loaded'] is True and observed['process'] is None and observed['recorded_pid_absent'] is True
+            and observed['last_exit_code'] == 0 and observed['runs'] == 1 and not observed['listener_pids']
+            and done['remove_absent_job']['absent'] is True and done['complete']['passed'] is True
+            and done['complete']['production_pin_schedule_executed'] is False, 'pin natural exit/absence differs')
+    raw = observed['raw']
+    require(raw['argv'] == ['/bin/launchctl','print',target] and raw['returncode'] == 0
+            and re.search(r'^\s*runs = 1\s*$',raw['stdout'],re.M)
+            and re.search(r'^\s*last exit code = 0\s*$',raw['stdout'],re.M)
+            and not re.search(r'^\s*pid = ',raw['stdout'],re.M), 'pin raw natural exit evidence differs')
+    require(boot['outcome']['argv'] == ['/bin/launchctl','bootstrap',f"gui/{plan['host_binding']['uid']}",str(root/'pin/active.plist')]
+            and removed['outcome']['argv'] == ['/bin/launchctl','bootout',target], 'pin controlled foreign target')
+    return {'rows': rows, 'head': head, 'done': done, 'sentinel': sentinel}

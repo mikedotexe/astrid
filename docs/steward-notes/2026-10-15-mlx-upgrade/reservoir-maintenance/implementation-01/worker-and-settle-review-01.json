@@ -1,0 +1,30 @@
+{
+  "schema": "maintenance_worker_and_settle_static_review_v1",
+  "reviewed_at": "2026-10-16T03:22:55.974748+00:00",
+  "reviewer": "mlx_integration",
+  "status": "no_blocking_finding",
+  "source_hashes": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/maintenance_fixture_worker.py": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_maintenance_fixture_worker.py": "d7be17da230ccbe5a1852a30d0d72e2149d4a79993a7d08e78ff058018d563be",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-01-observer.py": "d76aa9277c9fe4a81b277359266ad5835bab3a1d18d85ce52da2caf486018be8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/host-window-03-observer.py": "712c53cfa52bab5ca6d62244ed1525442632a91c8e6d38cbad6167c287abdaf6"
+  },
+  "worker_findings": [
+    "Worker imports stdlib only; private ownership marker checked before work.",
+    "Provider models admitted work racing stop, waits more than five seconds and requires matching fake acknowledgement before drained.",
+    "Reservoir completes final durable synthetic state save and per-handle events before drained.",
+    "Fixture driver must await same-PID idle/restored event in addition to ready marker/listener; ready marker is published first.",
+    "No automatic fixture failure cleanup should stop stateful workers; provider cleanup precedes reservoir."
+  ],
+  "observer_diff_review": [
+    "Requires both retained passive inputs state=completed before creating output.",
+    "Fresh O_EXCL output path.",
+    "CPU-fixture purpose/schema and accepted_mlx_baseline=false prevent interpreting this as accepted MLX baseline.",
+    "Previous observation path correctly points to absolute host-window-03.json.",
+    "Remaining host sampling and five-minute pressure/swap/no-build-test/gap logic unchanged."
+  ],
+  "limitations": [
+    "Static source review only. No worker, observer, launchd fixture, socket, camera, model, service API or signal executed by reviewer.",
+    "This does not qualify production maintenance or preservation witnesses."
+  ]
+}

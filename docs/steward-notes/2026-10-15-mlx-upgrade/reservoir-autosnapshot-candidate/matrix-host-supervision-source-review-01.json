@@ -1,0 +1,62 @@
+{
+  "approved_source": true,
+  "author_tests": {
+    "audit_violations": [],
+    "errors": 0,
+    "failures": 0,
+    "forbidden_imports_loaded": [],
+    "scope": "inert stdlib fakes, no monitor or real host observation",
+    "skipped": 0,
+    "source_unchanged": true,
+    "tests_run": 11
+  },
+  "cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-tests-01.json",
+    "sha256": "2ebbeb7b7e6dd7b3814e4ed438f97d5854ca4c1052e26a575f5251607dd8bb35"
+  },
+  "created_at": "2026-10-16T19:17:16.444743+00:00",
+  "execution": {
+    "fresh_live_probes_run": false,
+    "monitor_executed": false,
+    "numerical_cases_executed": 0,
+    "production_mutations": 0,
+    "reviewer_tests_run": false
+  },
+  "release_requirements": [
+    "A fresh independently accepted300-second host window and reviewed current process/file/ownership binding are still required before real CPU qualification. The completed07 window failed and supplies no numerical release.",
+    "Root must call ready_for_next_case against a current source-bound record before each case, bind covers_case to actual retained start/end times, and stop releasing further cases after any invalidation. A currently running child must be allowed to exit naturally; no force or automatic retry.",
+    "Root must bind the final supervision record and exact helper/source/input hashes into eventual matrix evidence. Source review does not turn sampled evidence into continuous certainty or authorize MLX/live deployment."
+  ],
+  "resolved_draft_findings": [
+    "Completed-with-zero-health gap removed",
+    "Final health coverage added",
+    "Owned stop shape/ownership/size checks added",
+    "Explicit per-case interval and next-release freshness gates added"
+  ],
+  "review_findings": [
+    "The helper imports only exact hash-bound07 imports and four reviewed read-only AST functions; main does not start, stop, signal or retry qualification children.",
+    "It samples normal pressure, finite nonnegative swap at or below initial usage, absence of observed build/test processes, readiness/reservoir connectivity, exact identity/input bindings and positive gaps no greater than15s; any violation stays invalidated.",
+    "Zero-sample finish refuses. An exact owned finish request triggers a final health/identity sample, and final identity changes invalidate. Finite duration exhaustion invalidates rather than silently accepting incomplete coverage.",
+    "Stop input is bounded512bytes, regular, same-user, single-link, not group/world-writable and opened no-follow; exact schema/token/operation are required.",
+    "covers_case requires bracketing samples for the actual case interval and validates every retained sample; ready_for_next_case also requires running, at least two samples and latest-sample freshness no greater than15s.",
+    "Output is fresh/exclusive, durable atomic updates preserve raw samples and first invalidation; failures retain invalidated evidence. The module never enforces a process kill or chooses another case."
+  ],
+  "reviewer": "mlx_integration",
+  "schema": "reservoir_matrix_supervision_source_review_v1",
+  "status": "accepted_preparation_only_not_executed",
+  "unresolved_source_blockers": [],
+  "verified_artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-bindings.json": "beae54c2362ea251c6b5a1fc9dbdf78532fa65b498796b97c7515c2c7cd5f629",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-observer.py": "005c5db21d9ff36dd2e867cb54a272cabdc2c1922f0a8bb0f0b5a7ddd5709d05",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix_host_supervision.py": "371a5fb7b4a94773b8e73f87df4d2fcf2b510dd049fcd6520f9d1395a6791483",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/test_matrix_host_supervision.py": "41416812f873c9481dddeea0b2e2cc98b7093cd60419390294ebb9fc53aa7dd5"
+  },
+  "verified_test_interpreter": {
+    "path": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43"
+  },
+  "verified_test_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-tests-01.txt",
+    "sha256": "151cbc39658a6dd91aafd7323ace94426437ab42ac2d3d06f7f6568021624a4c"
+  }
+}

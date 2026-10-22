@@ -1,0 +1,232 @@
+"""Read-only OS process identity; never signals or attaches to a process."""
+from __future__ import annotations
+
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import time
+
+from common import digest, finite, require
+
+PUBLICATION_LIMIT_S = 2.0
+PUBLICATION_INTERVAL_S = .025
+PUBLICATION_MAX_OBSERVATIONS = 81
+INCOMPLETE_COMMAND = "(python3.12)"
+
+
+def parse_identity(output, expected_pid):
+    parts = output.strip().split(maxsplit=6)
+    require(len(parts) == 7 and parts[0] == str(expected_pid), "missing or wrong process PID")
+    started = " ".join(parts[1:6])
+    require(re.fullmatch(r"[A-Z][a-z]{2} [A-Z][a-z]{2} \d{1,2} \d{2}:\d{2}:\d{2} \d{4}", started)
+            is not None and parts[6], "missing OS process start/argv")
+    return {"pid": expected_pid, "started_at": started, "command": parts[6]}
+
+
+def process_text(pid, reader=subprocess.run, *, timeout=5):
+    require(type(pid) is int and pid > 0, "positive process PID required")
+    require(finite(timeout) and 0 < timeout <= 5, "bounded ps timeout required")
+    result = reader(["/bin/ps", "-ww", "-p", str(pid), "-o", "pid=", "-o", "lstart=", "-o", "command="],
+                    capture_output=True, text=True, check=True, timeout=timeout,
+                    env={**os.environ, "LC_ALL": "C"})
+    return result.stdout
+
+
+def identity(pid, reader=subprocess.run):
+    return parse_identity(process_text(pid, reader), pid)
+
+
+def same_identity(before, after):
+    require(isinstance(before, dict) and isinstance(after, dict), "missing process identity")
+    for value in (before, after):
+        require(type(value.get("pid")) is int and value["pid"] > 0, "invalid identity PID")
+        require(isinstance(value.get("started_at"), str) and value["started_at"], "missing start")
+        require(isinstance(value.get("command"), str) and value["command"], "missing argv")
+        parse_identity(f'{value["pid"]} {value["started_at"]} {value["command"]}', value["pid"])
+    require(before == after, "OS process identity changed")
+
+
+def interpreter_paths(python):
+    # Same reviewed macOS framework launcher/re-exec rule as model_environment.py.
+    resolved = Path(python).resolve(strict=True)
+    paths = {resolved}
+    if (resolved.parent.name == "bin" and resolved.parent.parent.parent.name == "Versions"
+            and resolved.parent.parent.parent.parent.name == "Python.framework"):
+        executable = resolved.parent.parent / "Resources/Python.app/Contents/MacOS/Python"
+        require(executable.is_file(), "framework Python runtime executable is missing")
+        paths.add(executable.resolve(strict=True))
+    return paths
+
+
+def interpreter(python=None):
+    path = Path(python or sys.executable)
+    return {"executable": str(path), "resolved": str(path.resolve(strict=True)), "sha256": digest(path),
+            "files": {str(item): digest(item) for item in sorted(interpreter_paths(path))}}
+
+
+def launch_commands(command, runtime):
+    """Exact owned argv forms, with current bytes bound to the prepared family."""
+    require(isinstance(command, list) and command and all(isinstance(arg, str) and arg
+            and not any(char.isspace() or char == '\0' for char in arg) for arg in command),
+            "expected owned argv must contain unambiguous exact arguments")
+    require(isinstance(runtime, dict) and command[0] == runtime.get("executable"),
+            "owned launcher differs from prepared interpreter")
+    require(interpreter(command[0]) == runtime, "prepared interpreter family/hash changed")
+    resolved = Path(runtime["resolved"])
+    steady = resolved
+    if (resolved.parent.name == "bin" and resolved.parent.parent.parent.name == "Versions"
+            and resolved.parent.parent.parent.parent.name == "Python.framework"):
+        steady = (resolved.parent.parent / "Resources/Python.app/Contents/MacOS/Python").resolve(strict=True)
+        require(str(steady) in runtime["files"], "steady framework runtime is not pinned")
+    else:
+        # No general argv normalization: a non-framework command must stay exact.
+        steady = Path(command[0])
+    return " ".join(command), " ".join([str(steady), *command[1:]])
+
+
+def validate_launched_identity(observed, command, runtime):
+    same_identity(observed, observed)
+    expected, steady = launch_commands(command, runtime)
+    require(observed["command"] in (expected, steady),
+            "initial child command is not the exact owned launcher or pinned runtime argv")
+
+
+def launch_transition(launched, ready, command, runtime):
+    """Accept only initial launcher-to-runtime re-exec; pin the raw ready identity."""
+    validate_launched_identity(launched, command, runtime)
+    same_identity(ready, ready)
+    expected, steady = launch_commands(command, runtime)
+    require((launched["pid"], launched["started_at"]) == (ready["pid"], ready["started_at"]),
+            "owned PID/start changed during initial interpreter transition")
+    require(ready["command"] == steady, "ready command is not exact pinned steady runtime argv")
+    return {"schema": "reservoir_owned_interpreter_transition_v1",
+            "kind": "already_steady" if launched == ready else "exact_framework_reexec",
+            "launched": dict(launched), "ready": dict(ready), "expected_command": list(command),
+            "expected_launcher_command": expected, "expected_steady_command": steady,
+            "interpreter": runtime, "pid_start_continuous": True,
+            "unchanged_argument_tail": True, "steady_identity": dict(ready)}
+
+
+def publication_proof(evidence, command, runtime, pid, case_started, case_deadline):
+    """Recompute acceptance from every raw initial ps observation; no OS calls."""
+    require(isinstance(evidence, dict) and evidence.get("schema") == "reservoir_initial_process_publication_v1"
+            and evidence.get("status") == "complete", "initial publication evidence incomplete")
+    require(finite(case_started) and finite(case_deadline) and 0 < case_deadline - case_started <= 300,
+            "publication must stay within original at-most-300-second case watchdog")
+    started, deadline = evidence.get("started_mono"), evidence.get("deadline_mono")
+    require(finite(started) and case_started <= started < case_deadline
+            and deadline == min(started + PUBLICATION_LIMIT_S, case_deadline)
+            and evidence.get("case_started_mono") == case_started
+            and evidence.get("case_deadline_mono") == case_deadline
+            and evidence.get("limit_seconds") == PUBLICATION_LIMIT_S
+            and evidence.get("poll_interval_seconds") == PUBLICATION_INTERVAL_S,
+            "initial publication deadline/policy differs")
+    expected, steady = launch_commands(command, runtime)
+    rows = evidence.get("observations")
+    require(isinstance(rows, list) and 1 <= len(rows) <= PUBLICATION_MAX_OBSERVATIONS,
+            "initial publication observations missing/excessive")
+    first, previous_end, placeholders = None, started, 0
+    for index, row in enumerate(rows):
+        require(row.get("index") == index and finite(row.get("started_mono"))
+                and finite(row.get("completed_mono"))
+                and previous_end <= row["started_mono"] <= row["completed_mono"] < deadline,
+                "initial observations reordered or outside deadline")
+        require("error" not in row and row.get("poll_before", "missing") is None
+                and row.get("poll_after", "missing") is None,
+                "initial child exited or observation failed")
+        require(finite(row.get("ps_started_mono"))
+                and row["started_mono"] <= row["ps_started_mono"] <= row["completed_mono"]
+                and finite(row.get("ps_timeout_s")) and 0 < row["ps_timeout_s"] <= deadline - row["ps_started_mono"],
+                "ps timeout exceeds remaining publication budget")
+        observed = parse_identity(row.get("raw_ps_stdout", ""), pid)
+        require(observed == row.get("identity"), "raw initial ps identity differs")
+        if first is None:
+            first = observed
+        require((observed["pid"], observed["started_at"]) == (first["pid"], first["started_at"]),
+                "initial PID/start changed while metadata published")
+        if index < len(rows) - 1:
+            require(observed["command"] == INCOMPLETE_COMMAND
+                    and Path(runtime["resolved"]).name == "python3.12"
+                    and row.get("kind") == "incomplete_placeholder",
+                    "only documented incomplete command may wait for publication")
+            placeholders += 1
+        else:
+            require(observed["command"] in (expected, steady) and row.get("kind") == "complete_exact_command",
+                    "complete initial command must be exact owned launcher or pinned runtime argv")
+        previous_end = row["completed_mono"]
+    require(evidence.get("accepted_identity") == rows[-1]["identity"]
+            and evidence.get("completed_mono") == previous_end
+            and evidence.get("observation_count") == len(rows), "initial publication completion differs")
+    return {"schema": "reservoir_initial_process_publication_proof_v1", "observation_count": len(rows),
+            "placeholder_count": placeholders, "first_observed_identity": first,
+            "accepted_identity": rows[-1]["identity"], "expected_launcher_command": expected,
+            "expected_steady_command": steady, "pid_start_continuous": True}
+
+
+def await_initial_identity(child, command, runtime, evidence, *, case_started, case_deadline,
+                           persist=lambda: None, reader=subprocess.run,
+                           monotonic=time.monotonic, sleep=time.sleep):
+    """Only initial '(python3.12)' may wait; never launches, signals or probes."""
+    started = monotonic()
+    deadline = min(started + PUBLICATION_LIMIT_S, case_deadline)
+    evidence.update(schema="reservoir_initial_process_publication_v1", status="pending",
+                    started_mono=started, deadline_mono=deadline, case_started_mono=case_started,
+                    case_deadline_mono=case_deadline, limit_seconds=PUBLICATION_LIMIT_S,
+                    poll_interval_seconds=PUBLICATION_INTERVAL_S, observations=[])
+    persist()
+    try:
+        require(finite(case_started) and finite(case_deadline) and case_started <= started < case_deadline
+                and 0 < case_deadline - case_started <= 300, "initial case watchdog invalid/expired")
+        expected, steady = launch_commands(command, runtime)
+        first = None
+        while True:
+            now = monotonic()
+            require(now < deadline and len(evidence["observations"]) < PUBLICATION_MAX_OBSERVATIONS,
+                    "initial process metadata publication deadline expired")
+            row = {"index": len(evidence["observations"]), "started_mono": now,
+                   "poll_before": child.poll()}
+            evidence["observations"].append(row); persist()
+            require(row["poll_before"] is None, "owned child exited before metadata publication")
+            try:
+                row["ps_started_mono"] = monotonic()
+                row["ps_timeout_s"] = deadline - row["ps_started_mono"]
+                row["raw_ps_stdout"] = process_text(child.pid, reader, timeout=row["ps_timeout_s"])
+            except BaseException as error:
+                raw = getattr(error, "stdout", None)
+                if raw is not None:
+                    row["raw_ps_stdout"] = raw.decode(errors="replace") if isinstance(raw, bytes) else raw
+                row["error"] = type(error).__name__ + ": " + str(error)
+                row["completed_mono"] = monotonic(); persist()
+                raise
+            row["poll_after"] = child.poll(); row["completed_mono"] = monotonic(); persist()
+            # Preserve raw output and exit/deadline observations before any refusal.
+            require(row["completed_mono"] < deadline, "initial process metadata publication deadline expired")
+            require(row["poll_after"] is None, "owned child exited during metadata publication")
+            observed = parse_identity(row["raw_ps_stdout"], child.pid)
+            row["identity"] = observed; persist()
+            if first is None:
+                first = observed
+            require((observed["pid"], observed["started_at"]) == (first["pid"], first["started_at"]),
+                    "initial PID/start changed while metadata published")
+            if observed["command"] == INCOMPLETE_COMMAND and Path(runtime["resolved"]).name == "python3.12":
+                row["kind"] = "incomplete_placeholder"; persist()
+                sleep(min(PUBLICATION_INTERVAL_S, max(0, deadline - monotonic())))
+                continue
+            require(observed["command"] in (expected, steady),
+                    "initial full command is not exact owned launcher or pinned runtime argv")
+            row["kind"] = "complete_exact_command"
+            # Rehash the family before accepting; count this work inside the same cap.
+            validate_launched_identity(observed, command, runtime)
+            row["poll_after"] = child.poll(); row["completed_mono"] = monotonic(); persist()
+            require(row["poll_after"] is None and row["completed_mono"] < deadline,
+                    "child exited or publication deadline expired before acceptance")
+            evidence.update(status="complete", accepted_identity=observed,
+                            completed_mono=row["completed_mono"], observation_count=len(evidence["observations"]))
+            persist()
+            return observed
+    except BaseException as error:
+        evidence.update(status="failed", error=type(error).__name__ + ": " + str(error))
+        persist()
+        raise

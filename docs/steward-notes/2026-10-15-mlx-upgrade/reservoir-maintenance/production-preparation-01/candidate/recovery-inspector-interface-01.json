@@ -1,0 +1,31 @@
+{
+  "schema": "reservoir_production_recovery_inspector_interface_v1",
+  "source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_recovery_inspect.py",
+    "sha256": "0ee592e768df9ebdab9994b41d9a921b99aaea8479e676abaa1cd5c586229311"
+  },
+  "explicit_cli": [
+    "python3",
+    "-B",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_recovery_inspect.py",
+    "--preparation",
+    "/EXPLICIT/preparation.json",
+    "--journal",
+    "/EXACT/transaction_root/controller",
+    "--inspect-read-only"
+  ],
+  "cli_executed": false,
+  "output": "JSON to stdout only. Exit0 means retained evidence parsed consistently, never permission to continue. Review unresolved and errors; false automatic_resume_allowed/retry_authorized/production_recovery_qualified/controller_enabled are unconditional.",
+  "api": "inspect(preparation_path, journal_path, io=explicit_read_only_io) -> report; no default IO or observation on import.",
+  "journal_contract": "Canonical private transaction_root/controller, plan.json exactly matching prepared plan. Host owner binds preparation_digest excluding execution_review.",
+  "read_only_io": "Allowlisted fixed-label launchctl print, ps identities, lsof listeners, host OS/boot identity and stewardship reads. No service sockets/health/list_handles, signals, administrator requests or lifecycle commands.",
+  "durable_boundary": "Only signal_intent.wall_time_ns is reported as the final-file timestamp boundary. Missing value remains unresolved; no monotonic-to-wall reconstruction.",
+  "immutable_aliases": "Only model_snapshot/interpreter group entries can use direct symlinks. Exact link metadata/text and resolved target metadata/hash are checked before/after; transaction records/private directories cannot be symlinks.",
+  "limitations": [
+    "This inspector alone does not qualify production recovery or enable any controller boundary.",
+    "Host-operation records have no independent authenticated hash chain; contiguous records/results are cross-checked with the controller chain, and report hashes retain this observation.",
+    "It cannot detect a fully rewritten self-consistent history or deleted unanchored tail.",
+    "It does not requalify log prefixes, witness semantics, loaded source, numerical restoration or admission state.",
+    "Intent-without-result remains unresolved even when current bytes/PID appear consistent with success. Human-reviewed recovery is a separate action, never inferred or retried."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "boot_session_uuid": "A86C8146-975D-4935-85A6-A7879EC7BBE3",
+  "cleanup": {
+    "bootout_returncode": 0,
+    "service_absent": false
+  },
+  "debug_output": "This subcommand requires root privileges: debug\n",
+  "debug_returncode": 1,
+  "debug_supported": false,
+  "failure": "next_spawn_override_unsupported_no_signal_sent",
+  "fixture_sha256": "6893ffd2351b32db201d83936ce237379bc004c25347d8467b854f845cb8a889",
+  "host_version": "27.0.1",
+  "hostname": "m3-volya",
+  "label": "com.codex.model-handoff-fixture.48256694c5d04889a55c514958595b5c",
+  "launcher_sha256": "3c271a3db3126a8f7c9272154d0c10085a775a766a0d9a9b45257e4d60c4c41f",
+  "original_pid": 44364,
+  "passed": false,
+  "python": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+  "python_sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43",
+  "root_privileges_required": true,
+  "schema": "model_launchd_handoff_fixture_v1",
+  "scope": "owned_stdlib_fixture_no_model_no_gpu_no_production_services",
+  "signal_sent": false,
+  "uid": 501
+}

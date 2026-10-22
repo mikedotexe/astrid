@@ -1,0 +1,158 @@
+{
+  "schema": "reservoir_production_blocked_stage_review_v1",
+  "created_at": "2026-10-16T17:33:20.867355+00:00",
+  "reviewer": "Codex /root/mlx_integration independent source review",
+  "accepted_for_isolated_preparation": true,
+  "production_execution_allowed": false,
+  "production_recovery_qualified": false,
+  "numeric_qualification_accepted": false,
+  "scope": "Frozen disabled production preflight/Host, state/check-in witnesses, private restore verifier and read-only retained-transaction inspector. Separate numerical qualification runner is excluded.",
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_host.py": "d7b80c071ca1a279d95b237ce5b675865f85dc1c5f0c6565e0694ef09bace466",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_preflight.py": "3ded53f71a6d134640cb89a00ed9cf9c392a9709a8ac39eae67e2737250de1e5",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance.py": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/restore_verifier.py": "e363cc1144c7a92279a3bde5eabfcf7647d8ff6b8e56e445cfd7b560c21a8c16",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_host.py": "91787c5be064fba697ba393a4989fa1daa7619cd838ab0f82e6418973f121cf4",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_preflight.py": "782262b2267ab41e5040c817046f2e21106321e252dda7c86824aded3237045d",
+    "/Users/v/other/astrid/scripts/model_environment.py": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production-host-cpu-tests-01.txt": "7b50be41af1e51916312529ae59b00f8509f356799699dcecf096a58db3f4ac4",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_reservoir_maintenance_state.py": "5c896092de2a2da6351c7a05ffe78a080fcfd49e91630fd5764b6110a9075834",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_restore_verifier.py": "7967d6dbfca9077026b29b615176c20649adf56031b5f719749180563cd94049",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_recovery_inspect.py": "0ee592e768df9ebdab9994b41d9a921b99aaea8479e676abaa1cd5c586229311",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_recovery_inspect.py": "ef1c9d9e2e91444f16c6776e8724381bc06f468f8f7b945d37557970c22d1af7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/metadata_preflight.py": "3c2bce47648596f8988e0884081625f729d77856526c1b062f5078b68684d318"
+  },
+  "cpu_receipts": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production-host-cpu-tests-01.json",
+      "sha256": "e5708bcd73a9d76ab1b0066028f42e31f4ec95576eef43e5d7d315b7f06bf323"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/state-restore-cpu-tests-01.json",
+      "sha256": "50b2b1d87829c7fe97e2a99d7874ddfe66db1c291848127125b2616bab3be125"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/recovery-inspector-cpu-tests-01.json",
+      "sha256": "98816f0ed89b4c0c475bef2d21450e44b5a6fbc5adf29054cfd43f89c8227bc4"
+    }
+  ],
+  "interfaces": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production-host-interface-01.json",
+      "sha256": "b692264f9c883bc4bdee4ecaad4d4e199d2514748d0cafeeded3c0f8f7c2e169"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/state-restore-interface-01.json",
+      "sha256": "876fedf668f8f43dff891485655a995c2c870762cc72721ef1cc329139e32547"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/recovery-inspector-interface-01.json",
+      "sha256": "5b5eae0905e69a0039ad1fd60c99840fa046ffe2af0b7b0cd86aef4d10541e9f"
+    }
+  ],
+  "prior_reviews": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/provider-model-resolution-review-01.json",
+      "sha256": "3224c7b1282df0c50e402de0938ead88febbe5be3e9bbca51c30ed1dfb9e176c"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-state-restore-independent-review-03.json",
+      "sha256": "748211562fe24794d608d4e1e319ab54db7f5fbe35b0c4ddf6c0361a56b20f43"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/design-review-readiness-01.json",
+      "sha256": "e4850ea80861346d0115b0f55cfa1ba739184c88cadd459590dfd1ef662ad7f7"
+    }
+  ],
+  "policy_test_evidence": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/provider-model-policy-ast-tests-01.json",
+      "sha256": "f463b0ea99fcb4c31abfbd28473dd53865e5e7b3caf50f0ac14d0e7006b01b3c"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/test_provider_model_policy_ast_01.py",
+      "sha256": "6b0403c18a53c4c4012432ac9606c66d4ea3f620e8ebb4a2fc5bcc04b4338bd5"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/provider-model-policy-ast-tests-01.log",
+      "sha256": "d94a22fb4a0ee96deaf8cdb4202fa18a7ad1a62d0b8d7916f6a5eb9239cbd0f8"
+    }
+  ],
+  "metadata_evidence": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/metadata-preflight-01.json",
+    "sha256": "645d14db4c694ec42168d722733aa3bb858d0e50a8e0303d3449b2d08e79424b"
+  },
+  "validation": {
+    "author_cpu_tests": 77,
+    "breakdown": {
+      "host_preflight": 25,
+      "state_restore": 34,
+      "read_only_recovery_inspector": 18
+    },
+    "reviewer_policy_ast_fake_tests": 7,
+    "author_receipt_and_source_hashes_verified": true,
+    "author_cpu_suites_rerun_by_this_reviewer": false,
+    "numeric_or_model_imports_by_this_reviewer": false,
+    "service_calls_or_live_inspection_by_this_reviewer": false,
+    "metadata_model_alias_check": "Only is_symlink metadata on existing manifest keys: all9 model artifact paths are direct cached-snapshot links. No model weight content read.",
+    "frozen_accepted_fixture_controller_unchanged": true
+  },
+  "accepted_findings": [
+    "Full immutable source/package/model closure, original manifest/RECORD verification and original interpreter family are required; sparse caller inventories cannot replace them. Loaded historical bytes remain explicitly reviewed provenance, not inferred from current disk.",
+    "Large live logs use at most 1 MiB streaming prefix hashing and bounded captured tails. Append tolerance is limited to later bytes; rotation/truncation/prefix rewrite or incomplete records refuses. Idle/empty anchors establish complete windows only; provider drain/check-in remains the actual admission barrier.",
+    "Check-in verification requires complete successful generation/QoS/push pairs before reservoir stop. Final-save verification reconciles exact active handles, and stopped backup must contain each fresh NPZ and thermostat sidecar plus all historical files.",
+    "Private restore runs synchronous actual restore_all only on independent copies, with exact repaired entrypoint/five original dependencies, original packages/interpreters and derived config. Complete 22 stored-field, history, thermostat and elapsed-time semantics are required; no production wrapper is introduced.",
+    "Provider pin changes only the sole --model value to the reviewed cached snapshot; process framework argv and launch alias remain distinct. Original plist is retained. Atomic pin intent precedes replacement and bootstrap intent binds both applied and original rollback hashes. Failed replacement/bootstrap tests preserve exact evidence.",
+    "Cooperative signal intent now records durable wall_time_ns equal to final-file freshness boundary before SIGTERM. Legacy missing boundary remains unresolved.",
+    "Recovery inspector accepts only qualified holder Python family, validates owner/plan/controller chain/ordered host records and referenced witnesses, and detects record-set growth/absent-file appearance. Narrow model/interpreter direct aliases bind link and target identities; private records remain canonical/nofollow.",
+    "An intent without result remains unresolved despite current bytes/PID appearing successful. Uncertain held removal does not clear potentially pending override. Read-only IO allowlist excludes service probes, sudo and mutations; every resume/retry/recovery-authority flag is unconditionally false.",
+    "Metadata helper reads bounded archive headers/scalars and sidecars with individual stable-read guards and no numerical imports. Its 102 observed paths (99 NumPy, 3 lsm_shadow) are a read-only planning observation, not a cross-file snapshot or restore acceptance."
+  ],
+  "explicit_remaining_execution_blockers": [
+    "Do not execute or qualify against frozen production-candidate-01 verifier e363cc11: source-origin check ordering deterministically rejects fresh real execution. A separate versioned fix/new tests/review and qualifier rebinding are required first. Preserve v1 sources and all earlier receipts unchanged.",
+    "Current host settling/memory gate must pass before any numerical workload; no gate is relaxed by this review.",
+    "Complete frozen real-service 14-case matrix and separately qualify the NEW restore_verifier under actual installed original runtime on private 192-node NumPy AND lsm_shadow fixtures, with semantic positive and corruption/drift negative controls. Matrix-only 102 NumPy coverage cannot qualify 3 LSM histories. Later stopped-production backup verification is a second actual check, not its first.",
+    "Integrate and review the finite external private restore runner. This review does not cover the separate restore-qualification-01 runner being authored.",
+    "Prepare exact current runtime-alignment/source/model/package/fixture evidence and revalidate protected identities. No operational production preparation has been accepted or captured by this review.",
+    "Review narrow controller changes for exact production admission, pinned provider_settings invariant transition, and explicitly pinned replacement argv while preserving old drain identity. REQUIRED_INPUTS is already a subset check: additive provider_restart_settings needs no key-schema relaxation.",
+    "Read-only inspector is not a resumable Host or recovery executor. Qualify exact-phase human-reviewed recovery/rollback decisions before enabling production, including uncertain override/signal/install/bootstrap outcomes. Never automatically rearm, repeat signal, replay bootstrap or roll back runtime state.",
+    "Keep both existing blocks until that review: PRODUCTION_EXECUTION_ENABLED=False and fixture-only controller admission. Source changes require new hash-bound tests/review and relevant fixture/equivalence evidence."
+  ],
+  "limits": [
+    "Inspector evidence_valid/exit0 means internally consistent parsed evidence only; unresolved fields and unconditional no-authority flags remain decisive. It does not requalify numerical witnesses, log prefix semantics, admission state or loaded source.",
+    "Contiguous host records and controller hash chain cannot detect a fully rewritten self-consistent history or missing unanchored tail. No authenticated history claim is made.",
+    "Private actual restore plus identical inputs/implementation and complete production startup logs provides deterministic-path inference, not direct in-process production-memory equality. Unstored LSM internal trajectories are not claimed preserved.",
+    "The policy AST receipt binds the preflight bytes tested at that earlier step; the final preflight has its own 25-test frozen receipt. It is not represented as an identical whole-file hash.",
+    "No live source, service, state, packages, controller pause, signal, launchd operation or numerical workload was changed or executed in this review.",
+    "The77 fake tests did not exercise real constructor/import order. Their passing receipts remain accurate but are insufficient for actual numerical qualification; this specific gap is now recorded and blocks v1 execution."
+  ],
+  "supersedes": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-blocked-stage-review-01.json",
+    "sha256": "c9009e68b6cfc98ebf6fb22485adabb8067d2d50301ab1ec58f05a4a91236f4f",
+    "reason": "Subsequent static qualification-runner review found a concrete frozen-v1 real-execution blocker. No numerical or live execution occurred."
+  },
+  "status": "disabled_v1_archive_only_known_restore_execution_blocker",
+  "runnable_restore_qualification_approved": false,
+  "known_execution_blockers": [
+    {
+      "summary": "Frozen v1 restore verifier requires the lazily imported LSM support module before constructing the service that imports it. Fresh actual execution necessarily rejects with wrong source import.",
+      "verifier": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/restore_verifier.py",
+        "sha256": "e363cc1144c7a92279a3bde5eabfcf7647d8ff6b8e56e445cfd7b560c21a8c16",
+        "line": 364
+      },
+      "supporting_source": {
+        "path": "/Users/v/other/neural-triple-reservoir/dual_ai_bridge.py",
+        "sha256": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549",
+        "import_line": 329,
+        "constructor_lines": [
+          372,
+          375
+        ]
+      },
+      "required_narrow_fix": "In a separately versioned candidate, move the exact complete source-origin validation after ReservoirService construction, which eagerly creates both NumPy and LSM-shadow backends. Preserve all hashes/origin checks and numerical assertions; add a stdlib AST/mocked import-order regression. Rebind qualifier and run new CPU tests/review.",
+      "impact": "Preparation bug caught before first actual verifier execution; not a live service incident, production state issue or MLX package regression."
+    }
+  ]
+}

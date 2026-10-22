@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_cleanup_host.py": "3aa97ac474aa77d67d2617435823c802a5e725526967af3d7b98a26f489f6ace",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_retained.py": "d1b09bc4eae7f41593557fc028ee03289953c8a5b7c8f5cdb205d8807bfc70a2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_system.py": "bfc620d4a5432ad818e19e20e61dda94fc1d52a6a902c48f3fa01bec6db5dbbd",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_fixture_witnesses.py": "3530284ed90730b5c78f277c195d10b20103924806c5d0ca6091f1e20789acd8",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_recovery_core.py": "422b5e7438fad31c944af501d34bee52ad72a287dd180f19ba15233951bc49f2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/owned_recovery_host.py": "58fdae455d5151a2f9694b67bf2fc5904cbf35aa7614ce2b319018bcc9768782",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/test_owned_recovery_host.py": "fad4c04716ec311922fbbdaa61ba0840ab41e77a0d9de1a0ead73802ced293d5"
+  },
+  "combined_cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-01/evidence/combined-cpu-tests-02.json",
+    "sha256": "1340194973c2360003a01dc0e4a9926f3357486ade280917e6ace8b7d47dd566"
+  },
+  "core": {
+    "production_flags_modified": false,
+    "production_host_executed": false,
+    "root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04",
+    "source_modified": false
+  },
+  "failure_boundaries": [
+    "Unknown debug outcome with original still running blocks; no rearm or resignal.",
+    "Incomplete witness payload blocks explicit adoption; no overwrite or producer retry.",
+    "Missing/foreign identity, guard, listener, source, runtime or release binding blocks.",
+    "Setup/cleanup/main histories are distinct append-only evidence; uncertain claims remain retained.",
+    "No stateful worker is forcibly terminated; only an exact no-listener stdlib holder can be removed."
+  ],
+  "interfaces": {
+    "cleanup": "Separate context/ledger and cleanup Host operation files, using existing resume_one lock mode. Both roles are checked before any mutation. Second synthetic check-in produces22/7 while original11/7 backup remains immutable.",
+    "core_loader": "load_core(release) requires complete exact04 source closure; returns exact shared modules without admission changes.",
+    "initial_setup": "FixtureHost.create attaches owned files only. setup_bootstrap requires the actual exclusive setup lock and exact latest claim. An explicit release-bound single-action successor may launch only a never-attempted setup action; setup_reconcile only adopts a proven ready effect.",
+    "main_recovery": "FixtureHost.attach reconstructs retained ownership. expect_recovery_action constrains the recomputed action under the shared04 lock before claim. recovery_inspection, revalidate_recovery and reconcile_recovery never reset original anchors or fabricate old completions.",
+    "observation_races": "Only exact retained old ready markers during expected bootstrap birth are tolerated. Initial provider-drain capture waits <=30 seconds for the exact applied event after ACK, under unchanged identities/request/ACK. Recorded-signal loaded/no-PID gap enters bounded cleanup holder observation only.",
+    "witnesses": "Actual synthetic worker event order, >5-second drain timestamps, request/ACK/applied-event identity and exact saved state are checked. JSON-only private backup/restore is explicitly not numeric or production persistence proof."
+  },
+  "production_qualified": false,
+  "recorded_at": "2026-10-16T19:25:53.361825+00:00",
+  "remaining_qualification": [
+    "Actual owned launchd interruption/continuation fixture has not run.",
+    "Separate private atomic pin primitive remains compositional coverage, not execution of the production-only pin schedule.",
+    "Actual ProductionHost and real numeric restore/service preservation are outside this fixture.",
+    "Any later execution-enabling or release-byte change needs exact new review/qualification; preparatory04 acceptance does not transfer."
+  ],
+  "schema": "owned_recovery_fixture_host_interface_v1",
+  "scope": "owned_fixture_only",
+  "status": "source_preparation_tested_no_os_execution"
+}

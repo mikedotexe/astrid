@@ -1,0 +1,14 @@
+{
+  "hold": {
+    "actor": "owned-fixture-cleanup",
+    "schema": "model_environment_hold_v1",
+    "transaction_id": "3b6d224c3c42468c8033890d2c535662"
+  },
+  "hold_only": true,
+  "launcher_sha256": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+  "listener_opened": false,
+  "model_imported": false,
+  "pid": 77047,
+  "schema": "model_environment_held_v1",
+  "started_at": "Fri Oct 16 08:03:01 2026"
+}

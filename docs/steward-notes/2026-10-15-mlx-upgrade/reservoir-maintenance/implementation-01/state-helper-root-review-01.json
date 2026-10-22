@@ -1,0 +1,24 @@
+{
+  "schema": "reservoir_maintenance_state_independent_review_v1",
+  "reviewed_at": "2026-10-16T03:30:53.263756+00:00",
+  "reviewer": "Codex /root",
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/reservoir_maintenance_state.py": "30fc7e3aa9e90719d89fc34f3dc509e49b6b9d95735af6f45c2cff826ed561fa",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_reservoir_maintenance_state.py": "423c651b09e07476850d2fc1c648874dc66764a1ad2a024fb83435ed308e135e",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/state-tests-01.json": "99d371ceb86d18f1142a4e45ebb5a4dba73268b8961c4dbae334c5fed1ee66e4"
+  },
+  "accepted_for_isolated_helper_use": true,
+  "blocking_findings": [],
+  "verified": [
+    "Provider success requires ordered generated-token/check-in pairs plus complete canonical QoS lifecycles and clean signal/shutdown boundaries. Journal alone is not check-in proof.",
+    "Final-save handles are reconciled with a starting inventory and complete lifecycle span; banner/count alone cannot pass.",
+    "Stopped-tree backup requires bound two-role absence evidence, preserves all files including historic/quarantine, rejects symlinks/hardlinks/special entries, rechecks stable source and retained-copy bytes.",
+    "Restore request remains passed:false until actual isolated restore/semantic validation; helper has no production execution path."
+  ],
+  "limitations": [
+    "Production capture adapter must independently establish exact PID/start/argv, complete log spans, matching inventory boundary and stopped-service ownership. These helper functions cannot establish those facts from caller booleans.",
+    "Actual production state preservation and real-service restore remain unqualified."
+  ],
+  "production_qualified": false,
+  "production_mutations": false
+}

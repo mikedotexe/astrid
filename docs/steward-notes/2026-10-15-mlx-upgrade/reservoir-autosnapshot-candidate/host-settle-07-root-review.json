@@ -1,0 +1,62 @@
+{
+  "all_health_samples_passed": true,
+  "all_source_and_process_identities_matched": true,
+  "automatic_repeat": false,
+  "build_test_activity_samples": 32,
+  "created_at": "2026-10-16T19:17:33.683974+00:00",
+  "duration_s": 612.1654660420027,
+  "independent_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07-review.json",
+    "sha256": "a96263cf60758096d54379edd0b249c2eeaac8a2ee62df30d203b46a1c38a38b"
+  },
+  "longest_eligible_window_s": 129.99714922904968,
+  "max_sample_gap_s": 5.004770040512085,
+  "numeric_cases_authorized": false,
+  "numeric_cases_executed": 0,
+  "observed_build_processes": {
+    "72986": {
+      "first_observed": "2026-10-16T19:08:38.218661+00:00",
+      "identity": {
+        "cpu_percent": 0.0,
+        "executable": "/Users/v/.rustup/toolchains/1.94.1-aarch64-apple-darwin/bin/cargo",
+        "pid": 72986,
+        "ppid": 72535,
+        "rss_bytes": 132874240,
+        "started_local": "Fri Oct 16 12:08:36 2026"
+      },
+      "last_observed": "2026-10-16T19:11:13.217287+00:00",
+      "samples": 32
+    },
+    "72995": {
+      "first_observed": "2026-10-16T19:08:38.218661+00:00",
+      "identity": {
+        "cpu_percent": 98.4,
+        "executable": "/Users/v/.rustup/toolchains/1.94.1-aarch64-apple-darwin/bin/rustc",
+        "pid": 72995,
+        "ppid": 72986,
+        "rss_bytes": 199163904,
+        "started_local": "Fri Oct 16 12:08:37 2026"
+      },
+      "last_observed": "2026-10-16T19:11:13.217287+00:00",
+      "samples": 32
+    }
+  },
+  "passed": false,
+  "pressure_level_counts": {
+    "1": 103,
+    "2": 20
+  },
+  "production_mutations": 0,
+  "protected_exact_processes": 7,
+  "protected_files": 237,
+  "raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-07.json",
+    "sha256": "4ca343f39773e3910b449facc632bc955471a6d5743e7457e20c2087b4106848"
+  },
+  "reason": "Longest clean observed period129.997 seconds is below300; both build activity and pressure2 break windows even though swap decreased. Preserve complete failure; finish isolated preparation and require meaningful headroom change before another fresh bounded check.",
+  "reviewer": "root",
+  "samples": 123,
+  "schema": "reservoir_fixture_host_settle_review_v1",
+  "state": "completed_failed",
+  "swap_net_change_bytes": -260046848.0
+}

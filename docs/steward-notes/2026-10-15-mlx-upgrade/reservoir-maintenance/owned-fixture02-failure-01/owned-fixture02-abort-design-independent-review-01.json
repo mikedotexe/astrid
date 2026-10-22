@@ -1,0 +1,116 @@
+{
+  "accepted_for_separate_implementation": true,
+  "actual_abort_executed": false,
+  "basis": [
+    {
+      "finding": "SIGTERM only sets stopping; the reservoir preserves its applied in-memory11/7, closes its listener, waits the configured six seconds, writes state.json through fsync+replace+directory-fsync, records sorted per-handle saves/completion/drained, and exits naturally.",
+      "lines": [
+        70,
+        75,
+        120,
+        141,
+        151
+      ],
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py"
+    },
+    {
+      "finding": "The preserved seven-row provider lifecycle, unique request/ACK and one matching reservoir applied event bind exactly one11-tick check-in. The failed main must never restart provider or synthesize a second check-in.",
+      "lines": [
+        92,
+        118,
+        125,
+        139
+      ],
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py"
+    },
+    {
+      "finding": "The unchanged hold helper accepts the separate abort transaction string; exact hold-only ownership makes guard loss an error and keeps the holder in stdlib without loading a model/listener. Guard removal must follow job/PID/listener absence.",
+      "lines": [
+        255,
+        277,
+        280,
+        298
+      ],
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/model_environment.py"
+    },
+    {
+      "finding": "Prior code supports the bounded hold/signal/save/holder-removal algorithm but hardcodes a different root/token/PIDs/completed history/second check-in22/7. It cannot be reused as executable acceptance for this failed run.",
+      "lines": [
+        25,
+        52,
+        70,
+        161,
+        187,
+        203,
+        232
+      ],
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/recover_owned_fixture.py"
+    },
+    {
+      "finding": "The original transaction serializes on execution.lock. The abort must lock that same verified inode while writing new session/intent evidence only in its separate abort directory; appending original ExecutionSession records would violate frozen-history preservation.",
+      "lines": [
+        48,
+        65,
+        67,
+        98
+      ],
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/transaction_execution.py"
+    }
+  ],
+  "design": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-failure-recovery-design-01.json",
+    "sha256": "8a45bd55faed3e201d7af57d92c02e9499b68e10129c3e36d8cf5b2b4d52b3e7"
+  },
+  "execution_authorized": false,
+  "failure_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-actual-failure-independent-review-01.json",
+    "sha256": "073610566bb9906bf3e8d076d08ed6e591932dc3bb8ac8ff6fef77285b7ac20e"
+  },
+  "findings": [],
+  "implementation_checks_required": [
+    "Explicit fixed-target source/review/test/interpreter/host/coordination/owner manifest; root-owned fresh preflight before any action. All process facts in the design remain historical until revalidated.",
+    "Verify exact original regular private nlink1 zero-byte execution.lock, retain its inode while nonblocking exclusive flock is held, and refuse any original owner/history/record-set change or live original executor.",
+    "Use a separate exclusive abort ledger/guard. A durable debug or signal intent consumes that one attempt, including nonzero, timeout or interruption; no provider control, main rerun, bootstrap, restart, force, group signal or automatic retry.",
+    "Bounded observation must tolerate only the exact old reservoir draining, its loaded/no-PID publication gap, and exact intended holder awaiting its receipt. Unknown full argv, PID/start, listener or guard must fail closed; a holder alone is never final-state proof.",
+    "Recompute unique request/ACK and full old provider lifecycle; require exactly the three-row preserved reservoir prefix plus stop_received/final_snapshot_started/two sorted handle_saved/final_snapshot_complete/drained, all from original9217, with monotonic order and configured drain timing. Require a newly durable exact11/7 state file and old worker/listener absence.",
+    "Distinguish unchanged original histories from expected lifecycle outputs: only reservoir log append, state creation, original reservoir-ready removal and the final exact provider guard unlink are permitted original-root changes. Preserve every historical receipt/source/plist/request/ACK and both log prefixes.",
+    "Before each of the two bootouts, prove the current exact no-listener hold-only process, matching guard/receipt/helper and complete final-save witness; only then remove that fixed held job. Release guards only after bounded absence proof.",
+    "Separate parent closeout must establish abort executor absence. An abort receipt can establish synthetic state/resource cleanup only; original_fixture_passed and production_qualified remain false.",
+    "Implement asynchronous fake publication tests so signal returns before the six-second drain and holder receipt; prior synchronous FakeIO behavior hid the actual failed step07 boundary."
+  ],
+  "limits": [
+    "No live process identity, listener, launchd, lock availability, protected-runtime or state readiness observation was made by this reviewer.",
+    "The snapshot was made while the synthetic reservoir remained live; verification of its preserved bytes is not stopped-state or restore acceptance.",
+    "No existing primitive, disabled test suite or failed final fixture acceptance transfers to the new abort implementation. Its exact code, guarded tests, release and independent review are still required.",
+    "Unknown/interrupted outcomes may remain manual-review stops; this review does not require broad automatic recovery or permit replay."
+  ],
+  "operations_by_reviewer": {
+    "frozen_source_edits": 0,
+    "process_queries": 0,
+    "service_calls": 0,
+    "signals": 0,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "original_fixture_passed": false,
+  "preserved_snapshot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-failed-run-snapshot-01/manifest.json",
+    "sha256": "c6c11df7fb4bc18d4ead51df32c8eeae6635da187cd2e127f1a62d053c8a36a2"
+  },
+  "production_qualified": false,
+  "reviewed_at": "2026-10-17T06:12:21.129031+00:00",
+  "reviewer": "codex-mlx-upstream",
+  "schema": "owned_fixture02_abort_design_independent_review_v1",
+  "scope": "source_and_preserved_evidence_only",
+  "snapshot_all_copied_bytes_match": true,
+  "snapshot_copy_count_verified": 141,
+  "source_hashes_verified": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/maintenance_fixture_worker.py": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/recover_owned_fixture.py": "f88247e4e611f9bb1291af4b805511cead8477e4dac5277de18d80655ba85b5e",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_cleanup.py": "5637d6269990e70b9ec0dbc6505173d891171f7dfbeca4c543ca4364c4097a66",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_retained.py": "d1b09bc4eae7f41593557fc028ee03289953c8a5b7c8f5cdb205d8807bfc70a2",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_recovery_host.py": "0fa54ce45e72452fb01108360dc0c48aade212cfc47de77fdf0167a45aba286a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2/model_environment.py": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/transaction_execution.py": "2b4e5ad98f4e920ceb67a161480afaffde9e6a44e3c9007645dc9e9445ccc4cb"
+  }
+}

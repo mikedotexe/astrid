@@ -1,0 +1,106 @@
+{
+  "approved_source": true,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/driver.py": "6575765ccd39fe0c3e1e329629b0a5a50e480811b66f1a613ffa95ecc9c2a074",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/process_identity.py": "0342641e028a65039d80c4bc6cba7e32e666ececb6aa0e29e1ac1dffbd66abbc",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/result_checks.py": "ceac5f6aefef5cac2621e194094803d427a469d64492f7ae6588f0c7ee7d47bc",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/test_harness.py": "ca64cb6b3be18e0414d54820ced60784527f5844653c132406d15d90a1336551"
+  },
+  "created_at": "2026-10-16T22:59:30.524481+00:00",
+  "execution": {
+    "child_or_service_starts": 0,
+    "new_numerical_execution_authorized": false,
+    "numerical_or_model_imports": 0,
+    "production_mutations": 0,
+    "runtime_probes": 0,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "limits": [
+    "This accepts the narrow source repair only. No guarded test receipt or actual numerical success is claimed by this review. Root must serialize the guarded stdlib suite, bind final unchanged hashes, create fresh prepared sources and review that provenance before any case.",
+    "Future actual cases require a fresh accepted host window, current root ownership/runtime preflight, continuous run03 supervision and separate exact case release. No automatic retry of the retained first failure.",
+    "The source-parent copied_sha256 fields describe initial copies; this review separately binds the changed current v2 bytes. No v1 failure is relabeled as successful.",
+    "Actual launch/ready recognition still awaits a newly released real case. The full14-case NumPy matrix, separate LSM-shadow/restore qualification, production lifecycle and MLX package work remain unqualified.",
+    "Identity evidence uses exact owned PID plus OS start/argv and pinned bytes; it does not claim continuous kernel tracing between observations."
+  ],
+  "readme": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/README.md",
+    "sha256": "2ee9d57575d9f420a0fb948ac5af5302b15c964dcf847fe3f7a2f29f6b67cd14"
+  },
+  "retained_failure": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/runs/01-original-normal/result.json",
+    "sha256": "d167342961a4d97211958146aa2802754a70392132ab01cbb1d68e2ab31194b0"
+  },
+  "retained_failure_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/first-real-case-failure-independent-review-01.json",
+    "sha256": "2c68380cc552cfc53d4ce8663d2fb9b4b572302363627ed411e6876e65e772db"
+  },
+  "reviewed_invariants": [
+    {
+      "finding": "Expected argv must be unambiguous and argv0 exactly the prepared launcher. Recomputed interpreter() must equal the whole pinned wrapper/framework map, including both current byte hashes. No general executable/argument normalization is introduced.",
+      "line": 58,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/process_identity.py"
+    },
+    {
+      "finding": "Only the initial boundary allows launcher\u2192exact framework runtime or already-steady observation; PID, OS start and argument tail remain exact. Readiness must show pinned steady runtime. General same_identity remains unchanged strict equality.",
+      "line": 85,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/process_identity.py"
+    },
+    {
+      "finding": "Actual owned Popen PID is observed and checked before probes. Exactly one ready boundary derives and stores raw transition proof. Subsequent pre-shutdown and child-origin checks compare with raw ready identity.",
+      "line": 113,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/driver.py"
+    },
+    {
+      "finding": "Independent receipt verifier binds exact manifest hash and expected_interpreter, recomputes transition from raw launch/ready/command/runtime evidence, rejects mismatched proof, and requires strict ready equality through shutdown, listener closure and restore plus distinct client PID.",
+      "line": 88,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/result_checks.py"
+    },
+    {
+      "finding": "verify_result and verify_retained_files ASTs are unchanged. Exact2-second open/5-second receive, positive and negative controls,102-handle preservation, cancellation/error behavior and14-case reversed aggregate ordering remain unchanged.",
+      "line": 10,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/result_checks.py"
+    },
+    {
+      "finding": "Source contains focused inert tests for valid transition/already-steady, changed interpreter/hash/argv/script/case/PID/start, missing or forged proof/manifest, and steady-state drift. These tests were read, not executed by reviewer.",
+      "line": 143,
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/test_harness.py"
+    }
+  ],
+  "reviewer": "mlx_integration",
+  "schema": "reservoir_harness_v2_independent_source_review_v1",
+  "scope_verification": {
+    "all_original_source_parent_hashes_still_match": true,
+    "changed_files": [
+      "driver.py",
+      "process_identity.py",
+      "result_checks.py",
+      "test_harness.py"
+    ],
+    "copied_python_files": 10,
+    "no_prepared_sources_active_run_or_runs_copied": true,
+    "old_failure_preserved": true,
+    "source_parsed_without_import": true,
+    "test_definitions": 20,
+    "unchanged_files": [
+      "common.py",
+      "fixture.py",
+      "protocol_client.py",
+      "review_matrix.py",
+      "service_child.py",
+      "snapshot_oracle.py"
+    ]
+  },
+  "source_parent": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/source-parent-01.json",
+    "sha256": "445c6428a8e23544f5d3a7860d45e96277b4e86e0fd59e6d95ceb7afba143856"
+  },
+  "status": "accepted_source_only_guarded_tests_and_fresh_preparation_pending",
+  "unresolved_source_blockers": []
+}

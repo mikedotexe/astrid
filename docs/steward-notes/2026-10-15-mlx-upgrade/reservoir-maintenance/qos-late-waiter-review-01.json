@@ -1,0 +1,79 @@
+{
+  "schema": "reservoir_qos_late_waiter_static_review_v1",
+  "created_at": "2026-10-16T15:15:36.874358+00:00",
+  "status": "source_confirmed_possible_ordering_not_observed_in_the_previously_inspected_tail",
+  "scope": "Read-only source analysis; no service/model imports, live requests, new log polling, tests, process changes, or frozen-helper edits.",
+  "sources": [
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/coupled_http_gateway.py",
+      "sha256": "10f6d216baf5169c1fd375e79aa3d565459d14edf02089e53a8ff4bb6f17b54c",
+      "lines": [
+        156,
+        177,
+        198,
+        222,
+        299,
+        337
+      ]
+    },
+    {
+      "path": "/Users/v/other/neural-triple-reservoir/model_qos.py",
+      "sha256": "93951ff95e9835c6ca8298afbe12523c34062c0ea38a1b7a6e23d9378d45828f",
+      "lines": [
+        125,
+        160
+      ]
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/reservoir_maintenance_state.py",
+      "sha256": "30fc7e3aa9e90719d89fc34f3dc509e49b6b9d95735af6f45c2cff826ed561fa",
+      "lines": [
+        97,
+        135
+      ]
+    }
+  ],
+  "cause": "worker_once sets the future result and writes completed before acquiring the condition lock in finally to clear _active/_inflight. submit and release_waiter hold that condition lock while writing their own receipt. ReceiptWriter has a separate lock and fsync may release the GIL. Therefore the gateway can observe the old active/inflight job while completed is being written and append its waiter record immediately afterward.",
+  "realistic_schematic_records": [
+    {
+      "arrival_sequence": 41,
+      "lifecycle": "queued"
+    },
+    {
+      "arrival_sequence": 41,
+      "lifecycle": "selected"
+    },
+    {
+      "arrival_sequence": 41,
+      "lifecycle": "completed",
+      "outcome": "delivered"
+    },
+    {
+      "arrival_sequence": 41,
+      "lifecycle": "coalesced",
+      "coalesced_waiters": 2
+    }
+  ],
+  "record_note": "These are schematic lifecycle fields, not fabricated runtime receipts. Actual records must retain all current metadata and pass receipt_id canonical hash validation.",
+  "thread_schedule": [
+    "Model worker has finished generation/check-in, sets future result, begins writing completed under the receipt-writer lock.",
+    "Gateway admits same-key same-fingerprint retry, acquires condition lock, sees the existing _inflight job, increments waiter_count, then waits for the receipt-writer lock.",
+    "Model worker finishes completed/fsync and releases writer lock; it cannot clear _active/_inflight because gateway still owns condition lock.",
+    "Gateway writes coalesced, returns the already-completed shared future, releases condition lock; worker then clears the old active/inflight entry."
+  ],
+  "disconnect_variant": "Replace retry with cancellation of the sole remaining HTTP waiter: release_waiter finds _active, reduces waiter_count to zero, future.cancel() returns false because the future already completed, but the implementation still appends disconnected_active. Thus queued, selected, completed(delivered), disconnected_active is also possible.",
+  "current_parser_result": "_qos_selected sets active=None at completed and then rejects either late waiter event as waiter event without active/pending work. This is a false rejection of successful drain evidence, not false acceptance or a lost check-in.",
+  "narrow_proposal": [
+    "Keep current pending/active/selected/completed accounting and all success/error/hash requirements.",
+    "Track only the most recent successfully completed sequence as eligible for late waiter bookkeeping until the next selected event or another worker-only post-cleanup event (queue_timeout or stopped_pending). Queued requests for other sequences need not close the window.",
+    "Permit coalesced/disconnected_active for that one sequence without changing active state, generation counts, matched check-in pairs, or recorded completion outcome. Preserve these records separately as late waiter bookkeeping.",
+    "Never permit an unknown sequence, failed generation, second completion, or an older completed sequence after a newer selection."
+  ],
+  "proposed_tests": [
+    "Model-free coordinator concurrency characterization using explicit thread barriers around completion receipt writing reproduces the realistic interleaving without inference/model work.",
+    "Parser accepts successful completion followed by same-sequence coalesced or disconnected_active, including an unrelated queued event between them.",
+    "Parser rejects unknown late sequence, old sequence after a subsequent selection, missing selected/queued, duplicate completion, failed completion, and unresolved pending/active work."
+  ],
+  "implementation_performed": false,
+  "previous_tail_observation": "The already inspected 3,781-record tail contained no completed-then-late-waiter example; no additional live logs were read for this note."
+}

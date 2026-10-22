@@ -1,0 +1,28 @@
+{
+  "schema": "read_only_host_observer_source_review_v1",
+  "reviewed_at": "2026-10-16T17:15:54.430542+00:00",
+  "reviewer": "codex root",
+  "accepted_for_read_only_observation": true,
+  "source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-05-observer.py",
+    "sha256": "d487413ba3282bc700b6854c1de2521f87055b574acef142e311055f07af44bd"
+  },
+  "predecessor": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-04-observer.py",
+    "sha256": "97e6c8f688e42d6beeb996bb819964eaa5426a4b3d37734288d1e5b3d04b3f85"
+  },
+  "previous_result": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-04.json",
+    "sha256": "ec051655dab5eaa2643fc6f36ee66f275433997c77f5aaa04067b3cbf4ec4a5f",
+    "passed": false
+  },
+  "changes": [
+    "Fresh exclusive host-settle-05.json output",
+    "Previous observation points to completed failed host-settle-04.json"
+  ],
+  "only_these_literal_path_changes": true,
+  "unchanged_gate": "300 consecutive observed seconds pressure1, swap no higher than window first sample, no detected cargo/rustc/target tests, gap<=15s, sampling5s; bound610s",
+  "current_reason": "17:14:55UTC read-only precheck pressure1, swap12852.31MiB, lower than observed04 peak. One sample is not a passing window. Original services not altered.",
+  "source_operations": "Read-only OS accounting and provider readyz GET; exact six protected PID/PPID/start/argv at start/end; fresh private result writes only. No numeric imports/models/probes/restarts.",
+  "real_numeric_execution_authorized": false
+}

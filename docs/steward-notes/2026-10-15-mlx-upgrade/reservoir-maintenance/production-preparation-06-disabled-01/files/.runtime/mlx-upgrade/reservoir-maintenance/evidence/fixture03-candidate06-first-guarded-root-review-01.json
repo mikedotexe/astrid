@@ -1,0 +1,34 @@
+{
+  "actual_os_fixture_executed": false,
+  "all_test_output_preserved": true,
+  "at": "2026-10-17T15:15:40.873314+00:00",
+  "authorized_followup": "Only narrow fixture fake-test setup/mock corrections; exact new checkpoint/plan/review and one new guarded fixture suite. No production rerun unless a concrete further concern arises.",
+  "fixture_findings": [
+    "Two test mocks name their positional append argument kind, colliding with actual command kind keyword before the intended publication-failure test point.",
+    "Seventeen preserved HostTests setup methods attempt to create h.HERE/runs outside dedicated scratch; the guard denied every attempt before mutation."
+  ],
+  "fixture_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-guarded-tests-01.txt",
+    "sha256": "1683cf57752c3aba4274b428a0a1fa24a3fb27cb78ba68472bcefe82bd072ada"
+  },
+  "fixture_passed": false,
+  "fixture_result": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-guarded-tests-01.json",
+    "sha256": "f93017ad4e6dfaad6b8c4caf21d15facf30a6a66fbd9895ca0e6f078537ded3c"
+  },
+  "guard_denials_are_not_successful_mutations": true,
+  "mlx_qualified": false,
+  "production_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production06-guarded-tests-01.txt",
+    "sha256": "8403a156f09fd4c6282c931ae58ebc36eb6311fb2ed1662b3ee892c0f82647bd"
+  },
+  "production_qualified": false,
+  "production_result": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production06-guarded-tests-01.json",
+    "sha256": "adbf198d57baafe4c74e4a7adeaa6ca059475ec5cf785b435a0f7ef163ad4d4d"
+  },
+  "production_run_executed_no_fixture03_python": true,
+  "production_tests_passed": 327,
+  "schema": "fixture03_candidate06_first_guarded_root_review_v1",
+  "source_and_protected_and_old_run_unchanged_at_both_closeouts": true
+}

@@ -1,0 +1,35 @@
+{
+  "accepted_for_disabled_preparation": true,
+  "actual_os_fixture_accepted": false,
+  "at": "2026-10-17T01:49:40.156830+00:00",
+  "checks": {
+    "actual299_all_passed": true,
+    "all_executed_local_bound": true,
+    "flags_disabled": true,
+    "no_forbidden_work": true,
+    "no_retained_fake_runs": true,
+    "source_equal_current": true
+  },
+  "fixture62_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-guarded-tests-01.json",
+    "sha256": "a84ed9c1332b56e157a58b9843f7023c94959327318c5406a23e49b129c3aee5"
+  },
+  "fixture_source_files": 21,
+  "limit": "Disabled stdlib/fake validation only; final enabled bytes and actual owned OS/lifecycle qualification remain separate.",
+  "prior_failed_wrapper": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-01-failure-review.json",
+    "sha256": "e7a5bac554e99f4181bd1ddc9aeb798100c5a520c1e4cad575aba12a5daadaea"
+  },
+  "production_qualified": false,
+  "reader_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/fixture-reader-independent-source-review-02.json",
+    "sha256": "c674853ec4f3aaaec97762f6741b6540c9e62b45e64b6e507eca1b2c42da0c27"
+  },
+  "receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production05-combined-guarded-tests-02.json",
+    "sha256": "2eaae3b202d7ebae15afbdc724165aa9e3c34d254db37279c83513ded530ecd0"
+  },
+  "schema": "production05_disabled_combined_root_test_review_v1",
+  "source_files": 36,
+  "tests": 299
+}

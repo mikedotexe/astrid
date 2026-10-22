@@ -1,0 +1,256 @@
+{
+  "schema": "minime_engine_memory_static_review_v1",
+  "created_at": "2026-10-16T17:34:16.556345+00:00",
+  "scope": "Bounded read-only source/provenance review; paused after these findings for higher-priority verifier correction. No build, repair, profiler, camera, service API, signal or restart.",
+  "instructions": {
+    "path": "/Users/v/other/minime/AGENTS.md",
+    "sha256": "cd94751942ba4858336e425aa28eec46a7449b926efa08900b18cb9537751a0e",
+    "bytes": 26328,
+    "mtime_ns": 1780795169136617197
+  },
+  "working_tree": "git status --short was empty; current HEAD9b0031b differs from deployed source commit.",
+  "observation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-footprint-02.json",
+    "sha256": "f0170f72d4750867bcd6721579fecd1c8ec04dca2daa1dd306d77561cc7fd1a8",
+    "pid": 35303,
+    "started_at": "Thu Oct 1 11:16:53 2026",
+    "physical_footprint_bytes": 16493686856,
+    "rss_bytes": 57753600,
+    "allocator_cause_proven": false
+  },
+  "deployment": {
+    "label": "com.minime.engine",
+    "target": "gui/501/com.minime.engine",
+    "installed_plist": "/Users/v/Library/LaunchAgents/com.minime.engine.plist",
+    "read_only_launchctl_print": {
+      "command": [
+        "/bin/launchctl",
+        "print",
+        "gui/501/com.minime.engine"
+      ],
+      "observed_pid": 35303,
+      "state": "running",
+      "program": "/bin/bash",
+      "launcher": "/Users/v/other/minime/scripts/launchd_minime_engine.sh",
+      "exit_timeout_seconds": 5
+    },
+    "installed_binary": {
+      "path": "/Users/v/other/minime/minime/target/release/minime",
+      "sha256": "0610800dd57bf34287bb5e4f9869e777179f602bf5208a4d5524c95b93f235d8",
+      "bytes": 6764688,
+      "mtime_ns": 1790878614834714170
+    },
+    "retained_release_binary": {
+      "path": "/Users/v/other/worktrees/engine-qualification-20261001/release-04/bin/minime",
+      "sha256": "0610800dd57bf34287bb5e4f9869e777179f602bf5208a4d5524c95b93f235d8",
+      "bytes": 6764688,
+      "mtime_ns": 1790870926027220898
+    },
+    "release_manifest": {
+      "path": "/Users/v/other/worktrees/engine-qualification-20261001/release-04/manifest.json",
+      "sha256": "47396e48a469598480dce61ddfc12808682e698b75cbc5eccb845743f25dddbe",
+      "bytes": 20527,
+      "mtime_ns": 1790870926050331088
+    },
+    "source_commit": "c428fcaec55090a29b9c3f38c4219b093b1d9172",
+    "release": "release-04",
+    "historical_mapped_uuid": "1DFC8F61-22C9-3B60-8379-6DAC898303C6",
+    "current_accounting_uuid_matches_historical_image": true,
+    "live_transition_receipt": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-01-engine-live-transition.json",
+      "sha256": "6346c7094be6d6966c654665b3e275640cd6d71ea5207ad5618fa3ccc4347ae1",
+      "bytes": 12571,
+      "mtime_ns": 1790879364641299256
+    },
+    "provenance_limit": "Current disk hash and retained release match; process start and kernel accounting UUID corroborate Oct1 receipt. No new mapped-image/profiler or process-memory byte attestation was performed. Earlier release03/PID3906 note is stale for this engine."
+  },
+  "configuration_inputs": [
+    {
+      "path": "/Users/v/other/minime/scripts/launchd_minime_engine.sh",
+      "sha256": "6a8bde6b2e6f62cbf9689a9c05291a3ddd0d87cb9d6d3247952ef915dc8a7f26",
+      "bytes": 2685,
+      "mtime_ns": 1790878612002209016
+    },
+    {
+      "path": "/Users/v/other/minime/scripts/minime_rescue_investigation.py",
+      "sha256": "3f6a44e309050a440d4f85c40186f8946e3fcf191a56d02e4d6e6e53dad58015",
+      "bytes": 78719,
+      "mtime_ns": 1781135377639915559
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/rescue_profile.json",
+      "sha256": "d892aff002f97ba761cbf25e304fbde3e77fa6e45c2459ee53028af482c25e01",
+      "bytes": 5623,
+      "mtime_ns": 1777909809020875757
+    },
+    {
+      "path": "/Users/v/other/minime/workspace/division/runtime-manifest.json",
+      "sha256": "58fd6abbdbd08cba72e3e942621228502d014ed163f14d27e268d0d80452000a",
+      "bytes": 1154,
+      "mtime_ns": 1791479604683237617
+    },
+    {
+      "path": "/Users/v/other/minime/launchd/com.minime.engine.plist",
+      "sha256": "6c680e4c523469883fda285724cae076d7c39197bb83b37b7b442d98899b34b1",
+      "bytes": 1381,
+      "mtime_ns": 1788812928416857427
+    },
+    {
+      "path": "/Users/v/Library/LaunchAgents/com.minime.engine.plist",
+      "sha256": "6c680e4c523469883fda285724cae076d7c39197bb83b37b7b442d98899b34b1",
+      "bytes": 1381,
+      "mtime_ns": 1788813329033237062
+    }
+  ],
+  "reviewed_source_alignment": {
+    "minime/src/av_gpu.rs": {
+      "path": "/Users/v/other/minime/minime/src/av_gpu.rs",
+      "sha256": "032c635a580157c61d27d4c1b731c9f9f3edb1372e13fe3746b982c556714e96",
+      "bytes": 8462,
+      "mtime_ns": 1790870893898375864,
+      "release04_sha256": "032c635a580157c61d27d4c1b731c9f9f3edb1372e13fe3746b982c556714e96",
+      "matches_release04": true
+    },
+    "minime/src/av_ws.rs": {
+      "path": "/Users/v/other/minime/minime/src/av_ws.rs",
+      "sha256": "dfdb40b4425560599a581c83a6c0e66865f08de3ffa765516ff4ecd37feeaa34",
+      "bytes": 11844,
+      "mtime_ns": 1790870893899017068,
+      "release04_sha256": "dfdb40b4425560599a581c83a6c0e66865f08de3ffa765516ff4ecd37feeaa34",
+      "matches_release04": true
+    },
+    "minime/src/gpu.rs": {
+      "path": "/Users/v/other/minime/minime/src/gpu.rs",
+      "sha256": "55c1273db91209b5f536ee3c4b1ead1ca2e18596263607293e6c94948281ed15",
+      "bytes": 7031,
+      "mtime_ns": 1790870893902305964,
+      "release04_sha256": "55c1273db91209b5f536ee3c4b1ead1ca2e18596263607293e6c94948281ed15",
+      "matches_release04": true
+    },
+    "minime/src/buffer_pool.rs": {
+      "path": "/Users/v/other/minime/minime/src/buffer_pool.rs",
+      "sha256": "9f4dd10331e59fa5cb5de1cb5b46325fee6ded2caa2cb5107afa92217e288b5d",
+      "bytes": 1458,
+      "mtime_ns": 1776624385247996970,
+      "release04_sha256": "9f4dd10331e59fa5cb5de1cb5b46325fee6ded2caa2cb5107afa92217e288b5d",
+      "matches_release04": true
+    },
+    "minime/src/sensory_bus.rs": {
+      "path": "/Users/v/other/minime/minime/src/sensory_bus.rs",
+      "sha256": "9ade4c9ea093586ead21bbf5072b1f386a1499491f79a0fef4f64507b6138311",
+      "bytes": 168896,
+      "mtime_ns": 1790870893913167397,
+      "release04_sha256": "9ade4c9ea093586ead21bbf5072b1f386a1499491f79a0fef4f64507b6138311",
+      "matches_release04": true
+    },
+    "minime/src/runtime/orchestration.rs": {
+      "path": "/Users/v/other/minime/minime/src/runtime/orchestration.rs",
+      "sha256": "510fc70ba658b0f757e3cad359b3568964b754932947705724f4ed3f9a0c0479",
+      "bytes": 312426,
+      "mtime_ns": 1790883999946342547,
+      "release04_sha256": "baed0a15c7358384f2fd3a1b41b08216ea9f4b4b1cd9a04ec5d2f9f3105c6f10",
+      "matches_release04": false
+    },
+    "minime/src/main.rs": {
+      "path": "/Users/v/other/minime/minime/src/main.rs",
+      "sha256": "432a3a7cd422b1028bc66eaa9f82ce5150553b1c69f4e9411c0de02a5ec5bd47",
+      "bytes": 887,
+      "mtime_ns": 1790870893904400410,
+      "release04_sha256": "432a3a7cd422b1028bc66eaa9f82ce5150553b1c69f4e9411c0de02a5ec5bd47",
+      "matches_release04": true
+    },
+    "minime/Cargo.lock": {
+      "path": "/Users/v/other/minime/minime/Cargo.lock",
+      "sha256": "b7550430a7761fe1cf48f31c0034093c3372c86b8ed71aa852fb69760a83152b",
+      "bytes": 37715,
+      "mtime_ns": 1788812388202386651,
+      "release04_sha256": "b7550430a7761fe1cf48f31c0034093c3372c86b8ed71aa852fb69760a83152b",
+      "matches_release04": true
+    },
+    "minime/shaders/av_features.metal": {
+      "path": "/Users/v/other/minime/minime/shaders/av_features.metal",
+      "sha256": "c041b9a921b9869ce4a3e1c03788b4c40176564466a18d089684489954960f92",
+      "bytes": 2466,
+      "mtime_ns": 1773544493753825196,
+      "release04_sha256": "c041b9a921b9869ce4a3e1c03788b4c40176564466a18d089684489954960f92",
+      "matches_release04": true
+    }
+  },
+  "dependency_sources": [
+    {
+      "path": "/Users/v/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metal-0.29.0/src/commandqueue.rs",
+      "sha256": "a7d6dee5d064093521465e1da30bded851aa9d59f078942d88926d0f38de82fd",
+      "bytes": 1287,
+      "mtime_ns": 1153704088000000000
+    },
+    {
+      "path": "/Users/v/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metal-0.29.0/src/commandbuffer.rs",
+      "sha256": "464d504969ba1c213f6f8812b414c1581e39490cd048888404e04fbb5a1bd4ce",
+      "bytes": 5230,
+      "mtime_ns": 1153704088000000000
+    },
+    {
+      "path": "/Users/v/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/metal-0.29.0/examples/compute/main.rs",
+      "sha256": "bf160f3aba9f7492e3f4b6cf3198f8e454a49d6a29225312a84fdb9d784ffec4",
+      "bytes": 6663,
+      "mtime_ns": 1153704088000000000
+    }
+  ],
+  "findings": [
+    {
+      "kind": "bounded_AV_storage",
+      "confidence": "source-confirmed",
+      "evidence": [
+        "minime/src/av_ws.rs:275-320",
+        "minime/src/av_gpu.rs:26-35,62-75,221-244"
+      ],
+      "detail": "V2 uses one Shared AvGpu instance and16-slot channel of128x128 frames (~256KiB raw queue payload), fixed texture/previous/accumulator buffers, sequential per-frame command completion. It does not keep a growing frame-history collection."
+    },
+    {
+      "kind": "native_object_lifetime_candidate",
+      "confidence": "hypothesis, not demonstrated allocator cause",
+      "evidence": [
+        "minime/src/av_gpu.rs:221-244",
+        "minime/src/gpu.rs:86-112",
+        "metal-0.29.0/src/commandqueue.rs:33-35",
+        "metal-0.29.0/src/commandbuffer.rs:119-121"
+      ],
+      "detail": "Hot paths repeatedly obtain borrowed commandBuffer/computeCommandEncoder wrappers and wait for completion; no explicit autorelease pool was found under current minime/src. Cached crate compute example scopes work in objc::rc::autoreleasepool. GPU completion does not establish Objective-C pool drainage. AV is not the only Metal path; do not assign15GiB to camera processing from footprint alone."
+    },
+    {
+      "kind": "buffer_cache",
+      "confidence": "source-confirmed scope only",
+      "evidence": [
+        "minime/src/buffer_pool.rs:8-10,24-34,46-48",
+        "minime/src/cheby.rs:114-176",
+        "minime/src/esn.rs:1161,1348-1349"
+      ],
+      "detail": "BufferPool retains returned buffers by aligned size with no explicit global count/byte ceiling. Reviewed hot paths acquire/release fixed shapes, which suggests bounded steady-state demand but does not prove a whole-process bound or explain measured footprint."
+    },
+    {
+      "kind": "sensory_queue",
+      "confidence": "source-confirmed",
+      "evidence": [
+        "minime/src/sensory_bus.rs:33,1146-1183"
+      ],
+      "detail": "Sensory lane defaults to1024 entries and evicts oldest at cap. This is bounded unlike an unbounded event-history queue."
+    },
+    {
+      "kind": "maintenance_and_continuity",
+      "confidence": "source plus approved historical transition",
+      "evidence": [
+        "scripts/launchd_minime_engine.sh:11-13",
+        "minime/src/runtime/orchestration.rs:948-969,992-1037",
+        "docs/steward-notes/2026-10-01-engine-live-transition.md:5-47"
+      ],
+      "detail": "Existing sanctioned --activate-stage wrapper previously stopped only exact engine/gateway/supervisor identities with signed handoff and owner launch holds. Current/deployed shutdown saves regulator context atomically via startup_restore, but current stable-core profile disables covariance lineage/neural restoration. Full reservoir/in-flight-input continuity was explicitly not claimed. KeepAlive and launchctl exit timeout5 require existing reviewed bounded transition, not a direct restart shortcut. Historical approval is not new restart authorization."
+    }
+  ],
+  "next_diagnostics_unexecuted": [
+    "Add com.minime.engine PID/start and listed binary/plist/launcher/profile/runtime-manifest/shader hashes to the next freshly prepared passive baseline; existing generic launch-label observer can cover it without code change.",
+    "If separately authorized, a finite passive physical-footprint trend correlated with already retained frame/tick counters can distinguish accumulation from a plateau without changing workload.",
+    "Only in a future isolated, separately qualified environment compare matching synthetic fixed-frame and spectral-command workloads with explicit local autorelease scopes; preserve outputs and allocator evidence. No Rust rebuild or GPU test is authorized/executed in this review.",
+    "Any future maintenance uses retained release04 and current signed-control/partial-continuity checks; do not infer preserved complete state or extend Oct1 approval."
+  ],
+  "guard_recommendation": "Bind engine separately from autonomous_agent PID82314. Reprepare baseline inputs after reservoir repair; do not retroactively claim the old six-process baseline covered the engine."
+}

@@ -1,0 +1,104 @@
+"""Actual persistence checks; NumPy is supplied only by the released child."""
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+from pathlib import Path
+import shutil
+
+from common import digest, finite, require
+
+
+def descriptor(np, value):
+    array = np.asarray(value)
+    result = {"dtype": str(array.dtype), "shape": list(array.shape),
+              "sha256": hashlib.sha256(array.tobytes(order="C")).hexdigest()}
+    if array.shape == ():
+        result["scalar"] = array.item()
+    return result
+
+
+def thermostat_signature(value):
+    raw = json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+    return {"sha256": hashlib.sha256(raw).hexdigest(), "layers": len(value),
+            "buffer_rows": [len(layer.get("buffer_tail", [])) for layer in value],
+            "keys": [sorted(layer) for layer in value]}
+
+
+def expected_payload(np, service, name):
+    info = service.handles[name]
+    h1, h2, h3 = service.bridge.read_state(name)
+    rs = service.rehearsal.get_state(name)
+    state = {
+        "h1": h1, "h2": h2, "h3": h3,
+        "last_input": rs.last_live_input if rs.last_live_input is not None else np.zeros(32),
+        "backend": info.backend, "mode": rs.mode, "decay_profile": rs.decay_profile,
+        "decay_weight": np.array(rs.decay_weight, dtype=np.float64),
+        "tick_count": np.array(info.tick_count, dtype=np.int64),
+        "event_seq": np.array(info.event_seq, dtype=np.int64),
+        "snapshot_version": np.array(2, dtype=np.int64),
+        "config_fingerprint": service._snapshot_fingerprint, "entity": info.entity,
+        "mode_authority": rs.mode_authority, "hint_policy": rs.hint_policy,
+        "last_live_meta_json": json.dumps(info.last_live_meta or {}),
+        "last_lane_meta_json": json.dumps(info.last_lane_meta or {}),
+        "provenance_json": json.dumps(list(info.provenance_ring)),
+        "output_history": np.array(list(info.output_ring), dtype=np.float32),
+        "h_norm_history": np.array(list(info.h_norm_ring), dtype=np.float32),
+    }
+    import time
+    wall, mono = time.time(), time.monotonic()
+    last_wall = max(0.0, wall - max(0.0, mono - info.last_tick_time)) if info.last_tick_time > 0 else -1.0
+    return {"fields": {key: descriptor(np, value) for key, value in state.items()},
+            "last_live_wall_time": last_wall,
+            "thermostats": thermostat_signature([thermostat.state_dict() for thermostat in info.thermostats])}
+
+
+def compare_fields(expected, actual, *, started_wall, completed_wall):
+    require(set(actual) == set(expected["fields"]) | {"timestamp", "last_live_wall_time"},
+            "snapshot key set changed")
+    for key, value in expected["fields"].items():
+        require(actual[key] == value, f"snapshot content mismatch: {key}")
+    for key in ("timestamp", "last_live_wall_time"):
+        require(actual[key]["dtype"] == "float64" and actual[key]["shape"] == [],
+                f"incorrect time representation: {key}")
+        require(finite(actual[key].get("scalar")), f"nonfinite snapshot time: {key}")
+    require(started_wall <= actual["timestamp"]["scalar"] <= completed_wall,
+            "snapshot timestamp outside its write interval")
+    require(abs(actual["last_live_wall_time"]["scalar"] - expected["last_live_wall_time"]) <= .05,
+            "last-live wall time changed beyond clock conversion tolerance")
+
+
+def verify_files(np, state_dir, name, expected, started_wall, completed_wall, artifact_dir=None):
+    path = Path(state_dir) / f"{name}.npz"
+    thermo = Path(state_dir) / f"{name}_thermostats.json"
+    with np.load(path, allow_pickle=False) as archive:
+        actual = {key: descriptor(np, archive[key]) for key in archive.files}
+    compare_fields(expected, actual, started_wall=started_wall, completed_wall=completed_wall)
+    require(thermostat_signature(json.loads(thermo.read_text())) == expected["thermostats"], "thermostat file changed")
+    result = {"npz_sha256": digest(path), "thermostat_sha256": digest(thermo),
+            "timestamp": actual["timestamp"]["scalar"],
+            "last_live_wall_time": actual["last_live_wall_time"]["scalar"]}
+    if artifact_dir is not None:
+        artifact_dir = Path(artifact_dir)
+        artifact_dir.mkdir(parents=True, exist_ok=True)
+        for source, key in ((path, "npz"), (thermo, "thermostat")):
+            target = artifact_dir / source.name
+            with source.open("rb") as original, target.open("xb") as retained:
+                shutil.copyfileobj(original, retained)
+            require(digest(target) == result[key + "_sha256"], "retained snapshot copy differs")
+            result[key + "_path"] = str(target)
+    return result
+
+
+def verify_restored(np, service, expected_by_name):
+    require(set(service.handles) == set(expected_by_name), "restored handle set differs")
+    results = {}
+    for name, expected in expected_by_name.items():
+        restored = expected_payload(np, service, name)
+        require(restored["fields"] == expected["fields"], f"restored state/metadata differs: {name}")
+        require(restored["thermostats"] == expected["thermostats"], f"restored thermostat differs: {name}")
+        require(abs(restored["last_live_wall_time"] - expected["last_live_wall_time"]) <= .05,
+                f"restored last-live time differs: {name}")
+        results[name] = {"preserved": True, "event_seq": service.handles[name].event_seq}
+    return results

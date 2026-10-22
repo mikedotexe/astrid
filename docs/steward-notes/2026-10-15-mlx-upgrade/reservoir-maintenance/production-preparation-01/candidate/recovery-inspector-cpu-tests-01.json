@@ -1,0 +1,56 @@
+{
+  "schema": "reservoir_production_recovery_inspector_cpu_tests_v1",
+  "created_at": "2026-10-16T17:27:51.331921+00:00",
+  "command": [
+    "python3",
+    "-B",
+    "-m",
+    "unittest",
+    "-v",
+    "test_production_recovery_inspect"
+  ],
+  "cwd": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01",
+  "observed_result": {
+    "exit_code": 0,
+    "tests_run": 18,
+    "suite_seconds": 0.159,
+    "status": "OK"
+  },
+  "provenance": "Observed exec_command output retained in this task; this records the test result rather than fabricating a raw stdout transcript.",
+  "files": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_recovery_inspect.py": "0ee592e768df9ebdab9994b41d9a921b99aaea8479e676abaa1cd5c586229311",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_recovery_inspect.py": "ef1c9d9e2e91444f16c6776e8724381bc06f468f8f7b945d37557970c22d1af7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_preflight.py": "3ded53f71a6d134640cb89a00ed9cf9c392a9709a8ac39eae67e2737250de1e5",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_host.py": "d7b80c071ca1a279d95b237ce5b675865f85dc1c5f0c6565e0694ef09bace466",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance.py": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b"
+  },
+  "stdlib_compile_and_ast": {
+    "passed": true,
+    "file_count": 2,
+    "bytecode_written": false
+  },
+  "interpreter": {
+    "path": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "resolved_path": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43",
+    "version": "3.14.3 (main, Feb  3 2026, 15:32:20) [Clang 17.0.0 (clang-1700.6.3.2)]"
+  },
+  "coverage": [
+    "interruption before/after debug result",
+    "signal intent/result and missing durable wall-time boundary",
+    "held removal ambiguity",
+    "source and pinned-plist installation ambiguity",
+    "bootstrap pending/no PID and known replacement",
+    "unknown process/wrong holder Python family",
+    "missing/altered owner, anchor, controller chain, host record or witness",
+    "bound model-cache alias and rejecting private-record symlink",
+    "record-set growth and absent-file appearance",
+    "no-args CLI and mutation/service-command rejection"
+  ],
+  "live_inspection_performed": false,
+  "service_calls_performed": false,
+  "numeric_workloads_performed": false,
+  "original_state_restore_helpers_unchanged": true,
+  "production_recovery_qualified": false,
+  "controller_enabled": false
+}

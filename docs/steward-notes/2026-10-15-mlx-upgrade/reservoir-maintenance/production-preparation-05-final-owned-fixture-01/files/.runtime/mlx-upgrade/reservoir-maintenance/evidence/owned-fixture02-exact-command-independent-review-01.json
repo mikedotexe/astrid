@@ -1,0 +1,112 @@
+{
+  "accepted": true,
+  "actual_os_fixture_accepted": false,
+  "actual_os_fixture_executed": false,
+  "argv": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/owned_fixture_run.py",
+    "--execute",
+    "--release",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-01.json"
+  ],
+  "blockers": [],
+  "checks": {
+    "all60_source_and2_interpreter_hashes_unchanged": true,
+    "final_source_maps_flags_and_schedule_equal_approved_review": true,
+    "no_whole_parent_sudo_or_shell_chaining": true,
+    "release_and_handoff_hashes_exact": true,
+    "retained_precommand_spot_matches_release_and_coordination": true,
+    "retained_validator_passed_with7_exact_origins_and_zero_violations": true,
+    "root_and_result_absent_without_symlinks_at_review": true,
+    "seventy_one_steps_and_injection_digest_equal": true,
+    "terminal_text_exact_single_pinned_argv": true,
+    "three_targets_exact_generated_token_only": true,
+    "uid501_and_saved_boot_binding_match": true
+  },
+  "command": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-terminal-command-01.txt",
+    "sha256": "70bd0005916a558da28930efbbcc20f4362b6cea40524e8932eadabee72fc3f7"
+  },
+  "coordination": {
+    "actor": "codex-mlx-upgrade",
+    "control": {
+      "path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/steward_control_v1/control.json",
+      "sha256": "d722df02a823393130dfb31c402c1600754ef887cda04da2b272adf6099478e3"
+    },
+    "lease_absent": true,
+    "lease_path": "/Users/v/other/astrid/capsules/spectral-bridge/workspace/diagnostics/steward_control_v1/lease.json",
+    "pause_generation": 528,
+    "paused": true
+  },
+  "final_release_acceptance": false,
+  "final_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-source-review-01.json",
+    "sha256": "02c5e463adfef20776e7a50b012841ef624c48eb20d3afc173bd7c90b573ef14"
+  },
+  "fixture": {
+    "root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/runs/owned-recovery-4327212894d64b31980b98bf3fbd7fc2",
+    "targets": {
+      "pin": "gui/501/com.codex.reservoir-maintenance-fixture.4327212894d64b31980b98bf3fbd7fc2.pin",
+      "provider": "gui/501/com.codex.reservoir-maintenance-fixture.4327212894d64b31980b98bf3fbd7fc2.provider",
+      "reservoir": "gui/501/com.codex.reservoir-maintenance-fixture.4327212894d64b31980b98bf3fbd7fc2.reservoir"
+    },
+    "token": "4327212894d64b31980b98bf3fbd7fc2"
+  },
+  "host_binding": {
+    "boot_uuid": "A86C8146-975D-4935-85A6-A7879EC7BBE3",
+    "hostname": "m3-volya",
+    "os_version": "27.0.1",
+    "uid": 501
+  },
+  "limits": [
+    "No command, target import, test, process/service probe, numerical workload or administrator operation was performed by this reviewer. Only exact saved source/receipts and reserved root/result filesystem absence were checked.",
+    "This accepts the exact prepared ordinary-user command and immutable owned-fixture release. Current host/boot/UID, Terminal, coordination and target ownership must still pass the command\u2019s own guards before effects. Saved host readiness is a spot, not continuous numerical admission.",
+    "Actual OS fixture behavior is still unqualified. A failure must be preserved without rerunning or automatic cleanup; the command may prompt only for narrow generated-target launchctl debug.",
+    "After Terminal returns, independent parent absence and complete raw result/recovery/check-in/backup/final-state/cleanup evidence must be verified before final fixture acceptance.",
+    "No ProductionHost, production pin schedule, live provider/reservoir replacement, model work or MLX promotion is authorized by this review. Disabled62/299 test evidence is not relabeled as actual enabled OS execution."
+  ],
+  "operations_by_reviewer": {
+    "numerical_workloads": 0,
+    "os_fixture_actions": 0,
+    "runtime_probes": 0,
+    "source_edits": 0,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "precommand_host_spot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-precommand-host-spot-01.json",
+    "sha256": "76c9d13e9456d04a0aae7501d874eca3c37d8b908db79c09fcb59d04e17dfcfa"
+  },
+  "preparation_inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-source-inputs-01.json",
+    "sha256": "2ae353e1c80d5e40adabd4194b4aba9a355a3d2092105018cd23fec386595180"
+  },
+  "production_qualified": false,
+  "read_only_validation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-validation-01.json",
+    "sha256": "56ccca1d03c45cee140bf2fd19f3bb71f9f648f9c88f7ff67a256620ed20e1b1"
+  },
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-01.json",
+    "sha256": "aa1273e375e376d51ea70be44b1bbb684f1a0a5c3fc96a7ca0bb5bc192ee215c"
+  },
+  "result_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-02/evidence/owned-recovery-4327212894d64b31980b98bf3fbd7fc2-result.json",
+  "reviewed_at": "2026-10-17T02:04:35.706202+00:00",
+  "reviewer": "/root/mlx_integration",
+  "root_handoff_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-handoff-root-review-01.json",
+    "sha256": "f9f30edc6d1cce852fe484c2af7f54507320a49c97b8c673552ba20a335eeee4"
+  },
+  "schema": "owned_fixture02_exact_command_release_independent_review_v1",
+  "scope": "retained_source_release_command_and_read_only_validation_only",
+  "validation_elapsed_s": 0.04037320800125599,
+  "validator_source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/validate_fixture02_final_release_01.py",
+    "sha256": "4a42bae6a894d23e43daa4d51eef3c7db693a6b3d83496fdf68d43e2d200367b"
+  },
+  "validator_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-validator-source-review-01.json",
+    "sha256": "2e9308d55ee319f6d0b51765f7efc4b2360b2030128dba38f0fed9f5db82730f"
+  }
+}

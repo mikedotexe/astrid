@@ -1,0 +1,244 @@
+{
+  "build_test_processes": {},
+  "completed_at": "2026-10-16T00:43:59.236844+00:00",
+  "conclusion": "No five-minute normal-pressure, non-growing-swap window without detected Cargo/rustc/target-test processes occurred. Host pressure and swap increased without a qualification model. This observation does not establish an MLX package regression and does not justify another GPU retry.",
+  "duration_s": 601.6456196249928,
+  "elevated_pressure_episodes": [
+    {
+      "last_elevated_sample_utc": "2026-10-16T00:35:47.595052+00:00",
+      "next_normal_sample_utc": "2026-10-16T00:35:52.598939+00:00",
+      "observed_span_s": 0.0,
+      "start_utc": "2026-10-16T00:35:47.595052+00:00",
+      "until_next_normal_sample_s": 5.003886938095093
+    },
+    {
+      "last_elevated_sample_utc": "2026-10-16T00:40:02.597749+00:00",
+      "next_normal_sample_utc": "2026-10-16T00:40:07.597709+00:00",
+      "observed_span_s": 0.0,
+      "start_utc": "2026-10-16T00:40:02.597749+00:00",
+      "until_next_normal_sample_s": 4.999959945678711
+    },
+    {
+      "last_elevated_sample_utc": "2026-10-16T00:41:02.593763+00:00",
+      "next_normal_sample_utc": "2026-10-16T00:41:07.597337+00:00",
+      "observed_span_s": 29.996402263641357,
+      "start_utc": "2026-10-16T00:40:32.597361+00:00",
+      "until_next_normal_sample_s": 34.99997615814209
+    },
+    {
+      "last_elevated_sample_utc": "2026-10-16T00:42:32.596789+00:00",
+      "next_normal_sample_utc": "2026-10-16T00:42:37.593235+00:00",
+      "observed_span_s": 24.999780893325806,
+      "start_utc": "2026-10-16T00:42:07.597008+00:00",
+      "until_next_normal_sample_s": 29.996227025985718
+    },
+    {
+      "last_elevated_sample_utc": "2026-10-16T00:43:52.596273+00:00",
+      "next_normal_sample_utc": "2026-10-16T00:43:57.594411+00:00",
+      "observed_span_s": 0.0,
+      "start_utc": "2026-10-16T00:43:52.596273+00:00",
+      "until_next_normal_sample_s": 4.998137950897217
+    }
+  ],
+  "external_activity_notes": [
+    {
+      "activity": "Small model-free pytest checks, including 9 and 11-test batches, ran during this observation; no MLX/GPU execution. These Python tests are outside the build/test detector.",
+      "source": "parent agent report",
+      "time_utc": "2026-10-16T00:40:00Z (approximate)"
+    }
+  ],
+  "final_cpu_receipt": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/focused-tests-final-06.json",
+    "sha256": "85e97022fbd48f7b53637c3b2d73c38e87c1be5c7df1ad555959700a3f8825a5"
+  },
+  "longest_elevated_pressure_observed_s": 29.996402263641357,
+  "longest_eligible_window": {
+    "duration_s": 244.99885201454163,
+    "last_sample_utc": "2026-10-16T00:39:57.597791+00:00",
+    "passed": false,
+    "required_s": 300,
+    "rule": ">=300 consecutive observed seconds of pressure1, swap not above window's first sample, no cargo/rustc/target test process; sample gaps >15s invalidate",
+    "sample_indices": [
+      23,
+      72
+    ],
+    "start_utc": "2026-10-16T00:35:52.598939+00:00"
+  },
+  "next_step": "Keep GPU qualification stopped while arranging sufficient sustained headroom and a reversible execution/restoration plan; no automatic test retry or AI shutdown.",
+  "observer_source": {
+    "bytes": 6775,
+    "note": "Exact executed stdin source copied to this evidence file after observation; no rerun.",
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/host-window-01-observer.py",
+    "sha256": "da3bcb47f337b14e4940ca500f4b45fc50d91da1a32c43d736c731cc99b9472f"
+  },
+  "pressure_sample_counts": {
+    "1": 105,
+    "2": 16
+  },
+  "prior_parser_failed_observation": {
+    "note": "Initial nine samples retained; excluded from this corrected observation.",
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/host-window-01-parser-failed.json",
+    "sha256": "ef248ea7db8fdd35f083f14757c90ed89966143cabd2bc1f008f92fdba538712"
+  },
+  "process_detection_scope": "Cargo/rustc executable names and binaries in target debug/release deps paths; excludes Python pytest and arbitrary other CPU activity. No arbitrary full process command lines were captured.",
+  "production_identity_end": {
+    "astrid_provider": {
+      "pids": [
+        3893
+      ],
+      "port": 8090,
+      "processes": [
+        {
+          "executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+          "pid": 3893,
+          "started_local": "Wed Sep 30 14:29:07 2026"
+        }
+      ]
+    },
+    "astrid_reservoir": {
+      "pids": [
+        3888
+      ],
+      "port": 7881,
+      "processes": [
+        {
+          "executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+          "pid": 3888,
+          "started_local": "Wed Sep 30 14:29:07 2026"
+        }
+      ]
+    },
+    "ollama": {
+      "pids": [
+        35486
+      ],
+      "port": 11434,
+      "processes": [
+        {
+          "executable": "/Applications/Ollama.app/Contents/Resources/ollama",
+          "pid": 35486,
+          "started_local": "Thu Oct 15 13:14:29 2026"
+        }
+      ]
+    },
+    "spectral_bridge": {
+      "executable": "/Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server",
+      "pid": 82528,
+      "started_local": "Thu Oct 15 07:49:42 2026"
+    }
+  },
+  "production_identity_start": {
+    "astrid_provider": {
+      "pids": [
+        3893
+      ],
+      "port": 8090,
+      "processes": [
+        {
+          "executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+          "pid": 3893,
+          "started_local": "Wed Sep 30 14:29:07 2026"
+        }
+      ]
+    },
+    "astrid_reservoir": {
+      "pids": [
+        3888
+      ],
+      "port": 7881,
+      "processes": [
+        {
+          "executable": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python",
+          "pid": 3888,
+          "started_local": "Wed Sep 30 14:29:07 2026"
+        }
+      ]
+    },
+    "ollama": {
+      "pids": [
+        35486
+      ],
+      "port": 11434,
+      "processes": [
+        {
+          "executable": "/Applications/Ollama.app/Contents/Resources/ollama",
+          "pid": 35486,
+          "started_local": "Thu Oct 15 13:14:29 2026"
+        }
+      ]
+    },
+    "spectral_bridge": {
+      "executable": "/Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server",
+      "pid": 82528,
+      "started_local": "Thu Oct 15 07:49:42 2026"
+    }
+  },
+  "production_identity_unchanged": true,
+  "production_mutations": 0,
+  "provider_health_failure_sample_indices": [],
+  "provider_worker_phase_counts": {
+    "generating": 68,
+    "ready": 53
+  },
+  "qualification_workloads_started": 0,
+  "raw_observation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/qualification/host-window-01.json",
+    "sha256": "adc8e2766c28d3268819d5755d5d536dbc095b6f5497559b01b5635ee6cd1458"
+  },
+  "reviewed_at": "2026-10-16T00:45:05.876047+00:00",
+  "sample_count": 121,
+  "sample_errors": [],
+  "sample_gap_s": {
+    "max": 5.005413293838501,
+    "min": 4.9951560497283936
+  },
+  "schema": "mlx_host_qualification_window_review_v1",
+  "started_at": "2026-10-16T00:33:57.400288+00:00",
+  "swap_bytes": {
+    "delta": 1991570882.5600014,
+    "final": 20028126658.56,
+    "initial": 18036555776.0,
+    "max": 20036515266.56,
+    "min": 17764188160.0
+  },
+  "system_cpu_percent": {
+    "idle_percent": {
+      "max": 87.15,
+      "min": 43.72
+    },
+    "system_percent": {
+      "max": 24.81,
+      "min": 4.8
+    },
+    "user_percent": {
+      "max": 39.96,
+      "min": 7.82
+    }
+  },
+  "vm_stat_bytes": {
+    "compressed_logical_bytes": {
+      "max": 27358494720,
+      "min": 15513632768
+    },
+    "compressor_bytes": {
+      "max": 25060507648,
+      "min": 14200487936
+    },
+    "free_bytes": {
+      "max": 6413664256,
+      "min": 92127232
+    },
+    "inactive_bytes": {
+      "max": 19100712960,
+      "min": 7292682240
+    },
+    "speculative_bytes": {
+      "max": 448921600,
+      "min": 76709888
+    },
+    "wired_bytes": {
+      "max": 31506661376,
+      "min": 11416207360
+    }
+  }
+}

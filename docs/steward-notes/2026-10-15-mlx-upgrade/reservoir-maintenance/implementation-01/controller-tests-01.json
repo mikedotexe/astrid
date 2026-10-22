@@ -1,0 +1,18 @@
+{
+  "schema": "reservoir_maintenance_cpu_tests_v1",
+  "recorded_at": "2026-10-16T03:21:14.228316+00:00",
+  "scope": "stdlib_fake_only_no_process_service_network_signal_or_model",
+  "tests_run": 23,
+  "passed": true,
+  "failures": 0,
+  "errors": 0,
+  "source_hashes": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/reservoir_maintenance.py": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_reservoir_maintenance.py": "67275c384b058c2f90977d3ec8b60e29c1788d47f08cfa1f983c6dc31bfd0a15"
+  },
+  "source_unchanged": true,
+  "log": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/controller-tests-01.txt",
+  "log_sha256": "389fa283cd24219b46918908ae0624008fc5cb5e0274b21a505d0432149a0d1c",
+  "forbidden_modules_loaded": [],
+  "production_qualified": false
+}

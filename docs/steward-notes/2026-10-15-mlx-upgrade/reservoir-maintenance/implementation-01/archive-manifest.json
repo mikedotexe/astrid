@@ -1,0 +1,115 @@
+{
+  "schema": "reservoir_maintenance_staged_implementation_archive_v1",
+  "created_at": "2026-10-16T03:35:48.133543+00:00",
+  "state": "reviewed_isolated_helpers_and_owned_fixture_adapter_not_executed_or_deployed",
+  "artifacts": [
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/qualify_reservoir_maintenance.py",
+      "archive": "qualify_reservoir_maintenance.py.txt",
+      "sha256": "8d6a2bb549f4f9115285d0d1bdc5247b3d88a5c4cb135116ef8c17722c4bb329",
+      "bytes": 30801
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/reservoir_maintenance.py",
+      "archive": "reservoir_maintenance.py.txt",
+      "sha256": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b",
+      "bytes": 23609
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/reservoir_maintenance_state.py",
+      "archive": "reservoir_maintenance_state.py.txt",
+      "sha256": "30fc7e3aa9e90719d89fc34f3dc509e49b6b9d95735af6f45c2cff826ed561fa",
+      "bytes": 19462
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/maintenance_fixture_worker.py",
+      "archive": "maintenance_fixture_worker.py.txt",
+      "sha256": "fb27a4c806b7cb5f2d52d90560a1a624c21d6360455808d7ab3c1590ca3e0418",
+      "bytes": 7142
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_qualify_reservoir_maintenance.py",
+      "archive": "test_qualify_reservoir_maintenance.py.txt",
+      "sha256": "d7ea6b81b645db1faa8b7f4647380276f8d887eb58cda3b158bee65a5f955eb5",
+      "bytes": 10702
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_reservoir_maintenance.py",
+      "archive": "test_reservoir_maintenance.py.txt",
+      "sha256": "67275c384b058c2f90977d3ec8b60e29c1788d47f08cfa1f983c6dc31bfd0a15",
+      "bytes": 18129
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_reservoir_maintenance_state.py",
+      "archive": "test_reservoir_maintenance_state.py.txt",
+      "sha256": "423c651b09e07476850d2fc1c648874dc66764a1ad2a024fb83435ed308e135e",
+      "bytes": 14582
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate/test_maintenance_fixture_worker.py",
+      "archive": "test_maintenance_fixture_worker.py.txt",
+      "sha256": "d7be17da230ccbe5a1852a30d0d72e2149d4a79993a7d08e78ff058018d563be",
+      "bytes": 4019
+    },
+    {
+      "source": "/Users/v/other/astrid/scripts/model_environment.py",
+      "archive": "model_environment.py.txt",
+      "sha256": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+      "bytes": 15235
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-adapter-tests-02.json",
+      "archive": "fixture-adapter-tests-02.json",
+      "sha256": "3d78db187ac9f3d91135715e8e6d9289311736640f48f9c510224c5b69ccb364",
+      "bytes": 2865
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-adapter-tests-02.txt",
+      "archive": "fixture-adapter-tests-02.txt",
+      "sha256": "48cbdbc17b064ba99c8e344a4d969102eb9bc26177e31200c2572a0af171c183",
+      "bytes": 10404
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-adapter-independent-review-01.json",
+      "archive": "fixture-adapter-independent-review-01.json",
+      "sha256": "932cae83683e5f077458a0c8b8eb12fe29ed8a239fba42ea2d44619e2847f74f",
+      "bytes": 4603
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/state-helper-root-review-01.json",
+      "archive": "state-helper-root-review-01.json",
+      "sha256": "59ce7623cfd99e3e167ae1d39b6b9681d50edecb60ac01e057b623237df5ddb9",
+      "bytes": 1867
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/worker-and-settle-review-01.json",
+      "archive": "worker-and-settle-review-01.json",
+      "sha256": "a6320dbe826d036eb3d3c9f832df9a5fb7df14595bfc5677f2252477483e647e",
+      "bytes": 2187
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/controller-tests-01.json",
+      "archive": "controller-tests-01.json",
+      "sha256": "7ca032f64d35b92bac485c80c6e79ee22a8307d4cc9b7e046ad5aa2310bbbd20",
+      "bytes": 918
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/state-tests-01.json",
+      "archive": "state-tests-01.json",
+      "sha256": "99d371ceb86d18f1142a4e45ebb5a4dba73268b8961c4dbae334c5fed1ee66e4",
+      "bytes": 1263
+    },
+    {
+      "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/state-interface-01.json",
+      "archive": "state-interface-01.json",
+      "sha256": "e3145f370932275d219d4f0dc0e43b9026f5350bc34e634f3925bc60bc771133",
+      "bytes": 3334
+    }
+  ],
+  "combined_stdlib_fake_tests": 63,
+  "actual_host_fixture_qualified": false,
+  "production_qualified": false,
+  "production_adapter_available": false,
+  "interruption_recovery": "Durable intent/hold retention and read-only classification; no automatic resume/cancel or production recovery executor.",
+  "reconstruct": "Verify every SHA256 and restore original bytes to the explicitly owned recorded source paths; .py.txt files lose only the final .txt extension. Revalidate live inputs and review bindings before any execution."
+}

@@ -1,0 +1,274 @@
+{
+  "schema": "perception_native_capture_upstream_audit_v1",
+  "completed_at": "2026-10-16T01:32:41.144342+00:00",
+  "reviewer": "codex-mlx-upstream",
+  "scope": {
+    "mode": "static_and_primary_source_read_only",
+    "camera_calls": 0,
+    "microphone_calls": 0,
+    "model_calls": 0,
+    "cv2_imports": 0,
+    "framework_imports": 0,
+    "live_profiler_attaches": 0,
+    "signals": 0,
+    "installs": 0,
+    "baseline_bound_file_edits": 0,
+    "output_only": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/upstream-audit.json"
+  },
+  "conclusion": {
+    "confirmed": "The long-lived perception process retained a large amount of memory and its replacement initially used far less. The exact installed OpenCV camera backend already manages local autorelease pools and capture release.",
+    "not_proven": [
+      "An OpenCV or AVFoundation leak is not established by allocator totals or process restart.",
+      "A missing Python-level autorelease pool is not established as the cause.",
+      "A finally-only cleanup fix has not been shown to stop normal-path retention.",
+      "Camera subprocess isolation has not received real macOS camera or long-duration memory acceptance."
+    ],
+    "recommended_candidate": "Contain cv2 camera open/read/release and JPEG encoding in one freshly execed child per capture. Preserve interpreter, packages, camera index and all capture/encoding defaults. Treat this as containment of per-process native retention, not a root-cause repair."
+  },
+  "local_runtime": {
+    "python": "Homebrew Python 3.14.3_1 framework, macOS 27.0.1 (26A434) per retained recovery vmmap",
+    "distribution": "opencv-python-headless",
+    "version": "4.13.0.92",
+    "wheel_tag": "cp37-abi3-macosx_13_0_arm64",
+    "binary_build_strings": [
+      "General configuration for OpenCV 4.13.0 =====================================",
+      "  Version control:               4.13.0-1-gb4c5ec4042",
+      "    AVFoundation:                YES"
+    ],
+    "files": [
+      {
+        "path": "/opt/homebrew/lib/python3.14/site-packages/cv2/cv2.abi3.so",
+        "sha256": "2a262de6b70d3b6cfa2cc78a76a5d7edd0117eb1fe260dbda3f29d6120c881f0",
+        "size_bytes": 34937504,
+        "distribution_RECORD_sha256_matches": true
+      },
+      {
+        "path": "/opt/homebrew/lib/python3.14/site-packages/cv2/version.py",
+        "sha256": "570ca4d4488ec286db11264bf4634ec4b2c0afca115b23d807c092d91ef0ad8b",
+        "size_bytes": 92,
+        "distribution_RECORD_sha256_matches": true
+      },
+      {
+        "path": "/opt/homebrew/lib/python3.14/site-packages/opencv_python_headless-4.13.0.92.dist-info/METADATA",
+        "sha256": "e4a77fb9b25b744ca4db9cdaef315e0dad2ddf173ee741cd95ba543c1cf28e20",
+        "size_bytes": 19752,
+        "distribution_RECORD_sha256_matches": true
+      },
+      {
+        "path": "/opt/homebrew/lib/python3.14/site-packages/opencv_python_headless-4.13.0.92.dist-info/WHEEL",
+        "sha256": "07ab8c54722e3cf22cfe2f414a5122957b9604af000a7c7936c3d8e23dce5415",
+        "size_bytes": 102,
+        "distribution_RECORD_sha256_matches": true
+      }
+    ],
+    "record": {
+      "path": "/opt/homebrew/lib/python3.14/site-packages/opencv_python_headless-4.13.0.92.dist-info/RECORD",
+      "sha256": "6e5c2b67ec7cc942e563e82d800464ca1b596dc3b9897ad5f87b3e1ce76528de",
+      "size_bytes": 16877
+    },
+    "native_linkage": {
+      "command": [
+        "/usr/bin/otool",
+        "-L",
+        "/opt/homebrew/lib/python3.14/site-packages/cv2/cv2.abi3.so"
+      ],
+      "relevant_dependencies": [
+        "AVFoundation",
+        "AppKit",
+        "CoreMedia",
+        "CoreVideo",
+        "Foundation",
+        "libobjc",
+        "FFmpeg dylibs (libavformat 61 and related libraries)"
+      ],
+      "interpretation": "Installed binary supports AVFoundation. Camera backend selection is inferred from platform/index source and build metadata; this audit did not query a live camera backend."
+    }
+  },
+  "wheel_provenance": {
+    "pypi_url": "https://pypi.org/pypi/opencv-python-headless/4.13.0.92/json",
+    "wheel_filename": "opencv_python_headless-4.13.0.92-cp37-abi3-macosx_13_0_arm64.whl",
+    "published_wheel_sha256": "1a7d040ac656c11b8c38677cc8cccdc149f98535089dbe5b081e80a4e5903209",
+    "wheel_upload_time": "2026-02-05T07:01:35.187941Z",
+    "wheel_downloaded_or_installed": false,
+    "wrapper_tag": "92",
+    "wrapper_tag_commit": "4ddfc013fd1f13d9b9e379dbebf2cdbeb052e7f8",
+    "wrapper_tree_url": "https://api.github.com/repos/opencv/opencv-python/git/trees/92",
+    "opencv_submodule_commit": "b4c5ec4042f097e2a5b386b9d413ec7333d0a184",
+    "core_tag_commit": "fe38fc608f6acb8b68953438a62305d8318f4fcd",
+    "note": "Embedded native build string matches the wheel wrapper submodule revision; examined source files are byte-identical to core 4.13.0 despite the post-tag build revision."
+  },
+  "local_capture": {
+    "source": {
+      "path": "/Users/v/other/astrid/capsules/perception/perception.py",
+      "sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a",
+      "size_bytes": 64948
+    },
+    "lines": [
+      125,
+      141,
+      231,
+      577,
+      685
+    ],
+    "normal_path": "Construct VideoCapture(camera_index), read one frame, release, JPEG encode and return bytes. This is the only cv2 import/use in perception.py.",
+    "cleanup_gap": "isOpened false returns before explicit release; an exception during read skips explicit release. Native destructor still releases ownership when Python destroys the object. No confirmed retention attribution follows.",
+    "retained_history": "Host ASCII history is a bounded deque of 25; it does not retain captured video frames."
+  },
+  "primary_source_evidence": [
+    {
+      "url": "https://raw.githubusercontent.com/opencv/opencv/b4c5ec4042f097e2a5b386b9d413ec7333d0a184/modules/videoio/src/cap_avfoundation_mac.mm",
+      "github_url": "https://github.com/opencv/opencv/blob/b4c5ec4042f097e2a5b386b9d413ec7333d0a184/modules/videoio/src/cap_avfoundation_mac.mm",
+      "sha256": "e2de8d176f456913b71a967b46eb5fcfe5db8e1804336ded4150e65d0a0f9d85",
+      "matches_4_13_0_tag_bytes": true,
+      "line_references": [
+        206,
+        211,
+        253,
+        292,
+        295,
+        413,
+        535,
+        567,
+        570,
+        615
+      ],
+      "finding": "Camera constructor failure destroys its local smart pointer; destructor stops capture. Open, grab and stop explicitly drain local autorelease pools; stop releases session/input/output/delegate. Delegate replaces and releases retained pixel buffers, including deallocation cleanup."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/opencv/opencv/b4c5ec4042f097e2a5b386b9d413ec7333d0a184/modules/videoio/src/cap.cpp",
+      "github_url": "https://github.com/opencv/opencv/blob/b4c5ec4042f097e2a5b386b9d413ec7333d0a184/modules/videoio/src/cap.cpp",
+      "sha256": "6246cfd08e64e240da748fd5e3fd16afc6fbb2aa1207a51f45b59039d0c3d411",
+      "matches_4_13_0_tag_bytes": true,
+      "line_references": [
+        109,
+        113,
+        521,
+        525
+      ],
+      "finding": "Both VideoCapture destructor and explicit release call icap.release(). Missing Python finally is cleanup hardening, not proof that ordinary local-variable return leaks the capture."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/opencv/opencv/b4c5ec4042f097e2a5b386b9d413ec7333d0a184/modules/videoio/CMakeLists.txt",
+      "github_url": "https://github.com/opencv/opencv/blob/b4c5ec4042f097e2a5b386b9d413ec7333d0a184/modules/videoio/CMakeLists.txt",
+      "sha256": "7c191d21b16b66af305c4c81d8282e0977304e0d3edc50bdabb29997fd0cb5fa",
+      "matches_4_13_0_tag_bytes": true,
+      "line_references": [
+        181,
+        190
+      ],
+      "finding": "macOS builds select cap_avfoundation_mac.mm; iOS builds select separate cap_avfoundation.mm. iOS writer fixes cannot be assumed relevant to this macOS camera path."
+    },
+    {
+      "url": "https://docs.opencv.org/4.13.0/d8/dfe/classcv_1_1VideoCapture.html",
+      "finding": "Documented release closes device; destructor and subsequent open invoke release automatically."
+    },
+    {
+      "url": "https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/MemoryMgmt/Articles/mmAutoreleasePools.html",
+      "finding": "Autorelease pools are thread-local. Non-UI loops need suitable pools for autoreleased objects. This generic rule does not establish a missing pool in the already-pooled OpenCV call path, and a caller-thread pool cannot drain a separate native callback thread."
+    },
+    {
+      "url": "https://developer.apple.com/documentation/dispatch/dispatch_autorelease_frequency_t/dispatch_autorelease_frequency_inherit",
+      "finding": "New dispatch queues inherit autorelease frequency. OpenCV creates a serial camera callback queue without an explicit per-work-item policy. That is a possible experiment axis, not proof of leaked objects."
+    },
+    {
+      "url": "https://developer.apple.com/documentation/dispatch/dispatch_autorelease_frequency_t/dispatch_autorelease_frequency_work_item",
+      "finding": "Per-work-item queue policy provides its own autorelease pool. Changing that would require a custom native build; it is outside the proposed containment patch."
+    },
+    {
+      "url": "https://developer.apple.com/documentation/bundleresources/requesting-authorization-for-media-capture-on-macos",
+      "finding": "Camera access is authorized per app and requires usage-description metadata. Using the same Python executable reduces change but does not statically establish that a new subprocess has identical TCC attribution in the actual launchd context."
+    },
+    {
+      "url": "https://github.com/opencv/opencv/issues/27294",
+      "finding": "Open issue reports camera reconnect failures on macOS/OpenCV 4.11 after repeated release/reopen. This is a different version/trigger and is not evidence of this memory leak; include reconnect behavior in deferred hardware acceptance."
+    }
+  ],
+  "newer_version_review": {
+    "compared_tags": [
+      "4.13.0",
+      "4.14.0"
+    ],
+    "mac_backend_changes": [
+      "Fractional-frame-rate seeking in file capture",
+      "VideoWriter finishWriting lifetime fix"
+    ],
+    "camera_open_grab_stop_delegate_code_changed": false,
+    "finding": "No identified camera-retention fix in this comparison justifies upgrading OpenCV as the repair. Search coverage was bounded and does not prove absence of every upstream issue."
+  },
+  "retained_observations": {
+    "artifacts": [
+      {
+        "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/memory-consumers-20261016T0057Z.json",
+        "sha256": "b28ffe55996c0e0223acafbaa5e1efc969654ed03e731eff91f63a3b3a24117b",
+        "size_bytes": 10113
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/maintenance/perception-recover-01.json",
+        "sha256": "5fdc6bdccfbaf5acf37e1bdf8e25f95e307a225f284428712bbcaf2a2e8bc6a6",
+        "size_bytes": 15122
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/maintenance/perception-recover-01-memory.txt",
+        "sha256": "a3ab1d6adc9aad591d73b18e122cfe5a0d444c93b6dc241e4b659118b2116b90",
+        "size_bytes": 7605
+      },
+      {
+        "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/lifecycle-characterization.json",
+        "sha256": "acb4b1538063e54c4b14fb69986b2d284a2628a263823c1a517546f155890123",
+        "size_bytes": 6854
+      }
+    ],
+    "old_pid": 3895,
+    "old_age_days_approx": 15,
+    "old_physical_footprint": "10.7G",
+    "old_default_malloc_allocations": 39699536,
+    "new_pid": 22354,
+    "new_physical_footprint": "101.8M",
+    "new_peak_footprint": "403.3M",
+    "new_default_malloc_allocations": 58018,
+    "new_snapshot_at": "2026-10-15T18:15:31.912-07:00",
+    "interpretation": "Observed release on process replacement supports a process-lifetime containment boundary. It does not identify the allocation stack, prove camera causation or predict a stable long-term slope."
+  },
+  "candidate_contract": {
+    "isolation": "Exec the exact sys.executable with a dedicated one-shot helper; do not fork an already-imported framework process. Parent never imports cv2. No package/backend/resolution/JPEG-default changes.",
+    "worker": "Initialize capture inside child, release in finally for success/failure; check read and imencode success. Write only JPEG bytes in binary mode; diagnostics use inherited stderr.",
+    "protocol": "Bound retained parent stdout bytes. Continue draining and discarding overflow so the child cannot block on a full pipe, then reject. Require a nonempty SOI/EOI JPEG envelope; this detects missing markers and ordinary leading/trailing diagnostics but is not a full JPEG decoder and does not prove every interior byte is valid. Never treat bytes alone as success.",
+    "ownership": "Exactly one child at a time. Wait for and reap child, require exit 0 before accepting bytes. Avoid Popen context/error paths that return while the child survives. Preserve current synchronous blocking behavior.",
+    "timeouts": "Chosen candidate deliberately adds no timeout or kill/escalation. A wedged native camera call may still block indefinitely. This preserves an existing limitation and must not be described as hang recovery. subprocess.run(timeout) would silently introduce forced child termination and is excluded.",
+    "stderr": "Inherited stderr prevents a new unbounded in-memory capture buffer and avoids pipe deadlock; it retains existing log behavior and does not cap on-disk diagnostic volume.",
+    "permissions": "Same executable and user are not proof of equivalent TCC responsibility. No permission reset, prompt bypass, plist modification or camera probe during MLX observation.",
+    "limits": [
+      "Native retention in a normal-exiting capture child cannot accumulate in the parent address space across captures.",
+      "Other parent paths and OS camera-service retention remain possible.",
+      "Starting a Python process per capture adds unmeasured latency/CPU/startup cost.",
+      "Actual camera permission, frame content/freshness and capture continuity remain deferred."
+    ]
+  },
+  "isolated_test_plan": {
+    "safe_during_baseline": [
+      "Extract or copy candidate outside all 119 baseline-bound paths, bind production/candidate hashes.",
+      "Mock cv2 ownership across unopened/readfalse/readexception/encodefalse/encodeexception/success; release exactly once and preserve relevant error semantics.",
+      "Mock process exact interpreter/argv, binary payload split across reads, empty/error exit, overflow drained, output contamination, stderr inheritance, wait/reap on every accepted return.",
+      "Use fake child helper for real pipe/wait/reap tests; it must not import cv2 or touch camera/microphone/models.",
+      "Assert no cv2 import in parent; all outputs and test artifacts remain private and separate from live workspaces."
+    ],
+    "deferred_until_observation_bindings_can_be_renewed": [
+      "Run actual camera candidate under equivalent launchd/TCC identity without simultaneous competing camera probes.",
+      "Verify same camera selection, frame geometry/JPEG decode/freshness and acceptable latency; exercise unavailable/disconnect/reconnect behavior.",
+      "Measure matched normal-path cycles with process/native footprint and allocation counts after warmup; compare baseline and containment parent slopes with child peaks recorded.",
+      "Require stable parent memory and full artifact/history continuity over a sustained soak before promotion."
+    ]
+  },
+  "alternatives": {
+    "finally_only": "Low-complexity correctness improvement; insufficient evidence as sole steady-state memory repair.",
+    "outer_autorelease_pool": "Speculative and would not cover callbacks on another thread; exact native caller path already drains pools.",
+    "long_lived_capture": "May reduce session churn but changes camera ownership, freshness/buffering and failure lifecycle; not the narrow first containment candidate.",
+    "periodic_watchdog_restart": "Masks growth by resetting the whole perception runtime, including volatile continuity state; no need to add while a smaller capture boundary can be tested."
+  },
+  "commands_provenance": [
+    "Read installed cv2 version.py/config and distribution METADATA/WHEEL/RECORD; compute SHA256 with standard-library-only Python.",
+    "Read native binary strings and run otool -L; no dynamic imports or execution.",
+    "Fetch official OpenCV GitHub raw sources/API, PyPI metadata and Apple documentation using read-only HTTP.",
+    "Read retained vmmap/recovery evidence; no new live profiler attachment."
+  ]
+}

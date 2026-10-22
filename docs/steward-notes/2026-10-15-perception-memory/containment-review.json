@@ -1,0 +1,103 @@
+{
+  "schema": "perception_camera_containment_peer_review_v1",
+  "reviewer": "codex-mlx-upstream",
+  "reviewed_at": "2026-10-16T01:40:52.137527+00:00",
+  "mode": "read_only_static_review",
+  "findings": [],
+  "blocking_findings": 0,
+  "accepted_scope": "Candidate source and CPU mock-test evidence only; not production promotion or hardware/memory qualification.",
+  "files": [
+    {
+      "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/camera_capture.py",
+      "sha256": "4692f30fe56090490cc648b78447e993a368a5a148ef53a0b2e38d235caae34d"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/test_camera_capture_containment.py",
+      "sha256": "5e2fadc465407167aca5f7530b506870733c1c51ed8b6da193028909f76c87f7"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/perception.py",
+      "sha256": "d842d08aa505836451c64e0ad29158d7610efc6828e54a2988ccfe8f28c648a8"
+    },
+    {
+      "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/host_audio_fallback.py",
+      "sha256": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69"
+    },
+    {
+      "path": "/Users/v/other/astrid/capsules/perception/perception.py",
+      "sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a"
+    }
+  ],
+  "outside_capture_frame_AST_identical_to_production": true,
+  "test_evidence": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/containment-tests-02.json",
+    "sha256": "c3b376539e8c51c3fb1a02aa95836b4a3650845afe2b69695c6ea823ce865b86",
+    "executed_by_this_reviewer": false,
+    "reviewed_receipt_and_test_source": true,
+    "hashes_match_current_candidate": true,
+    "passed": true,
+    "tests_run": 20,
+    "owned_children_count": 18,
+    "all_owned_children_reaped": true,
+    "elapsed_s": 0.6206412089522928,
+    "real_cv2_imported_in_parent": false,
+    "model_modules_imported": []
+  },
+  "verified_properties": [
+    {
+      "file": "camera_capture.py",
+      "lines": [
+        45,
+        91
+      ],
+      "finding": "Parent retains bounded output, drains overflow, closes stdout then waits for exact child and requires exit 0 before returning JPEG envelope. No kill/terminate/timeout or process-group operations."
+    },
+    {
+      "file": "camera_capture.py",
+      "lines": [
+        94,
+        99,
+        108,
+        140
+      ],
+      "finding": "Dedicated fresh exec uses sys.executable and unchanged camera/default encoding arguments. cv2 import occurs only in worker; capture is released in finally."
+    },
+    {
+      "file": "camera_capture.py",
+      "lines": [
+        147,
+        169
+      ],
+      "finding": "CLI reserves a non-inheritable duplicate pipe for binary JPEG, redirects native stdout to inherited stderr before cv2 import, and closes the reserved file/descriptor through normal/error ownership paths."
+    },
+    {
+      "file": "test_camera_capture_containment.py",
+      "lines": [
+        151,
+        218,
+        229,
+        297
+      ],
+      "finding": "Fake workers exercise normal/error release, native fd1 diagnostic separation, reserved descriptor noninheritance/closure, nonzero rejection and real waitpid reaping. Finite 256 KiB output tests draining beyond pipe capacity."
+    }
+  ],
+  "limits": [
+    "TCC identity and actual camera availability/content/geometry/latency are not tested.",
+    "No actual OpenCV or camera workload ran in this review or the cited CPU suite.",
+    "Normal child exit contains child address-space retention; actual parent memory improvement is unproved.",
+    "Camera wait remains unbounded, matching the chosen existing synchronous behavior.",
+    "Arbitrary immediate/repeated KeyboardInterrupt can interrupt wait/reaping; source and README explicitly disclose this.",
+    "SOI/EOI checks are transport-envelope validation, not complete JPEG decoding.",
+    "Inherited stderr preserves existing on-disk logging behavior; it is not a disk log-size bound."
+  ],
+  "deferred_acceptance": [
+    "Actual equivalent launchd/TCC camera execution and image freshness/quality.",
+    "Matched sustained parent-memory and capture-latency measurement.",
+    "Promotion only when all relevant MLX observation identities can be safely renewed."
+  ],
+  "runtime_actions_performed": [],
+  "upstream_audit": {
+    "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/upstream-audit.json",
+    "sha256": "3dd3cd3804a2889d1e7149284318f0a9767d1d1cfbedd3c064182874672d9240"
+  }
+}

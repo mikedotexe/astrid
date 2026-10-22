@@ -1,0 +1,52 @@
+{
+  "accepted_for_owned_fixture_handoff_preparation": true,
+  "actual_os_fixture_accepted": false,
+  "actual_os_fixture_executed": false,
+  "checks": {
+    "current_precommand_spot_seven_processes_305_historical_files_70_final_source_paths_pause528_and_health": true,
+    "exact_fresh_release_source_and_review": true,
+    "exact_ordinary_user_command_no_whole_controller_sudo": true,
+    "history_preserved": true,
+    "read_only_validator_passed_no_guard_or_native_action": true,
+    "sealed_71_steps_and_23_injections": true,
+    "three_destinations_unused_three_generated_jobs_absent": true
+  },
+  "created_at": "2026-10-17T16:55:30.563814+00:00",
+  "findings": [],
+  "limits": [
+    "This is root review of preparation, not independent command review or actual OS acceptance.",
+    "Historical private numerical acceptance does not qualify live persistence or production maintenance.",
+    "A later host/process/source change requires fresh precommand verification before the human runs this exact one-use command.",
+    "Never rerun fixture03 or a failed fixture05 token; preserve receipts and prepare reviewed cleanup if any failure occurs."
+  ],
+  "mlx_qualified": false,
+  "production_qualified": false,
+  "references": {
+    "owned-fixture05-final-command-01.txt": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-command-01.txt",
+      "sha256": "95f879fe672ecfdaea41870aec01d500dd340f8fdabeccf6a14f7ad6fc1c9479"
+    },
+    "owned-fixture05-final-release-01.json": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-release-01.json",
+      "sha256": "1bb48bce1af7b086d9f485f47e208b9f4847c9fef02f64c20dd283f6b648d310"
+    },
+    "owned-fixture05-final-release-validation-01.json": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-release-validation-01.json",
+      "sha256": "63fb459a8f7c1718d2f66d74d7e655111bb9ad15178e22bc964c8cc93faaccd4"
+    },
+    "owned-fixture05-final-source-inputs-01.json": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-source-inputs-01.json",
+      "sha256": "62f0d8da8f30b6f7014471b69e23fff86541a2e0b162fbe9f23234661aaf9a70"
+    },
+    "owned-fixture05-final-source-review-01.json": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-source-review-01.json",
+      "sha256": "0d895ce460de4aaa49068496a019e6c68b4b09f5d8e6eb43091e9986b25abcdb"
+    },
+    "owned-fixture05-precommand-host-spot-01.json": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-precommand-host-spot-01.json",
+      "sha256": "eb718ebcf20b10541fc28fa2390ba417726df374746c607ede6587160d08c951"
+    }
+  },
+  "reviewer": "root",
+  "schema": "owned_fixture05_final_validation_root_review_v1"
+}

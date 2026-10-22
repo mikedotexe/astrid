@@ -1,0 +1,55 @@
+"""Read-only OS process identity; never signals or attaches to a process."""
+from __future__ import annotations
+
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+from common import digest, require
+
+
+def parse_identity(output, expected_pid):
+    parts = output.strip().split(maxsplit=6)
+    require(len(parts) == 7 and parts[0] == str(expected_pid), "missing or wrong process PID")
+    started = " ".join(parts[1:6])
+    require(re.fullmatch(r"[A-Z][a-z]{2} [A-Z][a-z]{2} \d{1,2} \d{2}:\d{2}:\d{2} \d{4}", started)
+            is not None and parts[6], "missing OS process start/argv")
+    return {"pid": expected_pid, "started_at": started, "command": parts[6]}
+
+
+def identity(pid, reader=subprocess.run):
+    require(type(pid) is int and pid > 0, "positive process PID required")
+    result = reader(["/bin/ps", "-ww", "-p", str(pid), "-o", "pid=", "-o", "lstart=", "-o", "command="],
+                    capture_output=True, text=True, check=True, timeout=5,
+                    env={**os.environ, "LC_ALL": "C"})
+    return parse_identity(result.stdout, pid)
+
+
+def same_identity(before, after):
+    require(isinstance(before, dict) and isinstance(after, dict), "missing process identity")
+    for value in (before, after):
+        require(type(value.get("pid")) is int and value["pid"] > 0, "invalid identity PID")
+        require(isinstance(value.get("started_at"), str) and value["started_at"], "missing start")
+        require(isinstance(value.get("command"), str) and value["command"], "missing argv")
+        parse_identity(f'{value["pid"]} {value["started_at"]} {value["command"]}', value["pid"])
+    require(before == after, "OS process identity changed")
+
+
+def interpreter_paths(python):
+    # Same reviewed macOS framework launcher/re-exec rule as model_environment.py.
+    resolved = Path(python).resolve(strict=True)
+    paths = {resolved}
+    if (resolved.parent.name == "bin" and resolved.parent.parent.parent.name == "Versions"
+            and resolved.parent.parent.parent.parent.name == "Python.framework"):
+        executable = resolved.parent.parent / "Resources/Python.app/Contents/MacOS/Python"
+        require(executable.is_file(), "framework Python runtime executable is missing")
+        paths.add(executable.resolve(strict=True))
+    return paths
+
+
+def interpreter(python=None):
+    path = Path(python or sys.executable)
+    return {"executable": str(path), "resolved": str(path.resolve(strict=True)), "sha256": digest(path),
+            "files": {str(item): digest(item) for item in sorted(interpreter_paths(path))}}

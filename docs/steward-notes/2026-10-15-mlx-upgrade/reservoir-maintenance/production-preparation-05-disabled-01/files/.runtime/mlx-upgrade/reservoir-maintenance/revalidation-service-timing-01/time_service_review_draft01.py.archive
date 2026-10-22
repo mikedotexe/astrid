@@ -1,0 +1,377 @@
+"""One explicitly released, instrumented read-only frozen service review.
+
+No work on import. No service, model, child, network, signal or numeric action.
+This measures one prerequisite, not complete production admission or maintenance.
+"""
+from __future__ import annotations
+
+import argparse
+import base64
+from collections import Counter, deque
+import datetime
+import fcntl
+import hashlib
+import importlib.abc
+import json
+import locale
+import math
+import os
+from pathlib import Path
+import re
+import stat
+import subprocess
+import sys
+import time
+import types
+
+
+HERE = Path(__file__).resolve().parent
+INPUT = HERE / 'timing-inputs-01.json'
+OUTPUT = HERE / 'timing-result-01.json'
+HARNESS = HERE.parent.parent / 'reservoir-snapshot-candidate/qualification-harness-v3'
+GROUP = 'service_v3_review_matrix_once_read_map'
+MODULES = ('common', 'fixture', 'process_identity', 'result_checks', 'driver', 'review_matrix')
+TOTAL_LIMIT_S = 180.0
+REVIEW_LIMIT_S = 120.0
+BYTE_LIMIT = 4_715_809_975
+VISIT_LIMIT = 11_569
+FILE_LIMIT = 2_180_277
+FORBIDDEN = {'numpy', 'torch', 'mlx', 'mlx_lm', 'cv2', 'coremltools', 'Foundation',
+             'Quartz', 'AVFoundation', 'sounddevice', 'sklearn', 'websockets',
+             'reservoir_service', 'coupled_astrid_server'}
+DENIED_EVENTS = {'subprocess.Popen', 'os.system', 'os.posix_spawn', 'os.fork', 'os.forkpty',
+                 'os.exec', 'os.kill', 'os.killpg', 'os.truncate', 'os.chmod', 'os.chown',
+                 'os.remove', 'os.rmdir', 'os.mkdir', 'os.rename', 'os.link', 'os.symlink',
+                 'os.utime', 'os.setxattr', 'os.removexattr', 'os.chdir', 'os.fchdir',
+                 'fcntl.flock', 'fcntl.lockf', 'fcntl.fcntl', 'mmap.__new__'}
+
+
+class Refusal(RuntimeError):
+    pass
+
+
+def require(value, message):
+    if not value:
+        raise Refusal(message)
+
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def checked_metadata(path, expected):
+    """Check saved metadata without discovering any new path or payload."""
+    path = Path(path)
+    link = path.lstat()
+    actual = path.stat()
+    values = {'bytes': actual.st_size, 'canonical_path': str(path.resolve(strict=True)),
+              'ctime_ns': actual.st_ctime_ns, 'device': actual.st_dev, 'inode': actual.st_ino,
+              'links': actual.st_nlink, 'lstat_inode': link.st_ino,
+              'mode': stat.S_IMODE(actual.st_mode), 'mtime_ns': actual.st_mtime_ns,
+              'path': str(path), 'regular': stat.S_ISREG(actual.st_mode),
+              'symlink': stat.S_ISLNK(link.st_mode), 'uid': actual.st_uid}
+    require(all(expected.get(key) == value for key, value in values.items()),
+            'saved file metadata changed: ' + str(path))
+    require(values['regular'], 'nonregular input: ' + str(path))
+    return actual
+
+
+def same_fd(handle, expected):
+    value = os.fstat(handle.fileno())
+    require((value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns)
+            == tuple(expected[k] for k in ('device', 'inode', 'bytes', 'mtime_ns', 'ctime_ns')),
+            'opened descriptor differs from saved input')
+
+
+class Guard(importlib.abc.MetaPathFinder):
+    """Audit exact read opens; profile their C reads and cooperative boundaries.
+
+    Audit open charges the entire saved file length, even for a hypothetical short
+    read. Frozen reviewer helpers use full read_bytes/read_text, so this is an
+    explicit logical full-file charge, never an OS byte/physical-I/O measurement.
+    """
+    def __init__(self, total_deadline):
+        self.total_deadline = total_deadline
+        self.deadline = total_deadline
+        self.phase = 'setup'
+        self.allowed = {}
+        self.maximum = {}
+        self.opens = Counter()
+        self.reads = Counter()
+        self.logical_bytes = 0
+        self.open_count = 0
+        self.violations = []
+        self.deadline_reached = False
+        self.bootstrap_allowed = {}
+        self.setup_opens = Counter()
+        self.setup_bytes = 0
+        self.output_fd = None
+        self.finished = False
+
+    def fail(self, message):
+        self.violations.append(message)
+        # Retain the failure even after the deadline: avoid a second tracing
+        # exception interrupting the wrapper's exclusive receipt finalizer.
+        sys.setprofile(None)
+        sys.settrace(None)
+        raise Refusal(message)
+
+    def check_time(self):
+        if time.monotonic() >= self.deadline:
+            self.deadline_reached = True
+            self.fail('cooperative deadline reached; no replay is authorized')
+
+    def find_spec(self, fullname, path=None, target=None):
+        # All required stdlib modules are preloaded before target source loading.
+        # Target modules are compiled from exactly hash-bound source below.
+        self.fail('unexpected new import: ' + fullname)
+
+    def audit(self, event, args):
+        if event in DENIED_EVENTS or event.startswith(('socket.', 'ctypes.')):
+            self.fail('forbidden external/mutating action: ' + event)
+        if event == 'open':
+            path, mode, flags = args
+            if type(path) is not str:
+                self.fail('descriptor or non-string open is not an authorized input')
+            writing = flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND)
+            if writing:
+                self.fail('write open forbidden: ' + path)
+            if self.finished:
+                self.fail('input reopened after review completion')
+            self.check_time()
+            if self.phase == 'review':
+                if path not in self.allowed:
+                    self.fail('unbudgeted reviewer read: ' + path)
+                expected = self.allowed[path]
+                checked_metadata(path, expected)
+                if self.opens[path] >= self.maximum[path]:
+                    self.fail('per-file read-open ceiling exceeded: ' + path)
+                size = expected['bytes']
+                if size > FILE_LIMIT or self.open_count >= VISIT_LIMIT or self.logical_bytes + size > BYTE_LIMIT:
+                    self.fail('review file/visit/logical-byte ceiling exceeded')
+                self.opens[path] += 1
+                self.open_count += 1
+                self.logical_bytes += size
+            else:
+                if path not in self.bootstrap_allowed:
+                    self.fail('unbudgeted setup read: ' + path)
+                ceiling = self.bootstrap_allowed[path]
+                if self.setup_opens[path] >= ceiling['visits']:
+                    self.fail('setup per-file ceiling exceeded: ' + path)
+                info = Path(path).stat()
+                if not stat.S_ISREG(info.st_mode) or info.st_size != ceiling['bytes']:
+                    self.fail('setup input size/type changed: ' + path)
+                self.setup_opens[path] += 1
+                self.setup_bytes += info.st_size
+            self.check_time()
+        if event in {'os.listdir', 'os.scandir'}:
+            if Path(args[0]) != HARNESS:
+                self.fail('unbudgeted directory enumeration')
+            self.check_time()
+
+    def trace(self, frame, event, arg):
+        # Cooperative: a blocked C/OS operation is checked when it returns.
+        if not self.finished:
+            self.check_time()
+        return self.trace
+
+    def profile(self, frame, event, function):
+        if self.finished or event not in {'c_call', 'c_return'} or frame.f_code.co_filename == __file__:
+            return
+        self.check_time()
+        name = getattr(function, '__name__', '')
+        owner = getattr(function, '__self__', None)
+        owner_module = type(owner).__module__
+        if name in {'start_new_thread', 'start_joinable_thread', 'fork', 'kill', 'killpg'}:
+            self.fail('forbidden process/thread/control C call: ' + name)
+        if owner_module == '_io':
+            if name in {'write', 'writelines', 'truncate', 'seek'}:
+                self.fail('unexpected write/seek in frozen read-only review')
+            if name in {'read', 'read1', 'readinto', 'readinto1', 'readline', 'readlines'} and self.phase == 'review':
+                path = getattr(owner, 'name', None)
+                if name != 'read' or type(path) is not str or path not in self.allowed:
+                    self.fail('unbudgeted read method/path')
+                expected = self.allowed[path]
+                same_fd(owner, expected)
+                checked_metadata(path, expected)
+                if event == 'c_call':
+                    self.reads[path] += 1
+                    if self.reads[path] > self.opens[path]:
+                        self.fail('more than one full read per audited open: ' + path)
+                self.check_time()
+
+
+def load_bound(path, sha, size, guard):
+    """Fixed bounded setup read, retaining one independent hash/size check."""
+    path = Path(path)
+    guard.bootstrap_allowed[str(path)] = {'bytes': size, 'visits': 1}
+    before = path.stat()
+    with path.open('rb') as handle:
+        raw = handle.read(size + 1)
+        opened = os.fstat(handle.fileno())
+    after = path.stat()
+    require(len(raw) == size and digest(raw) == sha, 'bound setup input changed: ' + str(path))
+    fields = lambda x: (x.st_dev, x.st_ino, x.st_size, x.st_mtime_ns, x.st_ctime_ns)
+    require(fields(before) == fields(opened) == fields(after), 'setup input changed during read')
+    guard.check_time()
+    return raw
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--execute-reviewed-stage', action='store_true')
+    parser.add_argument('--inputs-sha256')
+    parser.add_argument('--wrapper-sha256')
+    args = parser.parse_args()
+    require(args.execute_reviewed_stage, 'default disabled; exact separate root release is required')
+    require(re.fullmatch('[0-9a-f]{64}', args.inputs_sha256 or '')
+            and re.fullmatch('[0-9a-f]{64}', args.wrapper_sha256 or ''), 'exact reviewed hashes required')
+    started = time.monotonic()
+    wall = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    require(sys.flags.isolated and sys.dont_write_bytecode, 'run with -I -B')
+    require(not any(k.split('.')[0] in FORBIDDEN for k in sys.modules), 'forbidden package already loaded')
+    require(not any(k in sys.modules for k in MODULES), 'target namespace must be fresh')
+    # Only our exclusive result descriptor can receive output. No target file is
+    # opened for writing, and no receipt can be overwritten or retried in place.
+    fd = os.open(OUTPUT, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    guard = Guard(started + TOTAL_LIMIT_S)
+    sys.meta_path.insert(0, guard)
+    sys.addaudithook(guard.audit)
+    result = None
+    error = None
+    review_elapsed = None
+    review_started = None
+    retained_modules = {}
+    trace_before, profile_before = sys.gettrace(), sys.getprofile()
+    try:
+        require(trace_before is None and profile_before is None, 'unexpected prior tracing/profiling')
+        sys.settrace(guard.trace)
+        # Inputs are a tiny fixed sidecar, not a directory-discovery authority.
+        size = INPUT.stat().st_size
+        require(size <= 65536 and not INPUT.is_symlink(), 'bounded canonical input sidecar required')
+        cfg = json.loads(load_bound(INPUT, args.inputs_sha256, size, guard))
+        require(cfg['schema'] == 'reservoir_service_review_timing_inputs_v1', 'wrong timing inputs')
+        require(Path(__file__).resolve() == HERE / 'time_service_review.py', 'wrapper origin changed')
+        raw_wrapper = load_bound(Path(__file__).resolve(), args.wrapper_sha256, Path(__file__).stat().st_size, guard)
+        require(len(raw_wrapper) < 65536, 'wrapper size outside reviewed bound')
+        expected_python = cfg['python']
+        require(expected_python['path'] == '/opt/homebrew/opt/python@3.14/bin/python3.14',
+                'timing must use the reviewed ordinary Python3.14 interpreter')
+        require(sys.executable == expected_python['path']
+                and str(Path(sys.executable).resolve(strict=True)) == expected_python['resolved'], 'wrong timing interpreter')
+        load_bound(Path(sys.executable), expected_python['sha256'], expected_python['bytes'], guard)
+        metadata = cfg['metadata']
+        require(Path(metadata['path']) == HERE.parent / 'evidence/revalidation-cost-metadata-02.json',
+                'only the reviewed saved metadata inventory is covered')
+        inventory = json.loads(load_bound(metadata['path'], metadata['sha256'], metadata['bytes'], guard))
+        correction = cfg['scope_correction']
+        assessment = cfg['root_assessment']
+        require(Path(correction['path']) == HERE.parent / 'evidence/revalidation-cost-metadata-02-scope-correction-01.json'
+                and Path(assessment['path']) == HERE.parent / 'evidence/revalidation-cost-metadata-02-root-assessment-01.json',
+                'exact saved scope correction and assessment required')
+        corrected = json.loads(load_bound(correction['path'], correction['sha256'], correction['bytes'], guard))
+        assessed = json.loads(load_bound(assessment['path'], assessment['sha256'], assessment['bytes'], guard))
+        require(corrected['original_inventory']['sha256'] == metadata['sha256']
+                and assessed['inventory']['sha256'] == metadata['sha256']
+                and assessed['correction']['sha256'] == correction['sha256']
+                and assessed['recorded_file_sizes_usable_with_correction'] is True
+                and assessed['clean_metadata_only_claim_accepted'] is False,
+                'recorded metadata is usable only with its retained scope correction')
+        group = inventory['logical_read_groups'][GROUP]
+        require(group['summary']['logical_bytes'] == BYTE_LIMIT and group['summary']['path_visits'] == VISIT_LIMIT
+                and group['summary']['maximum_individual']['bytes'] == FILE_LIMIT, 'saved budget changed')
+        maximum = group['visits']
+        require(sum(maximum.values()) == VISIT_LIMIT and all(type(n) is int and n > 0 for n in maximum.values()),
+                'invalid saved visit map')
+        outside = set(maximum) - {p for p in maximum if Path(p).is_relative_to(HARNESS)}
+        require(outside == set(cfg['interpreter_aliases']), 'unexpected nonprivate read scope')
+        allowed = {p: inventory['path_metadata'][p] for p in maximum}
+        require(sum(row['bytes'] * maximum[p] for p, row in allowed.items()) == BYTE_LIMIT,
+                'saved logical-byte sum differs')
+        for path, row in allowed.items():
+            guard.check_time()
+            checked_metadata(path, row)
+        # The accepted result is read once outside the stage clock and compared
+        # structurally in full, not reduced to an accepted boolean.
+        accepted = cfg['accepted_matrix']
+        require(Path(accepted['path']) == HARNESS / 'matrix-review-01.json', 'wrong accepted matrix path')
+        checked_metadata(accepted['path'], inventory['path_metadata'][accepted['path']])
+        expected = json.loads(load_bound(accepted['path'], accepted['sha256'], accepted['bytes'], guard))
+        require(len(expected['receipts']) == 14 and expected['harness_hashes'] == cfg['harness_hashes'],
+                'accepted matrix/source binding differs')
+        source_bytes = {}
+        for name, info in cfg['source_files'].items():
+            require(name.endswith('.py') and Path(name).name == name, 'invalid source name')
+            source_bytes[name] = load_bound(HARNESS / name, info['sha256'], info['bytes'], guard)
+        require(set(source_bytes) == set(expected['harness_hashes']), 'complete exact harness closure required')
+        for name in MODULES:
+            path = HARNESS / (name + '.py')
+            module = types.ModuleType(name)
+            module.__file__ = str(path)
+            module.__package__ = ''
+            sys.modules[name] = module
+            retained_modules[name] = module
+            exec(compile(source_bytes[name + '.py'], str(path), 'exec'), module.__dict__)
+        require(all(Path(sys.modules[name].__file__) == HARNESS / (name + '.py') for name in MODULES),
+                'loaded frozen module origin differs')
+        guard.allowed, guard.maximum = allowed, maximum
+        guard.phase = 'review'
+        review_started = time.monotonic()
+        guard.deadline = min(guard.total_deadline, review_started + REVIEW_LIMIT_S)
+        sys.setprofile(guard.profile)
+        result = retained_modules['review_matrix'].review([Path(x['path']) for x in expected['receipts']])
+        guard.check_time()
+        review_elapsed = time.monotonic() - review_started
+        require(result == expected, 'full returned matrix differs from accepted retained matrix')
+        require(guard.opens == Counter(maximum) and guard.reads == guard.opens
+                and guard.logical_bytes == BYTE_LIMIT, 'successful review did not match exact full-read map')
+        # Validation after the measured stage adds metadata-only work, not payload
+        # reads. Stop profiling but retain cooperative tracing and mutation guard.
+        sys.setprofile(None)
+        guard.deadline = guard.total_deadline
+        for path, row in allowed.items():
+            guard.check_time()
+            checked_metadata(path, row)
+    except BaseException as exc:
+        error = {'type': type(exc).__name__, 'message': str(exc)}
+        if review_started is not None and review_elapsed is None:
+            review_elapsed = time.monotonic() - review_started
+    finally:
+        guard.finished = True
+        sys.settrace(trace_before)
+        sys.setprofile(profile_before)
+        for name in retained_modules:
+            sys.modules.pop(name, None)
+        receipt = {'schema': 'reservoir_service_review_timing_result_v1', 'started_at': wall,
+                   'completed_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                   'passed': error is None, 'error': error, 'violations': guard.violations,
+                   'deadline_reached': guard.deadline_reached,
+                   'total_elapsed_s': time.monotonic() - started, 'instrumented_review_elapsed_s': review_elapsed,
+                   'logical_full_file_read_charges': guard.logical_bytes,
+                   'audited_read_open_count': sum(guard.opens.values()),
+                   'profiled_full_read_call_count': sum(guard.reads.values()),
+                   'distinct_opened_paths': len(guard.opens),
+                   'read_counters': {
+                       'path_order': 'sorted keys of the exact saved logical read group',
+                       'path_order_sha256': digest(json.dumps(sorted(guard.allowed), separators=(',', ':')).encode()),
+                       'open_then_read_counts': [[guard.opens[p], guard.reads[p]] for p in sorted(guard.allowed)]},
+                   'setup_read_charges': guard.setup_bytes, 'setup_read_open_count': sum(guard.setup_opens.values()),
+                   'inputs_sha256': args.inputs_sha256, 'wrapper_sha256': args.wrapper_sha256,
+                   'returned_review': result, 'physical_io_measured': False,
+                   'source_of_read_charges': 'saved full-file size charged once per audited read-open',
+                   'deadline_kind': 'cooperative; no forced preemption of a blocked OS/C operation',
+                   'production_qualified': False, 'full05_admission_measured': False,
+                   'maintenance_duration_measured': False, 'retry_authorized': False}
+        payload = (json.dumps(receipt, indent=2, sort_keys=True, allow_nan=False) + '\n').encode()
+        # Output is only this wrapper-owned descriptor opened before installing
+        # the audit hook. The reviewer never receives or writes it.
+        offset = 0
+        while offset < len(payload):
+            offset += os.write(fd, payload[offset:])
+        os.fsync(fd)
+        os.close(fd)
+    return 0 if error is None else 1
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

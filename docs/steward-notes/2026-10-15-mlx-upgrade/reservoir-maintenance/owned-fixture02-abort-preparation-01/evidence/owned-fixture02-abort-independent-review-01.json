@@ -1,0 +1,111 @@
+{
+  "actual_os_acceptance": false,
+  "approval_meaning": "Exact abort source and recorded guarded stdlib fake-test evidence accepted for the separately gated cleanup-only release; no OS cleanup result or current readiness is inferred.",
+  "approved": true,
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/README.md": "d3f3b08a85a79773eb4fa187cfa832d3c4731784822c78bc596a760558856830",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_driver.py": "947e6ddde47f913c1f796b0171e6609d7befa817cdfe376f01815306e4b25d54",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_evidence.py": "7bbc9ce8d2154d5b4b732b18174ffba68e897457d869240232764c9d301b6c38",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/abort_native.py": "4cbdefe3dc4795699d2ad1255f37c2b0cbba797ec32a2f86484728ccd1ba6405",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/target.json": "159cafb1804114dec016dbbfdccd425ba7aa2ebb76a2999c83f6b3e6e5cb57e6",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_driver.py": "5f1fdfdf8ad3c69a3f8f28471bf9c497f6d3ca0fb52a1deef219dcf4ec2384ce",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_evidence.py": "bea2755ccc298db9b0426f6ef5720ade8224f94491b856113a0bc65dcc7e4b9f",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/test_abort_native.py": "2ffb9df3166e7c430cf2dda1c0a164faee3f24b0387da5217827901567b865db"
+  },
+  "checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-fixture02-abort-01/evidence/source-checkpoint-03.json",
+    "sha256": "d9606685415a990a135d2400db912a921e3d6692bb2073f660676bed6edd4137"
+  },
+  "checks": {
+    "added_fixture_artifacts": 24,
+    "core_files_before_after_current": 36,
+    "errors": 0,
+    "exact_author_artifacts": 8,
+    "executed_local_sources": 6,
+    "failures": 0,
+    "forbidden_actions": [],
+    "forbidden_imports": [],
+    "original_files_current_hash_verified": 141,
+    "original_protected_files": 237,
+    "protected_plan_files": 261,
+    "python_family_files_rehashed": 2,
+    "retained_original_files_before_after_and_snapshot": 141,
+    "skipped": 0,
+    "snapshot_files_current_hash_verified": 141,
+    "source_before_after_current": 9,
+    "test_modules": {
+      "test_abort_driver": 16,
+      "test_abort_evidence": 11,
+      "test_abort_native": 26
+    },
+    "unique_log_tests_matching_ast": 53
+  },
+  "core_after_tests": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-core-after-tests-01.json",
+    "sha256": "bdc733d843e165a008cfb8f251c4adb50157b7a4817f1fd3f029555056a64118"
+  },
+  "core_before_tests": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-core-before-tests-01.json",
+    "sha256": "9e4284ca99a3cdbad4c930fcdb564fa33272296570f857416bd0d541634112dd"
+  },
+  "cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-guarded-tests-01.json",
+    "sha256": "d3b2895217b84cff8e4c477e8d902fe33c8a2206322491c16db097eff39cb0b8"
+  },
+  "findings": [],
+  "limitations": [
+    "The 261-file preservation result is the hash-bound guarded runner observation; this review checked its exact map against the 237-file target, 24 fixture artifacts and included interpreter family, without rescanning unrelated large protected payloads.",
+    "The separate 36-file core before/after records and current small source files were independently verified. Test logs demonstrate inert mocked boundaries, not real launchctl, privilege or signal behavior.",
+    "Audit hooks constrain the reviewed fake-test path and are not a sandbox against arbitrary hostile Python."
+  ],
+  "no_force_contract": [
+    "Read-only query and external action children use Popen and bounded communicate/wait without kill, terminate, subprocess.run or context-manager cleanup. Unknown child/effect evidence is retained; known natural reap is distinguished from uncertain outcomes.",
+    "Only the exact original reservoir can receive one SIGTERM, after durable successful debug and repeated current source, ownership, guard, listener and PID/start/argv checks. No retry or forced escalation exists.",
+    "The 90s/15s wait limits are acceptance deadlines. Each final bounded multi-query observation can overrun, but pre/post checks refuse late success. No hard interruption or exact wall-clock completion promise is made.",
+    "Complete unique check-in and 11/7 final save evidence is retained before holder removal. Only verified quiescent holders may be booted out, followed by exact absence checks before guard release."
+  ],
+  "original_fixture_passed": false,
+  "original_release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-final-release-01.json",
+    "sha256": "aa1273e375e376d51ea70be44b1bbb684f1a0a5c3fc96a7ca0bb5bc192ee215c"
+  },
+  "original_snapshot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-failed-run-snapshot-01/manifest.json",
+    "sha256": "c6c11df7fb4bc18d4ead51df32c8eeae6635da187cd2e127f1a62d053c8a36a2"
+  },
+  "prior_source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-independent-source-review-01.json",
+    "sha256": "95d27ea6f0aedcdfed6aef2c608433ccfa672fc2304f4ab47af5a1ddce8a3397"
+  },
+  "production_qualified": false,
+  "remaining_gates": [
+    "A separate root-owned release and fresh native preflight must establish current identities, private listener/guards, coordination, exact source closure and no previous abort attempt.",
+    "Actual cleanup requires its own retained action/result/save/absence evidence, including independent later abort-executor and command-child absence closeout.",
+    "The original failed fixture remains failed. This review cannot qualify the 71-step fixture, ProductionHost, numerical restoration, production maintenance or the MLX upgrade."
+  ],
+  "reviewed_at": "2026-10-17T06:35:06.392066+00:00",
+  "reviewer": "codex-mlx-upstream",
+  "reviewer_operations": {
+    "control_actions": 0,
+    "frozen_source_edits": 0,
+    "process_queries": 0,
+    "service_calls": 0,
+    "signals": 0,
+    "target_imports": 0,
+    "test_reruns": 0
+  },
+  "schema": "owned_fixture02_abort_independent_review_v1",
+  "scope": "exact_failed_fixture_abort_only",
+  "test_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-guarded-tests-01.txt",
+    "sha256": "d7280a9ae990d710c450c98731da3bbc88d63cb5dc5bac2d0c044afc5f1c40fe"
+  },
+  "test_plan": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-test-plan-01.json",
+    "sha256": "bda83b5fde8e731b9b80e295cf24d8dd9954d8917bb36245910b3eb3e189fe69"
+  },
+  "test_runner": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture02_abort_tests_01.py",
+    "sha256": "068317478ce4e737ae875faeb9a0bd9e5d3e2990ca466da89162f7e00437a52f"
+  }
+}

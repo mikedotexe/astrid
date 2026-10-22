@@ -1,0 +1,202 @@
+{
+  "accepted_mlx_baseline": false,
+  "all_health_samples_passed": true,
+  "all_source_and_process_identities_matched": true,
+  "automatic_repeat": false,
+  "build_test_activity_samples": 0,
+  "completed_at": "2026-10-16T23:19:35.031390+00:00",
+  "created_at": "2026-10-16T23:21:08.548909+00:00",
+  "current_eligible_window_s": 54.99965977668762,
+  "current_eligible_window_sample_indices": [
+    111,
+    122
+  ],
+  "duration_s": 612.1435325411148,
+  "final_sample_to_completion_s": 2.133453130722046,
+  "first_sample_after_start_s": 0.2768430709838867,
+  "five_minute_eligible_window_observed": false,
+  "health_failure_samples": 0,
+  "input_binding": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-bindings.json",
+    "sha256": "0d0de21af432a19c1f612840025238f6f2197452c3d5ea9d2a6c7207073045a2"
+  },
+  "invalid_sample_gaps": 0,
+  "launch": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-launch-01.json",
+    "sha256": "a40d7e6c6d88f14cee5a07db25766c77e1d54fd159d15ed0ddeaeed54f5b0db4"
+  },
+  "limits": [
+    "Source/identity/health checks passed; failure is insufficient sustained normal pressure, not a sampled provider outage or file/process mutation.",
+    "The prior accepted08 window remains historical and does not override this newer failed gate. No new servicev2/restore02 numerical attempt or run03 monitor is supported by this evidence. The earlier original first-case failure remains preserved.",
+    "This is sampled host evidence, not continuous proof about every host actor or attribution of memory pressure. No causal reclaim or remote-desktop-session conclusion is inferred.",
+    "Reviewer checked recorded237file/sevenprocess maps and exact reviewed observer provenance, not new live probes or a rehash of237 current inputs."
+  ],
+  "longest_eligible_window_s": 150.00617218017578,
+  "longest_eligible_window_sample_indices": [
+    56,
+    86
+  ],
+  "max_sample_gap_s": 5.010021924972534,
+  "min_sample_gap_s": 4.992350101470947,
+  "no_run03_or_new_numeric_outputs": {
+    "all_absent": true,
+    "checked_absent_paths": [
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-03.json",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-03-stop.json",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/runs",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs"
+    ]
+  },
+  "numeric_cases_authorized": false,
+  "numeric_cases_executed": 0,
+  "observation_errors": [],
+  "passed": false,
+  "per_sample_identity_checks_passed": 123,
+  "positive_consecutive_swap_increases": 0,
+  "preflight": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-preflight-01.json",
+    "sha256": "dada36ba053d1052d0fa11b67a21f6284153f8c336ef234ad777acd013e91fe1"
+  },
+  "pressure_episodes": [
+    {
+      "first_observed": "2026-10-16T23:09:22.891516+00:00",
+      "last_observed": "2026-10-16T23:10:47.901046+00:00",
+      "observed_span_s": 85.00952291488647,
+      "pressure_level": 1,
+      "sample_indices": [
+        0,
+        17
+      ],
+      "samples": 18
+    },
+    {
+      "first_observed": "2026-10-16T23:10:52.895450+00:00",
+      "last_observed": "2026-10-16T23:11:42.900757+00:00",
+      "observed_span_s": 50.005308866500854,
+      "pressure_level": 2,
+      "sample_indices": [
+        18,
+        28
+      ],
+      "samples": 11
+    },
+    {
+      "first_observed": "2026-10-16T23:11:47.893345+00:00",
+      "last_observed": "2026-10-16T23:13:52.892763+00:00",
+      "observed_span_s": 124.99942111968994,
+      "pressure_level": 1,
+      "sample_indices": [
+        29,
+        54
+      ],
+      "samples": 26
+    },
+    {
+      "first_observed": "2026-10-16T23:13:57.899974+00:00",
+      "last_observed": "2026-10-16T23:13:57.899974+00:00",
+      "observed_span_s": 0.0,
+      "pressure_level": 2,
+      "sample_indices": [
+        55,
+        55
+      ],
+      "samples": 1
+    },
+    {
+      "first_observed": "2026-10-16T23:14:02.892828+00:00",
+      "last_observed": "2026-10-16T23:16:32.898998+00:00",
+      "observed_span_s": 150.00617218017578,
+      "pressure_level": 1,
+      "sample_indices": [
+        56,
+        86
+      ],
+      "samples": 31
+    },
+    {
+      "first_observed": "2026-10-16T23:16:37.891756+00:00",
+      "last_observed": "2026-10-16T23:18:32.898272+00:00",
+      "observed_span_s": 115.0065290927887,
+      "pressure_level": 2,
+      "sample_indices": [
+        87,
+        110
+      ],
+      "samples": 24
+    },
+    {
+      "first_observed": "2026-10-16T23:18:37.898289+00:00",
+      "last_observed": "2026-10-16T23:19:32.897949+00:00",
+      "observed_span_s": 54.99965977668762,
+      "pressure_level": 1,
+      "sample_indices": [
+        111,
+        122
+      ],
+      "samples": 12
+    }
+  ],
+  "pressure_level_counts": {
+    "1": 87,
+    "2": 36
+  },
+  "production_mutations": 0,
+  "protected_exact_processes": 7,
+  "protected_files": 237,
+  "provenance": {
+    "all_preflight_artifact_hashes_verified": true,
+    "independent08_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-review.json",
+      "sha256": "114012c4b785c120b1cc236159f79f8df8e21bcc5bb6b221dda224bf478a845e"
+    },
+    "observer_pid": 31216,
+    "perception_restart_receipt": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/maintenance/perception-recover-01.json",
+      "sha256": "5fdc6bdccfbaf5acf37e1bdf8e25f95e307a225f284428712bbcaf2a2e8bc6a6"
+    },
+    "preceding_accepted08": {
+      "raw": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08.json",
+        "sha256": "2624125047f38c00fee0fa393908b827977ae43c17393445395a15945e605227"
+      },
+      "root_review": {
+        "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-root-review.json",
+        "sha256": "7b5060960f84fb1798e927664b058be2186b3872edc91a53de56597e73faa663"
+      }
+    },
+    "retained_cpu_receipt": {
+      "path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/focused-tests-final-07.json",
+      "sha256": "51652181168727dc08b4ddfe3764454e61ff84c723dd6a973c8377dd30ca8f84"
+    },
+    "source_binding_preflight_launch_and_endpoint_consistent": true,
+    "steward_pause_generation": 528
+  },
+  "raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09.json",
+    "sha256": "0bad870ef7b342c6c6774c93ce79edc9cde21e677821bf1de844ed510ec551b5"
+  },
+  "reason": "Current ending clean window54.999660seconds and longest150.006172seconds both fall below300. Three observed pressure2 episodes (36samples) break the windows even though swap never increases. Preserve this completed failure; no numerical admission or automatic repeat.",
+  "reviewer": "mlx_integration",
+  "reviewer_actions": {
+    "live_probes_or_samplers": 0,
+    "receipt_source_read_and_hash_only": true,
+    "signals_or_service_changes": 0,
+    "target_imports": 0,
+    "tests_builds_numerical_work": 0
+  },
+  "samples": 123,
+  "schema": "reservoir_fixture_host_settle_review_v1",
+  "source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-observer.py",
+    "sha256": "7ae1c4946ad83a5a696c3dba8d89fbe612fb4ec20406a3ac886a1b5fe72e8f51"
+  },
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-09-source-review.json",
+    "sha256": "3efdc12766d60da961483bd24599f4a62f2a3f4c8a9e31a438f56e53441ba01f"
+  },
+  "started_at": "2026-10-16T23:09:22.614671+00:00",
+  "state": "completed_failed",
+  "swap_end_bytes": 13810731581.44,
+  "swap_net_change_bytes": -1384309063.6800003,
+  "swap_start_bytes": 15195040645.12
+}

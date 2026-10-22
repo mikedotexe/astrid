@@ -1,0 +1,113 @@
+{
+  "schema": "passive_rusage_v2_independent_review_v1",
+  "reviewer": "codex-mlx-upstream",
+  "reviewed_at": "2026-10-16T01:48:54.555812+00:00",
+  "decision": "approved_for_scoped_read_only_run",
+  "blocking_findings": [],
+  "scope": {
+    "target": {
+      "pid": 22354,
+      "parent_pid": 1,
+      "started_at": "Thu Oct 15 18:10:13 2026",
+      "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic"
+    },
+    "sample_interval_seconds": 60,
+    "duration": "One finite positive integer multiple of 60 seconds, no greater than 7200 seconds, ceil-rounded from launch time to end at or just after 2026-10-16T03:21:00Z.",
+    "runs": 1,
+    "source_must_match_sha256": true,
+    "output": "New unique private evidence path; retain original completed observation.",
+    "authorization_note": "This is technical review of the requested passive observation, not authority for source changes, signals, restarts, profiler attachment or broader monitoring."
+  },
+  "original": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive_rusage.py",
+    "sha256": "a3453dd69c989ba93484d109b0c8af86d5cde2e49bb29abb0d1badba60d31804"
+  },
+  "candidate": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive_rusage_v2.py",
+    "sha256": "2da04fd5dcee82c805ddd1f1f68d6e2f2c99a11954fa1fafa4f955a2d87ca6fc"
+  },
+  "only_intended_three_literal_replacements": true,
+  "ast_parses": true,
+  "public_abi": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/proc-rusage-abi.json",
+    "sha256": "29ee554e75465dc05e042b0a7c5fc63ff975d021e64a148c61bbbc5de123a3bc",
+    "flavor": 0,
+    "size_bytes": 96,
+    "alignment_bytes": 8,
+    "input_hash_checks": [
+      {
+        "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/libproc.h",
+        "sha256": "246d87709fc6b9157ce5cf3c475656ac48e0e1ae8bbdc46cf45acd34294448cd",
+        "matched": true
+      },
+      {
+        "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/resource.h",
+        "sha256": "1067178025c5fd88c9a1b8206a07c2695ef94dd471fe2783f06c512995382961",
+        "matched": true
+      },
+      {
+        "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/proc-rusage-abi.c",
+        "sha256": "704da70d57c6c253d1bbabcad8d4b55bd492d1ccf2f4ab5f20213d53c062115c",
+        "matched": true
+      }
+    ]
+  },
+  "reviewed_cpu_evidence": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive-rusage-v2-tests.json",
+    "sha256": "152ae5c150ddccc16e0cf814b4ba62eeb200159f793b3b36f3a70442a0724b97",
+    "passed": true,
+    "guard_cases": 4,
+    "target_process_calls": 0,
+    "libproc_calls": 0
+  },
+  "verified_controls": [
+    {
+      "lines": [
+        27,
+        36,
+        62,
+        64,
+        94,
+        106
+      ],
+      "finding": "Expected ps start/command checked before startup; full PID/parent/start/command compared immediately before and after every accounting read. Kernel UUID/start must remain stable and exit timestamp must be zero; mismatch stops and records error."
+    },
+    {
+      "lines": [
+        53,
+        70,
+        96,
+        100
+      ],
+      "finding": "ABI inputs hash-bound and every ctypes field offset/size/alignment matched to public SDK structure. Only proc_pid_rusage flavor 0 through libproc is called; failed call records error and has no fallback."
+    },
+    {
+      "lines": [
+        80,
+        89,
+        107,
+        126
+      ],
+      "finding": "Evidence path exclusively reserved; bounded accounting samples are atomically saved. No restart, launchd mutation, task attachment, suspension, target signal or profiler fallback exists."
+    }
+  ],
+  "prior_run": {
+    "state": "completed",
+    "sample_count": 21,
+    "complete": true
+  },
+  "limits": [
+    "Accounting samples cannot attribute allocator stacks or prove a leak.",
+    "Interval NaN/Inf validation is a pre-existing parser limitation outside this approved literal 60-second invocation.",
+    "The unchanged ps subprocess has a 5-second timeout; standard-library timeout cleanup may kill its own ps helper. It does not signal the observed perception process. No target-control operation is authorized or present.",
+    "Timing can finish slightly after nominal target due to scheduling and identity-read latency."
+  ],
+  "review_actions": {
+    "target_process_calls": 0,
+    "libproc_calls": 0,
+    "profiler_attachment": false,
+    "signals": 0,
+    "live_mutations": 0,
+    "source_edits": 0
+  }
+}

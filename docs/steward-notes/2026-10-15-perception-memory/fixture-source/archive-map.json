@@ -1,0 +1,49 @@
+{
+  "copies": [
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/test_camera_capture_containment.py",
+      "restore_relative_path": "capsules/perception/test_camera_capture_containment.py",
+      "sha256": "5e2fadc465407167aca5f7530b506870733c1c51ed8b6da193028909f76c87f7",
+      "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/test_camera_capture_containment.py"
+    },
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/first_sigint_fixture.py",
+      "restore_relative_path": "capsules/perception/first_sigint_fixture.py",
+      "sha256": "95915edff8acc33a388aab212430b3de4d4d495940cda98f858a92467e3cb8c1",
+      "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/first_sigint_fixture.py"
+    },
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/baseline/perception.py",
+      "restore_relative_path": "capsules/perception/baseline/perception.py",
+      "sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a",
+      "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/perception.py"
+    },
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/baseline/host_audio_fallback.py",
+      "restore_relative_path": "capsules/perception/baseline/host_audio_fallback.py",
+      "sha256": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69",
+      "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/host_audio_fallback.py"
+    },
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/baseline/test_capture_frame_lifecycle.py",
+      "restore_relative_path": "capsules/perception/baseline/test_capture_frame_lifecycle.py",
+      "sha256": "4a5d73ad58653ad250799860ae68be7697bccf97a93692ee0340fee1112d3c5b",
+      "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/test_capture_frame_lifecycle.py"
+    },
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/baseline/provenance.json",
+      "restore_relative_path": "capsules/perception/baseline/provenance.json",
+      "sha256": "827671a9fc3301eda812acad4eefd2735eaf8371d25a6407a6806548d237c636",
+      "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/provenance.json"
+    },
+    {
+      "archive_path": "/Users/v/other/astrid/docs/steward-notes/2026-10-15-perception-memory/fixture-source/baseline/manifest.json",
+      "restore_relative_path": "capsules/perception/baseline/manifest.json",
+      "sha256": "e937059ed39934d6b83d4a255f273d23f3748e2c37c9ddaf07fb28552fcd6c04",
+      "source_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/baseline/manifest.json"
+    }
+  ],
+  "executed_in_archive": false,
+  "instructions": "README.md",
+  "schema": "perception_containment_fixture_archive_v1"
+}

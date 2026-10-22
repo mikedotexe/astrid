@@ -1,0 +1,75 @@
+{
+  "additional_artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/README.md": "0550cfe1621ec7dc5557f9d872aead8708eaf8c6d9f4c5ee9ce8b9b45d91e44a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/source-parent-01.json": "9432395c6c17fec75ab5813a9810a32a56a3d93f214e409748b3ebb72b6969e7"
+  },
+  "argv_policy": [
+    "-I",
+    "-B"
+  ],
+  "audit_violations": [],
+  "completed_at": "2026-10-17T00:03:12.187602+00:00",
+  "elapsed_s": 0.1445700000040233,
+  "errors": 0,
+  "failures": 0,
+  "forbidden_import_attempts": [],
+  "forbidden_modules_loaded": [],
+  "in_memory_compiled": [
+    "common.py",
+    "driver.py",
+    "fixture.py",
+    "process_identity.py",
+    "protocol_client.py",
+    "result_checks.py",
+    "review_matrix.py",
+    "service_child.py",
+    "snapshot_oracle.py",
+    "test_harness.py",
+    "test_initial_publication.py"
+  ],
+  "log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/cpu-tests-01.txt",
+    "sha256": "ea12093f80780c29a39daa444e908ecbeedb23948e7ce9fecff734a2d730cefe"
+  },
+  "numerical_or_os_execution_accepted": false,
+  "passed": true,
+  "production_qualified": false,
+  "python": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+  "runner_error": null,
+  "schema": "reservoir_private_harness_guarded_cpu_tests_v1",
+  "scope": "One root-authorized stdlib fake suite only; no real ps, child, socket, signal, service or numerical import.",
+  "skipped": 0,
+  "slot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/harness-v3-test-slot-01.json",
+    "sha256": "55a3caeb2a9f30d45a1d34e4f7fdd04a2bd1c06fc357b391b1e68c3b5a4bf7ff"
+  },
+  "source_drift": false,
+  "source_hashes_after": {
+    "common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+    "driver.py": "f99dc8d0945cd23c62249b78a3a8a24fa5791f61c57b5ec37fb1bc90b1dbcf63",
+    "fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+    "process_identity.py": "badc6dd3ddec6aa9bf0c3996aecfab0e40232acad9dae346d6302bbec16803c7",
+    "protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+    "result_checks.py": "047389e82d8a8e5109ff6c49d4af10dd1bd9b80e254c965e9dd94692529ae5cf",
+    "review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+    "service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+    "snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+    "test_harness.py": "05e35897981af399fde10ee4a7baabd9dc8f15988179cdd0e0ef3daa78928148",
+    "test_initial_publication.py": "54462505c1efac8080f6ef60608605d93182a5ef9c9b90f88c455cbd316f024b"
+  },
+  "source_hashes_before": {
+    "common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+    "driver.py": "f99dc8d0945cd23c62249b78a3a8a24fa5791f61c57b5ec37fb1bc90b1dbcf63",
+    "fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+    "process_identity.py": "badc6dd3ddec6aa9bf0c3996aecfab0e40232acad9dae346d6302bbec16803c7",
+    "protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+    "result_checks.py": "047389e82d8a8e5109ff6c49d4af10dd1bd9b80e254c965e9dd94692529ae5cf",
+    "review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+    "service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+    "snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+    "test_harness.py": "05e35897981af399fde10ee4a7baabd9dc8f15988179cdd0e0ef3daa78928148",
+    "test_initial_publication.py": "54462505c1efac8080f6ef60608605d93182a5ef9c9b90f88c455cbd316f024b"
+  },
+  "started_at": "2026-10-17T00:03:12.042217+00:00",
+  "tests": 31
+}

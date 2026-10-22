@@ -1,0 +1,21 @@
+{
+  "command": [
+    "vmmap",
+    "-summary",
+    "22354"
+  ],
+  "host_sysctl": "kern.memorystatus_vm_pressure_level: 2\nvm.swapusage: total = 13312.00M  used = 11998.62M  free = 1313.38M  (encrypted)\n",
+  "pid": 22354,
+  "raw_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/maintenance/perception-recover-01-memory.txt",
+  "raw_sha256": "a3ab1d6adc9aad591d73b18e122cfe5a0d444c93b6dc241e4b659118b2116b90",
+  "recorded_at": "2026-10-16T01:15:32.897613+00:00",
+  "schema": "perception_recovery_memory_sample_v1",
+  "scope": "Observed process footprint reduction after same-code cooperative restart; not an MLX benchmark and not all reclaimed footprint is physical RAM.",
+  "selected_lines": [
+    "Date/Time:       2026-10-15 18:15:31.912 -0700",
+    "Launch Time:     2026-10-15 18:10:13.593 -0700",
+    "Physical footprint:         101.8M",
+    "Physical footprint (peak):  403.3M",
+    "Writable regions: Total=278.3M written=161.3M(58%) resident=152.9M(55%) swapped_out=12.2M(4%) unallocated=113.3M(41%)"
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "api": {
+    "Controller.run()": "Fresh-only. Concrete production and owned_fixture scopes acquire the same fixed transaction ExecutionSession before action-capable Host calls. Existing original events or any recovery directory forbid fresh replay.",
+    "ProductionHost.from_verified_recovery(preparation_path, journal_path, io=...)": "Separate retained attach. Does not run fresh preparation/capture or reset original log/QoS offsets. Host revalidates the authoritative checkpoint under the active shared lock.",
+    "checkpoint_from_inspection(spec, inspection, ledger)": "Pure finite reconstruction from exact original controller prefix plus separate validated recovery ledger. Returns original offsets, guards, receipts, signal wall boundaries, attempt reservations, applied source/plist phases and exact replacement identities.",
+    "expected_heads(checkpoint)": "Four evolving hashes are a stale-command guard only, never execution authority.",
+    "read_ledger(root, plan)": "Returns header, records, head_sha256. Every row is bound to exact retained executor begin record/root/plan/boot/mode/identity and optional end record; missing end never proves success.",
+    "resume_one(journal, host, expected=..., mode=execute|reconcile)": "Explicit single-step API, no loop or CLI. Recomputes inspector and full ledger under shared lock, revalidates exact retained Host semantics and both roles, rereads three histories, appends claim, then performs one never-attempted action or read-only observed-effect reconciliation."
+  },
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery.py": "893f70d91a8955df5e60cbacc3caf22dc08f2c1c8863677180a5cfc37a5f14d7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/production_recovery_driver.py": "a092c51499c353b53ddf4c09a43cf2d308ce951a535274f652cf755fb815d904",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_ledger.py": "fd855cd1613e9fbab1a8e5ae8df4a144fc936bdb7fa5525f3bee0a4e8b03ee84",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/recovery_phases.py": "df6e3e959f79e560dfbe8904cbf9546b79e27b2819f7f5b8ab1aa89bb6917389",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/reservoir_maintenance.py": "55e53b84d8caae818fc29fb997761c160cb296e2512207d4d9dbe48da15c5536",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_controller.py": "6d7b05f415d033c164f85abdc22fbcbb7303f9fc2022f4fc03de6f68b4b7ba40",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_production_recovery_driver.py": "0a948bbce5d3f6dc77b82254ab5a5858db9626a9a6cd80d2f7569347fd6c6355",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_recovery_phases.py": "3a4c17fc8ec0caaa61424028c28a208fac681c70a367e6bcd91cb48c1ee69d03",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/test_transaction_execution.py": "996d4a57be06ff2055a292f06e83c38247685db8b3c6dc6fc2ace44dda91d44a",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-04/transaction_execution.py": "2b4e5ad98f4e920ceb67a161480afaffde9e6a44e3c9007645dc9e9445ccc4cb"
+  },
+  "blocked_cases": [
+    "Current original worker remains alive with unknown/nonzero debug outcome: manual-review stop. No new arm, signal, auth retry or inferred lack of override.",
+    "Any attempted producer/control action without exact accepted result or sufficient observed-effect proof. No automatic retry, force, broad bootout, history rollback or recreated missing guard.",
+    "Partial backup or incomplete/unresolved numeric child/request/exit evidence. No second child, overwritten outputs, or relabeling failure as success.",
+    "Missing original capture/boot/executor/source/plist/protected identity or signal wall boundary; foreign/reused PID, ambiguous listener, new unapproved source/settings, or changed stewardship.",
+    "A result from another session, mismatched Host operation span, changed original or recovery history, stale expected heads, or unresolved unrelated role.",
+    "Incomplete claim-only phase may be explicitly reconciled again read-only; only a proof resolving all retained claims advances. Ordinary action_result cannot supersede an action_failed."
+  ],
+  "created_at": "2026-10-16T18:42:58.124047+00:00",
+  "durable_records": {
+    "execution-sessions/<uuid>-begin.json": "Exclusive root/plan/boot/exact executor identity/mode/time record before execution; optional end records failure without inferring external effect.",
+    "execution.lock": "Private owned fixed file, nonblocking exclusive flock; never deleted. Same-process nested execution and independent lock holder refuse before action.",
+    "reconciliation_result": "Names every outstanding claim resolved, binds checkpoint/inspection and exact proof/result. It adopts current evidence; it is not a fabricated historical controller/Host completion.",
+    "recovery/event-NNNNN.json": "Separate append-only hash chain. action_claim, action_result, action_failed, reconciliation_claim, reconciliation_result; exact context/session and Host operation prefix/span. Interrupted claims persist.",
+    "recovery/header.json": "Exclusive preparation and original controller-head anchor. Original controller files remain unchanged."
+  },
+  "limitations": [
+    "No claim of real numeric persistence, live launchd recovery, or production acceptance.",
+    "Fixed transaction service control remains subject to races outside cooperating callers; exact current revalidation narrows but cannot eliminate external actor changes.",
+    "Stdlib fakes permit synthetic identity/timing data; actual Host requires exact live process/start/listener and preserved evidence."
+  ],
+  "phase_coverage": [
+    "Fresh retained preflight observation.",
+    "Exact guard creation; positive recorded arm/signal result or proven original exit into owned holder; holder verification/removal and absent job.",
+    "Complete generation check-in and final snapshot witnesses anchored before drain; holder alone never proves check-in.",
+    "Stable stopped backup and complete private restore witness. Existing partial outputs cannot be overwritten/re-run; successful fully verified existing inner receipt may be exclusively published unchanged as outer evidence.",
+    "Exact repaired source install and original rollback source preservation; replacement reservoir startup with full log, birth, listener, restore and thermostat proof.",
+    "Atomic reviewed provider --model pin with distinct original rollback plist; exact provider replacement and readiness. Applied bytes are distinct from prior accepted completion.",
+    "Late provider-ready witness, guard release and final current completion. New history after provider admission is never compared to an old snapshot or rolled back."
+  ],
+  "production_enabled": false,
+  "production_executed": false,
+  "production_recovery_qualified": false,
+  "required_before_live_use": [
+    "Independent exact-source review and combined fake receipt; preserve 01/02/03 and all failed records.",
+    "Actual owned launchd interruption/continuation fixture using the same version04 shared lock/driver/Host interface, including late install/pin/bootstrap/readiness boundaries. Existing v2 fixture does not qualify this new recovery path.",
+    "Actual bounded real-service numerical matrix and exact restore verifier qualification under a genuinely fresh passing host/memory gate and external oversight.",
+    "Fresh preparation/admission using then-current steward owner/generation and all protected identities. Historical526 fixture/plan data is not current authority; current external527 work prevents live admission.",
+    "Only separately reviewed enablement can change the two false production flags. This interface note authorizes no command."
+  ],
+  "schema": "reservoir_production_recovery_interface_v2",
+  "scope": "Disabled version04 operational recovery preparation. Stdlib fake evidence only; no executable production CLI.",
+  "test_focus": [
+    "Full inert production and owned_fixture sequences through every phase; original journal and nonzero offsets unchanged.",
+    "Result-write interruption at every finite phase and hard interruption without failure record; producer count remains one.",
+    "Shared lock concurrency/stale fresh Journal/recovery-vs-fresh exclusion; durable executor identity and missing end handling.",
+    "Claim/context/session/Host span tampering, stale heads, protected/other-role/source drift, unknown debug and partial outputs.",
+    "Real driver plus retained Host plus inspector fake integration; late history is preserved."
+  ]
+}

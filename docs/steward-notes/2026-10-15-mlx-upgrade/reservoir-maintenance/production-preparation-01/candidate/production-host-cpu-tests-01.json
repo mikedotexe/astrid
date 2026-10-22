@@ -1,0 +1,45 @@
+{
+  "argv": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "-m",
+    "unittest",
+    "-v",
+    "test_production_host",
+    "test_production_preflight"
+  ],
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_host.py": "d7b80c071ca1a279d95b237ce5b675865f85dc1c5f0c6565e0694ef09bace466",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production_preflight.py": "3ded53f71a6d134640cb89a00ed9cf9c392a9709a8ac39eae67e2737250de1e5",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance.py": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/restore_verifier.py": "e363cc1144c7a92279a3bde5eabfcf7647d8ff6b8e56e445cfd7b560c21a8c16",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_host.py": "91787c5be064fba697ba393a4989fa1daa7619cd838ab0f82e6418973f121cf4",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/test_production_preflight.py": "782262b2267ab41e5040c817046f2e21106321e252dda7c86824aded3237045d",
+    "/Users/v/other/astrid/scripts/model_environment.py": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587"
+  },
+  "controller_identical_to_candidate_v2": true,
+  "development_note": "One added bootstrap identity fake initially omitted timeout_s (three fixture KeyErrors); fixed the test fixture only before this final run.",
+  "elapsed_seconds": 0.0979415827896446,
+  "errors": 0,
+  "failures": 0,
+  "finished_at": "2026-10-16T17:19:27.260791+00:00",
+  "forbidden_imports": [],
+  "log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/production-host-cpu-tests-01.txt",
+    "sha256": "7b50be41af1e51916312529ae59b00f8509f356799699dcecf096a58db3f4ac4"
+  },
+  "passed": true,
+  "production_execution_enabled": false,
+  "python": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+  "python_sha256": "cbf84109626aa1013bbe408fbb9590bd0f1c1548f038b2221c6b8b87de26ca43",
+  "python_version": "3.14.3 (main, Feb  3 2026, 15:32:20) [Clang 17.0.0 (clang-1700.6.3.2)]",
+  "real_restore_verifier_executed": false,
+  "schema": "reservoir_production_host_cpu_tests_v1",
+  "scope": "stdlib temporary files and mocked OS/service boundaries only; no launchd, signal, live API, numeric/model, or production state execution",
+  "skipped": 0,
+  "sources_unchanged": true,
+  "started_at": "2026-10-16T17:19:27.163244+00:00",
+  "test_count": 25,
+  "working_directory": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01"
+}

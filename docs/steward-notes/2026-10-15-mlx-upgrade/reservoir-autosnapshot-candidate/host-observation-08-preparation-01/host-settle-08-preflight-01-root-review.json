@@ -1,0 +1,38 @@
+{
+  "all237_file_and7_process_bindings_match": true,
+  "all_agent_tests_held": true,
+  "both_indexes_clean": true,
+  "build_test_processes": [],
+  "created_at": "2026-10-16T21:50:57.171887+00:00",
+  "headroom_change_trigger": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/heartbeat-headroom-20261016T214441Z.json",
+    "sha256": "52885b457aa80fbd98524977ee99cd576730eedbc970038eb1ffc8c1e626c1eb"
+  },
+  "health_ready": true,
+  "historical07_failed_receipt_preserved": true,
+  "numerical_cases_started": 0,
+  "observer_started": false,
+  "passed": false,
+  "pause_generation": 528,
+  "preflight": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-preflight-01.json",
+    "sha256": "bb2aac4b002541b8e6bb9f064bf3d759b77813f02cb6e4ac726fb8b9301d3fc2"
+  },
+  "production_mutations": 0,
+  "reason": "Pressure returned to2 and swap rose469.06MiB from the21:45UTC spot. Preserve refusal; do not repeat preflight or observation until a meaningful later change.",
+  "reviewer": "root",
+  "schema": "reservoir_host_window_preflight_review_v1",
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-08-source-review.json",
+    "sha256": "d1bb2c3d96c864a689e26ca661cc6f35b9605d8961e7d704d0ec6c4c45eeabec"
+  },
+  "state": "preflight_refused_observer_not_started",
+  "stdlib_test_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-tests-01.json",
+    "sha256": "764dc1b547caff69fd9ce3861fdbb9ea1c2715ca5323a0019ddab2cad0c68027"
+  },
+  "supervisor_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-v2-source-review-01.json",
+    "sha256": "43e46880a67357488256c7210d5799f315567ea6a216bc110595d41beb3d6935"
+  }
+}

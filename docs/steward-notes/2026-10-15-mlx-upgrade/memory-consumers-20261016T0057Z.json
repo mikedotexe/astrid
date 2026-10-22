@@ -1,0 +1,344 @@
+{
+  "schema": "mlx_host_memory_consumer_review_v1",
+  "observed_at": "2026-10-16T00:57:22.758819Z",
+  "reviewer": "codex-mlx-upgrade/mlx_upstream",
+  "scope": "Read-only sysctl, vm_stat, ps, lsof, localhost Ollama GET endpoints and vmmap -summary. No signals, sudo, model invocation, unloading, service/config changes or process restart.",
+  "host": {
+    "ram_bytes": 68719476736,
+    "pressure_level": 1,
+    "swap_used_mib": 20650.88,
+    "swap_total_mib": 21504,
+    "page_size_bytes": 16384,
+    "free_pages": 126260,
+    "active_pages": 915240,
+    "inactive_pages": 896233,
+    "speculative_pages": 17686,
+    "wired_pages": 1376734,
+    "compressor_occupied_pages": 815511,
+    "file_backed_pages": 479065,
+    "anonymous_pages": 1350094
+  },
+  "process_rss_snapshot": [
+    {
+      "pid": 92225,
+      "role": "Ollama Gemma runner",
+      "rss_kib": 10680256,
+      "cpu_percent": 1.3
+    },
+    {
+      "pid": 36054,
+      "role": "Ollama vision runner",
+      "rss_kib": 6202992,
+      "cpu_percent": 0.3
+    },
+    {
+      "pid": 48507,
+      "role": "Codex Renderer",
+      "rss_kib": 1825104,
+      "cpu_percent": 17.2
+    },
+    {
+      "pid": 82314,
+      "role": "Minime autonomous_agent.py",
+      "rss_kib": 1289600,
+      "cpu_percent": 99.1
+    },
+    {
+      "pid": 82528,
+      "role": "spectral-bridge-server",
+      "rss_kib": 1160736,
+      "cpu_percent": 0.4
+    },
+    {
+      "pid": 3895,
+      "role": "Astrid perception.py",
+      "rss_kib": 1041024,
+      "cpu_percent": 54.9
+    },
+    {
+      "pid": 7510,
+      "role": "Codex Renderer",
+      "rss_kib": 690000,
+      "cpu_percent": 0
+    },
+    {
+      "pid": 3905,
+      "role": "collab_feeder.py",
+      "rss_kib": 582064,
+      "cpu_percent": 0
+    },
+    {
+      "pid": 7089,
+      "role": "ChatGPT/Codex main",
+      "rss_kib": 539728,
+      "cpu_percent": 0.8
+    },
+    {
+      "pid": 776,
+      "role": "coreaudiod",
+      "rss_kib": 521664,
+      "cpu_percent": 0.1
+    },
+    {
+      "pid": 7512,
+      "role": "Codex CLI",
+      "rss_kib": 428608,
+      "cpu_percent": 1.5
+    },
+    {
+      "pid": 7687,
+      "role": "Codex Renderer",
+      "rss_kib": 310848,
+      "cpu_percent": 0
+    },
+    {
+      "pid": 6991,
+      "role": "Ollama embedding runner",
+      "rss_kib": 264304,
+      "cpu_percent": 0.3
+    },
+    {
+      "pid": 3893,
+      "role": "Astrid coupled provider",
+      "rss_kib": 216336,
+      "cpu_percent": 0
+    },
+    {
+      "pid": 615,
+      "role": "WindowServer",
+      "rss_kib": 86640,
+      "cpu_percent": 40.8
+    }
+  ],
+  "ollama": {
+    "version": "0.40.5",
+    "listener_pid": 35486,
+    "models": [
+      {
+        "name": "llava-llama3:latest",
+        "size_bytes": 5305060555,
+        "size_vram_bytes": 5305060555,
+        "context_length": 4096,
+        "expires_at": "2026-10-15T18:02:18.797288-07:00"
+      },
+      {
+        "name": "nomic-embed-text:latest",
+        "size_bytes": 335733063,
+        "size_vram_bytes": 335733063,
+        "context_length": 2048,
+        "expires_at": "2026-10-15T18:01:56.941883-07:00"
+      },
+      {
+        "name": "gemma4:12b",
+        "size_bytes": 1852529703,
+        "size_vram_bytes": 1852529703,
+        "context_length": 65536,
+        "expires_at": "2026-10-15T18:01:02.509419-07:00"
+      }
+    ],
+    "caution": "API size/size_vram is not whole-process physical footprint; Gemma API1.73GiB contrasts with vmmap11.1G charged footprint and10.5G resident mappings. Do not sum API values with process RSS or footprint."
+  },
+  "vmmap_summaries": [
+    {
+      "pid": 3893,
+      "observed_at": "2026-10-16T00:57:51.820Z",
+      "command": [
+        "/usr/bin/vmmap",
+        "-summary",
+        "3893"
+      ],
+      "returncode": 0,
+      "physical_footprint_display_g": 8.7,
+      "peak_footprint_display_g": 13.0,
+      "total_resident_display": "8.5G",
+      "total_swapped_display": "486.6M",
+      "retained_summary_note": "IOAccelerator graphics: virtual8.0G, resident8.0G, dirty8.0G"
+    },
+    {
+      "pid": 92225,
+      "observed_at": "2026-10-16T00:57:51.818Z",
+      "command": [
+        "/usr/bin/vmmap",
+        "-summary",
+        "92225"
+      ],
+      "returncode": 0,
+      "physical_footprint_display_g": 11.1,
+      "peak_footprint_display_g": 12.1,
+      "total_resident_display": "10.5G",
+      "total_swapped_display": "7.7G",
+      "retained_summary_note": "MallocLarge: virtual8.6G, resident1.4G, swapped6.8G; mappedfile resident6.8G; sharedmemory resident1.9G"
+    },
+    {
+      "pid": 36054,
+      "observed_at": "2026-10-16T00:57:51.817Z",
+      "command": [
+        "/usr/bin/vmmap",
+        "-summary",
+        "36054"
+      ],
+      "returncode": 0,
+      "physical_footprint_display_g": 9.4,
+      "peak_footprint_display_g": 10.5,
+      "total_resident_display": "6.2G",
+      "total_swapped_display": "7.8G",
+      "retained_summary_note": "MallocLarge: virtual8.3G, resident386.7M, swapped7.8G; mappedfile resident4.3G; sharedmemory resident1.1G"
+    },
+    {
+      "pid": 82314,
+      "observed_at": "2026-10-16T00:58:26.100Z",
+      "command": [
+        "/usr/bin/vmmap",
+        "-summary",
+        "82314"
+      ],
+      "returncode": 0,
+      "physical_footprint_display_g": 1.1,
+      "peak_footprint_display_g": 3.9,
+      "total_resident_display": "1.8G",
+      "total_swapped_display": "8512K",
+      "retained_summary_note": "Most mapped resident allocation is small/empty malloc regions; no full inference model in this process"
+    },
+    {
+      "pid": 3895,
+      "observed_at": "2026-10-16T00:58:26.100Z",
+      "command": [
+        "/usr/bin/vmmap",
+        "-summary",
+        "3895"
+      ],
+      "returncode": 0,
+      "physical_footprint_display_g": 10.7,
+      "peak_footprint_display_g": 11.0,
+      "total_resident_display": "1.5G",
+      "total_swapped_display": "9.8G",
+      "retained_summary_note": "DefaultMallocZone:39,699,536 allocations,4.3G allocated,1.6G fragmentation,825.0M resident,5.1G swapped"
+    },
+    {
+      "pid": 48507,
+      "observed_at": "2026-10-16T00:58:26.098Z",
+      "command": [
+        "/usr/bin/vmmap",
+        "-summary",
+        "48507"
+      ],
+      "returncode": 0,
+      "physical_footprint_display_g": 2.7,
+      "peak_footprint_display_g": 4.7,
+      "total_resident_display": "2.4G",
+      "total_swapped_display": "1.1G",
+      "retained_summary_note": "vmmap warned that PartitionAlloc malloc zone analysis was incomplete because framework canonical path could not be resolved"
+    }
+  ],
+  "vmmap_limitations": [
+    {
+      "pid": 615,
+      "command": [
+        "/usr/bin/vmmap",
+        "-summary",
+        "615"
+      ],
+      "returncode": 255,
+      "error": "WindowServer inspection requires privileges; not retried with sudo"
+    },
+    {
+      "pid": 48507,
+      "warning": "PartitionAlloc malloc zone could not be fully analyzed; retain uncertainty in detailed allocator accounting"
+    }
+  ],
+  "remote_desktop": {
+    "active_frontend_detected": false,
+    "remote_management_agents": [
+      {
+        "pid": 16167,
+        "name": "SSMenuAgent",
+        "rss_kib": 29776
+      },
+      {
+        "pid": 967,
+        "name": "ARDAgent",
+        "rss_kib": 7168
+      }
+    ],
+    "combined_agent_rss_mib": 36.078125,
+    "conclusion": "No evidence that closing an additional Remote Desktop frontend would now release model-scale memory. Remaining agents total36.1MiB RSS. Screen-sharing graphics overhead cannot be fully quantified because WindowServer inspection was denied."
+  },
+  "diagnosis": [
+    "The two large Ollama runners and Astrid provider are major charged-memory consumers; RSS understates MLX graphics allocations.",
+    "Perception PID3895 is another major consumer:10.7G footprint,9.8G swapped regions,~1.5G resident mappings after15days running. This is a concrete maintenance candidate, not proof of a diagnosed memory leak.",
+    "Snapshot memory accounting is not additive: shared mappings may overlap, footprint includes compressed/swapped charges, and freeing a10.7G footprint does not promise10.7GiB additional resident headroom.",
+    "Existing historical swap is not itself disqualifying; qualification still needs stable memory conditions under the unchanged gates."
+  ],
+  "possible_actions_not_performed": [
+    {
+      "action": "Observe natural Ollama idle expiry",
+      "scope": "Read-only waiting remains within current unchanged-service plan",
+      "limitation": "Perception requests vision every60seconds, so vision runner may remain resident; other clients may also refresh it."
+    },
+    {
+      "action": "Perception cooperative restart using existing SIGINT/KeepAlive path",
+      "scope": "Separate reviewed runtime maintenance; no source or configuration change needed, but service identity changes and fresh baseline required",
+      "potential": "Reclaims process-owned retained allocations/backing; actual physical benefit must be measured after restart. Existing historical perception artifacts remain on disk."
+    },
+    {
+      "action": "Stop or unload a model, bridge, Minime or sensory service",
+      "scope": "Not performed; not implicit in the original MLX-only plan"
+    }
+  ],
+  "command_provenance": [
+    {
+      "argv": [
+        "sysctl",
+        "hw.memsize",
+        "kern.memorystatus_vm_pressure_level",
+        "vm.swapusage"
+      ],
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "vm_stat"
+      ],
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "ps",
+        "-axo",
+        "pid=,ppid=,rss=,pcpu=,etime=,comm="
+      ],
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "lsof",
+        "-nP",
+        "-iTCP:11434",
+        "-sTCP:LISTEN"
+      ],
+      "returncode": 0
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:11434/api/ps",
+      "success": true
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:11434/api/version",
+      "success": true
+    },
+    {
+      "argv": [
+        "ps",
+        "-p",
+        "3895,3905,82314",
+        "-o",
+        "pid=,args="
+      ],
+      "returncode": 0
+    }
+  ],
+  "live_mutations": [],
+  "qualification_accepted": false
+}

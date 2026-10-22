@@ -1,0 +1,33 @@
+{
+  "accepted": true,
+  "all_children_absent": true,
+  "created_at": "2026-10-17T01:04:34.786341+00:00",
+  "final_supervision": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-06.json",
+    "sha256": "2950999c67d65f3d4ce96ef5d31e4fea5f413e0dac49b8fc593126a13905ba5c"
+  },
+  "host_admission": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-12-root-review.json",
+    "sha256": "ea980ba0be7a8017344a2c3cd23ebac8a9a9ddafe63b77898b565f5a111f7864"
+  },
+  "independent_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/independent-numerical-review-01.json",
+    "sha256": "73778c536e034a59f7eed2b9bd9a3ba27b9edbe12834348c38eeed86e4d74e19"
+  },
+  "live_persistence_qualified": false,
+  "mlx_upgrade_qualified": false,
+  "production_qualified": false,
+  "qualification": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/runs/cpu-qualification-01/qualification.json",
+    "sha256": "023ea4a004d64b841f8bc381b86cc62d24648e521dbb0c4832e4e85563209a2c"
+  },
+  "reason": "Root and independent complete raw reviews agree on exact positive and eight negative restore oracles, original synthetic state, immutable release and per-child authority, and strict final continuous coverage.",
+  "reviewer": "root",
+  "root_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-numerical-review-01.json",
+    "sha256": "9492ab0182cfd11691e2ce9dbf912fc04c5735bea0810bb1fb036a8336c7b6d9"
+  },
+  "schema": "reservoir_restore_root_numeric_acceptance_v1",
+  "scope": "synthetic_cpu_fixture_only",
+  "seed_plus_nine_cases_accepted": true
+}

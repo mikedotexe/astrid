@@ -1,0 +1,27 @@
+{
+  "created_at": "2026-10-17T01:21:32.500438+00:00",
+  "delta": "Add four direct fake closure/interpreter regression tests and required inert fixture-history helper to preflight closure",
+  "prepared_by": "root",
+  "preserved_pre_edit_tool_refusal": {
+    "reason": "expected multiline helper context not found",
+    "source_changed": false,
+    "tool": "apply_patch"
+  },
+  "previous_checkpoint": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/evidence/entrypoint-source-checkpoint-01.json",
+    "sha256": "86f4450044c8af30eeb79680939d226ecbccfcfade7fe30a5c92dda51b103608"
+  },
+  "production_enabled": false,
+  "review_pending": true,
+  "runtime_actions": false,
+  "schema": "reservoir_production_entrypoint_source_checkpoint_v1",
+  "scope": "disabled source and unrun stdlib tests only",
+  "source_files": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_entrypoint.py": "a32fac0b1733719ac3c995215f95b97f13d606cc657f6707166bd7a21661dcd1",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/production_preflight.py": "ac673d26f54d0856f4ad98499f5ee1a22615eafd32f0bcb3445a64885f96ebee",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_entrypoint.py": "fb059b7fe81ce99af98ab8c87617c46798e903fe68c0eec992f7d8a6544f262e",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-05/test_production_preflight.py": "ec8caa2ec9796a509657467ce5ffb71c62616152923191382ce6f7e688c0ac30"
+  },
+  "target_imports": false,
+  "tests_run": false
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "mlx_post_failure_identity_review_v1",
+  "at": "2026-10-16T00:03:20.122298+00:00",
+  "baseline_record": "/Users/v/other/astrid/.runtime/mlx-upgrade/observations/20261015T203041Z/soak_result.json",
+  "baseline_sha256": "760021391ee08584d6416b324e671a950cbb523b7cb57091562a4c09031361c4",
+  "checked_files": 105,
+  "changed_files": [],
+  "processes": " 3893 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python\n35486 Thu Oct 15 13:14:29 2026     /Applications/Ollama.app/Contents/Resources/ollama\n82314 Thu Oct 15 07:49:29 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python\n82528 Thu Oct 15 07:49:42 2026     /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server\n",
+  "memory": "vm.swapusage: total = 17408.00M  used = 15761.44M  free = 1646.56M  (encrypted)\nkern.memorystatus_vm_pressure_level: 1\n",
+  "scope": "read-only revalidation; historical offline memory failure remains failed"
+}

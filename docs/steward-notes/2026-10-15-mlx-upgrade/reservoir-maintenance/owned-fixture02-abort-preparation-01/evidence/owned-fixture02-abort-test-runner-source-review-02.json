@@ -1,0 +1,35 @@
+{
+  "accepted_guard_structure": true,
+  "actual_os_acceptance": false,
+  "findings": [],
+  "operations_by_reviewer": {
+    "process_queries": 0,
+    "runner_edits": 0,
+    "service_calls": 0,
+    "signals": 0,
+    "target_imports": 0,
+    "tests": 0
+  },
+  "previous_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture02-abort-test-runner-source-review-01.json",
+    "sha256": "ae496eb1c065eb1871bda7629aca585830592a366f0592931362c31f6a618ac2"
+  },
+  "production_qualified": false,
+  "remaining_pre_run_checks": [
+    "Final root-owned expected test count/module/source/interpreter/protected closure plan and full authored source checkpoint are still pending.",
+    "No fake test or descriptor behavior was executed during this static review; root owns the single serialized guarded run."
+  ],
+  "resolved_conditional_finding": {
+    "actual_call_path": "abort_native.write_new uses os.open followed by os.fdopen(fd, wb), making the old blanket integer-descriptor refusal a real fake-test compatibility problem.",
+    "correction": "Integer descriptors now require fstat regular file+nlink1, exactly one nonsymlink scratch file with matching device/inode, and resolved scratch containment. All other descriptors remain refused. The prior exact exclusive output-open correction remains present."
+  },
+  "reviewed_at": "2026-10-17T06:18:13.238543+00:00",
+  "reviewer": "codex-mlx-upstream",
+  "runner": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/run_fixture02_abort_tests_01.py",
+    "sha256": "92f30050333a97d46aec464de835097706ed85d68ab31549ad28441d5060e7f3"
+  },
+  "schema": "owned_fixture02_abort_test_runner_source_review_v1",
+  "scope": "static_guard_delta_review_pending_final_author_test_plan",
+  "test_execution_authorized": false
+}

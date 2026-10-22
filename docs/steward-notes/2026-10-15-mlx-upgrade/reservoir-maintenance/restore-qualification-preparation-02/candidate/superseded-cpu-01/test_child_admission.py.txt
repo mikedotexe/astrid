@@ -1,0 +1,289 @@
+"""Stdlib fakes only: no actual child, monitor, numeric import or service call."""
+import copy
+import json
+from pathlib import Path
+import tempfile
+import types
+import unittest
+from unittest.mock import Mock, patch
+
+import child_admission as a
+import qualify_restore as q
+
+
+class Clock:
+    def __init__(self): self.value = 1000.0
+    def now(self): return self.value
+    def sleep(self, seconds): self.value += seconds
+
+
+class AdmissionTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix='restore-admission-fake-')
+        self.addCleanup(temporary.cleanup); self.root = Path(temporary.name).resolve()
+        self.clock = Clock(); self.policy = a.load_policy(q.read(q.INPUTS))
+        self.inputs = {'artifacts': {'synthetic': 'a' * 64}}
+        self.input_path = self.root / 'inputs.json'; q.write(self.input_path, self.inputs)
+        self.binding = {'record_path': str(self.root / 'monitor.json'), 'token': 'fake-run',
+                        'observer_pid': 987, 'started_at': 'fake-start', 'identity_start': {'fixture': 1},
+                        'source': {'path': '/never-executed.py', 'sha256': 'a' * 64},
+                        'sampler': {'path': '/never-sampled.py', 'sha256': 'b' * 64}}
+        self.record = {'schema': 'reservoir_matrix_host_supervision_v2', 'state': 'running',
+                       'swap_policy': 'nonincrease_between_consecutive_samples_and_not_above_initial',
+                       'invalidated': False, 'initial_swap_bytes': 100, 'samples': [],
+                       'production_mutations': 0, 'qualification_cases_started': 0,
+                       'self_sha256': 'a' * 64, 'source_sha256': 'b' * 64,
+                       **{key: self.binding[key] for key in ('token', 'observer_pid', 'started_at', 'identity_start')}}
+        self.append_sample(995); self.append_sample(1000)
+        self.release = {'run_id': 'fake-run', 'expires_wall': 2000, 'permit_wait_seconds': 2,
+                        'supervision': self.binding}
+        self.release_path = self.root / 'release.json'; q.write(self.release_path, self.release)
+        self.api = types.SimpleNamespace(ref=q.ref, read=q.read, write=q.write, check_ref=q.check_ref,
+                    check=lambda: self.inputs, validate_release=lambda *args, **kwargs: self.release,
+                    harness_hashes=lambda: {'fake.py': 'c' * 64}, INPUTS=self.input_path, CASES=q.CASES)
+        self.run_root = self.root / 'run'; self.run_root.mkdir()
+        self.run = a.AdmissionRun(self.api, self.inputs, self.release_path, self.release, self.run_root,
+                                 clock=self.clock.now, monotonic=self.clock.now,
+                                 sleep=self.clock.sleep, policy=self.policy)
+
+    def append_sample(self, when, **changes):
+        self.record['samples'].append({'t_s': when, 'pressure_level': 1, 'swap_bytes': 100,
+             'build_test_processes': [], 'production_identity_unchanged': True,
+             'readyz': {'http_status': 200, 'body': {'ready': True, 'reservoir': {'status': 'connected'}}}, **changes})
+        Path(self.binding['record_path']).write_text(json.dumps(self.record))
+
+    def gate(self):
+        case = (('seed',) + q.CASES)[self.run.ordinal]
+        directory = self.run_root / case; directory.mkdir()
+        request = None
+        if case != 'seed':
+            path = directory / 'request.json'; q.write(path, {'case': case, 'scope': 'fake-no-numeric'})
+            request = q.ref(path)
+        gate = self.run.request(case, ['never-executed', case], directory, request)
+        return gate, directory
+
+    def permit(self, gate, **changes):
+        snapshot = self.run.directory / (gate.stem + '-root-monitor.json')
+        q.write(snapshot, self.record)
+        permit = {'schema': 'reservoir_restore_child_permit_v1', 'accepted': True,
+                  'reviewer': 'root-fake-unit-only', 'request': gate.request_ref,
+                  'run_release': self.run.release_ref, 'previous_acceptance': self.run.previous,
+                  'expires_wall': 1900, 'supervisor_snapshot': q.ref(snapshot), **changes}
+        q.write(gate.permit_path, permit)
+        return permit
+
+    def finish(self, gate, directory):
+        self.permit(gate); gate.wait(); gate.claim(gate.waiting['argv'], directory)
+        start = self.clock.now() + .1; self.clock.value += 1
+        child = {'pid': 123, 'returncode': 0, 'reaped': True,
+                 'started_wall': start, 'completed_wall': self.clock.now()}
+        q.write(directory / 'child-exit.json', child)
+        result = directory / 'expected-result.json'; q.write(result, {'passed': True, 'case': gate.waiting['case']})
+        self.append_sample(self.clock.now())
+        return self.run.accept(gate, child, result)
+
+    def test_all_ten_children_need_distinct_permits_claims_and_coverage(self):
+        refs = []
+        for _ in range(10):
+            gate, directory = self.gate()
+            refs.append(self.finish(gate, directory))
+        self.assertEqual(self.run.ordinal, 10); self.assertIsNone(self.run.pending)
+        self.assertEqual(len(list(self.run.directory.glob('*-permit.json'))), 10)
+        self.assertEqual(len(list(self.run.directory.glob('*-launch-claim.json'))), 10)
+        self.assertEqual(q.ref(self.release_path), self.run.release_ref)
+        for reference in refs:
+            accepted = a.checked(reference)
+            child = a.checked(accepted['child_exit'])
+            self.assertTrue(self.policy.covers_case(self.record, child['started_wall'], child['completed_wall']))
+
+    def test_missing_permit_waits_finitely_and_starts_no_child(self):
+        gate, directory = self.gate(); launch = Mock(side_effect=AssertionError('forbidden launch'))
+        with self.assertRaisesRegex(ValueError, 'permit wait exhausted'):
+            q.run_child(gate.waiting['argv'], directory, admission=gate, popen=launch)
+        launch.assert_not_called(); self.assertFalse(gate.claim_path.exists())
+        failure = q.read(directory / 'child-unresolved.json')
+        self.assertFalse(failure['launch_attempted']); self.assertIsNone(failure['pid'])
+
+    def test_wrong_request_or_release_permit_is_rejected(self):
+        gate, _ = self.gate()
+        permit = self.permit(gate)
+        for key in ('request', 'run_release', 'previous_acceptance'):
+            wrong = dict(permit, **{key: {'path': '/wrong', 'sha256': 'd' * 64}})
+            with self.subTest(key=key), self.assertRaisesRegex(ValueError, 'binding differs'):
+                gate.validate_permit(wrong)
+        with self.assertRaisesRegex(ValueError, 'expired/extends'):
+            gate.validate_permit(dict(permit, expires_wall=2001))
+
+    def test_edited_release_and_permit_never_extend_authority(self):
+        gate, directory = self.gate(); self.permit(gate); gate.wait()
+        original = self.release_path.read_bytes()
+        self.release_path.write_text(json.dumps(dict(self.release, expires_wall=9000)))
+        with self.assertRaisesRegex(ValueError, 'reference changed'):
+            gate.claim(gate.waiting['argv'], directory)
+        self.release_path.write_bytes(original)
+        row = q.read(gate.permit_path); row['expires_wall'] = 1800; gate.permit_path.write_text(json.dumps(row))
+        with self.assertRaisesRegex(ValueError, 'reference changed'):
+            gate.claim(gate.waiting['argv'], directory)
+
+    def test_stale_monitor_or_consecutive_rebound_refuses_before_claim(self):
+        gate, directory = self.gate(); self.permit(gate); gate.wait()
+        self.clock.value = 1016
+        with self.assertRaisesRegex(ValueError, 'fresh/ready'):
+            gate.claim(gate.waiting['argv'], directory)
+        self.clock.value = 1002; self.append_sample(1001, swap_bytes=90); self.append_sample(1002, swap_bytes=95)
+        with self.assertRaisesRegex(ValueError, 'fresh/ready'):
+            gate.claim(gate.waiting['argv'], directory)
+        self.assertFalse(gate.claim_path.exists())
+
+    def test_source_inputs_request_argv_and_monitor_identity_are_bound(self):
+        gate, directory = self.gate(); self.permit(gate); gate.wait()
+        with self.assertRaisesRegex(ValueError, 'argv/directory'):
+            gate.claim(['different'], directory)
+        original = self.api.harness_hashes
+        self.api.harness_hashes = lambda: {'fake.py': 'd' * 64}
+        with self.assertRaisesRegex(ValueError, 'harness changed'):
+            gate.claim(gate.waiting['argv'], directory)
+        self.api.harness_hashes = original
+        self.record['observer_pid'] = 988
+        Path(self.binding['record_path']).write_text(json.dumps(self.record))
+        with self.assertRaisesRegex(ValueError, 'identity changed'):
+            gate.claim(gate.waiting['argv'], directory)
+
+    def test_claim_is_one_use_even_if_no_child_start_result_exists(self):
+        gate, directory = self.gate(); self.permit(gate); gate.wait()
+        gate.claim(gate.waiting['argv'], directory)
+        with self.assertRaisesRegex(ValueError, 'one-use'):
+            gate.claim(gate.waiting['argv'], directory)
+        with self.assertRaisesRegex(ValueError, 'prior admission unresolved'):
+            self.run.request('complete', ['never-executed'], directory, None)
+        self.assertTrue(gate.claim_path.exists())
+
+    def test_final_recheck_catches_invalidation_after_durable_claim(self):
+        gate, directory = self.gate(); self.permit(gate); gate.wait()
+        write = self.api.write
+        def invalidate(path, value):
+            write(path, value)
+            if path == gate.claim_path:
+                self.record['invalidated'] = True
+                Path(self.binding['record_path']).write_text(json.dumps(self.record))
+        self.api.write = invalidate
+        with self.assertRaisesRegex(ValueError, 'fresh/ready'):
+            gate.claim(gate.waiting['argv'], directory)
+        self.assertTrue(gate.claimed); self.assertTrue(gate.claim_path.exists())
+
+    def test_inflight_invalidation_does_not_signal_and_blocks_acceptance(self):
+        gate, directory = self.gate(); self.permit(gate)
+        process = Mock(pid=123)
+        def natural_exit(timeout):
+            self.clock.value += 1; self.record['invalidated'] = True
+            self.append_sample(self.clock.now(), pressure_level=2)
+            return 0
+        process.wait.side_effect = natural_exit
+        with patch.object(q.time, 'time', side_effect=self.clock.now):
+            child = q.run_child(gate.waiting['argv'], directory, admission=gate, popen=Mock(return_value=process))
+        result = directory / 'expected-result.json'; q.write(result, {'passed': True})
+        with self.assertRaisesRegex(ValueError, 'fresh/ready'):
+            self.run.accept(gate, child, result)
+        process.kill.assert_not_called(); process.terminate.assert_not_called(); process.send_signal.assert_not_called()
+        self.assertIs(self.run.pending, gate); self.assertEqual(self.run.ordinal, 0)
+
+    def test_failed_result_missing_post_sample_and_rewritten_history_block(self):
+        gate, directory = self.gate(); self.permit(gate); gate.wait(); gate.claim(gate.waiting['argv'], directory)
+        child = {'reaped': True, 'started_wall': 1000.1, 'completed_wall': 1001.0}
+        q.write(directory / 'child-exit.json', child)
+        result = directory / 'expected-result.json'; q.write(result, {'passed': False})
+        with self.assertRaisesRegex(ValueError, 'strict child result failed'):
+            self.run.accept(gate, child, result)
+        result.write_text(json.dumps({'passed': True}))
+        with self.assertRaisesRegex(ValueError, 'coverage wait exhausted'):
+            self.run.accept(gate, child, result)
+        self.append_sample(self.clock.now())
+        accepted = self.run.accept(gate, child, result)
+        self.assertTrue(a.checked(accepted)['passed'])
+        self.record['samples'][0]['swap_bytes'] = 99
+        Path(self.binding['record_path']).write_text(json.dumps(self.record))
+        with self.assertRaises(ValueError):
+            self.gate()
+
+    def test_timeout_or_interruption_keeps_claim_and_no_next_child(self):
+        for error in (TimeoutError('fake wait failure'), KeyboardInterrupt()):
+            with self.subTest(error=type(error).__name__):
+                # Independent run/test layout; no uncertain attempt is ever reused.
+                temp = tempfile.TemporaryDirectory(); directory = Path(temp.name).resolve()
+                self.addCleanup(temp.cleanup)
+                admission = Mock(claimed=True); admission.claim.return_value = {'path': '/fake-claim', 'sha256': 'a' * 64}
+                process = Mock(pid=123); process.wait.side_effect = error; process.poll.return_value = None
+                with self.assertRaises(type(error)):
+                    q.run_child(['never-executed'], directory, admission=admission, popen=Mock(return_value=process))
+                self.assertTrue(q.read(directory / 'child-unresolved.json')['admission_claimed'])
+                process.kill.assert_not_called(); process.terminate.assert_not_called()
+
+    def test_actual_run03_review_schema_and_maps_are_required(self):
+        inputs = q.read(q.INPUTS)
+        observer_root = Path(inputs['admission_supervision']['helper']['path']).parent
+        review_ref = q.ref(observer_root / 'matrix-host-supervision-v2-run03-source-review-01.json')
+        review = q.read(review_ref['path'])
+        raw_path = self.root / 'fake-completed-window.json'
+        q.write(raw_path, {'production_identity_end': {'unit-only': 1},
+                          'input_binding_path': review['future_observer_binding']['path'],
+                          'input_binding_sha256': review['future_observer_binding']['sha256']})
+        binding = {'record_path': review['new_paths']['output'], 'token': review['new_paths']['token'],
+                   'observer_pid': 987, 'started_at': 'unit-only', 'identity_start': {'unit-only': 1},
+                   'source': review['source'], 'source_review': review_ref,
+                   'sampler': review['sampler_source'], 'bindings': review['future_observer_binding']}
+        release = {'schema': 'reservoir_restore_qualification_release_v2', 'permit_wait_seconds': 2,
+                   'supervision': binding, 'host_gate_raw': q.ref(raw_path)}
+        self.assertEqual(a.validate_release_supervision(release, inputs), binding)
+        for key, value in [('approved_source', False), ('status', 'self-asserted'),
+                           ('source', {'path': '/different', 'sha256': 'a' * 64}),
+                           ('future_observer_binding', inputs['admission_supervision']['bindings']),
+                           ('scope', {'review_only': True, 'numerical_work_authorized': True})]:
+            path = self.root / ('wrong-review-' + key + '.json')
+            q.write(path, dict(review, **{key: value}))
+            altered = copy.deepcopy(release); altered['supervision']['source_review'] = q.ref(path)
+            with self.subTest(key=key), self.assertRaisesRegex(ValueError, 'reviewed exact'):
+                a.validate_release_supervision(altered, inputs)
+        altered = copy.deepcopy(release); altered['supervision']['token'] = 'wrong-token'
+        with self.assertRaisesRegex(ValueError, 'token binding'):
+            a.validate_release_supervision(altered, inputs)
+
+    def test_monitor_revision_allows_only_three_constants(self):
+        inputs = q.read(q.INPUTS)
+        original = Path(inputs['admission_supervision']['helper']['path']).read_text()
+        candidate = self.root / 'fake-observer-source.py'
+        source = original.replace("'matrix-host-supervision-02.json'", "'new-output.json'")
+        source = source.replace("'matrix-host-supervision-02-stop.json'", "'new-stop.json'")
+        source = source.replace("'mlx-matrix-20261016-528-supervision-02'", "'unit-only'")
+        candidate.write_text(source)
+        binding = {'record_path': str(self.root / 'new-output.json'), 'token': 'unit-only'}
+        a.verify_monitor_revision(candidate, inputs, binding)
+        candidate.write_text(source.replace('MAX_SECONDS = 3600', 'MAX_SECONDS = 7200'))
+        with self.assertRaisesRegex(ValueError, 'beyond reviewed'):
+            a.verify_monitor_revision(candidate, inputs, binding)
+
+    def test_permit_does_not_mask_changed_private_request_or_runtime(self):
+        gate, directory = self.gate(); self.finish(gate, directory)
+        gate, directory = self.gate(); self.permit(gate); gate.wait()
+        request = Path(gate.waiting['request']['path']); request.write_text('{"changed":true}')
+        with self.assertRaisesRegex(ValueError, 'reference changed'):
+            gate.claim(gate.waiting['argv'], directory)
+        self.assertFalse(gate.claim_path.exists())
+        self.api.check = Mock(side_effect=ValueError('prepared artifact changed'))
+        with self.assertRaisesRegex(ValueError, 'prepared artifact changed'):
+            gate.claim(gate.waiting['argv'], directory)
+
+    def test_accepted_result_dependency_tamper_is_detected(self):
+        log = self.root / 'retained-output.txt'; log.write_text('original fake output\n')
+        result = self.root / 'result.json'; q.write(result, {'passed': True, 'stdout': q.ref(log)})
+        child = self.root / 'exit.json'; q.write(child, {'reaped': True})
+        acceptance = self.root / 'acceptance.json'
+        q.write(acceptance, {'passed': True, 'result': q.ref(result), 'child_exit': q.ref(child),
+                            'raw_dependencies': a.result_dependencies(q.read(result))})
+        a.validate_acceptance(q.ref(acceptance))
+        log.write_text('edited after classification\n')
+        with self.assertRaisesRegex(ValueError, 'retained child artifact changed'):
+            a.validate_acceptance(q.ref(acceptance))
+
+
+if __name__ == '__main__':
+    unittest.main()

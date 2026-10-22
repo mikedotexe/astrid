@@ -1,0 +1,102 @@
+{
+  "schema": "reservoir_production_candidate_review_v2",
+  "created_at": "2026-10-16T17:39:38.704095+00:00",
+  "reviewer": "Codex /root/mlx_integration",
+  "accepted_for_isolated_preparation": true,
+  "production_execution_allowed": false,
+  "production_recovery_qualified": false,
+  "actual_numeric_qualification_accepted": false,
+  "scope": "Version2 source-only clone and narrow deferred LSM import-order correction; no live or numerical execution acceptance",
+  "artifacts": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/metadata_preflight.py": "3c2bce47648596f8988e0884081625f729d77856526c1b062f5078b68684d318",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/production_host.py": "d7b80c071ca1a279d95b237ce5b675865f85dc1c5f0c6565e0694ef09bace466",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/production_preflight.py": "3ded53f71a6d134640cb89a00ed9cf9c392a9709a8ac39eae67e2737250de1e5",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/production_recovery_inspect.py": "0ee592e768df9ebdab9994b41d9a921b99aaea8479e676abaa1cd5c586229311",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/reservoir_maintenance.py": "34458397f9a6de29913c90035c6cc6b60caadd54b2916f836944c411d177282b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/reservoir_maintenance_state.py": "4418d9df7792d52004d15572aeecce2947ff0f0674c6b3067a71bded2c8f4594",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/restore_verifier.py": "eb152430ff580da4401c4e7ca46908c47799b00a7f3f3058ef36201c985e4ea3",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/test_production_host.py": "91787c5be064fba697ba393a4989fa1daa7619cd838ab0f82e6418973f121cf4",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/test_production_preflight.py": "782262b2267ab41e5040c817046f2e21106321e252dda7c86824aded3237045d",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/test_production_recovery_inspect.py": "ef1c9d9e2e91444f16c6776e8724381bc06f468f8f7b945d37557970c22d1af7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/test_reservoir_maintenance_state.py": "5c896092de2a2da6351c7a05ffe78a080fcfd49e91630fd5764b6110a9075834",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/test_restore_verifier.py": "0494a6570245cfc2e6a76cd18188789130c7cedf3b1eb80743522e0e5e3f7522"
+  },
+  "source_parent": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/source-parent-01.json",
+    "sha256": "8f8fc247e5e8634ab8e22a7c55eb4861a3304976fea3d7585a050a8ea9f439d8"
+  },
+  "preserved_v1_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production-blocked-stage-review-02.json",
+    "sha256": "dcbd49fb36e32d9a7d7fb4e0774512abd3cb3c8acdee7ca8a509ac4d472204cf"
+  },
+  "combined_cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/combined-stdlib-tests-01.json",
+    "sha256": "c6d6a73c3cb6d741331dcc711d30093660fb409d81ca5e4d1ccd1e04bc57192e"
+  },
+  "combined_cpu_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/combined-stdlib-tests-01.log",
+    "sha256": "6edf2dcaa92471dbcdcb023b778a225c9f30855eb1d57dc4a835319a191cb10a"
+  },
+  "focused_verifier_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-02/restore-verifier-cpu-tests-01.json",
+    "sha256": "cfab1b8526e6d3838f7841b8b940b7aeb0ac8a401b8d4e428a2be7ef266d23bf"
+  },
+  "lazy_import_source": {
+    "path": "/Users/v/other/neural-triple-reservoir/dual_ai_bridge.py",
+    "sha256": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549",
+    "import_line": 329,
+    "constructor_lines": [
+      372,
+      375
+    ]
+  },
+  "equivalence": {
+    "source_only_files": 12,
+    "byte_identical_files": [
+      "metadata_preflight.py",
+      "production_host.py",
+      "production_preflight.py",
+      "production_recovery_inspect.py",
+      "reservoir_maintenance.py",
+      "reservoir_maintenance_state.py",
+      "test_production_host.py",
+      "test_production_preflight.py",
+      "test_production_recovery_inspect.py",
+      "test_reservoir_maintenance_state.py"
+    ],
+    "changed_files": [
+      "restore_verifier.py",
+      "test_restore_verifier.py"
+    ],
+    "only_verifier_executable_delta": "The exact ReservoirService constructor assignment moves immediately before the unchanged complete six-module source-origin loop. Normalizing that one adjacent move makes the entire old/new AST identical. Two comments are explanatory only.",
+    "old_sources_and_receipts_unchanged": true,
+    "prior_acceptance_not_relabelled": true
+  },
+  "findings": [
+    "V1 real-execution blocker is resolved statically: ReservoirService constructs ReservoirBridge, which eagerly initializes its LSM backend and imports lsm_reservoir before complete source-origin validation.",
+    "The full six-module origin check remains immediate after construction and before read_expected or restore_all. Missing or shadow-source modules still reject. Fresh-module check, all source hashes, package/interpreter checks, GPU/network guards and semantic comparisons remain unchanged.",
+    "Two new tests execute the extracted actual constructor/check AST with correct, absent and shadowed lazy LSM modules, and enforce check placement before expected-state reading/restoration.",
+    "The other 10 Python files are byte-identical source copies of the reviewed disabled stage. Their private HERE-derived paths now correctly identify candidate02; any operational preparation must be newly bound to these v2 paths rather than reuse v1 evidence as current.",
+    "The combined 79-test run denied real numerical imports, subprocesses, signals and socket bind/connect. Its full source inventory and raw log hash match current files. The separate 15-test receipt is retained as focused evidence, not counted as additional independent test cases.",
+    "Host production flag remains false and copied controller is still fixture-only. Read-only inspector still confers no recovery authority."
+  ],
+  "remaining_requirements": [
+    "Separately review and freeze restore-qualification-01 rebound to these v2 verifier/state bytes; then obtain an explicit current host-gated numerical release. This review does not release the runner.",
+    "Execute actual installed-runtime qualification for private 192-node NumPy and LSM-shadow fixtures plus targeted negative controls before any production drain. Static/mock import-order tests do not prove real restore semantics.",
+    "Complete the separate frozen 14-case real-service matrix, current runtime/source/model/package alignment and all host/resource gates; no requirement is waived.",
+    "Production admission/settings/argv amendments, external restore-runner integration and exact-phase recovery qualification remain outstanding as listed in the prior review. Later stopped-production backup verification remains a second actual validation.",
+    "Preserve frozen v1 as archive-only known-bad-for-real-verifier execution; v2 supersedes its import-order defect only. No rollback of runtime state or blind replay is authorized."
+  ],
+  "policy_and_metadata_evidence": {
+    "policy_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/provider-model-resolution-review-01.json",
+      "sha256": "3224c7b1282df0c50e402de0938ead88febbe5be3e9bbca51c30ed1dfb9e176c"
+    },
+    "metadata": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-01/metadata-preflight-01.json",
+      "sha256": "645d14db4c694ec42168d722733aa3bb858d0e50a8e0303d3449b2d08e79424b"
+    }
+  },
+  "no_live_actions": true,
+  "numeric_or_service_imports_by_reviewer": false
+}

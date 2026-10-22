@@ -1,0 +1,32 @@
+{
+  "accepted_for_private_numpy_only": true,
+  "case_count": 14,
+  "created_at": "2026-10-17T00:46:13.048849+00:00",
+  "final_monitor": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/matrix-host-supervision-05.json",
+    "sha256": "11b8fdcc7979e954b35cfb2d370c4b838a537aa5d7a616bf868f2f3eec21edda"
+  },
+  "host_completed_at": "2026-10-17T00:40:54.042533+00:00",
+  "host_samples": 303,
+  "independent_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-matrix-independent-review-01.json",
+    "sha256": "4aa13cce8bb02f9d5abf4b55766f7b7bab69c307c86d5951897eddef085ed59c"
+  },
+  "matrix": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/matrix-review-01.json",
+    "sha256": "42a63f52154aafca5b8502f667cd6af4679aee73d69281551e3c508801c9729d"
+  },
+  "mlx_qualified": false,
+  "next_required": "Fresh independently accepted strict host12 and run06 continuous coverage plus root one-use permit before seed and each restore02 child.",
+  "production_qualified": false,
+  "root_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-matrix-root-review-01.json",
+    "sha256": "1d2e2081bdd68a4a17cd680870c6c0d120b5a54b52ec0ec997b9a0f4bb1215ae"
+  },
+  "schema": "reservoir_private_matrix_root_acceptance_v1",
+  "source": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3/prepared-01/sources.json",
+    "sha256": "dc6183624da3c5beec22ae1ff78bbed9d0df12850e413612305ac21f500cef2e"
+  },
+  "timestamp_correction": "Preserve root-review01 informational null host_completed_at; actual completed monitor timestamp is final updated_at as independently verified. No raw evidence changed."
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "reservoir_fixture_host_settle_review_v1",
+  "reviewed_at": "2026-10-16T17:26:35.014524+00:00",
+  "raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-05.json",
+    "sha256": "a070d621da92cbff7d761026ba93cd1b2aceef5e077cd1761fe39a4aa920549d"
+  },
+  "observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-05-observer.py",
+    "sha256": "d487413ba3282bc700b6854c1de2521f87055b574acef142e311055f07af44bd"
+  },
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-05-source-review.json",
+    "sha256": "990d12e6671e9f59626a517ea6ceaa28ac7b2141cfa51a8f22bd47e7b96c3912"
+  },
+  "passed": false,
+  "samples": 123,
+  "duration_s": 611.7529771670233,
+  "longest_eligible_window_s": 45.00542974472046,
+  "current_eligible_window_s": 0,
+  "window_independently_recomputed": true,
+  "pressure_sample_counts": {
+    "1": 46,
+    "2": 77
+  },
+  "swap_bytes_first": 13359183298.56,
+  "swap_bytes_last": 15475083837.44,
+  "swap_endpoint_growth_bytes": 2115900538.880001,
+  "swap_bytes_max": 15584135741.44,
+  "detected_build_process_samples": 58,
+  "max_sample_gap_s": 5.00973105430603,
+  "health_ready_samples": 123,
+  "reservoir_connected_samples": 123,
+  "production_identity_unchanged": true,
+  "real_numeric_fixture_started": false,
+  "production_mutations": false,
+  "acceptance": "Failed: 45.005 seconds is below unchanged300-second gate. A lower-swap/normal-pressure spot reading did not persist. No numeric case released. Preserve result; do not start a sixth observation in this turn merely to repeat unchanged conditions."
+}

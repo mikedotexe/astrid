@@ -1,0 +1,25 @@
+{
+  "created_at": "2026-10-16T23:58:28.915564+00:00",
+  "destination": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v3",
+  "original_files": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/driver.py": "6575765ccd39fe0c3e1e329629b0a5a50e480811b66f1a613ffa95ecc9c2a074",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/process_identity.py": "0342641e028a65039d80c4bc6cba7e32e666ececb6aa0e29e1ac1dffbd66abbc",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/result_checks.py": "ceac5f6aefef5cac2621e194094803d427a469d64492f7ae6588f0c7ee7d47bc",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/test_harness.py": "ca64cb6b3be18e0414d54820ced60784527f5844653c132406d15d90a1336551"
+  },
+  "production_qualified": false,
+  "purpose": "Bounded read-only initial ps metadata publication wait; no case execution, identity acceptance weakening, timeout extension or lifecycle replay.",
+  "retained_failed_case": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2/runs/01-original-normal/result.json",
+    "sha256": "82d99e0c74bfc9e9539bc346cc6c77538da3626d6912eb97326941fb76ac78a1"
+  },
+  "schema": "reservoir_private_harness_source_parent_v1",
+  "source": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness-v2",
+  "source_only_copy": true
+}

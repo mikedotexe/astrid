@@ -1,0 +1,92 @@
+{
+  "actual_os_fixture_accepted": false,
+  "actual_os_fixture_executed": false,
+  "all_future_paths_unused": true,
+  "all_generated_jobs_absent_at_spot": true,
+  "executor_steps": 71,
+  "fixture_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-05/runs/owned-recovery-7feeaafc7ba94bbe860b326088d9dd20",
+  "fixture_tests_passed": 97,
+  "fixture_token": "7feeaafc7ba94bbe860b326088d9dd20",
+  "followup_pause_required": true,
+  "injections": 23,
+  "mlx_qualified": false,
+  "native_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-05/runs/owned-native-7feeaafc7ba94bbe860b326088d9dd20",
+  "on_return": "Review exact71 executor outcomes,74 parent actions,5 sessions,23 injections, raw readiness/native ownership records, natural reaps, saved synthetic states/check-ins/pin proof, original backup and generated job/process/listener/guard absence. Establish parent absence separately and independently accept or preserve failure; never rerun automatically.",
+  "preparation_accepted": true,
+  "prepared_at": "2026-10-17T16:56:42.803144+00:00",
+  "prepared_by": "root",
+  "preserved_failures": [
+    "fixture02 actual failed run and accepted cleanup",
+    "fixture03 actual failed run and accepted cleanup",
+    "failed guarded test and validator receipts"
+  ],
+  "private_restore_seed_plus_cases_accepted": 10,
+  "private_service_cases_accepted": 14,
+  "production_helper_tests_passed": 327,
+  "production_qualified": false,
+  "references": {
+    "command": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-command-01.txt",
+      "sha256": "95f879fe672ecfdaea41870aec01d500dd340f8fdabeccf6a14f7ad6fc1c9479"
+    },
+    "command_independent_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-exact-command-independent-review-01.json",
+      "sha256": "579503c19e9e35d61198ccc53d0da1eca70057793df9ac6de7978b1561e45a14"
+    },
+    "core_tests": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/production07-guarded-tests-03.json",
+      "sha256": "468133206ba939b311889f50c66d320f1fea62077a1dce83755a3d54cac578bb"
+    },
+    "fixture03_cleanup": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture03-abort-7e6529d26a3046ca87c0ca9b94332b02-02/result.json",
+      "sha256": "80096aaf91ce96441a02cef0fa55b73468799897318435153f96560dfbde015d"
+    },
+    "fixture_tests": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture05-guarded-tests-03.json",
+      "sha256": "a8ce78f70d40ebb5097e43269ca711412c54133e3d8a38bf018188c66dadd6bd"
+    },
+    "inputs": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-source-inputs-01.json",
+      "sha256": "62f0d8da8f30b6f7014471b69e23fff86541a2e0b162fbe9f23234661aaf9a70"
+    },
+    "precommand_spot": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-precommand-host-spot-01.json",
+      "sha256": "eb718ebcf20b10541fc28fa2390ba417726df374746c607ede6587160d08c951"
+    },
+    "read_only_validation": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-release-validation-01.json",
+      "sha256": "63fb459a8f7c1718d2f66d74d7e655111bb9ad15178e22bc964c8cc93faaccd4"
+    },
+    "release": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-release-01.json",
+      "sha256": "1bb48bce1af7b086d9f485f47e208b9f4847c9fef02f64c20dd283f6b648d310"
+    },
+    "restore_numeric": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/restore-qualification-02/root-numerical-acceptance-01.json",
+      "sha256": "4c22bf6ae2efad5334d95e7162da34a86362ce79576b54de1c13973f8baa27b9"
+    },
+    "service_numeric": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/numeric-v3-matrix-root-acceptance-01.json",
+      "sha256": "739c5a4261c645747dd516456017c2dacfeb230fb0b84dad2122bc7cf37fa6be"
+    },
+    "source_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-source-review-01.json",
+      "sha256": "0d895ce460de4aaa49068496a019e6c68b4b09f5d8e6eb43091e9986b25abcdb"
+    },
+    "validation_root_review": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-validation-root-review-01.json",
+      "sha256": "cb393406afdde7dd9472a815aa2a808262a3808ea7eb3ab390c88979ff513c7c"
+    }
+  },
+  "result_path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-05/evidence/owned-recovery-7feeaafc7ba94bbe860b326088d9dd20-result.json",
+  "schema": "owned_fixture05_handoff_preparation_acceptance_v1",
+  "scope": "exact_generated_owned_fixture_only",
+  "steward_pause_generation": 528,
+  "still_required_before_production": [
+    "Actual exact final owned OS rehearsal and independent acceptance.",
+    "Current complete production runtime/source/proof alignment, live state backup and real persistence checks.",
+    "Measured exact-stage full revalidation cost and maintenance duration before live drain.",
+    "Reviewed narrow production handoff preserving provider final check-in, held reservoir write barrier, every saved handle/sidecar and stopped backup."
+  ],
+  "user_action": "Run the exact recorded command once as the ordinary owning user in interactive Terminal; administrator authentication applies only to four generated-label launchctl debug calls, not the whole controller."
+}

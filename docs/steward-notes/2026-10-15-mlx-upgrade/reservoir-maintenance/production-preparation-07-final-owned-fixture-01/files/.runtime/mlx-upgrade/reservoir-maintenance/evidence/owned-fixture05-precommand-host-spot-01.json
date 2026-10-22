@@ -1,0 +1,75 @@
+{
+  "actual_os_fixture_executed": false,
+  "command": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-command-01.txt",
+    "sha256": "95f879fe672ecfdaea41870aec01d500dd340f8fdabeccf6a14f7ad6fc1c9479"
+  },
+  "completed_at": "2026-10-17T16:54:29.012133+00:00",
+  "control_match": true,
+  "control_sha256": "d722df02a823393130dfb31c402c1600754ef887cda04da2b272adf6099478e3",
+  "errors": [],
+  "final_source_mismatches": [],
+  "historical_spot": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-source-preparation-host-spot-02.json",
+    "sha256": "9262be074226b50d299057b4b81a39d2c66dfbe14aae177e7338b6a3f2c0f79f"
+  },
+  "host": {
+    "boot_uuid": "A86C8146-975D-4935-85A6-A7879EC7BBE3",
+    "hostname": "m3-volya",
+    "os_version": "27.0.1",
+    "uid": 501
+  },
+  "host_match": true,
+  "indexes_clean": {
+    "/Users/v/other/astrid": true,
+    "/Users/v/other/minime": true
+  },
+  "inputs": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-source-inputs-01.json",
+    "sha256": "62f0d8da8f30b6f7014471b69e23fff86541a2e0b162fbe9f23234661aaf9a70"
+  },
+  "job_absence_returncodes": {
+    "pin": 113,
+    "provider": 113,
+    "reservoir": 113
+  },
+  "numeric_host_admission": false,
+  "passed": true,
+  "paths_unused": {
+    "fixture_root": true,
+    "native_root": true,
+    "result": true
+  },
+  "process_mismatches": [],
+  "production_qualified": false,
+  "protected_305_mismatches": [],
+  "protected_exact": {
+    "22354": "22354     1 Thu Oct 15 18:10:13 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic",
+    "35303": "35303     1 Thu Oct  1 11:16:53 2026     /Users/v/other/minime/minime/target/release/minime run --log-homeostat --eigenfill-target 0.6800 --warm-start-blend 0.55 --reg-tick-secs 0.5 --legacy-audio-synth-enabled false --legacy-video-synth-enabled false --ws-addr 127.0.0.1:7900 --sensory-ws-addr 127.0.0.1:7901 --av-ws-addr 127.0.0.1:7902 --enable-gpu-av",
+    "3888": "3888     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state",
+    "3893": "3893     1 Wed Sep 30 14:29:07 2026     /opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active",
+    "60407": "60407     1 Fri Oct 16 11:43:16 2026     /opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60",
+    "61069": "61069     1 Fri Oct 16 11:44:08 2026     /Users/v/other/worktrees/truthful-return-20261016/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/truthful-return-20261016/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/truthful-return-20261016/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous",
+    "9536": "9536  9524 Sat Oct 17 09:15:56 2026     /Applications/Ollama.app/Contents/Resources/ollama serve"
+  },
+  "provider_health": {
+    "http_status": 200,
+    "ready": true,
+    "reservoir_status": "connected",
+    "worker_phase": "ready"
+  },
+  "release": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-release-01.json",
+    "sha256": "1bb48bce1af7b086d9f485f47e208b9f4847c9fef02f64c20dd283f6b648d310"
+  },
+  "schema": "owned_fixture05_precommand_host_spot_v1",
+  "source_review": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-source-review-01.json",
+    "sha256": "0d895ce460de4aaa49068496a019e6c68b4b09f5d8e6eb43091e9986b25abcdb"
+  },
+  "started_at": "2026-10-17T16:54:28.883007+00:00",
+  "validation": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture05-final-release-validation-01.json",
+    "sha256": "63fb459a8f7c1718d2f66d74d7e655111bb9ad15178e22bc964c8cc93faaccd4"
+  }
+}

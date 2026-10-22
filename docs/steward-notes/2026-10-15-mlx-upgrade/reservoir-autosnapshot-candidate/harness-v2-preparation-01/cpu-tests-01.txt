@@ -1,0 +1,25 @@
+test_child_and_driver_have_no_forced_termination (test_harness_v2.BoundaryTests.test_child_and_driver_have_no_forced_termination) ... ok
+test_event_reader_does_not_parse_partial_record (test_harness_v2.BoundaryTests.test_event_reader_does_not_parse_partial_record) ... ok
+test_gpu_guard_and_private_output (test_harness_v2.BoundaryTests.test_gpu_guard_and_private_output) ... ok
+test_request_has_native_full_state_and_quiet_hint (test_harness_v2.BoundaryTests.test_request_has_native_full_state_and_quiet_hint) ... ok
+test_tests_import_no_real_service_or_numeric_packages (test_harness_v2.BoundaryTests.test_tests_import_no_real_service_or_numeric_packages) ... ok
+test_no_missing_or_changed_snapshot_fields (test_harness_v2.OracleTests.test_no_missing_or_changed_snapshot_fields) ... ok
+test_thermostat_digest_binds_values_and_order (test_harness_v2.OracleTests.test_thermostat_digest_binds_values_and_order) ... ok
+test_current_interpreter_hash_and_exact_family_required (test_harness_v2.ProcessIdentityTests.test_current_interpreter_hash_and_exact_family_required) ... ok
+test_exact_initial_framework_transition_and_already_steady_identity (test_harness_v2.ProcessIdentityTests.test_exact_initial_framework_transition_and_already_steady_identity) ... ok
+test_framework_runtime_requires_both_exact_files (test_harness_v2.ProcessIdentityTests.test_framework_runtime_requires_both_exact_files) ... ok
+test_initial_wrong_interpreter_argv_pid_or_start_is_not_normalized (test_harness_v2.ProcessIdentityTests.test_initial_wrong_interpreter_argv_pid_or_start_is_not_normalized) ... ok
+test_process_evidence_requires_both_separate_stable_processes (test_harness_v2.ProcessIdentityTests.test_process_evidence_requires_both_separate_stable_processes) ... ok
+test_readonly_process_reader_and_strict_parse (test_harness_v2.ProcessIdentityTests.test_readonly_process_reader_and_strict_parse) ... ok
+test_all_planned_cases_have_distinct_expected_outcomes (test_harness_v2.ReceiptTests.test_all_planned_cases_have_distinct_expected_outcomes) ... ok
+test_cancellation_and_single_delay_evidence_required (test_harness_v2.ReceiptTests.test_cancellation_and_single_delay_evidence_required) ... ok
+test_file_hashes_and_owned_paths_required (test_harness_v2.ReceiptTests.test_file_hashes_and_owned_paths_required) ... ok
+test_incomplete_matrix_cannot_be_accepted (test_harness_v2.ReceiptTests.test_incomplete_matrix_cannot_be_accepted) ... ok
+test_incomplete_or_weakened_receipts_fail (test_harness_v2.ReceiptTests.test_incomplete_or_weakened_receipts_fail) ... ok
+test_late_trigger_and_after_batch_ack_fail (test_harness_v2.ReceiptTests.test_late_trigger_and_after_batch_ack_fail) ... ok
+test_negative_control_cannot_hide_application_send (test_harness_v2.ReceiptTests.test_negative_control_cannot_hide_application_send) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.032s
+
+OK

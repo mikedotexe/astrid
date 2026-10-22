@@ -1,0 +1,17 @@
+{
+  "schema": "reservoir_host_headroom_spot_v1",
+  "at": "2026-10-16T17:57:34Z",
+  "scope": "single read-only OS sample; not a qualifying observation window",
+  "commands": [
+    "sysctl kern.memorystatus_vm_pressure_level vm.swapusage",
+    "memory_pressure -Q"
+  ],
+  "pressure_level": 2,
+  "swap_used_mib": 15614.25,
+  "swap_total_mib": 16384,
+  "swap_free_mib": 769.75,
+  "system_memory_free_percentage": 28,
+  "eligible_to_release_numeric_tests": false,
+  "new_window_started": false,
+  "service_or_configuration_changes": false
+}

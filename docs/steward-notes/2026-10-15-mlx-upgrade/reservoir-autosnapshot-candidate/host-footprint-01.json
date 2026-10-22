@@ -1,0 +1,167 @@
+{
+  "schema": "one_time_host_memory_accounting_v1",
+  "at": "2026-10-16T16:58:10.707081+00:00",
+  "api": "proc_pid_rusage",
+  "purpose": "Read-only accounting during host-settle04; not a repeated perception observer or allocator diagnosis",
+  "task_attachment_used": false,
+  "signals_sent": 0,
+  "model_imports": 0,
+  "helper_sha256": "2da04fd5dcee82c805ddd1f1f68d6e2f2c99a11954fa1fafa4f955a2d87ca6fc",
+  "abi_sha256": "29ee554e75465dc05e042b0a7c5fc63ff975d021e64a148c61bbbc5de123a3bc",
+  "rows": [
+    {
+      "identity": {
+        "pid": 3888,
+        "parent_pid": 1,
+        "started_at": "Wed Sep 30 14:29:07 2026",
+        "command": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/reservoir_service.py --port 7881 --state-dir /Users/v/other/neural-triple-reservoir/state"
+      },
+      "returncode": 0,
+      "errno": 0,
+      "footprint_bytes": 988497384,
+      "resident_bytes": 63356928,
+      "kernel_uuid": "b16c919a2acf3c78a8b32594fbd5ee51",
+      "kernel_start": 2795904649
+    },
+    {
+      "identity": {
+        "pid": 3893,
+        "parent_pid": 1,
+        "started_at": "Wed Sep 30 14:29:07 2026",
+        "command": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/coupled_astrid_server.py --port 8090 --coupling-strength 0.1 --model-memory-map --model mlx-community/gemma-4-12B-it-5bit --model-qos-mode active"
+      },
+      "returncode": 0,
+      "errno": 0,
+      "footprint_bytes": 9561169216,
+      "resident_bytes": 194166784,
+      "kernel_uuid": "b16c919a2acf3c78a8b32594fbd5ee51",
+      "kernel_start": 2796134698
+    },
+    {
+      "identity": {
+        "pid": 3905,
+        "parent_pid": 1,
+        "started_at": "Wed Sep 30 14:29:07 2026",
+        "command": "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/v/other/neural-triple-reservoir/collab_feeder.py"
+      },
+      "returncode": 0,
+      "errno": 0,
+      "footprint_bytes": 606700576,
+      "resident_bytes": 733347840,
+      "kernel_uuid": "b16c919a2acf3c78a8b32594fbd5ee51",
+      "kernel_start": 2796565281
+    },
+    {
+      "identity": {
+        "pid": 22354,
+        "parent_pid": 1,
+        "started_at": "Thu Oct 15 18:10:13 2026",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic"
+      },
+      "returncode": 0,
+      "errno": 0,
+      "footprint_bytes": 645072240,
+      "resident_bytes": 216186880,
+      "kernel_uuid": "fb29f1ba6a6534f391e9a7f1c998d756",
+      "kernel_start": 31425387495152
+    },
+    {
+      "identity": {
+        "pid": 35486,
+        "parent_pid": 35461,
+        "started_at": "Thu Oct 15 13:14:29 2026",
+        "command": "/Applications/Ollama.app/Contents/Resources/ollama serve"
+      },
+      "returncode": 0,
+      "errno": 0,
+      "footprint_bytes": 26067904,
+      "resident_bytes": 32735232,
+      "kernel_uuid": "4004677a5e573c38c189d7e3788995a7",
+      "kernel_start": 30999517018051
+    },
+    {
+      "identity": {
+        "pid": 36054,
+        "parent_pid": 35486,
+        "started_at": "Thu Oct 15 13:15:28 2026",
+        "command": "/Applications/Ollama.app/Contents/Resources/llama-server --model /Users/v/.ollama/models/blobs/sha256-99cc7333f104a17a7906aa2e05c09b510b8f19129a2bf84840e284e306f3e0c8 --port 49822 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /Users/v/.ollama/models/blobs/sha256-eb569aba7d65cf3da1d0369610eb6869f4a53ee369992a804d5810a80e9fa035 --flash-attn auto -b 512 -ub 512 --context-shift --keep 4"
+      },
+      "returncode": 0,
+      "errno": 0,
+      "footprint_bytes": 10693013792,
+      "resident_bytes": 6355451904,
+      "kernel_uuid": "7dc5c0dd610431ec82ab1e6e72b228ea",
+      "kernel_start": 31000936612129
+    },
+    {
+      "identity": {
+        "pid": 66463,
+        "parent_pid": 35486,
+        "started_at": "Fri Oct 16 07:09:53 2026",
+        "command": "/Applications/Ollama.app/Contents/Resources/llama-server --model /Users/v/.ollama/models/blobs/sha256-1278394b693672ac2799eadc9a83fd98259a6a88a40acfb1dcaa6c6fc895a606 --port 51657 --host 127.0.0.1 --no-webui --offline -c 65536 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj /Users/v/.ollama/models/blobs/sha256-675ad6e68101ca9413ec806855c452362f0213f2dfc5800996b086fdb8119842 --flash-attn auto -b 2048 -ub 2048 --context-shift --keep 4"
+      },
+      "returncode": 0,
+      "errno": 0,
+      "footprint_bytes": 13224476320,
+      "resident_bytes": 9549856768,
+      "kernel_uuid": "7dc5c0dd610431ec82ab1e6e72b228ea",
+      "kernel_start": 32548109230994
+    },
+    {
+      "identity": {
+        "pid": 82314,
+        "parent_pid": 1,
+        "started_at": "Thu Oct 15 07:49:29 2026",
+        "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u /Users/v/other/minime/autonomous_agent.py --interval 60"
+      },
+      "returncode": 0,
+      "errno": 0,
+      "footprint_bytes": 1333938336,
+      "resident_bytes": 1557512192,
+      "kernel_uuid": "fb29f1ba6a6534f391e9a7f1c998d756",
+      "kernel_start": 30531513076896
+    },
+    {
+      "identity": {
+        "pid": 82528,
+        "parent_pid": 1,
+        "started_at": "Thu Oct 15 07:49:42 2026",
+        "command": "/Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/spectral-bridge-server --deployment-manifest /Users/v/other/worktrees/writing-admission-guidance-20261014/bridge-stage-01/manifest.json --astrid-root /Users/v/other/astrid --bridge-root /Users/v/.codex/worktrees/writing-admission-guidance-20261014/astrid/capsules/spectral-bridge --bridge-workspace /Users/v/other/astrid/capsules/spectral-bridge/workspace --db-path /Users/v/other/astrid/capsules/spectral-bridge/workspace/bridge.db --workspace-path /Users/v/other/minime/workspace --minime-root /Users/v/other/minime --perception-path /Users/v/other/astrid/capsules/perception/workspace/perceptions --autonomous"
+      },
+      "returncode": 0,
+      "errno": 0,
+      "footprint_bytes": 863258040,
+      "resident_bytes": 1013252096,
+      "kernel_uuid": "975eee4921ff3c928f0c2f373763582b",
+      "kernel_start": 30531834257864
+    },
+    {
+      "identity": {
+        "pid": 7089,
+        "parent_pid": 1,
+        "started_at": "Sun Oct 11 12:57:04 2026",
+        "command": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+      },
+      "returncode": 0,
+      "errno": 0,
+      "footprint_bytes": 544821328,
+      "resident_bytes": 493797376,
+      "kernel_uuid": "4c4c448855553144a1f0bfbd5d904e64",
+      "kernel_start": 22680000023311
+    },
+    {
+      "identity": {
+        "pid": 48507,
+        "parent_pid": 7089,
+        "started_at": "Mon Oct 12 14:10:33 2026",
+        "command": "/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/155.0.8059.40/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer) --type=renderer --user-data-dir=/Users/v/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --enable-blink-features=WebMCP --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=5 --launch-time-ticks=1035809567817 --shared-files --metrics-shmem-handle=1752395122,r,18153201012823638797,11409529025769688710,1572864 --field-trial-handle=1718379636,r,1339738394191434807,5055778884776075845,262144 --enable-features=DevToolsWebMCPSupport,DocumentPolicyIncludeJSCallStacksInCrashReports,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,14408051685059763147,12154151897547929510,4 --trace-process-track-uuid=3190708990997080739 --seatbelt-client=287"
+      },
+      "returncode": 0,
+      "errno": 0,
+      "footprint_bytes": 3061293000,
+      "resident_bytes": 1916141568,
+      "kernel_uuid": "4c4c448b55553144a146c75eac998bab",
+      "kernel_start": 24859429629037
+    }
+  ]
+}

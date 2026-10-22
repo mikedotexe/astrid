@@ -1,0 +1,70 @@
+{
+  "core_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/production-candidate-06",
+  "execution_budget": {
+    "child_created_fields": [
+      "budget_observed_monotonic",
+      "budget_timeout_s"
+    ],
+    "exit_fields": [
+      "wait_started_monotonic",
+      "wait_timeout_s",
+      "completed_monotonic"
+    ],
+    "launch_fields": [
+      "started_monotonic",
+      "timeout_s"
+    ],
+    "lock_holder": "Adjacent nonmutating lock holder retains existing90 second launch envelope and30 second observation/refusal/wait stages; new launch started_monotonic only. Ordinary launch keeps300 unless existing lock refusal uses30.",
+    "selected_launch_field": "phase_deadline_monotonic",
+    "semantics": "Readiness captures full authoritative inspection and seals request under shared parent lock, released before child. Launch timeout is floor(original phase deadline minus launch started monotonic). Created fields are provisional budget before durable created-file publication; actual wait re-evaluates remaining budget after publication. Natural reap at or after deadline is refused with known reap/return retained in unresolved; no extra budget, force, retry or re-launch. Final Host validation also must precede the shared deadline.",
+    "unchanged_phase_seconds": 300,
+    "unchanged_readiness_acceptance_seconds": 90
+  },
+  "fixture_root": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/owned-recovery-fixture-03",
+  "native": {
+    "chain_hash": "canonical digest(row), not raw JSONL bytes",
+    "effects": [
+      "bootstrap gui/UID exact RUN/provider.plist, RUN/reservoir.plist or RUN/pin/active.plist",
+      "bootout exact generated provider/reservoir/pin target",
+      "sudo -- /bin/launchctl debug exact generated provider/reservoir target --program SELECTED_PYTHON -- RUN/model_environment.py launch --control-root RUN/hold-ROLE --hold-only TOKEN or TOKEN-cleanup"
+    ],
+    "immutable_refs": "Native owner/chain/artifact namespace remains interface01; no aliases or exclusions. Unknown command effects or publication failures retain all evidence and stop.",
+    "kind_enum": [
+      "query",
+      "effect"
+    ],
+    "nonzero_queries": "Natural reap is not success; original exact command-specific absence predicates remain required. Do not require universal rc0 for legitimate ps/lsof/launchctl absence queries.",
+    "pid": "Canonical positive decimal string >1; no zero padding. Private port1024<port<65536 excludes existing protected list.",
+    "privilege": "Actual debug must match release.sudo_debug=true and exact sudo -- form/terminal180; other commands terminalfalse/20.",
+    "queries": [
+      "/usr/sbin/sysctl -n kern.bootsessionuuid",
+      "/usr/bin/sw_vers -productVersion",
+      "/bin/ps -p POSITIVE_PID -o lstart=",
+      "/bin/ps -ww -p POSITIVE_PID -o command=",
+      "/usr/sbin/lsof -nP -a -p POSITIVE_PID -iTCP -sTCP:LISTEN -Fpn",
+      "/usr/sbin/lsof -nP -iTCP:PRIVATE_PORT -sTCP:LISTEN -Fp",
+      "/bin/launchctl print GENERATED_PROVIDER_RESERVOIR_OR_PIN_TARGET"
+    ],
+    "time_order": "Parent invocation started_wall_time_ns <= native root owner created <= parent caller owner created <= first command; executor caller owner follows launch and precedes all its native commands, ending before natural executor reap. Raw initial/readiness/final queries additionally bind their exact parent phase intervals."
+  },
+  "no_tests_or_imports_executed": true,
+  "previous": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture03-candidate06-interface-01.json",
+    "sha256": "f59b561ebc0d6f5411ccf41c6686f696af217c96db130a048e9f6d520bc49034"
+  },
+  "readiness_aggregate": {
+    "inspections": "Exactly two refs to readiness/<step.id>-inspection.json in same order",
+    "records": "Exactly two refs to readiness/<step.id>.json in sealed step order"
+  },
+  "schema": "owned_fixture03_candidate06_interface_v1",
+  "schemas": "Retain release/result v2; exact03/06 closure plus required readiness and native sections reject legacy fixtures.",
+  "source_only_test_modules": [
+    "test_owned_fixture_commands",
+    "test_owned_fixture_coordinator",
+    "test_owned_fixture_pin",
+    "test_owned_fixture_readiness",
+    "test_owned_fixture_run",
+    "test_owned_recovery_host"
+  ],
+  "status": "source_contract_only_not_execution_or_acceptance"
+}

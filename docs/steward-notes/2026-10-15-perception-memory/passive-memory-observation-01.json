@@ -1,0 +1,53 @@
+{
+  "schema": "perception_passive_memory_observation_summary_v1",
+  "reviewed_at": "2026-10-16T01:48:12.049571+00:00",
+  "completed": true,
+  "raw": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive-rusage-01.json",
+    "sha256": "4772086301d19df5bcc2d94bad6420b383facea307a7af7a83ec4bca94bd05ff"
+  },
+  "observer_source": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive_rusage.py",
+    "sha256": "a3453dd69c989ba93484d109b0c8af86d5cde2e49bb29abb0d1badba60d31804"
+  },
+  "abi": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/proc-rusage-abi.json",
+    "sha256": "29ee554e75465dc05e042b0a7c5fc63ff975d021e64a148c61bbbc5de123a3bc"
+  },
+  "launch": {
+    "path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/passive-rusage-01-launch.json",
+    "sha256": "872d89672203d46b0ed37ed474f9214110d99ef6efe94ebd728e541d3df92436"
+  },
+  "started_at": "2026-10-16T01:36:17.478860+00:00",
+  "completed_at": "2026-10-16T01:46:17.502798+00:00",
+  "target": {
+    "pid": 22354,
+    "parent_pid": 1,
+    "started_at": "Thu Oct 15 18:10:13 2026",
+    "command": "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/v/other/astrid/capsules/perception/perception.py --camera 0 --ascii-source active --ascii-interval 45 --vision-interval 60 --audio-interval 30 --mic"
+  },
+  "kernel_uuid": "fb29f1ba6a6534f391e9a7f1c998d756",
+  "kernel_start_abstime": 31425387495152,
+  "samples": 21,
+  "interval_seconds": 30,
+  "actual_span_seconds": 600.0201475410722,
+  "footprint_bytes": {
+    "first": 139642008,
+    "last": 113656984,
+    "min": 113656984,
+    "max": 434717896,
+    "endpoint_delta": -25985024
+  },
+  "counter_deltas": {
+    "ri_user_time": 295484730,
+    "ri_system_time": 84469293,
+    "ri_pkg_idle_wkups": 0,
+    "ri_interrupt_wkups": 3832,
+    "ri_pageins": 523
+  },
+  "all_process_and_kernel_identity_checks_passed": true,
+  "observer_exited": true,
+  "stderr_bytes": 0,
+  "interpretation": "The sampled footprint showed transient peaks and returned below its first value over ten minutes. This does not prove absence of a slower leak or identify the native allocation responsible for historical10.7G footprint.",
+  "scope": "Public proc_pid_rusage V0 accounting only. No target attachment, suspension, signal, camera, microphone, model call or source/configuration mutation."
+}

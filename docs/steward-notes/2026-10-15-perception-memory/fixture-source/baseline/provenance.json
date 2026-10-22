@@ -1,0 +1,24 @@
+{
+  "baseline_record": "/Users/v/other/astrid/.runtime/mlx-upgrade/observations-post-perception-01/20261016T012057Z/soak_result.json",
+  "created_at": "2026-10-16T01:26:48.258517+00:00",
+  "expected_live_perception_pid": 22354,
+  "files": {
+    "host_audio_fallback.py": {
+      "bytes": 3017,
+      "candidate_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/host_audio_fallback.py",
+      "sha256": "aefe5019b21cba231c9c2d8722397667bce5b2e275e5838769b3e44be625bc69",
+      "source_mtime_ns": 1778340900826383616,
+      "source_path": "/Users/v/other/astrid/capsules/perception/host_audio_fallback.py"
+    },
+    "perception.py": {
+      "bytes": 64948,
+      "candidate_path": "/Users/v/other/astrid/.runtime/perception-memory-investigation/candidate/perception.py",
+      "sha256": "3b7baa2265373a39e8b46c8ad5a33781b21a86abf23d5959dc2393b53427a57a",
+      "source_mtime_ns": 1778340939690641106,
+      "source_path": "/Users/v/other/astrid/capsules/perception/perception.py"
+    }
+  },
+  "production_source_changes": 0,
+  "purpose": "Isolated source snapshot for fake-camera resource-lifecycle characterization. Do not import either production or copied module; perception has top-level filesystem side effects. No repair applied.",
+  "schema": "perception_memory_candidate_snapshot_v1"
+}

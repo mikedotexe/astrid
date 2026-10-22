@@ -1,0 +1,27 @@
+{
+  "schema": "reservoir_fixture_host_settle_review_v1",
+  "reviewed_at": "2026-10-16T03:36:08.794164+00:00",
+  "raw": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-02.json",
+    "sha256": "52a6dae9e8fc065a8cb0298fa23561131390cd7c43e63345d20c38f07550ecdb"
+  },
+  "observer": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/host-settle-02-observer.py",
+    "sha256": "48d8342850e033c552bb98d180a7ce3ca3e7a7cb7338534bfebbdf3eeac50507"
+  },
+  "passed": false,
+  "samples": 63,
+  "duration_s": 311.69493712484837,
+  "longest_eligible_window_s": 90.00942611694336,
+  "pressure_sample_counts": {
+    "1": 54,
+    "2": 9
+  },
+  "swap_bytes_first": 14021956730.88,
+  "swap_bytes_last": 13893432770.56,
+  "swap_endpoint_growth_bytes": -128523960.3199997,
+  "production_identity_unchanged": true,
+  "real_numeric_fixture_started": false,
+  "production_mutations": false,
+  "acceptance": "No300-secondquietwindow; pressure and swap movements reset the window. Preserve failure."
+}

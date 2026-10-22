@@ -1,0 +1,87 @@
+{
+  "approved": true,
+  "bindings": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-recovery-independent-review-01.json": "a5917de34e6dfaffb83ab29195e095c3d63d641fc6020553a2d3fd26885324a5",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-recovery-noninteractive-01.json": "8174947893417582494f495ef5f8aac97fd404b55bf6a600beeee7ba93f86b4c",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-v2-independent-review-01.json": "99ee4a2f235daf41a0731f9f0f6169aa6f256de447256e4c72be66ed7e7e7a36",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/hold-reservoir/hold.json": "dcd88c5f950f49500da0b5e1398eefa5422942a294ae3808074a4c0dea8b5cbc",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00028.json": "f2fc0ccfc7405a69c859007cb40e5dfc2ac752b068273a2c889cd538fcbf7d98",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00029.json": "eff20e35633f6237704e3ace07bf41cedcff6c55ce47cdc60b2b6da1b4ab9238",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00030.json": "1d86d5fe36a05eeb2096b6ade69faff04bca14fd40a20682777bd64b4b57a7f9",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00031.json": "a0d1117362d9a5ed997e173c17ae4a3f899033c5495fdc93207ce082461ee414",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00032.json": "7acc3b477c3e11e9c438ac3f9eb1670f13b7974774bcb16765df9f10b90c8233",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/host-operation-00033.json": "002822a767116f47c9c5cd0afd9901ffb61b98047425053c106d470395a72166",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/owned-fixture-3b6d224c3c42468c8033890d2c535662/preserved-state.json": "3b80389821271032a06532d30ad929e17f2c33d8b88c56913c943e311b652333"
+  },
+  "blocking_findings": [],
+  "checks": [
+    "Absolute pinned ordinary-user Python invokes the already reviewed recovery helper with interactive-debug, exact reviewed bindings and new admin-01 recovery receipt.",
+    "set -euo pipefail stops the script if recovery exits nonzero. Only a zero recovery exit reaches exec of the reviewed fresh v2 fixture with sudo-debug and a separate new admin-02 receipt.",
+    "No sudo wraps the shell or Python; each helper enforces ordinary user and narrows privilege to exact owned launchctl debug calls. Interactive path requires Terminal stdin.",
+    "No source, guard, state, prior result or operation file is overwritten by the wrapper; original failed fixture and noninteractive refusal receipts remain immutable. Re-running after output creation refuses rather than replaying.",
+    "Operation33 is exact sudo -n password-required refusal, with no recovery signal intent. This is the reviewed retryable authorization condition."
+  ],
+  "intended_invocation": [
+    "/bin/zsh",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/continue_owned_fixture.zsh"
+  ],
+  "limitations": [
+    "This review ran only read-only print/ps/lsof and zsh syntax checks; it did not run the continuation or privileged/runtime actions.",
+    "Helpers must recheck current identities during execution; this observation is a point-in-time snapshot.",
+    "Recovery success alone is cleanup evidence; fresh fixture success and production preservation qualification remain separate."
+  ],
+  "new_output_paths": [
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/fixture-recovery-admin-01.json",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/evidence/launchd-fixture-admin-02.json"
+  ],
+  "outputs_absent_at_review": true,
+  "production_qualified": false,
+  "read_only_host_observation": {
+    "preserved_backup": {
+      "fixture_astrid": {
+        "ticks": 11
+      },
+      "fixture_minime": {
+        "ticks": 7
+      }
+    },
+    "provider_guard_present": false,
+    "provider_holder_pid77047": "ps returned1 with empty output",
+    "provider_job": "launchctl print returned113: exact generated provider service not found",
+    "reservoir_argv_matches_retained_framework_runtime": true,
+    "reservoir_guard": {
+      "actor": "owned-fixture-cleanup",
+      "schema": "model_environment_hold_v1",
+      "transaction_id": "3b6d224c3c42468c8033890d2c535662"
+    },
+    "reservoir_listener": "lsof returned0: PID76424 127.0.0.1:52970",
+    "reservoir_pid": 76424,
+    "reservoir_started_at": "Fri Oct 16 08:02:53 2026",
+    "state_file": {
+      "fixture_astrid": {
+        "ticks": 11
+      },
+      "fixture_minime": {
+        "ticks": 7
+      }
+    }
+  },
+  "reviewed_at": "2026-10-16T15:20:14.713694+00:00",
+  "reviewer": "mlx_integration",
+  "runtime_mutations_by_reviewer": 0,
+  "schema": "owned_fixture_continuation_wrapper_review_v1",
+  "syntax_check": {
+    "command": [
+      "/bin/zsh",
+      "-n",
+      "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/continue_owned_fixture.zsh"
+    ],
+    "returncode": 0,
+    "script_executed": false
+  },
+  "wrapper": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-maintenance/candidate-v2/continue_owned_fixture.zsh",
+    "sha256": "2708affe66984dcbce04de9ef11f528ebecd6391e07e3e9491cf9575f977d793"
+  },
+  "wrapper_executed": false
+}

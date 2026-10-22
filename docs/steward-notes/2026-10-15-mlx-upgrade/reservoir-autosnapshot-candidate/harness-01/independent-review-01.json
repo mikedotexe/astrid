@@ -1,0 +1,97 @@
+{
+  "author_cpu_result": "17 stdlib tests passed; receipt, log and all ten current source hashes independently verified. Reviewer did not rerun tests.",
+  "blocking_findings": [],
+  "candidate_source_hashes": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/baseline/reservoir_service.py": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/reservoir_service.py": "cd887e536de210592f6f719ffaff16be5508869b48b3594fc53956504968b9da"
+  },
+  "checks": [
+    {
+      "area": "Protocol and timing",
+      "evidence": "protocol_client.py uses real synchronous websockets connect(open_timeout=2, proxy=None) and recv(timeout=5); service and client are separate PID-bound processes. Opening, acknowledgement, pull and close timings are recorded separately. Trigger alignment requires <=0.5 seconds and positive aggregate acknowledgement before periodic batch end."
+    },
+    {
+      "area": "Controls",
+      "evidence": "Original aggregate and both 3.2-second single-save cases require exact opening-handshake TimeoutError, no application send and no credited push. Positive cases require matching unique synthetic acknowledgement and full-state pull. Fourteen-case matrix requires original/candidate then reversed aggregate order, no overlap and no hidden retry."
+    },
+    {
+      "area": "Actual service path",
+      "evidence": "Six copied source modules are hash-bound; original/candidate service and unchanged persistence have fixed reviewed hashes. Actual ReservoirService, actual 60-second timer, real writer and real WebSocket handler are delegated unchanged except transparent instrumentation and deliberate test delay/error/cancellation."
+    },
+    {
+      "area": "Preservation oracle",
+      "evidence": "102 nonzero handle-distinct synthetic states seed actual files. Every successful periodic/final write checks exact NPZ key set, all non-time array/scalar descriptors and complete thermostat payload, with bounded timestamp/last-live conversion. Actual snapshot and restore semantics match the reviewed source."
+    },
+    {
+      "area": "Restore lifecycle",
+      "evidence": "Two fresh actual backend objects restore all 102 handles and verify metadata, arrays and thermostat state, with an intervening actual resnapshot and continued event sequence. First service scope/event loop ends before restore construction; objects are released and gc.collect runs between restore objects."
+    },
+    {
+      "area": "Cancellation and failure",
+      "evidence": "Candidate cancellation is delivered after seventh complete save; original captures uninterrupted 102-save behavior. Final synchronous save must complete all 102 handles, including delayed-final control. Writer-error case retains prior file and requires exactly the intended failure."
+    },
+    {
+      "area": "Ownership and cleanup",
+      "evidence": "Fresh outputs resolve beneath harness. One Popen child is serialized by flock plus retained active-run record. Bound 127.0.0.1:0 actual socket supplies port. Shutdown uses private control pipe; child is reaped before success. No signal/kill/terminate path; timeout retains unresolved child and blocks further runs."
+    },
+    {
+      "area": "Source and package identity",
+      "evidence": "Interpreter wrapper and exact framework Python.app runtime bytes are bound; ps -ww records PID/start/command across phases. Loaded private module origins, source/harness hashes and package METADATA/RECORD fingerprints are checked; final matrix requires identical package, interpreter and fixture evidence."
+    },
+    {
+      "area": "Isolation",
+      "evidence": "No production source/state edits, package installs or production endpoint requests exist in the intended driver path. Child imports real numerical dependencies only after explicit run release; GPU/model import guard and CPU thread limits remain active."
+    }
+  ],
+  "cpu_log": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/cpu-tests-03.txt",
+    "sha256": "cf9fed22aa6e7a4921caa32b0458d4d14ddff513ca8f52a6cf0ad05b31909f07"
+  },
+  "cpu_receipt": {
+    "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/cpu-tests-03.json",
+    "sha256": "befc3ea373d8a57ee652f0b5f0d034227fd4e6455a1c110c693dfb6b883b4c87"
+  },
+  "deployment_accepted": false,
+  "harness_hashes": {
+    "common.py": "d31eff0618ccddd723ede9d58c91da5e03e4888a0c48cc6e55120770bd488420",
+    "driver.py": "42dc76d5b90a7797ef89b88e1835661c851d85130d5df9d37dd72df6727da09d",
+    "fixture.py": "f947cd3ba213cda45f25d9d7c3f32ab111a7de3a6c64c29ed620adaa49d3688b",
+    "process_identity.py": "068da901598ff9cf982314f1cc0f4381a6e6e878143be5e52def59270871d0f2",
+    "protocol_client.py": "5718ebd4b0cb285fd9b06a6c4d54412d4a6cc16c3a2ed93d73b83326018a9427",
+    "result_checks.py": "1242f173bd6c77fa1ed4f9bde9a9934845815aab9025aedf44c97f92117a3b86",
+    "review_matrix.py": "e8b5c904d373813428799cdd53139a1bd63a00edfc15894653c322779992e440",
+    "service_child.py": "e0dc625857dcc5877ee2751e6d2f1b91c395a1f1e64481402542bac6f3adfdd7",
+    "snapshot_oracle.py": "48334a63be758ccff7d943b056f820112c81b5c935b5d1020e244bf4649e53ae",
+    "test_harness.py": "8b272aca672305744939d88b3e2599c7dedcf2405873c846289077b8c6283e47"
+  },
+  "limitations": [
+    "Review does not execute or qualify production deployment, MLX package upgrade, live history, or non-NumPy backend preservation.",
+    "Instrumentation includes per-handle reads/copies on the service loop; timing characterizes this instrumented fixture rather than production disk throughput.",
+    "A single slow synchronous save can still exceed the unchanged opening deadline; that is an explicit expected limitation.",
+    "Source review and author CPU tests do not prove host launchd behavior or actual numeric/network execution.",
+    "The exact semantic restore oracle rejects missing/changed states; generic log warning absence is not separately parsed and must not be claimed from this harness alone."
+  ],
+  "mlx_upgrade_qualified": false,
+  "pending_execution_gates": [
+    "Root release after a current accepted five-minute host-settling window and exact protected/runtime identity checks.",
+    "Actual NumPy initialization cost, all real API interactions, timer/trigger alignment and semantic equality remain unmeasured until fourteen retained cases run successfully.",
+    "Every unexpected failure stops progression; changed harness bytes require fresh source preparation and cases."
+  ],
+  "production_mutations": 0,
+  "real_service_executed_by_reviewer": false,
+  "reference_hashes": {
+    "/Users/v/other/astrid/.runtime/mlx-upgrade/reservoir-snapshot-candidate/qualification-harness/README.md": "607f2c0099f3f5c6ae9e79e9d76e0b73a6468f4820c940e25691c90101c36f8d",
+    "/Users/v/other/astrid/docs/steward-notes/2026-10-15-mlx-upgrade/reservoir-autosnapshot-candidate/qualification-plan.md": "e146e8d76dbc6df4b64fd44b145e93087c25cbf1bb78307d37423e7ddf2cc7cc",
+    "/Users/v/other/neural-triple-reservoir/dual_ai_bridge.py": "a7adae36510c496bff084a10d41ecd7b40ffb4f0c259924a448b56bbfe17a549",
+    "/Users/v/other/neural-triple-reservoir/lsm_reservoir.py": "36143cc0d9ed1b377b251abc42f5a4957e9ef835a4739b1e8cd6404625957417",
+    "/Users/v/other/neural-triple-reservoir/persistence.py": "b550833fdb819f38bbdabb6990e134e68629f6a63397f23b7b7afb2bed2ca72f",
+    "/Users/v/other/neural-triple-reservoir/rehearsal.py": "bf3558a04c75f04d489653c71d74d55d378330153a69870705a5a393660b8093",
+    "/Users/v/other/neural-triple-reservoir/reservoir_service.py": "800ee15fc9a73df294068d23bc9c8f0a1d4d508d336fc1e0c904b1adb86a8db0",
+    "/Users/v/other/neural-triple-reservoir/triple_reservoir_coreml.py": "524d44ec4c03f0be43236a635eeb2bb783f61ea5d3227a133bd451aadf6644a8"
+  },
+  "reviewed_at": "2026-10-16T03:37:46.152052+00:00",
+  "reviewer": "mlx_integration",
+  "schema": "reservoir_snapshot_qualification_harness_independent_review_v1",
+  "scope": "Static review of nine implementation modules and one stdlib test module; no imports or execution of the real service, NumPy, Torch, sockets or models by reviewer.",
+  "source_review_passed": true
+}
