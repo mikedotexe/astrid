@@ -2,12 +2,11 @@
 
 ## Status and Scope
 
-Source-qualified tooling, approved for coordinated Git integration, developed on
-`codex/scoped-release-preflight-20261022` from Astrid
+Integrated and pushed as Astrid `1ef40356b64e521fde0c9cf3c9b4a30fc6bed1f0`,
+developed on `codex/scoped-release-preflight-20261022` from
 `054f4ff335f197c3f2921b995f82121a0eb4c00a`. The qualification sections below
-describe the pre-integration state. No service transition or new release build
-is required to integrate these Python/shell tools; no policy grant or automation
-resume is included.
+retain the pre-integration observations. No service transition or new release
+build was performed; no policy grant or automation resume is included.
 
 Mike requested an autonomous, serious review of avoidable go-live friction while
 he investigates Brave separately. This is operator-process feedback, not a claim
@@ -364,3 +363,25 @@ The integration rerun passed all 416 selected tooling tests in 35.250 seconds.
 The read-only domain audit again reports zero violations, and `git diff --check`
 passes. This is a fresh Python/shell tooling check, not a new Rust compilation or
 an assertion that a live rollout occurred.
+
+### Integration Result
+
+The reviewed 19-path tooling commit is
+`1ef40356b64e521fde0c9cf3c9b4a30fc6bed1f0`. Canonical Astrid `main` fast-forwarded
+from the inspected base without conflict. The same 416-test selection passed
+again from canonical `main` in 32.644 seconds, and the committed diff passed
+the whitespace check. A normal, non-forced `git push origin main` succeeded;
+an independent `git ls-remote` returned the exact implementation commit.
+
+Canonical Minime remains clean at
+`73f1e390565c52f83c77fd4ffd31d38103c3bb33`; it needed no commit or push. The
+implementation worktree is clean and retained, as are unrelated search, capacity
+and historical worktrees. No Cargo targets were created in the implementation
+worktree; its pre-existing 16 KiB Python cache was left alone. The volume reports
+389 GiB available; no cleanup or space-reclamation claim is made.
+
+The integration adds no launch, stop, signal, state migration, model request or
+change to immutable current/rollback releases. Steward control remains paused at
+generation 535 with no lease or projection. The next ordinary qualified build
+can establish the first production v5 reuse baseline; historical stages and test
+logs have not been relabelled as reusable evidence.
