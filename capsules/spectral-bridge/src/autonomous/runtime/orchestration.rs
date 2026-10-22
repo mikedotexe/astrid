@@ -1560,6 +1560,12 @@ pub fn spawn_autonomous_loop(
                                         let anchor =
                                             search_topic.clone().unwrap_or_else(|| query.clone());
                                         let ctx = crate::llm::web_search_checked(&query, &anchor).await;
+                                        if ctx.as_ref().is_ok_and(|results| results.hits.is_empty()) {
+                                            next_action::research_jobs::finish(&mut conv, bound_research_job, true);
+                                            info!(target_hash = %crate::public_web::target_fingerprint(&query), results = 0, source_delivered = false, generation_requested = false, "web search completed with zero results; no fallback or reflection");
+                                            save_state(&mut conv);
+                                            continue;
+                                        }
                                         if let Ok(ref results) = ctx {
                                             research_source_succeeded = true;
                                             info!(target_hash = %crate::public_web::target_fingerprint(&query), "dialogue: web search enriched response");
@@ -2995,11 +3001,7 @@ pub fn spawn_autonomous_loop(
                                 let web_ctx =
                                     crate::llm::web_search(&search_query, &search_anchor).await;
                                 if let Some(ref ctx) = web_ctx {
-                                    info!(label = %label, "introspect: web search returned context");
-                                    debug!(
-                                        "web context: {}",
-                                        truncate_str(&ctx.prompt_body(), 100)
-                                    );
+                                    info!(result_count = ctx.hits.len(), "introspect: web search returned navigation candidates");
                                 }
                                 let web_prompt_body =
                                     web_ctx.as_ref().map(|ctx| ctx.prompt_body());

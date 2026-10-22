@@ -78,7 +78,7 @@ pub(crate) async fn fetch(
         Err(failure) => {
             tracing::info!(receipt = %serde_json::to_string(&failure).unwrap_or_default(),
                 "public_web_fetch_incomplete");
-            Err(format!("public_web_{:?}; complete=false", failure.code))
+            Err(failure.delivery_message())
         },
     }
 }

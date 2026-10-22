@@ -74,6 +74,7 @@ impl Fixture {
             issuer_public_key_hex: issuer.export_public_key().to_hex(),
             operations: vec![PublicWebOperationV2::Search, PublicWebOperationV2::Page],
             limits: PublicWebLimitsV2::default(),
+            search_api: None,
             issued_at_unix_ms: now,
             expires_at_unix_ms: now.saturating_add(600_000),
             approval_audit_refs: vec!["synthetic-approval".into()],
@@ -103,6 +104,7 @@ impl Fixture {
             expected_owner: owner.clone(),
             expected_policy_sha256: policy.sha256(),
             minimum_state_revision: 1,
+            brave: None,
         };
         write(
             &config.delegation_root.join("trust.json"),

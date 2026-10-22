@@ -88,6 +88,28 @@ is implemented. Hashes of typed statements use their existing `sha256()` APIs;
 constructor in the runtime crate, so only its existing unsigned serde wire
 document is represented locally and exercised through the actual validator.
 
+## Brave Search Authorization
+
+An optional `search_api` and `brave` pair selects signed v3 authority. Supply
+both or neither. `search_api` contains schema `volition.brave_search.v1`,
+`account_id`, `monthly_limit_microusd`, `request_cost_microusd` (5000),
+`storage_rights_status` (`unverified` or `operator_confirmed`), and an explicit
+`retention_review_audit_ref`. `brave` contains absolute `credential_file` and
+shared `account_directory` paths. Neither preparation nor its receipt reads the
+API key. Existing v2 authority remains credential-free.
+
+The status records the operator's knowledge, not a legal determination. An
+explicit decision to proceed with unverified rights must remain `unverified`;
+possession of a key, payment and signed operational authorization establish no
+contractual entitlement. The audit reference identifies the informed retention
+decision. The runtime does not rewrite it into verified permission.
+
+The shared account enforces gross local reservations, including failed or
+uncertain attempts, not the provider's total bill or usage by other clients.
+Initialize it explicitly with `astrid-public-web search-account-init`; do not
+reset an existing account during policy rotation. No automatic paid retries,
+fallback or forwarding of credentials to redirect destinations is permitted.
+
 ## Renew Only Approval
 
 Install/revoke approval expires in five minutes. To renew, supply the exact

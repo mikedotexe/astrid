@@ -4,12 +4,15 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use astrid_capabilities::{CapabilityToken, TokenScope};
 use astrid_core::Permission;
 use astrid_minime_protocol::public_web::{
-    PUBLIC_WEB_CAPABILITY_RESOURCE_V2, PublicWebOperationV2, PublicWebPolicyStateV2,
-    PublicWebPolicyStatusV2, PublicWebPolicyV2,
+    PUBLIC_WEB_POLICY_SCHEMA_V2, PUBLIC_WEB_POLICY_SCHEMA_V3, PublicWebOperationV2,
+    PublicWebPolicyStateV2, PublicWebPolicyStatusV2, PublicWebPolicyV2,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{CONFIG_SCHEMA, PublicWebConfig, PublicWebErrorCode as E, Result, digest, guard};
+use crate::{
+    CONFIG_SCHEMA, CONFIG_SCHEMA_V3, PublicWebConfig, PublicWebErrorCode as E, Result, digest,
+    guard,
+};
 
 /// Wire-compatible with the existing delegated-capability bootstrap trust file.
 #[derive(Deserialize)]
@@ -120,7 +123,12 @@ pub(crate) fn validate_candidate(
     token_bytes: &[u8],
     allow_revoked: bool,
 ) -> Result<()> {
-    if config.schema != CONFIG_SCHEMA
+    if !((config.schema == CONFIG_SCHEMA
+        && config.brave.is_none()
+        && policy.schema == PUBLIC_WEB_POLICY_SCHEMA_V2)
+        || (config.schema == CONFIG_SCHEMA_V3
+            && config.brave.is_some()
+            && policy.schema == PUBLIC_WEB_POLICY_SCHEMA_V3))
         || !config.expected_owner.is_well_formed()
         || config.minimum_state_revision == 0
     {
@@ -181,9 +189,9 @@ pub(crate) fn validate_candidate(
         || token.validate_with_skew(0).is_err()
         || token.scope != TokenScope::Persistent
         || token.is_single_use()
-        || token.resource.as_str() != PUBLIC_WEB_CAPABILITY_RESOURCE_V2
+        || token.resource.as_str() != policy.capability_resource()
         || token.permissions != vec![Permission::Read]
-        || !token.grants(PUBLIC_WEB_CAPABILITY_RESOURCE_V2, Permission::Read)
+        || !token.grants(policy.capability_resource(), Permission::Read)
         || token.issued_at.0.timestamp_millis() > i64::try_from(now).unwrap_or(i64::MAX)
     {
         return Err(E::InvalidCapability);

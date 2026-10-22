@@ -18,8 +18,10 @@ use crate::authority::Authority as _;
 use crate::network::{Backend, Body, HopResponse, public_ip, public_url};
 use crate::transport::fetch_with;
 
+mod brave_search;
 mod failures;
 mod operator;
+mod search_delivery;
 
 struct Fixture {
     _root: tempfile::TempDir,
@@ -80,6 +82,7 @@ impl Fixture {
             issuer_public_key_hex: issuer.export_public_key().to_hex(),
             operations: vec![PublicWebOperationV2::Search, PublicWebOperationV2::Page],
             limits: PublicWebLimitsV2::default(),
+            search_api: None,
             issued_at_unix_ms: now,
             expires_at_unix_ms: now.saturating_add(60_000),
             approval_audit_refs: vec!["fixture:approval".into()],
@@ -96,6 +99,7 @@ impl Fixture {
             expected_owner: policy.owner.clone(),
             expected_policy_sha256: String::new(),
             minimum_state_revision: 1,
+            brave: None,
         };
         let mut fixture = Self {
             _root: root,
@@ -184,6 +188,7 @@ impl Body for Chunks {
 fn response(status: u16, location: Option<&str>, bytes: &[u8]) -> HopResponse {
     HopResponse {
         status,
+        header_error: None,
         location: location.map(str::to_owned),
         content_type: Some("text/html; charset=utf-8".into()),
         encoding: "identity".into(),
@@ -226,7 +231,12 @@ impl Backend for FakeBackend {
         pinned: &[SocketAddr],
         _: Duration,
         _: Duration,
+        credential: Option<&reqwest::header::HeaderValue>,
     ) -> Result<HopResponse> {
+        if let Some(credential) = credential {
+            assert!(credential.is_sensitive());
+            assert!(crate::brave::is_endpoint(url));
+        }
         self.sent
             .lock()
             .unwrap()

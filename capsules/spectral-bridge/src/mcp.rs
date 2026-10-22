@@ -2287,6 +2287,14 @@ async fn current_probe_context(state: &Arc<RwLock<BridgeState>>) -> LiveProbeCon
 
 fn normalize_probe_action(action_text: &str) -> Option<String> {
     let trimmed = action_text.trim();
+    let authored =
+        astrid_source_study::response_choice::final_explicit_next(trimmed).unwrap_or(trimmed);
+    if let Some((command, _)) = authored.split_once(char::is_whitespace)
+        && command.eq_ignore_ascii_case("SEARCH")
+    {
+        // A search query is data; generic NEXT cleanup can remove literal <T>.
+        return Some(authored.to_string());
+    }
     if trimmed.is_empty() {
         None
     } else {
@@ -2335,8 +2343,8 @@ fn probe_browse_url(parsed_action: &str) -> Option<String> {
 }
 
 fn probe_effective_search_query(parsed_action: &str, db: &BridgeDb) -> Option<String> {
-    if let Some(topic) = crate::autonomous::extract_search_topic(parsed_action) {
-        return Some(topic);
+    if let Some(query) = crate::autonomous::extract_search_topic(parsed_action) {
+        return Some(query);
     }
 
     db.get_recent_self_observations(1)
@@ -2381,8 +2389,9 @@ async fn probe_search_action(
     };
 
     let anchor = query.clone();
-    match crate::llm::web_search(&query, &anchor).await {
-        Some(results) => {
+    match crate::llm::web_search_checked(&query, &anchor).await {
+        Ok(results) if results.hits.is_empty() => probe_empty_search(parsed_action, live, query),
+        Ok(results) => {
             let mut state = load_probe_read_more_state().unwrap_or_default();
             state.last_research_anchor = Some(results.anchor.clone());
             save_probe_read_more_state(&state);
@@ -2404,15 +2413,33 @@ async fn probe_search_action(
                 preflight: None,
             }
         },
-        None => probe_error_action(
+        Err(reason) => probe_error_action(
             parsed_action.to_string(),
             base_action,
             live.safety_level,
-            format!("Web search failed or returned no usable results for \"{query}\"."),
+            format!("Web search incomplete: {reason}"),
             String::new(),
         ),
     }
 }
+
+fn probe_empty_search(parsed_action: &str, live: &LiveProbeContext, query: String) -> ProbeOutcome {
+    ProbeOutcome {
+        parsed_action: parsed_action.to_string(),
+        base_action: probe_base_action(parsed_action),
+        status: "ok".to_string(),
+        summary: "Web search completed with zero results.".to_string(),
+        experienced_text: "Search completed with zero results. No page evidence was delivered and no reflection was generated. The previous reading position is unchanged.".to_string(),
+        artifacts: Vec::new(),
+        safety_level: live.safety_level,
+        effective_query: Some(query),
+        preflight: None,
+    }
+}
+
+#[cfg(test)]
+#[path = "mcp_search_delivery_tests.rs"]
+mod search_delivery_tests;
 
 async fn probe_browse_action(
     parsed_action: &str,

@@ -1,26 +1,51 @@
-/// Search the web via DuckDuckGo HTML and return structured result snippets.
+/// Search through the shared transport and return result snippets.
 ///
 /// Used to supplement introspection with external knowledge — if Astrid
 /// reads ESN code, it can also read about ESN theory from the web.
 pub(crate) async fn web_search(query: &str, anchor: &str) -> Option<WebSearchResult> {
-    web_search_checked(query, anchor).await.ok()
+    // Optional enrichment needs actual candidates, not an empty-search reflection.
+    web_search_checked(query, anchor)
+        .await
+        .ok()
+        .filter(|result| !result.hits.is_empty())
 }
 
-pub(crate) async fn web_search_checked(query: &str, anchor: &str) -> Result<WebSearchResult, String> {
+pub(crate) async fn web_search_checked(
+    query: &str,
+    anchor: &str,
+) -> Result<WebSearchResult, String> {
     let response = crate::public_web::fetch(
-        astrid_minime_protocol::public_web::PublicWebOperationV2::Search, query,
-    ).await?;
-    let html = String::from_utf8(response.body).map_err(|_| "public_web_text_decoding_unavailable".to_string())?;
+        astrid_minime_protocol::public_web::PublicWebOperationV2::Search,
+        query,
+    )
+    .await?;
+    search_from_body(query, anchor, &response.content_type, &response.body).await
+}
 
-    let hits = extract_duckduckgo_hits(&html);
+async fn search_from_body(
+    query: &str,
+    anchor: &str,
+    content_type: &str,
+    body: &[u8],
+) -> Result<WebSearchResult, String> {
+    let hits = search_hits_from_body(query, content_type, body)?;
     if hits.is_empty() {
-        return Err("public_web_no_readable_search_results".to_string());
+        return Ok(WebSearchResult {
+            source_kind: ResearchSourceKind::Search,
+            raw_text: String::new(),
+            hits,
+            anchor: anchor.to_string(),
+            meaning_summary: "Search completed with zero results. No page evidence was delivered."
+                .to_string(),
+        });
     }
-
     let raw_text = render_hits_plain(&hits);
     let excerpt = trim_chars(&raw_text, 1800);
+    let navigation_notice =
+        "Search-provider snippets and links are navigation candidates, not verified page evidence.";
+    let evidence = format!("{navigation_notice}\n{excerpt}");
     let meaning_summary =
-        summarize_research_meaning(ResearchSourceKind::Search, anchor, query, &excerpt)
+        summarize_research_meaning(ResearchSourceKind::Search, anchor, query, &evidence)
             .await
             .unwrap_or_else(|| {
                 fallback_meaning_summary(ResearchSourceKind::Search, anchor, query, &excerpt)
@@ -31,9 +56,60 @@ pub(crate) async fn web_search_checked(query: &str, anchor: &str) -> Result<WebS
         raw_text,
         hits,
         anchor: anchor.to_string(),
-        meaning_summary,
+        meaning_summary: format!("{navigation_notice}\n{meaning_summary}"),
     })
 }
+
+fn search_hits_from_body(
+    query: &str,
+    content_type: &str,
+    body: &[u8],
+) -> Result<Vec<ResearchHit>, String> {
+    if content_type == "application/vnd.astrid.search+json" {
+        #[derive(serde::Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct SearchEnvelope {
+            schema: String,
+            provider: String,
+            query: String,
+            results: Vec<SearchCandidate>,
+        }
+        #[derive(serde::Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct SearchCandidate {
+            title: String,
+            url: String,
+            snippet: String,
+        }
+        let envelope: SearchEnvelope = serde_json::from_slice(body)
+            .map_err(|_| "public_web_search_response_invalid".to_string())?;
+        if envelope.schema != "astrid.search.results.v1"
+            || envelope.provider != "brave_web_v1"
+            || envelope.query != query
+            || envelope.results.len() > 5
+        {
+            return Err("public_web_search_response_invalid".to_string());
+        }
+        return Ok(envelope
+            .results
+            .into_iter()
+            .map(|hit| ResearchHit {
+                title: hit.title,
+                url: hit.url,
+                snippet: hit.snippet,
+            })
+            .collect());
+    }
+    let html = std::str::from_utf8(body)
+        .map_err(|_| "public_web_text_decoding_unavailable".to_string())?;
+    let hits = extract_duckduckgo_hits(html);
+    if hits.is_empty() {
+        return Err("public_web_no_readable_search_results".to_string());
+    }
+    Ok(hits)
+}
+
+include!("research_search_tests.rs");
 
 pub(crate) fn derive_browse_anchor(
     preferred: Option<&str>,

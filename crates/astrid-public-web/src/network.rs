@@ -2,7 +2,7 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
 
 use async_trait::async_trait;
-use reqwest::header::{CONTENT_ENCODING, CONTENT_TYPE, LOCATION};
+use reqwest::header::{CONTENT_ENCODING, CONTENT_TYPE, HeaderValue, LOCATION};
 use url::{Host, Url};
 
 use crate::{PublicWebErrorCode as E, Result};
@@ -119,10 +119,39 @@ pub(crate) trait Body: Send {
 
 pub(crate) struct HopResponse {
     pub status: u16,
+    pub header_error: Option<E>,
     pub location: Option<String>,
     pub content_type: Option<String>,
     pub encoding: String,
     pub body: Box<dyn Body>,
+}
+
+impl HopResponse {
+    pub(crate) fn from_headers(
+        status: u16,
+        headers: &reqwest::header::HeaderMap,
+        body: Box<dyn Body>,
+    ) -> Self {
+        let metadata = (|| {
+            Ok::<_, E>((
+                one_header(headers, LOCATION)?,
+                one_header(headers, CONTENT_TYPE)?,
+                one_header(headers, CONTENT_ENCODING)?.unwrap_or_else(|| "identity".into()),
+            ))
+        })();
+        let (location, content_type, encoding, header_error) = match metadata {
+            Ok((location, content_type, encoding)) => (location, content_type, encoding, None),
+            Err(error) => (None, None, String::new(), Some(error)),
+        };
+        Self {
+            status,
+            header_error,
+            location,
+            content_type,
+            encoding,
+            body,
+        }
+    }
 }
 
 #[async_trait]
@@ -134,6 +163,7 @@ pub(crate) trait Backend: Send + Sync {
         pinned: &[SocketAddr],
         connect: Duration,
         timeout: Duration,
+        credential: Option<&HeaderValue>,
     ) -> Result<HopResponse>;
 }
 
@@ -188,6 +218,7 @@ impl Backend for HttpBackend {
         pinned: &[SocketAddr],
         connect: Duration,
         timeout: Duration,
+        credential: Option<&HeaderValue>,
     ) -> Result<HopResponse> {
         validate_addresses(pinned, url.port_or_known_default().ok_or(E::UnsafeUrl)?)?;
         let client = reqwest::Client::builder()
@@ -203,23 +234,14 @@ impl Backend for HttpBackend {
             .resolve_to_addrs(url.host_str().ok_or(E::UnsafeUrl)?, pinned)
             .build()
             .map_err(|_| E::TransportFailed)?;
-        let response = client
-            .get(url.clone())
-            .header("Accept-Encoding", "identity")
-            .header(
-                "Accept",
-                "text/html, application/xhtml+xml, text/plain, application/json",
-            )
-            .header("User-Agent", "Astrid-Public-Web/2")
-            .send()
-            .await
-            .map_err(|error| {
-                if error.is_timeout() {
-                    E::Deadline
-                } else {
-                    E::TransportFailed
-                }
-            })?;
+        let request = http_request(&client, url, credential)?;
+        let response = client.execute(request).await.map_err(|error| {
+            if error.is_timeout() {
+                E::Deadline
+            } else {
+                E::TransportFailed
+            }
+        })?;
         if response.url() != url
             || response
                 .remote_addr()
@@ -227,16 +249,38 @@ impl Backend for HttpBackend {
         {
             return Err(E::UnsafeAddress);
         }
-        let location = one_header(response.headers(), LOCATION)?;
-        let content_type = one_header(response.headers(), CONTENT_TYPE)?;
-        let encoding =
-            one_header(response.headers(), CONTENT_ENCODING)?.unwrap_or_else(|| "identity".into());
-        Ok(HopResponse {
-            status: response.status().as_u16(),
-            location,
-            content_type,
-            encoding,
-            body: Box::new(HttpBody(response)),
-        })
+        let status = response.status().as_u16();
+        let headers = response.headers().clone();
+        Ok(HopResponse::from_headers(
+            status,
+            &headers,
+            Box::new(HttpBody(response)),
+        ))
     }
+}
+
+pub(crate) fn http_request(
+    client: &reqwest::Client,
+    url: &Url,
+    credential: Option<&HeaderValue>,
+) -> Result<reqwest::Request> {
+    if credential.is_some() && !crate::brave::is_endpoint(url) {
+        return Err(E::UnsafeUrl);
+    }
+    let mut request = client
+        .get(url.clone())
+        .header("Accept-Encoding", "identity")
+        .header(
+            "Accept",
+            if credential.is_some() {
+                "application/json"
+            } else {
+                "text/html, application/xhtml+xml, text/plain, application/json"
+            },
+        )
+        .header("User-Agent", "Astrid-Public-Web/3");
+    if let Some(credential) = credential {
+        request = request.header("X-Subscription-Token", credential);
+    }
+    request.build().map_err(|_| E::TransportFailed)
 }
