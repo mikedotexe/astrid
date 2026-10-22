@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import math
 import os
 import re
 import subprocess
@@ -199,8 +200,12 @@ def parse_request_metrics(text: str) -> dict[str, Any]:
             continue
         request = value.get("request") if isinstance(value.get("request"), dict) else {}
         generation = value.get("generation") if isinstance(value.get("generation"), dict) else {}
+        if not generation:
+            continue
         entries.append(
             {
+                "lane": request.get("lane") or request.get("label"),
+                "effective_timeout_secs": request.get("effective_timeout_secs"),
                 "handle_name": request.get("handle_name"),
                 "prompt_chars": request.get("prompt_chars"),
                 "max_tokens": request.get("max_tokens"),
@@ -209,6 +214,7 @@ def parse_request_metrics(text: str) -> dict[str, Any]:
                 "steady_tok_s": generation.get("steady_tok_s"),
                 "decode_tok_s": generation.get("decode_tok_s"),
                 "total_turn_s": generation.get("total_turn_s"),
+                "peak_memory_bytes": generation.get("peak_memory_bytes"),
             }
         )
 
@@ -241,8 +247,51 @@ def parse_request_metrics(text: str) -> dict[str, Any]:
         "max_prompt_chars": max(prompt_chars) if prompt_chars else None,
         "p95_prompt_chars": percentile([float(v) for v in prompt_chars], 95.0),
         "max_generated_tokens": max(generated_tokens) if generated_tokens else None,
-        "entries": entries[-20:],
+        "entries": entries,
+        "lane_deadlines": assess_lane_deadlines(entries),
     }
+
+
+def lane_deadline(entry: dict[str, Any]) -> float | None:
+    """Known Gemma4 bridge deadlines; never assign a generic 240s ceiling.
+
+    Sources: provider/{transport,prompt_contracts,fallback_contracts,writing_profile}.rs.
+    Explicit effective request receipts take precedence over inferred lane policy.
+    A reservoir handle such as 'astrid' is not a request lane and remains unknown.
+    """
+    explicit = entry.get("effective_timeout_secs")
+    if isinstance(explicit, (int, float)) and not isinstance(explicit, bool) and math.isfinite(explicit) and explicit > 0:
+        return float(explicit)
+    lane = entry.get("lane") or entry.get("handle_name")
+    tokens = entry.get("max_tokens")
+    chars = entry.get("prompt_chars")
+    writing_lanes = {"daydream", "aspiration", "creation", "journal_elaboration", "moment_capture", "private_writing"}
+    if lane in writing_lanes or (isinstance(tokens, int) and tokens >= 8192 and lane in {"dialogue_live", "introspect", "witness", "self_study", "initiation"}):
+        return 1200.0
+    if lane == "dialogue_live":
+        if not isinstance(chars, int) or not isinstance(tokens, int):
+            return None
+        return 360.0 if chars > 14000 else 300.0 if tokens > 1024 else 240.0
+    if lane == "introspect":
+        return (680.0 if tokens > 3072 else 400.0) if isinstance(tokens, int) else None
+    return {"witness": 240.0, "witness_context": 90.0, "meaning_summary": 45.0,
+            "initiation": 360.0, "evolve_request": 300.0}.get(lane)
+
+
+def assess_lane_deadlines(entries: list[dict[str, Any]]) -> dict[str, Any]:
+    exceeded, unavailable, checked = [], 0, 0
+    for entry in entries:
+        deadline, elapsed = lane_deadline(entry), entry.get("total_turn_s")
+        if deadline is None or not isinstance(elapsed, (int, float)) or not math.isfinite(elapsed) or elapsed < 0:
+            unavailable += 1
+            continue
+        checked += 1
+        if elapsed > deadline:
+            exceeded.append({"lane": entry.get("lane") or entry.get("handle_name"),
+                             "total_turn_s": elapsed, "deadline_s": deadline})
+    complete = bool(entries) and unavailable == 0
+    return {"checked": checked, "unavailable": unavailable, "exceeded": exceeded,
+            "complete": complete, "ok": complete and not exceeded}
 
 
 def fallback_incidents(bridge_text: str) -> list[dict[str, Any]]:
@@ -527,6 +576,13 @@ def monitor_soak(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--observe-only", action="store_true",
+                        help="Read existing service health/logs only; never start, route, probe or restart services")
+    parser.add_argument("--bridge-log", type=Path, default=BRIDGE_LOG)
+    parser.add_argument("--bridge-workspace", type=Path, default=BRIDGE_WORKSPACE)
+    parser.add_argument("--request-metrics-log", type=Path, action="append", default=[])
+    parser.add_argument("--identity-file", type=Path, action="append", default=[])
+    parser.add_argument("--observe-label", action="append", default=[])
     parser.add_argument("--reservoir-root", type=Path, default=narrow.DEFAULT_RESERVOIR_ROOT)
     parser.add_argument("--candidate-model", default=narrow.DEFAULT_CANDIDATE_MODEL)
     parser.add_argument("--candidate-port", type=int, default=narrow.DEFAULT_CANDIDATE_PORT)
@@ -554,6 +610,15 @@ def main() -> int:
     )
     parser.add_argument("--keep-candidate-running", action="store_true")
     args = parser.parse_args()
+
+    # Dispatch before the active-soak try/finally: passive observation must never
+    # reach routing, probes, process creation, or the legacy restoration path.
+    if args.observe_only:
+        if args.candidate_url:
+            parser.error("--observe-only accepts a local --candidate-port, not --candidate-url")
+        from astrid_soak_observer import observe
+
+        return observe(args, globals())
 
     current_run = run_id()
     output_dir = args.output_dir / current_run
@@ -690,14 +755,7 @@ def main() -> int:
         candidate_missing_samples = [
             sample for sample in record["samples"] if not sample.get("candidate_pids")
         ]
-        latency_ok = (
-            (request_metrics["count"] > 0 or generations["count"] > 0)
-            and (
-                request_metrics["max_total_turn_s"] is None
-                or request_metrics["max_total_turn_s"] <= 240.0
-            )
-            and (generations["max_elapsed_s"] is None or generations["max_elapsed_s"] <= 240.0)
-        )
+        latency_ok = request_metrics["lane_deadlines"]["ok"]
         failures = build_failure_reasons(
             bridge_bad_samples=bridge_bad_samples,
             candidate_missing_samples=candidate_missing_samples,

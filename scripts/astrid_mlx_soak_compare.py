@@ -15,6 +15,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from astrid_soak_performance import compare_performance
+
 
 EVENT_COUNTERS = (
     "fallback_count",
@@ -192,6 +194,10 @@ def compare_soaks(
     *,
     max_fallback_delta: int = 0,
     max_fallback_rate_delta: float | None = None,
+    max_p95_increase: float = .20,
+    max_decode_decline: float = .10,
+    max_peak_memory_increase: float = .10,
+    min_trials: int = 3,
 ) -> dict[str, Any]:
     baseline = run_summary(baseline_record)
     candidate = run_summary(candidate_record)
@@ -266,12 +272,20 @@ def compare_soaks(
             }
         )
 
-    strict_promotion_ok = bool(candidate["automated_ok"])
-    baseline_relative_ok = not regressions
+    performance = compare_performance(
+        baseline_record, candidate_record, max_p95_increase=max_p95_increase,
+        max_decode_decline=max_decode_decline, max_peak_memory_increase=max_peak_memory_increase,
+        min_trials=min_trials,
+    )
+    regressions.extend(performance["regressions"])
+    strict_promotion_ok = bool(candidate["automated_ok"]) and not regressions and performance["ok"]
+    baseline_relative_ok = not regressions and performance["ok"]
     if strict_promotion_ok:
         recommendation = "strict_promotion_ready"
-    elif not baseline_relative_ok:
+    elif regressions:
         recommendation = "hold_candidate_regression"
+    elif not performance["complete"]:
+        recommendation = "hold_incomplete_performance_evidence"
     elif candidate_failures & baseline_failures:
         recommendation = "hold_shared_failures"
     else:
@@ -287,6 +301,7 @@ def compare_soaks(
         "new_failure_reasons": new_failure_reasons,
         "resolved_failure_reasons": sorted(baseline_failures - candidate_failures),
         "regressions": regressions,
+        "performance": performance,
         "counter_deltas": counter_deltas,
         "request_metric_deltas": metric_deltas,
         "fallback_rates_per_hour": {
@@ -353,6 +368,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(f"- `{item['kind']}`: `{item}`" for item in report["regressions"])
     else:
         lines.append("- none")
+    if report["performance"]["incomplete_evidence"]:
+        lines.extend(["", "## Incomplete Performance Evidence", ""])
+        lines.extend(f"- `{item}`" for item in report["performance"]["incomplete_evidence"])
     lines.append("")
     return "\n".join(lines)
 
@@ -363,17 +381,31 @@ def main() -> int:
     parser.add_argument("--candidate", type=Path, required=True)
     parser.add_argument("--max-fallback-delta", type=int, default=0)
     parser.add_argument("--max-fallback-rate-delta", type=float)
+    parser.add_argument("--baseline-performance", type=Path)
+    parser.add_argument("--candidate-performance", type=Path)
+    parser.add_argument("--max-p95-increase", type=float, default=.20)
+    parser.add_argument("--max-decode-decline", type=float, default=.10)
+    parser.add_argument("--max-peak-memory-increase", type=float, default=.10)
+    parser.add_argument("--min-trials", type=int, default=3)
     parser.add_argument("--json-out", type=Path)
     parser.add_argument("--markdown-out", type=Path)
     parser.add_argument("--fail-on-regression", action="store_true")
     parser.add_argument("--fail-unless-strict-promotion", action="store_true")
     args = parser.parse_args()
 
+    baseline, candidate = load_json(args.baseline), load_json(args.candidate)
+    for record, path in ((baseline, args.baseline_performance), (candidate, args.candidate_performance)):
+        if path:
+            evidence = load_json(path)
+            for key in ("matched_workloads", "performance_samples"):
+                if key in evidence:
+                    record[key] = evidence[key]
     report = compare_soaks(
-        load_json(args.baseline),
-        load_json(args.candidate),
+        baseline, candidate,
         max_fallback_delta=args.max_fallback_delta,
         max_fallback_rate_delta=args.max_fallback_rate_delta,
+        max_p95_increase=args.max_p95_increase, max_decode_decline=args.max_decode_decline,
+        max_peak_memory_increase=args.max_peak_memory_increase, min_trials=args.min_trials,
     )
 
     text = json.dumps(report, indent=2, sort_keys=True) + "\n"

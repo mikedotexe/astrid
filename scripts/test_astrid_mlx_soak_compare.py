@@ -32,6 +32,12 @@ def soak_record(
 ) -> dict:
     return {
         "run_id": run_id,
+        "matched_workloads": {"dialogue": {
+            "messages_sha256": "same-prompt", "count": 3,
+            "p95_total_turn_s": 80.0, "p95_first_token_s": 2.0,
+            "steady_tok_s": 10.0, "peak_memory_bytes": 1000000,
+            "completion_tokens": [120, 120, 120],
+        }},
         "duration_s": 7200.0,
         "summary": {
             "automated_ok": automated_ok,
@@ -157,3 +163,62 @@ def test_clean_candidate_is_strict_promotion_ready():
     assert report["baseline_relative_ok"] is True
     assert report["recommendation"] == "strict_promotion_ready"
     assert report["resolved_failure_reasons"] == ["fallback_incidents_exceeded"]
+
+
+def clean_record():
+    return soak_record(run_id="clean", automated_ok=True, failure_reasons=[])
+
+
+def test_missing_performance_never_passes_even_when_candidate_says_ok():
+    baseline, candidate = clean_record(), clean_record()
+    del candidate["matched_workloads"]
+    report = compare.compare_soaks(baseline, candidate)
+    assert not report["strict_promotion_ok"]
+    assert not report["baseline_relative_ok"]
+    assert report["recommendation"] == "hold_incomplete_performance_evidence"
+
+
+def test_performance_boundaries_are_inclusive():
+    baseline, candidate = clean_record(), clean_record()
+    candidate["matched_workloads"]["dialogue"].update({
+        "p95_total_turn_s": 96, "p95_first_token_s": 2.4,
+        "steady_tok_s": 9, "peak_memory_bytes": 1100000})
+    assert compare.compare_soaks(baseline, candidate)["strict_promotion_ok"]
+
+
+def test_each_performance_regression_blocks_strict_promotion():
+    for key, value in (("p95_total_turn_s", 96.1), ("p95_first_token_s", 2.41),
+                       ("steady_tok_s", 8.99), ("peak_memory_bytes", 1100001)):
+        baseline, candidate = clean_record(), clean_record()
+        candidate["matched_workloads"]["dialogue"][key] = value
+        report = compare.compare_soaks(baseline, candidate)
+        assert not report["strict_promotion_ok"], key
+        assert report["recommendation"] == "hold_candidate_regression"
+
+
+def test_missing_metrics_nonfinite_values_and_mismatched_prompts_block():
+    for key, value in (("p95_total_turn_s", None), ("steady_tok_s", float("nan")),
+                       ("peak_memory_bytes", 0), ("count", 2),
+                       ("messages_sha256", "different-prompt")):
+        baseline, candidate = clean_record(), clean_record()
+        candidate["matched_workloads"]["dialogue"][key] = value
+        report = compare.compare_soaks(baseline, candidate)
+        assert not report["strict_promotion_ok"], key
+        assert report["performance"]["incomplete_evidence"], key
+
+
+def test_rendered_prompt_mismatch_and_short_completions_are_incomplete():
+    baseline, candidate = clean_record(), clean_record()
+    baseline["matched_workloads"]["dialogue"]["rendered_prompt_sha256_12"] = "a" * 12
+    candidate["matched_workloads"]["dialogue"]["rendered_prompt_sha256_12"] = "b" * 12
+    candidate["matched_workloads"]["dialogue"]["completion_tokens"] = [12, 12, 12]
+    report = compare.compare_soaks(baseline, candidate)
+    assert not report["strict_promotion_ok"]
+    kinds = {item["kind"] for item in report["performance"]["incomplete_evidence"]}
+    assert {"workload_setting_mismatch", "completion_length_mismatch"} <= kinds
+
+
+def test_missing_completion_counts_do_not_pass():
+    baseline, candidate = clean_record(), clean_record()
+    del candidate["matched_workloads"]["dialogue"]["completion_tokens"]
+    assert not compare.compare_soaks(baseline, candidate)["strict_promotion_ok"]

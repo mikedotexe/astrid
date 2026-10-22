@@ -3,9 +3,9 @@
 
 This script is intentionally separate from launchd. It can start a candidate
 coupled Astrid server on an alternate port, probe it with OpenAI-compatible
-chat requests, and write a JSON record for later comparison. Requests use an
-isolated reservoir handle so candidate generations do not mutate the live
-`astrid` handle.
+chat requests, and write a JSON record for later comparison. Started candidates
+use a private frozen-snapshot reservoir on 17881 and a private coupling journal;
+they never connect to the live reservoir. Fresh processes reset each trial.
 """
 
 from __future__ import annotations
@@ -24,6 +24,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
+
+from astrid_mlx_candidate import ARTIFACT_RE, CANDIDATE_PORT, prepare_trial, sha256, validate_candidate_url
 
 
 ASTRID_ROOT = Path(__file__).resolve().parents[1]
@@ -46,13 +48,6 @@ ASTRID_BRIDGE_MLX_PROFILE_ENV = "ASTRID_BRIDGE_MLX_PROFILE"
 ASTRID_OLLAMA_FALLBACK_MODEL_ENV = "ASTRID_OLLAMA_FALLBACK_MODEL"
 DEFAULT_BRIDGE_FALLBACK_PROFILE = "gemma4_12b"
 
-ARTIFACT_RE = re.compile(
-    r"(?:<start_of_turn>|<end_of_turn>|<think>|</think>|/no_think|"
-    r"<\|im_start\|>|<\|im_end\|>|<\|eot_id\|>|<\|endoftext\|>|"
-    r"<turn\|>|<\|turn>|<channel\|>|<\|channel>|<eos>|<bos>|<pad>|<unk>|"
-    r"\b(?:thought|analysis|final)\s*<channel\|>)",
-    re.I,
-)
 NEXT_RE = re.compile(r"(?im)^NEXT:\s*(.+?)\s*$")
 DEPRECATED_RUNTIME_RE = re.compile(r"\bconscious(?:ness)?\b", re.I)
 BRIDGE_PERSONA_RE = re.compile(
@@ -210,6 +205,19 @@ def port_pids(port: int) -> list[str]:
     return out.splitlines() if code == 0 and out else []
 
 
+def candidate_listener_ownership(proc: subprocess.Popen[str]) -> tuple[bool, str | None]:
+    """Both private listeners must belong to the child we started."""
+    if proc.poll() is not None:
+        return False, f"candidate process exited with code {proc.returncode}"
+    complete = True
+    for port in (CANDIDATE_PORT, 17881):
+        listeners = set(port_pids(port))
+        if listeners and listeners != {str(proc.pid)}:
+            return False, f"candidate port {port} is owned by unexpected PID(s): {', '.join(sorted(listeners))}"
+        complete = complete and bool(listeners)
+    return complete, None
+
+
 def http_json(url: str, payload: dict[str, Any] | None, timeout: float) -> dict[str, Any]:
     headers = {"Accept": "application/json"}
     data: bytes | None = None
@@ -267,18 +275,24 @@ def wait_for_models(
     deadline = time.monotonic() + timeout_s
     models_url = models_url_for_chat_endpoint(url)
     last: dict[str, Any] = {"ok": False, "error": "not attempted"}
+    if proc is not None:
+        validate_candidate_url(url)
     while time.monotonic() < deadline:
-        if proc is not None and proc.poll() is not None:
-            return {
-                "ok": False,
-                "status": None,
-                "elapsed_s": 0.0,
-                "raw": "",
-                "json": None,
-                "error": f"candidate process exited with code {proc.returncode}",
-            }
+        if proc is not None:
+            owned, error = candidate_listener_ownership(proc)
+            if error:
+                return {"ok": False, "status": None, "elapsed_s": 0.0,
+                        "raw": "", "json": None, "error": error}
+            if not owned:
+                last = {"ok": False, "error": "waiting for both owned candidate listeners"}
+                time.sleep(2)
+                continue
         last = http_json(models_url, None, timeout=5)
         if last.get("ok"):
+            if proc is not None:
+                owned, error = candidate_listener_ownership(proc)
+                if not owned:
+                    return {"ok": False, "error": error or "candidate listener disappeared during readiness"}
             return last
         time.sleep(2)
     return last
@@ -599,6 +613,9 @@ def chat_probe(
     ok = bool(response.get("ok")) and bool(text) and exact_ok and next_ok and not artifacts
     return {
         "name": name,
+        "handle_name": handle_name,
+        "prompt_sha256": sha256(json.dumps(messages, sort_keys=True, separators=(",", ":")).encode()),
+        "max_tokens": max_tokens,
         "ok": ok,
         "http_ok": bool(response.get("ok")),
         "status": response.get("status"),
@@ -865,9 +882,10 @@ def start_candidate_server(
     coupling_strength: float,
     output_dir: Path,
     wide_coupling_strength: float = 0.0,
+    frozen_fixture_dir: Path | None = None,
 ) -> tuple[subprocess.Popen[str], Path]:
-    if port == 8090:
-        raise ValueError("refusing to start a candidate server on production port 8090")
+    if port != CANDIDATE_PORT:
+        raise ValueError("isolated candidates must use port 8092; production ports are forbidden")
     existing = port_pids(port)
     if existing:
         raise RuntimeError(f"port {port} already has listener PID(s): {', '.join(existing)}")
@@ -876,34 +894,54 @@ def start_candidate_server(
     if not server.exists():
         raise FileNotFoundError(f"candidate server not found: {server}")
 
+    output_dir = output_dir.resolve()
+    reservoir_root = reservoir_root.resolve()
+    trial = prepare_trial(output_dir, reservoir_root, frozen_fixture_dir)
     log_path = output_dir / "candidate_server.log"
-    log_fh = log_path.open("a", encoding="utf-8")
     cmd = [
         python,
-        str(server),
-        "--port",
-        str(port),
+        "-B",
+        str(Path(__file__).with_name("astrid_mlx_candidate.py")),
+        "run",
+        "--reservoir-root", str(reservoir_root),
+        "--trial-dir", str(trial),
         "--coupling-strength",
         str(coupling_strength),
-        "--model-memory-map",
         "--model",
         model,
-        "--audit-dir",
-        str(output_dir / "request_metrics"),
+        "--wide-coupling-strength", str(wide_coupling_strength),
     ]
-    # Wider-coupling (y4) operator ceiling — only pass when >0 so existing
-    # callers/launches stay byte-identical (default OFF).
-    if wide_coupling_strength > 0.0:
-        cmd += ["--wide-coupling-strength", str(wide_coupling_strength)]
-    proc = subprocess.Popen(
-        cmd,
-        cwd=str(reservoir_root),
-        text=True,
-        stdout=log_fh,
-        stderr=subprocess.STDOUT,
-        start_new_session=True,
-    )
+    with log_path.open("x", encoding="utf-8") as log_fh:
+        os.chmod(log_path, 0o600)
+        proc = subprocess.Popen(
+            cmd, cwd=str(trial), text=True, stdout=log_fh,
+            stderr=subprocess.STDOUT, start_new_session=True,
+        )
     return proc, log_path
+
+
+def performance_samples(output_dir: Path, probes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    metrics = output_dir / "request_metrics/coupled_request_metrics.jsonl"
+    if not metrics.exists():
+        return []
+    by_handle = {probe.get("handle_name"): probe for probe in probes}
+    samples = []
+    for line in metrics.read_text().splitlines():
+        audit = json.loads(line)
+        request, generation = audit.get("request", {}), audit.get("generation", {})
+        probe = by_handle.get(request.get("handle_name"))
+        if probe is None:
+            continue
+        samples.append({"scenario": probe["name"], "lane": "qualification",
+                        "prompt_sha256": request.get("messages_sha256"),
+                        "prompt_tokens": generation.get("prompt_tokens"),
+                        "completion_tokens": generation.get("completion_tokens"),
+                        "rendered_prompt_sha256_12": request.get("prompt_sha256_12"),
+                        "prompt_chars": request.get("prompt_chars"), "max_tokens": request.get("max_tokens"),
+                        "total_turn_s": generation.get("total_turn_s"), "decode_tok_s": generation.get("decode_tok_s"),
+                        "first_token_s": generation.get("first_token_s"),
+                        "peak_memory_bytes": generation.get("peak_memory_bytes")})
+    return samples
 
 
 def stop_candidate_server(proc: subprocess.Popen[str], timeout_s: float = 20.0) -> None:
@@ -918,10 +956,10 @@ def stop_candidate_server(proc: subprocess.Popen[str], timeout_s: float = 20.0) 
         if proc.poll() is not None:
             return
         time.sleep(0.5)
-    try:
-        os.killpg(proc.pid, signal.SIGKILL)
-    except ProcessLookupError:
-        pass
+    raise TimeoutError(
+        f"candidate PID {proc.pid} did not drain within {timeout_s}s; "
+        "no forced termination was sent; retain its evidence and do not start another candidate"
+    )
 
 
 def main() -> int:
@@ -934,6 +972,8 @@ def main() -> int:
     parser.add_argument("--ollama-url", default=DEFAULT_OLLAMA_URL)
     parser.add_argument("--fallback-model", default=DEFAULT_FALLBACK_MODEL)
     parser.add_argument("--python", help="Python interpreter for coupled_astrid_server.py")
+    parser.add_argument("--frozen-fixture-dir", type=Path,
+                        help="Captured snapshot+journal shared by baseline and candidate trials")
     parser.add_argument("--start-candidate", action="store_true")
     parser.add_argument("--keep-running", action="store_true")
     parser.add_argument("--compare-baseline-chat", action="store_true")
@@ -961,14 +1001,17 @@ def main() -> int:
     parser.add_argument("--request-timeout", type=float, default=240.0)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     args = parser.parse_args()
+    if args.bridge_fallback_continuity_probe:
+        parser.error("--bridge-fallback-continuity-probe uses a retired forced bridge restart; use a reviewed lifecycle qualification instead")
 
     current_run_id = run_id()
     candidate_url = args.candidate_url or (
         f"http://127.0.0.1:{args.candidate_port}/v1/chat/completions"
     )
     candidate_port = endpoint_port(candidate_url)
+    validate_candidate_url(candidate_url)
     output_dir = args.output_dir / current_run_id
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, mode=0o700, exist_ok=False)
 
     record: dict[str, Any] = {
         "run_id": current_run_id,
@@ -989,7 +1032,7 @@ def main() -> int:
         "fallback_continuity_probes": [],
         "feedback_notes": [],
         "notes": [
-            "Candidate requests use isolated reservoir handles and do not target the live astrid handle.",
+            "Started candidates use a frozen snapshot fixture on 17881 and a private coupling journal; no live reservoir connections.",
             "Production baseline chat is opt-in via --compare-baseline-chat.",
             "Fallback continuity probes call Ollama directly with the MLX lane treated as unavailable; they do not change bridge defaults.",
             "Bridge fallback continuity probes temporarily point launchd at a dead MLX URL, force one inbox-triggered turn, restore prior launchctl env exactly, and restart the bridge back to its prior configuration.",
@@ -1010,6 +1053,7 @@ def main() -> int:
                 coupling_strength=args.coupling_strength,
                 output_dir=output_dir,
                 wide_coupling_strength=args.wide_coupling_strength,
+                frozen_fixture_dir=args.frozen_fixture_dir,
             )
             record["candidate_server_log"] = str(candidate_log_path)
             record["candidate_server_pid"] = proc.pid
@@ -1209,6 +1253,11 @@ def main() -> int:
         if candidate_log_path is not None and candidate_log_path.exists():
             lines = candidate_log_path.read_text(encoding="utf-8", errors="replace").splitlines()
             record["candidate_server_log_tail"] = lines[-80:]
+
+        record["performance_samples"] = performance_samples(output_dir, record["probes"])
+        isolation = output_dir / "candidate-runtime/isolation.json"
+        if isolation.exists():
+            record["isolation"] = json.loads(isolation.read_text())
 
         record_path = output_dir / "canary_result.json"
         record_path.write_text(json.dumps(record, indent=2, sort_keys=True), encoding="utf-8")

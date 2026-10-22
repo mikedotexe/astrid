@@ -174,3 +174,29 @@ def test_scan_generated_outputs_allows_journal_diagnostics_without_next():
     assert scan["counts"]["file_count"] == 1
     assert scan["counts"]["malformed_next_count"] == 0
     assert scan["files_with_findings"] == []
+
+
+def test_deadlines_follow_lanes_and_do_not_reject_valid_long_writing():
+    entries = [
+        {"lane": "journal_elaboration", "max_tokens": 8192, "total_turn_s": 900},
+        {"lane": "introspect", "max_tokens": 3072, "total_turn_s": 350},
+        {"lane": "introspect", "max_tokens": 4096, "total_turn_s": 600},
+        {"lane": "dialogue_live", "max_tokens": 512, "prompt_chars": 15000, "total_turn_s": 320},
+    ]
+    assert soak.assess_lane_deadlines(entries)["ok"]
+    assert soak.assess_lane_deadlines([{"lane": "meaning_summary", "total_turn_s": 46}])["exceeded"]
+
+
+def test_unknown_lane_and_missing_latency_are_unavailable_not_pass():
+    for entry in ({"handle_name": "astrid", "total_turn_s": 700},
+                  {"lane": "meaning_summary"}):
+        result = soak.assess_lane_deadlines([entry])
+        assert not result["ok"]
+        assert not result["complete"]
+        assert result["unavailable"] == 1
+
+
+def test_effective_deadline_receipt_overrides_inferred_lane_policy():
+    result = soak.assess_lane_deadlines([{"lane": "daydream", "total_turn_s": 260,
+                                         "effective_timeout_secs": 240}])
+    assert result["exceeded"][0]["deadline_s"] == 240

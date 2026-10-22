@@ -1,0 +1,40 @@
+{
+  "current_harness": {
+    "astrid_mlx_candidate.py": "92c8c36d3fec7b6ceb687e75e44fb4c86a4bc3c51ab267af20830735133a0a68",
+    "astrid_mlx_embedding_gate.py": "2fa026bca4370d616649826a171ba1f8a91f83c2091a6606189d157fc909ac7b",
+    "astrid_mlx_fixture.py": "528e77c9f06f889a3389c81c50577a8bb5198ed9076e0572c77bc4161ad690a6",
+    "astrid_mlx_generator_contract.py": "2aff1d00558796466b575950bdae1105c81a272e5a0b0c01514c4d8375f195ee",
+    "astrid_mlx_memory.py": "dca1ce8e73d089d982ada9ea55835f37b491190605fbaea22cef710dad7184ff",
+    "astrid_model_canary.py": "09e335d0655e1a7e6dce868a09ce9838770d9aaa2fc22776e8da81d2fa2b4c1f",
+    "astrid_soak_observer.py": "1fea36cfd32c4ab51e8761b11fac878155661c6ff55c5ae1bedb8e861bccabdb",
+    "model_environment.py": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+    "prepare_mlx_environments.py": "9700a44b1ecf125d6a25ff693b86c35430441814b3c489d61b7df7e31b353317",
+    "qualify_mlx_offline.py": "a34edf127eceeaf988ac080969b73d9d6dcf4b077f1a5bef3e94835cea532fb4",
+    "qualify_mlx_packages.py": "29952248d36abe83f870b5ad75e5346e1cec5ee1713c3d8cec08fa4341b269aa"
+  },
+  "legacy_harness": {
+    "astrid_mlx_candidate.py": "92c8c36d3fec7b6ceb687e75e44fb4c86a4bc3c51ab267af20830735133a0a68",
+    "astrid_mlx_embedding_gate.py": "2fa026bca4370d616649826a171ba1f8a91f83c2091a6606189d157fc909ac7b",
+    "astrid_mlx_fixture.py": "528e77c9f06f889a3389c81c50577a8bb5198ed9076e0572c77bc4161ad690a6",
+    "astrid_mlx_generator_contract.py": "2aff1d00558796466b575950bdae1105c81a272e5a0b0c01514c4d8375f195ee",
+    "astrid_mlx_memory.py": "b4c3f7c7f72a2185939aa1dbe98e7fd79b7fc47632a329ba7e94091d8606c86b",
+    "astrid_model_canary.py": "09e335d0655e1a7e6dce868a09ce9838770d9aaa2fc22776e8da81d2fa2b4c1f",
+    "astrid_soak_observer.py": "1fea36cfd32c4ab51e8761b11fac878155661c6ff55c5ae1bedb8e861bccabdb",
+    "model_environment.py": "5d9ae37877e798684295b1bfa5128f99a14aecc5d4eefe863dc93e0138877587",
+    "prepare_mlx_environments.py": "9700a44b1ecf125d6a25ff693b86c35430441814b3c489d61b7df7e31b353317",
+    "qualify_mlx_offline.py": "a34edf127eceeaf988ac080969b73d9d6dcf4b077f1a5bef3e94835cea532fb4",
+    "qualify_mlx_packages.py": "fc3c4a9846e8975356c001ccb0f7378ba25ac2823ab0dd87890da019afbe82ac"
+  },
+  "legacy_receipts": {
+    "baseline": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/alternative-0323-01/source-rebind-01/qualification-02/controlled-window-02/offline-baseline-01/offline.json",
+      "sha256": "e87b27614f03276c81a113b47c496989dbfe06d51188c172586bc1537dd197eb"
+    },
+    "core": {
+      "path": "/Users/v/other/astrid/.runtime/mlx-upgrade/alternative-0323-01/source-rebind-01/qualification-02/controlled-window-02/offline-core-01/offline.json",
+      "sha256": "dbc475313e1f18a35b3d5a481d8a665d28811647a8e40a8f9512a93df9a507be"
+    }
+  },
+  "schema": "mlx_0323_exact_offline_harness_compatibility_v1",
+  "scope": "Exact strict historical offline receipts only; new benchmarks must match the full current harness. No failed benchmark reuse."
+}

@@ -60,6 +60,30 @@ READYZ_OK=false; [ "$(curl --silent --max-time 2 --output /dev/null --write-out 
 
 BRIDGE_MANIFEST="$WORKSPACE/deployment_manifests/spectral-bridge.json"
 MODEL_MANIFEST="${MODEL_CONTEXT_MANIFEST:-$WORKSPACE/deployment_manifests/coupled-model.json}"
+model_identity_path() {
+  python3 -B -c '
+import json, sys
+from pathlib import Path
+value = json.loads(sys.argv[1])[sys.argv[2]]
+if not isinstance(value, str) or not Path(value).is_absolute() or any(c in value for c in "\0\r\n"):
+    sys.exit("model runtime identity returned an invalid artifact path")
+print(value)
+' "$MODEL_RUNTIME" "$1"
+}
+MODEL_IDENTITY_OK=false
+MODEL_PYTHON=""
+MODEL_WRAPPER=""
+if MODEL_RUNTIME="$(python3 -B "$SCRIPT_ROOT/scripts/model_runtime_identity.py" \
+    --context-manifest "$MODEL_MANIFEST" --pid "${MODEL_PID:-0}" --json)" \
+  && MODEL_PYTHON="$(model_identity_path python)" \
+  && MODEL_WRAPPER="$(model_identity_path wrapper)"; then
+  MODEL_IDENTITY_OK=true
+else
+  # Keep a failed receipt, without presenting guessed or partially resolved paths.
+  MODEL_PYTHON=""
+  MODEL_WRAPPER=""
+  echo "capture_stack_receipt: model runtime identity unavailable; recording failed receipt" >&2
+fi
 BRIDGE_MANIFEST_OK=false; [ -f "$BRIDGE_MANIFEST" ] && BRIDGE_MANIFEST_OK=true
 MINIME_MANIFEST_OK=false; [ -f "$MINIME_MANIFEST" ] && MINIME_MANIFEST_OK=true
 MODEL_MANIFEST_OK=false; [ -f "$MODEL_MANIFEST" ] && MODEL_MANIFEST_OK=true
@@ -70,7 +94,7 @@ TELEMETRY_OK=false; [ -f "$BRIDGE_TELEMETRY" ] && [ -f "$MINIME_TELEMETRY" ] && 
 
 STATUS=passed
 for check in \
-  "$BRIDGE_PROCESS_OK" "$MINIME_PROCESS_OK" "$MODEL_PROCESS_OK" \
+  "$BRIDGE_PROCESS_OK" "$MINIME_PROCESS_OK" "$MODEL_PROCESS_OK" "$MODEL_IDENTITY_OK" \
   "$PORT_7878_OK" "$PORT_7879_OK" "$LIVEZ_OK" "$READYZ_OK" \
   "$BRIDGE_MANIFEST_OK" "$MINIME_MANIFEST_OK" "$MODEL_MANIFEST_OK" "$TELEMETRY_OK"
 do
@@ -89,6 +113,7 @@ args=(
   --probe "bridge_process=$BRIDGE_PROCESS_OK"
   --probe "minime_process=$MINIME_PROCESS_OK"
   --probe "model_process=$MODEL_PROCESS_OK"
+  --probe "model_runtime_identity=$MODEL_IDENTITY_OK"
   --probe "port_7878=$PORT_7878_OK"
   --probe "port_7879=$PORT_7879_OK"
   --probe "livez=$LIVEZ_OK"
@@ -98,16 +123,17 @@ args=(
   --probe "model_manifest=$MODEL_MANIFEST_OK"
   --probe "telemetry=$TELEMETRY_OK"
   --binary "minime-current-disk-executable=$MINIME/minime/target/release/minime"
-  --binary "model-python=$MODEL_REPO/.venv/bin/python"
   --script "bridge-wrapper=$ASTRID/scripts/build_bridge.sh"
   --script "minime-wrapper=$ASTRID/scripts/deploy_minime.sh"
-  --script "model-wrapper=$ASTRID/scripts/restart_coupled_model.sh"
   --manifest "$BRIDGE_MANIFEST"
   --manifest "$MINIME_MANIFEST"
   --context-manifest "$MODEL_MANIFEST"
   --telemetry "$BRIDGE_TELEMETRY"
   --telemetry "$MINIME_TELEMETRY"
 )
+if [ "$MODEL_IDENTITY_OK" = true ]; then
+  args+=(--binary "model-python=$MODEL_PYTHON" --script "model-wrapper=$MODEL_WRAPPER")
+fi
 [ -n "$BRIDGE_BINARY" ] && args+=(--binary "spectral-bridge=$BRIDGE_BINARY")
 [ -n "$BRIDGE_PID" ] && args+=(--process "bridge=$BRIDGE_PID")
 [ -n "$MINIME_PID" ] && args+=(--process "minime=$MINIME_PID")
