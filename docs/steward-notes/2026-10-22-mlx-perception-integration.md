@@ -165,3 +165,39 @@ rollback assets or authored state were deleted; available disk space was about
 provider, bridge, agent, engine, perception, Division and sensory PID/start
 identities were unchanged. Source tests do not substitute for existing activation
 receipts or establish subjective improvement. Git results are recorded below.
+
+## Git Result
+
+All four implementation/history commits were pushed successfully:
+
+- Astrid `1a10ec8a5e9a04b4cac1b4eed1250b33e658d694`: 48 toolkit, test and
+  current-documentation paths.
+- Astrid `f2965de926b45d69d0f1daf914874ba5e2c4c777`: the two already-live
+  perception files and changelog.
+- Astrid `71a2f03155dae8dc6f0afb16e34bf2973dd3cc9c`: 1,626 paths comprising
+  the 1,623-file historical archive, its exact inventory, the separate inbox
+  receipt and changelog. All 23,791,343 archive bytes matched their inventory.
+  Forty-three whitespace diagnostics belong to frozen historical material;
+  those bytes were preserved rather than reformatted. Active source checks pass.
+- Reservoir `fa98708f78d37c11d434db568ef4edc15e0592ed`: the two already-live
+  production files, changelog and 11-test synthetic suite, on the repository's
+  existing `feat/service-stack-and-multi-headed` tracking branch.
+
+[Exact committed paths](2026-10-22-mlx-perception-commits.json) are recorded by
+repository and commit. Astrid integration is on `main`; no unrelated branch
+merge or history rewrite was needed. Minime remains unchanged and clean.
+The final documentation closeout is the commit containing this section and
+that path map. Source/history integration has no remaining commit debt.
+
+Remaining engineering debt is explicit: qualify legacy Python startup-closure
+bindings before enabling the deferred `.pth` rejection, improve portability of
+the local historical-performance test, and retain the camera blocking/interrupt
+limitations. These are not a requirement to repeat a completed deployment.
+Larger-capacity work and unfinished isolated worktrees are preserved, not
+implicitly merged. No new letters or uptake review were performed.
+
+Controller verification remained paused at generation 534 with no active lease,
+no pending events and valid indexed V2 evidence at sequence/count 1,123,188,
+head `6064ec94a2dd37895edd952bc0ffcd48322215249aa265724cc0594b879b0cdd`.
+All four V1 source streams remain immutable. This stabilization pass does not
+advance the canonical introspection reading queue or record a productive round.
