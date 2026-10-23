@@ -165,7 +165,9 @@ def finish_accepted_work(backend, expected_pid, *, running_inputs, expected_inpu
     emit({"phase": "accepted_work_signal_boundary", "old_pid": expected_pid,
           "old_started_at": old_start, "running_process": identity,
           "source_inputs": inputs, "config": config, "protected": protected,
-          "job_statuses": initial_status, "atomic_traffic_quiescence_claimed": False})
+          "job_statuses": {key: initial_status[key] for key in sorted(accepted_ids)},
+          "historical_job_count": len(initial_status), "historical_statuses_sha256": digest(initial_status),
+          "atomic_traffic_quiescence_claimed": False})
     backend.terminate(expected_pid)
     emit({"phase": "accepted_work_signal_sent", "pid": expected_pid, "signal": "SIGTERM"})
     deadline = now() + timeout_s
@@ -200,8 +202,11 @@ def finish_accepted_work(backend, expected_pid, *, running_inputs, expected_inpu
                     and row.get("outcome_status") == row["worker_status"]
                     and row.get("outcome_verified") is True,
                     "accepted worker outcome unverified; hold retained")
+    transition_statuses = {key: statuses[key] for key in sorted(statuses)
+                          if key in accepted_ids or key not in initial_status}
     emit({"phase": "accepted_work_drained", "old_pid": expected_pid,
-          "next_seal": sealed, "job_statuses": statuses,
+          "next_seal": sealed, "job_statuses": transition_statuses,
+          "historical_job_count": len(statuses), "historical_statuses_sha256": digest(statuses),
           "active_jobs": 0, "forced_termination": False})
     # No replacement may inspect/modify the queue until this seal is verified.
     transitioned = handoff.transition(backend, protected, emit)
@@ -230,7 +235,8 @@ def finish_accepted_work(backend, expected_pid, *, running_inputs, expected_inpu
                     "new_pid": pid, "new_started_at": backend.identity(pid),
                     "source_inputs": inputs, "config": config, "protected": protected,
                     "next_handoff": restored, "signal": "SIGTERM", "forced_termination": False,
-                    "job_statuses_at_drain": statuses, "execution_confirmed": False,
+                    "job_statuses_at_drain": transition_statuses, "execution_confirmed": False,
+                    "historical_job_count": len(statuses), "historical_statuses_sha256": digest(statuses),
                     "transition_scope": "paired" if paired else "agent_only"}
         sleep(1)
     raise DrainRefusal("replacement readiness timed out; no forced fallback or queue replay")

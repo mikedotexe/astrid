@@ -62,3 +62,12 @@ Qualification: 277 tests passed across native finish, paired recovery, agent
 restart, NEXT handoff, deployment wrappers, bridge activation/staging/drain,
 source reconciliation and steward control. Receipt:
 `/Users/v/other/worktrees/search-delivery-20261022/paired-finish-tests-02.log`.
+
+The first native attempt refused before SIGTERM because the signal-boundary
+receipt included every historical job and exceeded the recovery receipt's 2 MB
+bound. Keep the full in-memory preservation checks, but emit only accepted/new
+transition jobs, historical counts and an exact status-map digest. A 60,000-job
+synthetic history verifies bounded receipts; disappearing historical work still
+refuses. The original failed attempt remains intact, and exact no-signal recovery
+is required again. This changes diagnostic presentation, not job reconciliation.
+The expanded suite passed all 278 tests (`paired-finish-tests-03.log`).

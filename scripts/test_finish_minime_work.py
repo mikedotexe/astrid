@@ -100,6 +100,32 @@ def drain(backend, hold, **kwargs):
 
 
 class DrainTests(unittest.TestCase):
+    def test_large_history_keeps_transition_receipts_bounded_without_skipping_checks(self):
+        backend, hold, events = BusyBackend(), Hold(), []
+        jobs = backend.jobs
+        def historical_jobs():
+            value = jobs()
+            value["jobs"].extend({"job_id": f"job_historical_{index}", "status": "completed"}
+                                 for index in range(60000))
+            return value
+        backend.jobs = historical_jobs
+        result = drain(backend, hold, emit=events.append)
+        self.assertLess(len(json.dumps(events + [result])), 8000)
+        self.assertEqual(result["historical_job_count"], 60001)
+        self.assertEqual(result["job_statuses_at_drain"], {"job_accepted": "completed"})
+        self.assertEqual(len(result["historical_statuses_sha256"]), 64)
+        backend, hold = BusyBackend(), Hold()
+        jobs = backend.jobs
+        def disappearing_history():
+            value = jobs()
+            if backend.identity(10) is not None:
+                value["jobs"].append({"job_id": "job_old", "status": "completed"})
+            return value
+        backend.jobs = disappearing_history
+        with self.assertRaisesRegex(RuntimeError, "jobs missing"):
+            drain(backend, hold)
+        self.assertEqual(hold.transitions, 0)
+
     def test_paired_busy_drain_requires_verified_bridge_and_preserves_peers(self):
         backend, hold = BusyBackend(), PairedHold()
         backend.services[BRIDGE] = {"pid": 30, "started_at": "bridge-old"}

@@ -9,7 +9,7 @@ Changelog tracking starts with 0.2.0. Prior versions were not tracked.
 
 ## [Unreleased]
 
-- **Paired native accepted-work drain (2026-10-22, Codex).** Extend exact installed-state recovery with an explicit qualified native-v2 drain option. Finish accepted jobs, verify durable outcomes and the native NEXT seal, then activate only the bridge through its existing wrapper and verify replacement restoration. Retain the agent-only default, all other protected identities, timeout refusal and no forced fallback. This removes dependence on a brief idle gap without changing runtime binaries or authored state.
+- **Paired native accepted-work drain (2026-10-22, Codex).** Extend exact installed-state recovery with an explicit qualified native-v2 drain option. Finish accepted jobs, verify durable outcomes and the native NEXT seal, then activate only the bridge through its existing wrapper and verify replacement restoration. Retain the agent-only default, all other protected identities, timeout refusal and no forced fallback. Bound receipts to transition jobs plus historical counts/digests while retaining full preservation checks. This removes dependence on a brief idle gap without changing runtime binaries or authored state.
 
 - **Paired pre-signal recovery (2026-10-22, Codex).** Accept the exact completed-install receipt followed by a verified idle-boundary refusal, retaining all original evidence. Revalidate source, process, configuration, protected services and the owned hold; refuse any signal intent or uncertain outcome. Normal drain and readiness checks remain unchanged. No binary or authored-state change.
 
