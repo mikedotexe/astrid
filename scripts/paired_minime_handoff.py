@@ -292,15 +292,41 @@ class InstalledHandoff(PairedHandoff):
                 and bridge_stage.verify_stage(old_stage)["manifest_sha256"] == guard["manifest_sha256"],
                 "original stage identity changed")
         backup = original.with_suffix(".source-before")
-        terminal = {k: v for k, v in rows[-1].items() if k != "recorded_at"}
+        installed_count = 2 * len(OVERLAY) + 2
+        installed = rows[:installed_count]
+        terminal = {k: v for k, v in installed[-1].items() if k != "recorded_at"}
         complete = terminal in (
             {"phase": "installed_waiting_for_unchanged_quiet_window", "seconds": 185},
             {"phase": "installed_sources_verified", "schema": "minime_reviewed_install_v1",
              "selected_inputs_sha256": digest(selected)},
         )
         require(rows[0].get("phase") == "installation_held" and rows[0].get("backup") == str(backup)
-                and len(rows) == 2 * len(OVERLAY) + 2 and complete,
+                and len(installed) == installed_count and complete,
                 "original installation is not completely receipted")
+        tail = rows[installed_count:]
+        if tail:
+            require(len(tail) == 3, "original failure is not a bounded pre-signal refusal")
+            wait, refusal, failure = tail
+            reasons = {"pre_signal": "idle boundary moved; no signal sent",
+                       "waiting_timeout": "no bounded idle window; no signal sent"}
+            require(set(wait) - {"recorded_at"} == {
+                        "phase", "old_pid", "old_started_at", "source_inputs", "config", "protected"}
+                    and wait.get("phase") == "waiting_for_idle"
+                    and wait.get("old_pid") == expected_pid
+                    and wait.get("old_started_at") == backend.identity(expected_pid)
+                    and wait.get("source_inputs") == selected
+                    and wait.get("config") == backend.config()
+                    and wait.get("protected") == backend.protected(),
+                    "original pre-signal process/source/config boundary changed")
+            require(refusal.get("phase") == "idle_boundary_refused"
+                    and refusal.get("boundary") in reasons
+                    and isinstance(refusal.get("diagnostic"), dict)
+                    and refusal["diagnostic"].get("schema") == "minime_idle_boundary_diagnostic_v1"
+                    and refusal["diagnostic"].get("signal_sent") is False
+                    and {k: v for k, v in failure.items() if k != "recorded_at"} == {
+                        "outcome": "failed", "error": reasons[refusal["boundary"]],
+                        "owned_hold_retained": True, "forced_termination": False},
+                    "original failure lacks exact no-signal and retained-hold evidence")
         order = ["scripts/launchd_autonomous_agent.sh", *(p for p in OVERLAY
                  if p != "scripts/launchd_autonomous_agent.sh")]
         for index, path in enumerate(order):

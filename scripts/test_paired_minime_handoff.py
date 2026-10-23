@@ -467,6 +467,70 @@ class InstalledRecoveryTests(unittest.TestCase):
         self.assertEqual(self.hold.read_bytes(), self.original_hold_bytes)
         self.assertEqual(self.backend.signals, [])
 
+    def original_idle_refusal(self, boundary="pre_signal"):
+        return [
+            {"phase": "waiting_for_idle", "old_pid": 10, "old_started_at": "start-10",
+             "source_inputs": self.before_sources, "config": self.backend.config(),
+             "protected": self.backend.protected()},
+            {"phase": "idle_boundary_refused", "boundary": boundary,
+             "diagnostic": {"schema": "minime_idle_boundary_diagnostic_v1", "signal_sent": False}},
+            {"outcome": "failed", "owned_hold_retained": True, "forced_termination": False,
+             "error": ("idle boundary moved; no signal sent" if boundary == "pre_signal"
+                       else "no bounded idle window; no signal sent")},
+        ]
+
+    def test_original_completed_install_then_idle_refusal_is_recoverable(self):
+        for boundary in ("pre_signal", "waiting_timeout"):
+            with self.subTest(boundary=boundary):
+                tail = self.original_idle_refusal(boundary)
+                original = self.original_bytes
+                self.original.write_bytes(original + b"".join(json.dumps(row).encode() + b"\n" for row in tail))
+                self.original_bytes = self.original.read_bytes()
+                receipt = self.root / f"{boundary}.jsonl"
+                with ExitStack() as stack:
+                    handoff, emit = self.open(stack, receipt=receipt)
+                    handoff.adopt(emit)
+                    self.assertTrue(handoff.owned)
+                    self.assertEqual(self.backend.signals, [])
+                self.assert_preserved()
+                self.original_bytes = original
+                self.original.write_bytes(original)
+                self.hold.write_bytes(self.original_hold_bytes)
+
+    def test_original_failure_rejects_signal_uncertainty_or_changed_boundary(self):
+        cases = []
+        for field in ("old_pid", "old_started_at", "source_inputs", "config", "protected"):
+            tail = self.original_idle_refusal()
+            tail[0][field] = "changed"
+            cases.append(tail)
+        tail = self.original_idle_refusal()
+        tail[1]["diagnostic"]["signal_sent"] = True
+        cases.append(tail)
+        tail = self.original_idle_refusal()
+        tail[0]["signal_sent"] = True
+        cases.append(tail)
+        for field, value in (("owned_hold_retained", False), ("forced_termination", True),
+                             ("error", "unknown failure")):
+            tail = self.original_idle_refusal()
+            tail[2][field] = value
+            cases.append(tail)
+        tail = self.original_idle_refusal()
+        tail.insert(1, {"phase": "signal_boundary"})
+        cases.append(tail)
+        tail = self.original_idle_refusal()
+        tail[1]["boundary"] = "after_signal"
+        cases.append(tail)
+        for tail in cases:
+            with self.subTest(tail=tail):
+                raw = self.original_bytes + b"".join(json.dumps(row).encode() + b"\n" for row in tail)
+                self.original.write_bytes(raw)
+                with ExitStack() as stack, self.assertRaises(RuntimeError):
+                    self.open(stack)
+                self.assertEqual(self.original.read_bytes(), raw)
+                self.assertEqual(self.hold.read_bytes(), self.original_hold_bytes)
+                self.assertFalse(self.receipt.exists())
+                self.assertEqual(self.backend.signals, [])
+
     def test_normal_reload_and_transition_are_reused_after_adoption(self):
         with ExitStack() as stack:
             handoff, emit = self.open(stack)
