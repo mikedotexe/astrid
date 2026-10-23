@@ -6997,3 +6997,39 @@ September 28 release follow-through: Mike explicitly authorized live activation,
 **Boundary:** implemented in isolated candidates, not shipped. Repetition preceded the earlier recall feature, so causation and subjective improvement remain unestablished. Historical writing, native persistence, reservoir/controller policy, providers and paused automations are unchanged. Test results, failed attempts, explicit release debt and prospective matched comparison are retained in the packet.
 
 **Immutable qualification:** staged bridge/helper source identity is verified against 749 unchanged inputs. The paired packet passes 54 baseline checks, old/new reflection preservation for both owners, and the frozen real Minime adapter; the complete Minime suite passes 1,923 tests and 144 subtests with one existing skip. All 93 Python launch inputs match production. No activation has occurred; bounded paired approval is pending. The separate read-only engine observation still shows a pending `semantic_active` settle condition, not evidence of improvement or a prompt-release effect. Exact identities, unsuccessful quiet-window checks and activation sequence are in the same packet.
+
+## 2026-10-22 - Operator follow-through - search delivery (candidate)
+
+**Origin:** Mike requested repair of the rollout's HTTP 202 search limitation.
+One bounded public diagnostic identified a human-verification response, not a
+queued search. This is not a being-authored mechanism claim or evidence that
+research budgets caused reduced web activity.
+
+**Response:** retain failed-hop status, identify the known challenge without
+submitting it, and preserve factual failure feedback in both adapters and the
+operator probe. Old receipts remain readable; no automatic retries, source
+substitution, activity changes or private content disclosure are added.
+
+**Boundary:** candidate only, not restored search. A supported API needs explicit
+credential/policy approval and separate qualification. See
+[the search-delivery record](2026-10-22-search-delivery.md) for evidence, tests and
+deployment debt. Historical writing, live services and paused automations remain
+unchanged.
+
+**Brave follow-through:** Mike supplied a local key, identified the Search plan
+and selected an initial $25/month shared ceiling. The candidate adds explicit
+paid-search scope, secret-safe credentials, shared gross-cost reservations and
+structured result delivery. An operator-only fixed-query check passed (HTTP 200,
+five results), retaining no result content; two unsuccessful checks remain
+recorded. Notebook storage rights are still unconfirmed, so this is not live
+search restoration. No observed interests, emergence or reported experience
+are inferred from transport success. See the same steward note for the contract,
+credential-handling evidence and remaining paired-release work.
+
+**Informed retention decision:** Mike explicitly authorized enabling the existing
+notebook-retention behavior with storage rights recorded as unverified
+(`call_3e1119ee6b8b4d4f8560b20850d1da3c`). The signed v3 policy preserves that
+distinction; operational approval is not a statement of contractual entitlement.
+Final review also preserves undelivered requested context on empty search
+success, without a replacement generation. Actual rollout evidence follows in
+the steward note; no journal response or uptake is inferred.

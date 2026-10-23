@@ -47,6 +47,33 @@ fn is_mutation_command(args: &[String]) -> bool {
 }
 
 async fn run(args: Vec<String>) -> Result<Value, Value> {
+    if args.first().is_some_and(|arg| arg == "brave-check") {
+        if args.len() != 7
+            || args[1] != "--credential-file"
+            || args[3] != "--account-directory"
+            || args[5] != "--account-id"
+        {
+            return Err(failure(E::InvalidRequest));
+        }
+        let config = astrid_public_web::BraveSearchConfig {
+            credential_file: (&args[2]).into(),
+            account_directory: (&args[4]).into(),
+        };
+        let check = astrid_public_web::check_brave_connection(&config, &args[6])
+            .await
+            .map_err(|error| {
+                serde_json::to_value(error).unwrap_or_else(|_| failure(E::InvalidRequest))
+            })?;
+        return serde_json::to_value(check).map_err(|_| failure(E::InvalidRequest));
+    }
+    if args.first().is_some_and(|arg| {
+        matches!(
+            arg.as_str(),
+            "search-account-init" | "search-account-status"
+        )
+    }) {
+        return account_command(&args);
+    }
     if !is_read_command(&args) && !is_fetch_command(&args) && !is_mutation_command(&args) {
         return Err(failure(E::InvalidRequest));
     }
@@ -100,6 +127,24 @@ async fn run(args: Vec<String>) -> Result<Value, Value> {
     }
     .map_err(failure)?;
     serde_json::to_value(result).map_err(|_| failure(E::InvalidRequest))
+}
+
+fn account_command(args: &[String]) -> Result<Value, Value> {
+    if args.len() < 5 || args[1] != "--directory" || args[3] != "--account-id" {
+        return Err(failure(E::InvalidRequest));
+    }
+    let path = std::path::Path::new(&args[2]);
+    let status =
+        if args[0] == "search-account-init" && args.len() == 7 && args[5] == "--limit-microusd" {
+            let limit = args[6].parse().map_err(|_| failure(E::InvalidRequest))?;
+            astrid_public_web::initialize_search_account(path, &args[4], limit)
+        } else if args[0] == "search-account-status" && args.len() == 5 {
+            astrid_public_web::search_account_status(path, &args[4])
+        } else {
+            return Err(failure(E::InvalidRequest));
+        }
+        .map_err(failure)?;
+    serde_json::to_value(status).map_err(|_| failure(E::InvalidRequest))
 }
 
 #[cfg(test)]

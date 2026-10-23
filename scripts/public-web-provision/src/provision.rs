@@ -6,12 +6,14 @@ use astrid_capabilities::{AuditEntryId, CapabilityToken, ResourcePattern, TokenS
 use astrid_core::Permission;
 use astrid_crypto::KeyPair;
 use astrid_minime_protocol::public_web::{
-    PUBLIC_WEB_APPROVAL_SCHEMA_V2, PUBLIC_WEB_CAPABILITY_RESOURCE_V2, PUBLIC_WEB_POLICY_SCHEMA_V2,
-    PUBLIC_WEB_STATE_SCHEMA_V2, PublicWebApprovalV2, PublicWebLimitsV2, PublicWebMutationV2,
-    PublicWebOperationV2, PublicWebOwnerV2, PublicWebPolicyStateV2, PublicWebPolicyStatusV2,
-    PublicWebPolicyV2,
+    BraveSearchPolicyV1, PUBLIC_WEB_APPROVAL_SCHEMA_V2, PUBLIC_WEB_POLICY_SCHEMA_V2,
+    PUBLIC_WEB_POLICY_SCHEMA_V3, PUBLIC_WEB_STATE_SCHEMA_V2, PublicWebApprovalV2,
+    PublicWebLimitsV2, PublicWebMutationV2, PublicWebOperationV2, PublicWebOwnerV2,
+    PublicWebPolicyStateV2, PublicWebPolicyStatusV2, PublicWebPolicyV2,
 };
-use astrid_public_web::{CONFIG_SCHEMA, PublicWebBundle, PublicWebConfig};
+use astrid_public_web::{
+    BraveSearchConfig, CONFIG_SCHEMA, CONFIG_SCHEMA_V3, PublicWebBundle, PublicWebConfig,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest as _, Sha256};
@@ -34,6 +36,10 @@ struct PrepareRequest {
     install_root: PathBuf,
     owner_lock_dir: PathBuf,
     approval_audit_ref: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    search_api: Option<BraveSearchPolicyV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    brave: Option<BraveSearchConfig>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -149,9 +155,15 @@ fn config_for(
     owner_lock_dir: &Path,
     owner: PublicWebOwnerV2,
     policy_hash: String,
+    brave: Option<BraveSearchConfig>,
 ) -> PublicWebConfig {
     PublicWebConfig {
-        schema: CONFIG_SCHEMA.into(),
+        schema: if brave.is_some() {
+            CONFIG_SCHEMA_V3
+        } else {
+            CONFIG_SCHEMA
+        }
+        .into(),
         delegation_root: root.join("delegation"),
         policy_path: root.join("policy.json"),
         state_path: root.join("state.json"),
@@ -161,6 +173,29 @@ fn config_for(
         expected_owner: owner,
         expected_policy_sha256: policy_hash,
         minimum_state_revision: 1,
+        brave,
+    }
+}
+
+fn validate_search(
+    policy: Option<&BraveSearchPolicyV1>,
+    config: Option<&BraveSearchConfig>,
+    separate_from: &[&Path],
+) -> Result<()> {
+    match (policy, config) {
+        (None, None) => Ok(()),
+        (Some(policy), Some(config)) if policy.is_well_formed() => {
+            // Validate explicit paths without reading credentials, creating an
+            // account, or inferring storage rights from possession of a key.
+            disjoint(&config.credential_file, &config.account_directory)?;
+            for path in [&config.credential_file, &config.account_directory] {
+                for other in separate_from {
+                    disjoint(path, other)?;
+                }
+            }
+            Ok(())
+        },
+        _ => Err("invalid_search_configuration"),
     }
 }
 
@@ -219,11 +254,36 @@ pub(crate) fn prepare(issuer: &Path, request_path: &Path, out: &Path) -> Result<
     disjoint(&request.install_root, issuer)?;
     disjoint(&request.install_root, out)?;
     lock_location(&request.owner_lock_dir, issuer, out)?;
+    validate_search(
+        request.search_api.as_ref(),
+        request.brave.as_ref(),
+        &[&request.install_root, &request.owner_lock_dir, issuer, out],
+    )?;
     private_fs::require_absent(&request.install_root)?;
     let key = load_issuer(issuer)?;
+    let mut policy = PublicWebPolicyV2 {
+        schema: if request.search_api.is_some() {
+            PUBLIC_WEB_POLICY_SCHEMA_V3
+        } else {
+            PUBLIC_WEB_POLICY_SCHEMA_V2
+        }
+        .into(),
+        policy_id: request.policy_id,
+        revision: 1,
+        owner: request.owner,
+        capability_token_id: String::new(),
+        capability_token_sha256: String::new(),
+        issuer_public_key_hex: key.export_public_key().to_hex(),
+        operations: vec![PublicWebOperationV2::Search, PublicWebOperationV2::Page],
+        limits: PublicWebLimitsV2::default(),
+        search_api: request.search_api,
+        issued_at_unix_ms: 0,
+        expires_at_unix_ms: 0,
+        approval_audit_refs: vec![request.approval_audit_ref.clone()],
+        signature_hex: String::new(),
+    };
     let token = CapabilityToken::create(
-        ResourcePattern::exact(PUBLIC_WEB_CAPABILITY_RESOURCE_V2)
-            .map_err(|_| "invalid_resource")?,
+        ResourcePattern::exact(policy.capability_resource()).map_err(|_| "invalid_resource")?,
         vec![Permission::Read],
         TokenScope::Persistent,
         key.key_id(),
@@ -234,21 +294,10 @@ pub(crate) fn prepare(issuer: &Path, request_path: &Path, out: &Path) -> Result<
     let token_json = serde_json::to_string(&token).map_err(|_| "serialization_failed")?;
     let timestamp =
         u64::try_from(token.issued_at.0.timestamp_millis()).map_err(|_| "clock_unavailable")?;
-    let mut policy = PublicWebPolicyV2 {
-        schema: PUBLIC_WEB_POLICY_SCHEMA_V2.into(),
-        policy_id: request.policy_id,
-        revision: 1,
-        owner: request.owner,
-        capability_token_id: token.id.to_string(),
-        capability_token_sha256: sha(token_json.as_bytes()),
-        issuer_public_key_hex: key.export_public_key().to_hex(),
-        operations: vec![PublicWebOperationV2::Search, PublicWebOperationV2::Page],
-        limits: PublicWebLimitsV2::default(),
-        issued_at_unix_ms: timestamp,
-        expires_at_unix_ms: timestamp.checked_add(YEAR_MS).ok_or("clock_overflow")?,
-        approval_audit_refs: vec![request.approval_audit_ref.clone()],
-        signature_hex: String::new(),
-    };
+    policy.capability_token_id = token.id.to_string();
+    policy.capability_token_sha256 = sha(token_json.as_bytes());
+    policy.issued_at_unix_ms = timestamp;
+    policy.expires_at_unix_ms = timestamp.checked_add(YEAR_MS).ok_or("clock_overflow")?;
     policy.signature_hex = key
         .sign(&policy.signing_bytes().ok_or("invalid_policy")?)
         .to_hex();
@@ -257,6 +306,7 @@ pub(crate) fn prepare(issuer: &Path, request_path: &Path, out: &Path) -> Result<
         &request.owner_lock_dir,
         policy.owner.clone(),
         policy.sha256(),
+        request.brave,
     );
     let mut state = PublicWebPolicyStateV2 {
         schema: PUBLIC_WEB_STATE_SCHEMA_V2.into(),
@@ -301,11 +351,17 @@ fn validate(key: &KeyPair, config: &PublicWebConfig, bundle: &PublicWebBundle) -
     private_fs::absolute(root)?;
     disjoint(root, &config.owner_lock_dir)?;
     Directory::open(&config.owner_lock_dir)?;
+    validate_search(
+        policy.search_api.as_ref(),
+        config.brave.as_ref(),
+        &[root, &config.owner_lock_dir],
+    )?;
     let expected = config_for(
         root,
         &config.owner_lock_dir,
         policy.owner.clone(),
         policy.sha256(),
+        config.brave.clone(),
     );
     if config.sha256() != expected.sha256()
         || !policy.verifies(now)
@@ -330,7 +386,7 @@ fn validate(key: &KeyPair, config: &PublicWebConfig, bundle: &PublicWebBundle) -
         || token.issuer.to_hex() != policy.issuer_public_key_hex
         || token.scope != TokenScope::Persistent
         || token.permissions != [Permission::Read]
-        || token.resource.as_str() != PUBLIC_WEB_CAPABILITY_RESOURCE_V2
+        || token.resource.as_str() != policy.capability_resource()
         || sha(bundle.capability_token_json.as_bytes()) != policy.capability_token_sha256
         || token
             .expires_at
@@ -369,6 +425,11 @@ pub(crate) fn renew(issuer: &Path, request_path: &Path, out: &Path) -> Result<Va
     lock_location(&config.owner_lock_dir, issuer, out)?;
     disjoint(issuer, out)?;
     disjoint(config.policy_path.parent().ok_or("invalid_config")?, out)?;
+    validate_search(
+        bundle.policy.search_api.as_ref(),
+        config.brave.as_ref(),
+        &[issuer, out],
+    )?;
     let old_bytes = private_fs::read(&request.approval_path)?;
     if sha(&old_bytes) != request.approval_file_sha256 {
         return Err("reviewed_approval_mismatch");
@@ -414,6 +475,11 @@ pub(crate) fn revoke(issuer: &Path, request_path: &Path, out: &Path) -> Result<V
     lock_location(&config.owner_lock_dir, issuer, out)?;
     disjoint(issuer, out)?;
     disjoint(config.policy_path.parent().ok_or("invalid_config")?, out)?;
+    validate_search(
+        bundle.policy.search_api.as_ref(),
+        config.brave.as_ref(),
+        &[issuer, out],
+    )?;
     let current =
         astrid_public_web::status(&config).map_err(|_| "installed_authority_unavailable")?;
     if current.floor_sha256 != request.expected_previous_floor_sha256

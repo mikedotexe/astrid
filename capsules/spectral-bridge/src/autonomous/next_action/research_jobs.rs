@@ -143,6 +143,21 @@ pub(in crate::autonomous) fn finish(
     }
 }
 
+/// No model received the assembled prompt. Keep other requested feedback pending.
+pub(in crate::autonomous) fn finish_empty_search(
+    conv: &mut ConversationState,
+    job: Option<BoundResearchJob>,
+    requested_context: Option<String>,
+) {
+    finish(conv, job, true);
+    if let Some(previous) = requested_context {
+        conv.pending_file_listing = Some(match conv.pending_file_listing.take() {
+            Some(current) => format!("{previous}\n\n{current}"),
+            None => previous,
+        });
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -199,7 +214,7 @@ mod tests {
         let outcome = super::super::handle_next_action(
             &mut conv,
             &format!(
-                "EXPERIMENT_BIND {} :: SEARCH exact fixture",
+                "EXPERIMENT_BIND {} :: SEARCH \"CONTROL Vec<T>\"  - exact;",
                 experiment.experiment_id
             ),
             super::super::NextActionContext {
@@ -214,6 +229,10 @@ mod tests {
             },
         );
         assert_eq!(outcome.status, "queued", "{}", outcome.outcome_summary);
+        assert_eq!(
+            conv.search_topic.as_deref(),
+            Some("\"CONTROL Vec<T>\"  - exact;")
+        );
         assert!(conv.activity.foreground_reader.is_none());
         assert!(conv.activity.return_reader.is_some());
         let rows = action_continuity::read_native_authority_records(&path).unwrap();
@@ -237,6 +256,32 @@ mod tests {
                 .unwrap()["lifecycle"],
             "released_unstarted"
         );
+        let ticket = store
+            .reserve_research(
+                &experiment.experiment_id,
+                "SEARCH empty fixture",
+                "successful-empty",
+                &json!({}),
+            )
+            .unwrap();
+        enqueue(&store, &mut conv, ticket).unwrap();
+        let empty_job = begin(&mut conv).unwrap();
+        conv.wants_search = false;
+        conv.search_topic = None;
+        let reader_before = serde_json::to_value(&conv.activity).unwrap();
+        let anchor_before = conv.last_research_anchor.clone();
+        let history_before = conv.history.len();
+        finish_empty_search(&mut conv, Some(empty_job), None);
+        assert_eq!(
+            action_continuity::read_native_authority_records(&path)
+                .unwrap()
+                .last()
+                .unwrap()["lifecycle"],
+            "completed"
+        );
+        assert_eq!(serde_json::to_value(&conv.activity).unwrap(), reader_before);
+        assert_eq!(conv.last_research_anchor, anchor_before);
+        assert_eq!(conv.history.len(), history_before);
         let ticket = store
             .reserve_research(
                 &experiment.experiment_id,

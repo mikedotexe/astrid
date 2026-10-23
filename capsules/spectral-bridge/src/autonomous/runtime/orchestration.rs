@@ -716,12 +716,13 @@ pub fn spawn_autonomous_loop(
 
                     // Inject pending file listing into perception context.
                     // Cap at 8000 chars to prevent large MIKE_BROWSE from blowing context.
-                    let perception_text = if let Some(listing) = conv.pending_file_listing.take() {
+                    let requested_context = conv.pending_file_listing.take();
+                    let perception_text = if let Some(listing) = requested_context.as_deref() {
                         let perc = perception_text.as_deref().unwrap_or("");
                         let capped = if listing.len() > 8000 {
                             format!("{}\n[...truncated at 8000 chars]", &listing[..listing.floor_char_boundary(8000)])
                         } else {
-                            listing
+                            listing.to_string()
                         };
                         Some(format!("[Requested context:]\n{capped}\n\n{perc}"))
                     } else {
@@ -1560,6 +1561,12 @@ pub fn spawn_autonomous_loop(
                                         let anchor =
                                             search_topic.clone().unwrap_or_else(|| query.clone());
                                         let ctx = crate::llm::web_search_checked(&query, &anchor).await;
+                                        if ctx.as_ref().is_ok_and(|results| results.hits.is_empty()) {
+                                            next_action::research_jobs::finish_empty_search(&mut conv, bound_research_job, requested_context);
+                                            info!(target_hash = %crate::public_web::target_fingerprint(&query), results = 0, source_delivered = false, generation_requested = false, "web search completed with zero results; no fallback or reflection");
+                                            save_state(&mut conv);
+                                            continue;
+                                        }
                                         if let Ok(ref results) = ctx {
                                             research_source_succeeded = true;
                                             info!(target_hash = %crate::public_web::target_fingerprint(&query), "dialogue: web search enriched response");
@@ -2995,11 +3002,7 @@ pub fn spawn_autonomous_loop(
                                 let web_ctx =
                                     crate::llm::web_search(&search_query, &search_anchor).await;
                                 if let Some(ref ctx) = web_ctx {
-                                    info!(label = %label, "introspect: web search returned context");
-                                    debug!(
-                                        "web context: {}",
-                                        truncate_str(&ctx.prompt_body(), 100)
-                                    );
+                                    info!(result_count = ctx.hits.len(), "introspect: web search returned navigation candidates");
                                 }
                                 let web_prompt_body =
                                     web_ctx.as_ref().map(|ctx| ctx.prompt_body());

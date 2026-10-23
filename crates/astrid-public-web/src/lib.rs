@@ -6,9 +6,11 @@
 #![deny(unsafe_code)]
 
 mod authority;
+mod brave;
 mod guard;
 mod network;
 mod operator;
+mod spending;
 mod transport;
 
 use std::path::PathBuf;
@@ -22,9 +24,11 @@ pub use operator::{
     PublicWebBundle, PublicWebMutationPreview, PublicWebStatus, load_approval, mutate,
     preview_mutation, status,
 };
-pub use transport::fetch;
+pub use spending::{SearchAccountStatus, initialize_search_account, search_account_status};
+pub use transport::{BraveConnectionCheck, check_brave_connection, fetch};
 
 pub const CONFIG_SCHEMA: &str = "astrid.public_web.config.v2";
+pub const CONFIG_SCHEMA_V3: &str = "astrid.public_web.config.v3";
 pub const REQUEST_SCHEMA: &str = "astrid.public_web.request.v2";
 pub const RECEIPT_SCHEMA: &str = "astrid.public_web.receipt.v2";
 
@@ -43,6 +47,16 @@ pub struct PublicWebConfig {
     pub expected_owner: PublicWebOwnerV2,
     pub expected_policy_sha256: String,
     pub minimum_state_revision: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub brave: Option<BraveSearchConfig>,
+}
+
+#[derive(Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct BraveSearchConfig {
+    pub credential_file: PathBuf,
+    /// Shared by both owners. No query, response, or credential is stored here.
+    pub account_directory: PathBuf,
 }
 
 impl PublicWebConfig {
@@ -110,6 +124,13 @@ pub enum PublicWebErrorCode {
     RedirectLimit,
     InvalidRedirect,
     HttpStatus,
+    SearchChallenge,
+    CredentialUnavailable,
+    SearchAuthentication,
+    SearchRateLimited,
+    SearchResponseInvalid,
+    SearchSpendingLimit,
+    SearchSpendingState,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -121,6 +142,33 @@ pub struct PublicWebFailure {
     pub decoded_bytes_observed: u64,
     pub wire_bytes_observed: u64,
     pub redirects_followed: u8,
+    /// Status received on the failed hop, not a prior redirect. Absent if no
+    /// response headers arrived; older receipts did not retain this field.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub http_status: Option<u16>,
+}
+
+impl PublicWebFailure {
+    /// Content-free explanation for delivery feedback, never upstream prose.
+    #[must_use]
+    pub fn delivery_message(&self) -> String {
+        let reason = match self.code {
+            PublicWebErrorCode::SearchChallenge => {
+                "The search service returned a human-verification challenge, not search results. Changing the query is not an established remedy. No automatic retry or alternate service was used."
+            },
+            PublicWebErrorCode::HttpStatus if self.http_status == Some(202) => {
+                "The service returned HTTP 202 without a completed source. This receipt does not establish queued work or a later result."
+            },
+            _ => "No complete source was delivered by this request.",
+        };
+        let status = self
+            .http_status
+            .map_or_else(|| "unavailable".to_string(), |status| status.to_string());
+        format!(
+            "public_web_{:?}; complete=false; http_status={status}. {reason}",
+            self.code
+        )
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

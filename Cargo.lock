@@ -588,6 +588,7 @@ dependencies = [
  "astrid-crypto",
  "astrid-minime-protocol",
  "async-trait",
+ "chrono",
  "flate2",
  "fs2",
  "hex",
@@ -599,6 +600,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "url",
+ "zeroize",
 ]
 
 [[package]]

@@ -143,7 +143,8 @@ pub(super) fn reconcile_lease_law(conv: &mut super::state::ConversationState) {
 /// Parse NEXT: action from Astrid's response.
 pub(crate) fn parse_next_action(text: &str) -> Option<&str> {
     if let Some(action) = astrid_source_study::response_choice::final_explicit_next(text) {
-        if action.starts_with("AFTERIMAGE_KEEP ")
+        if matches!(leading_action_token(action).as_str(), "SEARCH" | "RESEARCH")
+            || action.starts_with("AFTERIMAGE_KEEP ")
             || astrid_source_study::response_choice::is_geometry_action(action)
             || astrid_source_study::command_boundary::has_study_payload(action)
         {
@@ -270,33 +271,12 @@ fn clean_search_topic(candidate: &str) -> Option<String> {
 }
 
 pub(crate) fn extract_search_topic(next_action: &str) -> Option<String> {
-    let trimmed = next_action.trim();
-    if trimmed.len() < 6 || !trimmed[..6].eq_ignore_ascii_case("SEARCH") {
-        return None;
-    }
-
-    let rest = trimmed[6..]
+    let (command, query) = next_action
         .trim()
-        .trim_start_matches(['-', '\u{2014}', ':'])
-        .trim();
-
-    if rest.is_empty() {
-        return None;
-    }
-
-    if let Some(quoted) = first_quoted_span(rest) {
-        return clean_search_topic(quoted);
-    }
-
-    let mut end = rest.len();
-    if let Some(idx) = rest.find('\u{2014}') {
-        end = end.min(idx);
-    }
-    if let Some(idx) = rest.find(" - ") {
-        end = end.min(idx);
-    }
-
-    clean_search_topic(rest[..end].trim())
+        .split_once(|ch: char| ch.is_whitespace() || ch == ':')?;
+    let query = query.trim();
+    (matches!(command.to_ascii_uppercase().as_str(), "SEARCH" | "RESEARCH") && !query.is_empty())
+        .then(|| query.to_string())
 }
 
 fn clean_alias_arg(raw: &str) -> String {
@@ -1181,7 +1161,7 @@ fn normalize_feedback_shadow_model_alias(
 fn canonicalize_next_action_components(next_action: &str) -> (String, String) {
     if matches!(
         leading_action_token(next_action.trim_start()).as_str(),
-        "AFTERIMAGE_KEEP" | "STEWARD_INVITATION"
+        "AFTERIMAGE_KEEP" | "STEWARD_INVITATION" | "SEARCH" | "RESEARCH"
     ) || astrid_source_study::response_choice::is_geometry_action(next_action)
         || astrid_source_study::command_boundary::has_study_payload(next_action)
     {
@@ -2230,6 +2210,9 @@ pub(super) fn handle_operator_next_action(
 }
 
 include!("dispatch.rs");
+
+#[cfg(test)]
+mod search_delivery_tests;
 
 /// v4.0 Phase 1+2: dispatch a multi-segment NEXT line. Each segment is
 /// dispatched in order through the full `handle_next_action` pipeline

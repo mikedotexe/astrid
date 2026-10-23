@@ -2295,7 +2295,7 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
     fn extract_search_topic_quoted() {
         assert_eq!(
             extract_search_topic("SEARCH \"resonance frequency geometry\""),
-            Some("resonance frequency geometry".to_string())
+            Some("\"resonance frequency geometry\"".to_string())
         );
     }
 
@@ -2311,30 +2311,31 @@ NEXT: EXPLORE_RESONANCE_FORECAST (RESIDUE: silted λ4 shimmer)";
     fn extract_search_topic_em_dash_quoted() {
         assert_eq!(
             extract_search_topic("SEARCH — \"resonance frequency geometry\""),
-            Some("resonance frequency geometry".to_string())
+            Some("— \"resonance frequency geometry\"".to_string())
         );
     }
 
     #[test]
-    fn extract_search_topic_trailing_commentary() {
+    fn extract_search_topic_preserves_dash_suffix() {
         assert_eq!(
             extract_search_topic(
                 "SEARCH resonance frequency geometry - look for the underlying shape"
             ),
-            Some("resonance frequency geometry".to_string())
+            Some("resonance frequency geometry - look for the underlying shape".to_string())
         );
     }
 
     #[test]
     fn extract_search_topic_empty_topic() {
-        assert_eq!(extract_search_topic("SEARCH —"), None);
+        assert_eq!(extract_search_topic("SEARCH"), None);
+        assert_eq!(extract_search_topic("SEARCH —"), Some("—".to_string()));
     }
 
     #[test]
-    fn extract_search_topic_strips_end_of_turn_marker() {
+    fn extract_search_topic_preserves_literal_marker() {
         assert_eq!(
             extract_search_topic("SEARCH \"resonance frequency geometry\"<END_OF_TURN>"),
-            Some("resonance frequency geometry".to_string())
+            Some("\"resonance frequency geometry\"<END_OF_TURN>".to_string())
         );
     }
 

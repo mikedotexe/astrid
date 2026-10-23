@@ -21,6 +21,7 @@ fn signed_policy() -> (SigningKey, PublicWebPolicyV2) {
         issuer_public_key_hex: hex::encode(key.verifying_key().as_bytes()),
         operations: vec![PublicWebOperationV2::Search, PublicWebOperationV2::Page],
         limits: PublicWebLimitsV2::default(),
+        search_api: None,
         issued_at_unix_ms: 1_000,
         expires_at_unix_ms: 10_000,
         approval_audit_refs: vec!["fixture:approval".into()],
@@ -55,9 +56,52 @@ fn standing_policy_has_explicit_schema_and_no_action_counter() {
     assert!(policy.verifies(2_000));
     let wire = serde_json::to_value(&policy).unwrap();
     assert!(wire.get("action_count").is_none());
+    assert!(wire.get("search_api").is_none());
     let mut old_style = wire;
     old_style["action_count"] = u64::MAX.into();
     assert!(serde_json::from_value::<PublicWebPolicyV2>(old_style).is_err());
+}
+
+#[test]
+fn paid_search_binds_usage_review_without_inventing_storage_rights() {
+    let (key, mut policy) = signed_policy();
+    policy.search_api = Some(BraveSearchPolicyV1 {
+        schema: "volition.brave_search.v1".into(),
+        account_id: "fixture-account".into(),
+        monthly_limit_microusd: 25_000_000,
+        request_cost_microusd: 5_000,
+        storage_rights_status: SearchStorageRights::Unverified,
+        retention_review_audit_ref: "synthetic-operator-review".into(),
+    });
+    sign(&key, &mut policy);
+    assert!(!policy.verifies(2_000));
+    policy.schema = PUBLIC_WEB_POLICY_SCHEMA_V3.into();
+    sign(&key, &mut policy);
+    assert!(policy.verifies(2_000));
+    assert_eq!(
+        serde_json::to_value(&policy).unwrap()["search_api"]["storage_rights_status"],
+        "unverified"
+    );
+    policy.search_api.as_mut().unwrap().storage_rights_status =
+        SearchStorageRights::OperatorConfirmed;
+    assert!(!policy.verifies(2_000));
+    policy.search_api.as_mut().unwrap().storage_rights_status = SearchStorageRights::Unverified;
+    assert!(policy.verifies(2_000));
+    assert_eq!(
+        policy.capability_resource(),
+        PUBLIC_WEB_CAPABILITY_RESOURCE_V3
+    );
+    policy.search_api.as_mut().unwrap().monthly_limit_microusd = 25_000_001;
+    assert!(!policy.verifies(2_000));
+    policy.search_api.as_mut().unwrap().monthly_limit_microusd = 25_000_000;
+    policy
+        .search_api
+        .as_mut()
+        .unwrap()
+        .retention_review_audit_ref
+        .clear();
+    sign(&key, &mut policy);
+    assert!(!policy.verifies(2_000));
 }
 
 #[test]

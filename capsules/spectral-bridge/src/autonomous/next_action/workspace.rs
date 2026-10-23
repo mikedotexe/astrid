@@ -308,20 +308,12 @@ pub(super) fn handle_action(
         },
         "SEARCH" | "RESEARCH" => {
             conv.wants_search = true;
-            // RESEARCH maps to SEARCH — the being invented this alias naturally.
-            let topic_text = if base_action == "RESEARCH" {
-                // Strip RESEARCH prefix and try to extract topic
-                let rest = strip_action(original, "RESEARCH");
-                if !rest.is_empty() {
-                    Some(rest)
-                } else {
-                    extract_search_topic(next_action)
-                }
-            } else {
-                extract_search_topic(next_action)
-            };
-            if let Some(topic) = topic_text {
-                info!("Astrid requested web search ({}): {}", base_action, topic);
+            if let Some(topic) = extract_search_topic(original) {
+                info!(
+                    target_hash = %crate::public_web::target_fingerprint(&topic),
+                    route = base_action,
+                    "Astrid requested web search"
+                );
                 conv.search_topic = Some(topic);
             } else {
                 info!("Astrid requested web search ({})", base_action);

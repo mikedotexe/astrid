@@ -1,4 +1,7 @@
 use super::*;
+use astrid_minime_protocol::public_web::{
+    BRAVE_REQUEST_MICROUSD, PUBLIC_WEB_CAPABILITY_RESOURCE_V2, PUBLIC_WEB_CAPABILITY_RESOURCE_V3,
+};
 use astrid_public_web::{PublicWebErrorCode, mutate, preview, preview_mutation, status};
 use std::os::unix::fs::{MetadataExt as _, symlink};
 
@@ -48,7 +51,36 @@ impl Fixture {
             install_root: self.root.join(format!("installed-{being}")),
             owner_lock_dir: self.locks.clone(),
             approval_audit_ref: "synthetic:test-approval".into(),
+            search_api: None,
+            brave: None,
         }
+    }
+
+    fn search_request(&self, being: &str) -> PrepareRequest {
+        let mut request = self.prepare_request(being);
+        request.search_api = Some(BraveSearchPolicyV1 {
+            schema: "volition.brave_search.v1".into(),
+            account_id: "synthetic-shared-account".into(),
+            monthly_limit_microusd: 25_000_000,
+            request_cost_microusd: BRAVE_REQUEST_MICROUSD,
+            storage_rights_status:
+                astrid_minime_protocol::public_web::SearchStorageRights::Unverified,
+            retention_review_audit_ref: "synthetic:operator-retention-review".into(),
+        });
+        request.brave = Some(BraveSearchConfig {
+            credential_file: self.root.join("unread-synthetic-credential"),
+            account_directory: self.root.join("uncreated-synthetic-account"),
+        });
+        request
+    }
+
+    fn prepared_search(&self, being: &str) -> PathBuf {
+        let request = self.search_request(being);
+        let path = self.json(&format!("{being}-search-request.json"), &request);
+        let out = self.root.join(format!("search-packet-{being}"));
+        prepare(&self.issuer, &path, &out).unwrap();
+        assert!(!request.install_root.exists());
+        out
     }
 
     fn prepared(&self, being: &str) -> PathBuf {
@@ -197,93 +229,356 @@ fn existing_operator_preview_mutate_status_accept_prepared_files() {
 
 #[test]
 fn expired_exact_approval_renews_without_changing_policy_state_or_config() {
-    let f = Fixture::new();
-    let packet = f.prepared("astrid");
-    let (config, bundle, mut old) = packet_values(&packet);
-    let key = load_issuer(&f.issuer).unwrap();
-    let now = now_ms().unwrap();
-    old.approved_at_unix_ms = now.checked_sub(10_000).unwrap();
-    old.expires_at_unix_ms = now.checked_sub(1_000).unwrap();
-    old.signature_hex = key.sign(&old.signing_bytes().unwrap()).to_hex();
-    assert!(!old.verifies_for(&bundle.policy, &bundle.state, &config.sha256(), now));
-    let old_path = f.json("expired.json", &old);
-    let request = RenewRequest {
-        schema: "astrid.public_web.provision.renew.v1".into(),
-        exact: exact(&packet),
-        approval_file_sha256: sha(&private_fs::read(&old_path).unwrap()),
-        approval_path: old_path,
-        approval_audit_ref: "synthetic:renew".into(),
-    };
-    let request_path = f.json("renew.json", &request);
-    let renewed = f.root.join("renewed");
-    renew(&f.issuer, &request_path, &renewed).unwrap();
-    for name in ["bundle.json", "config.json", "runtime-owner.json"] {
+    for search in [false, true] {
+        let f = Fixture::new();
+        let packet = if search {
+            f.prepared_search("astrid")
+        } else {
+            f.prepared("astrid")
+        };
+        let (config, bundle, mut old) = packet_values(&packet);
+        let key = load_issuer(&f.issuer).unwrap();
+        let now = now_ms().unwrap();
+        old.approved_at_unix_ms = now.checked_sub(10_000).unwrap();
+        old.expires_at_unix_ms = now.checked_sub(1_000).unwrap();
+        old.signature_hex = key.sign(&old.signing_bytes().unwrap()).to_hex();
+        assert!(!old.verifies_for(&bundle.policy, &bundle.state, &config.sha256(), now));
+        let old_path = f.json("expired.json", &old);
+        let request = RenewRequest {
+            schema: "astrid.public_web.provision.renew.v1".into(),
+            exact: exact(&packet),
+            approval_file_sha256: sha(&private_fs::read(&old_path).unwrap()),
+            approval_path: old_path,
+            approval_audit_ref: "synthetic:renew".into(),
+        };
+        let request_path = f.json("renew.json", &request);
+        let renewed = f.root.join("renewed");
+        renew(&f.issuer, &request_path, &renewed).unwrap();
+        for name in ["bundle.json", "config.json", "runtime-owner.json"] {
+            assert_eq!(
+                *private_fs::read(&packet.join(name)).unwrap(),
+                *private_fs::read(&renewed.join(name)).unwrap()
+            );
+        }
+        let (renewed_config, _, fresh) = packet_values(&renewed);
+        assert_eq!(renewed_config.owner_lock_dir, f.locks);
+        assert_eq!(renewed_config.sha256(), config.sha256());
+        assert!(fresh.verifies_for(
+            &bundle.policy,
+            &bundle.state,
+            &config.sha256(),
+            now_ms().unwrap()
+        ));
         assert_eq!(
-            *private_fs::read(&packet.join(name)).unwrap(),
-            *private_fs::read(&renewed.join(name)).unwrap()
+            fresh.expected_previous_floor_sha256,
+            old.expected_previous_floor_sha256
+        );
+        assert!(!config.policy_path.exists());
+        let (installed, _, _) = f.install_fixture(&packet);
+        assert_eq!(
+            preview_mutation(&installed, &installed.expected_owner, &bundle, &fresh).unwrap_err(),
+            PublicWebErrorCode::StaleApproval
         );
     }
-    let (renewed_config, _, fresh) = packet_values(&renewed);
-    assert_eq!(renewed_config.owner_lock_dir, f.locks);
-    assert_eq!(renewed_config.sha256(), config.sha256());
-    assert!(fresh.verifies_for(
+}
+
+#[test]
+fn revoke_preparation_is_read_only_and_installer_enforces_reviewed_floor() {
+    for search in [false, true] {
+        let f = Fixture::new();
+        let packet = if search {
+            f.prepared_search("minime")
+        } else {
+            f.prepared("minime")
+        };
+        let (config, _, _) = f.install_fixture(&packet);
+        let current = status(&config).unwrap();
+        let request = RevokeRequest {
+            schema: "astrid.public_web.provision.revoke.v1".into(),
+            exact: exact(&packet),
+            expected_previous_floor_sha256: current.floor_sha256.clone(),
+            expected_state_revision: current.state_revision,
+            approval_audit_ref: "synthetic:revoke".into(),
+        };
+        let request_path = f.json("revoke.json", &request);
+        let out = f.root.join("revocation");
+        revoke(&f.issuer, &request_path, &out).unwrap();
+        assert_eq!(status(&config).unwrap().floor_sha256, current.floor_sha256);
+        assert!(preview(&config).is_ok());
+        let (revoked_config, bundle, approval) = packet_values(&out);
+        assert_eq!(revoked_config.owner_lock_dir, f.locks);
+        assert_eq!(revoked_config.sha256(), config.sha256());
+        assert_eq!(
+            *private_fs::read(&packet.join("config.json")).unwrap(),
+            *private_fs::read(&out.join("config.json")).unwrap()
+        );
+        assert_eq!(bundle.state.revision, 2);
+        assert_eq!(approval.operation, PublicWebMutationV2::Revoke);
+        preview_mutation(&config, &config.expected_owner, &bundle, &approval).unwrap();
+        mutate(&config, &config.expected_owner, &bundle, &approval).unwrap();
+        assert_eq!(
+            status(&config).unwrap().status,
+            PublicWebPolicyStatusV2::Revoked
+        );
+        assert_eq!(preview(&config).unwrap_err(), PublicWebErrorCode::Revoked);
+        let conflict = f.root.join("conflict");
+        assert_eq!(
+            revoke(&f.issuer, &request_path, &conflict).unwrap_err(),
+            "installed_head_conflict"
+        );
+        assert!(!conflict.exists());
+    }
+}
+
+#[test]
+fn explicit_search_policy_prepares_v3_without_opening_credentials_or_account() {
+    let f = Fixture::new();
+    let packet = f.prepared_search("astrid");
+    let (config, bundle, approval) = packet_values(&packet);
+    let expected = f.search_request("astrid");
+    assert_eq!(config.schema, CONFIG_SCHEMA_V3);
+    assert_eq!(bundle.policy.schema, PUBLIC_WEB_POLICY_SCHEMA_V3);
+    assert_eq!(bundle.policy.search_api, expected.search_api);
+    assert!(config.brave == expected.brave);
+    let brave = config.brave.as_ref().unwrap();
+    assert!(!brave.credential_file.exists());
+    assert!(!brave.account_directory.exists());
+    let token: CapabilityToken = serde_json::from_str(&bundle.capability_token_json).unwrap();
+    assert_eq!(token.resource.as_str(), PUBLIC_WEB_CAPABILITY_RESOURCE_V3);
+    assert_eq!(token.resource.as_str(), bundle.policy.capability_resource());
+    assert!(bundle.policy.verifies(now_ms().unwrap()));
+    assert!(approval.verifies_for(
         &bundle.policy,
         &bundle.state,
         &config.sha256(),
         now_ms().unwrap()
     ));
-    assert_eq!(
-        fresh.expected_previous_floor_sha256,
-        old.expected_previous_floor_sha256
-    );
-    assert!(!config.policy_path.exists());
+    let receipt: Value = private_fs::read_json(&packet.join("receipt.json")).unwrap();
+    assert_eq!(receipt["installed"], false);
+    assert_eq!(receipt["network_used"], false);
     let (installed, _, _) = f.install_fixture(&packet);
+    assert!(preview(&installed).is_ok());
+    assert!(!brave.credential_file.exists());
+    assert!(!brave.account_directory.exists());
+}
+
+#[test]
+fn search_requires_explicit_usage_review_and_honest_storage_status() {
+    let f = Fixture::new();
+    let baseline = serde_json::to_value(f.search_request("astrid")).unwrap();
+    let mut invalid = Vec::new();
+    for field in ["search_api", "brave"] {
+        let mut request = baseline.clone();
+        request.as_object_mut().unwrap().remove(field);
+        invalid.push(request);
+    }
+    for (field, value) in [
+        ("retention_review_audit_ref", json!("")),
+        ("retention_review_audit_ref", json!(" inferred ")),
+        ("storage_rights_status", json!("assumed_from_key")),
+        ("account_id", json!("")),
+        ("schema", json!("unrecognized")),
+        ("monthly_limit_microusd", json!(0)),
+        (
+            "monthly_limit_microusd",
+            json!(BRAVE_REQUEST_MICROUSD.saturating_sub(1)),
+        ),
+        ("request_cost_microusd", json!(0)),
+    ] {
+        let mut request = baseline.clone();
+        request["search_api"][field] = value;
+        invalid.push(request);
+    }
+    let mut missing_rights = baseline.clone();
+    missing_rights["search_api"]
+        .as_object_mut()
+        .unwrap()
+        .remove("storage_rights_status");
+    invalid.push(missing_rights);
+    for (index, request) in invalid.iter().enumerate() {
+        let path = f.json(&format!("invalid-search-{index}.json"), request);
+        let out = f.root.join(format!("invalid-search-{index}"));
+        assert!(prepare(&f.issuer, &path, &out).is_err());
+        assert!(!out.exists());
+    }
+    let mut unknown = baseline;
+    unknown["brave"]["api_key"] = json!("synthetic-not-a-real-key");
+    let path = f.json("unknown-credential-field.json", &unknown);
     assert_eq!(
-        preview_mutation(&installed, &installed.expected_owner, &bundle, &fresh).unwrap_err(),
-        PublicWebErrorCode::StaleApproval
+        prepare(&f.issuer, &path, &f.root.join("unknown-output")).unwrap_err(),
+        "invalid_operator_json"
     );
 }
 
 #[test]
-fn revoke_preparation_is_read_only_and_installer_enforces_reviewed_floor() {
+fn explicit_search_paths_must_be_normal_absolute_and_disjoint() {
     let f = Fixture::new();
-    let packet = f.prepared("minime");
-    let (config, _, _) = f.install_fixture(&packet);
-    let current = status(&config).unwrap();
-    let request = RevokeRequest {
-        schema: "astrid.public_web.provision.revoke.v1".into(),
+    for (index, path) in [
+        PathBuf::from("relative"),
+        f.root.join("../escape"),
+        f.issuer.join(KEY_NAME),
+        f.locks.join("key"),
+        f.root.join("installed-astrid/key"),
+        f.root.join("uncreated-synthetic-account/key"),
+        f.root.clone(),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let mut request = f.search_request("astrid");
+        request.brave.as_mut().unwrap().credential_file = path;
+        let path = f.json(&format!("bad-search-path-{index}.json"), &request);
+        let out = f.root.join(format!("bad-search-path-{index}"));
+        assert!(prepare(&f.issuer, &path, &out).is_err());
+        assert!(!out.exists());
+    }
+    let mut request = f.search_request("astrid");
+    let out = f.root.join("search-path-collision");
+    request.brave.as_mut().unwrap().account_directory = out.join("account");
+    let path = f.json("output-collision.json", &request);
+    assert!(prepare(&f.issuer, &path, &out).is_err());
+    assert!(!out.exists());
+}
+
+#[test]
+fn v3_renewal_rejects_config_policy_drift_and_output_collision() {
+    let f = Fixture::new();
+    let packet = f.prepared_search("astrid");
+    let (mut config, bundle, _) = packet_values(&packet);
+    let mut request = RenewRequest {
+        schema: "astrid.public_web.provision.renew.v1".into(),
         exact: exact(&packet),
-        expected_previous_floor_sha256: current.floor_sha256.clone(),
-        expected_state_revision: current.state_revision,
-        approval_audit_ref: "synthetic:revoke".into(),
+        approval_path: packet.join("approval.json"),
+        approval_file_sha256: sha(&private_fs::read(&packet.join("approval.json")).unwrap()),
+        approval_audit_ref: "synthetic:renew-search".into(),
     };
-    let request_path = f.json("revoke.json", &request);
-    let out = f.root.join("revocation");
-    revoke(&f.issuer, &request_path, &out).unwrap();
-    assert_eq!(status(&config).unwrap().floor_sha256, current.floor_sha256);
-    assert!(preview(&config).is_ok());
-    let (revoked_config, bundle, approval) = packet_values(&out);
-    assert_eq!(revoked_config.owner_lock_dir, f.locks);
-    assert_eq!(revoked_config.sha256(), config.sha256());
+    let path = f.json("renew-search-output-collision.json", &request);
+    let account = config.brave.as_ref().unwrap().account_directory.clone();
+    assert!(renew(&f.issuer, &path, &account).is_err());
+    assert!(!account.exists());
+    config.brave.as_mut().unwrap().credential_file = f.root.join("changed-credential");
+    request.exact.config_path = f.json("changed-search-config.json", &config);
+    let out = f.root.join("refused-search-renewal");
+    let path = f.json("renew-search-drift.json", &request);
     assert_eq!(
-        *private_fs::read(&packet.join("config.json")).unwrap(),
-        *private_fs::read(&out.join("config.json")).unwrap()
+        renew(&f.issuer, &path, &out).unwrap_err(),
+        "reviewed_input_mismatch"
     );
-    assert_eq!(bundle.state.revision, 2);
-    assert_eq!(approval.operation, PublicWebMutationV2::Revoke);
-    preview_mutation(&config, &config.expected_owner, &bundle, &approval).unwrap();
-    mutate(&config, &config.expected_owner, &bundle, &approval).unwrap();
+    request.exact.config_sha256 = config.sha256();
+    let path = f.json("renew-search-rehashed.json", &request);
     assert_eq!(
-        status(&config).unwrap().status,
-        PublicWebPolicyStatusV2::Revoked
+        renew(&f.issuer, &path, &out).unwrap_err(),
+        "invalid_prior_approval"
     );
-    assert_eq!(preview(&config).unwrap_err(), PublicWebErrorCode::Revoked);
-    let conflict = f.root.join("conflict");
+    assert!(!out.exists());
+    assert!(bundle.policy.verifies(now_ms().unwrap()));
+}
+
+#[test]
+fn exact_validation_rejects_cross_version_token_even_when_resigned() {
+    let f = Fixture::new();
+    let packet = f.prepared_search("astrid");
+    let (mut config, mut bundle, _) = packet_values(&packet);
+    let key = load_issuer(&f.issuer).unwrap();
+    let token = CapabilityToken::create(
+        ResourcePattern::exact(PUBLIC_WEB_CAPABILITY_RESOURCE_V2).unwrap(),
+        vec![Permission::Read],
+        TokenScope::Persistent,
+        key.key_id(),
+        AuditEntryId::new(),
+        &key,
+        Some(chrono::Duration::days(365)),
+    );
+    bundle.capability_token_json = serde_json::to_string(&token).unwrap();
+    bundle.policy.capability_token_id = token.id.to_string();
+    bundle.policy.capability_token_sha256 = sha(bundle.capability_token_json.as_bytes());
+    bundle.policy.signature_hex = key.sign(&bundle.policy.signing_bytes().unwrap()).to_hex();
+    bundle.state.policy_sha256 = bundle.policy.sha256();
+    sign_state(&key, &mut bundle.state).unwrap();
+    config.expected_policy_sha256 = bundle.policy.sha256();
     assert_eq!(
-        revoke(&f.issuer, &request_path, &conflict).unwrap_err(),
-        "installed_head_conflict"
+        validate(&key, &config, &bundle).unwrap_err(),
+        "invalid_capability"
     );
-    assert!(!conflict.exists());
+    config.brave = None;
+    assert_eq!(
+        validate(&key, &config, &bundle).unwrap_err(),
+        "invalid_search_configuration"
+    );
+}
+
+#[test]
+fn v2_wire_bytes_hashes_and_policy_signature_keep_the_legacy_shape() {
+    // Field order matters for config.sha256; keep an independent pre-v3 schema.
+    #[derive(Serialize)]
+    struct LegacyConfig<'a> {
+        schema: &'a str,
+        delegation_root: &'a Path,
+        policy_path: &'a Path,
+        state_path: &'a Path,
+        state_floor_path: &'a Path,
+        owner_lock_dir: &'a Path,
+        storage_path: &'a Path,
+        expected_owner: &'a PublicWebOwnerV2,
+        expected_policy_sha256: &'a str,
+        minimum_state_revision: u64,
+    }
+    let f = Fixture::new();
+    let packet = f.prepared("astrid");
+    let (config, bundle, _) = packet_values(&packet);
+    let legacy = LegacyConfig {
+        schema: &config.schema,
+        delegation_root: &config.delegation_root,
+        policy_path: &config.policy_path,
+        state_path: &config.state_path,
+        state_floor_path: &config.state_floor_path,
+        owner_lock_dir: &config.owner_lock_dir,
+        storage_path: &config.storage_path,
+        expected_owner: &config.expected_owner,
+        expected_policy_sha256: &config.expected_policy_sha256,
+        minimum_state_revision: 1,
+    };
+    assert_eq!(encoded(&config).unwrap(), encoded(&legacy).unwrap());
+    assert_eq!(config.sha256(), sha(&encoded(&legacy).unwrap()));
+    assert_eq!(config.schema, CONFIG_SCHEMA);
+    let policy = &bundle.policy;
+    let legacy_policy = json!({
+        "schema": policy.schema, "policy_id": policy.policy_id, "revision": policy.revision,
+        "owner": policy.owner, "capability_token_id": policy.capability_token_id,
+        "capability_token_sha256": policy.capability_token_sha256,
+        "issuer_public_key_hex": policy.issuer_public_key_hex, "operations": policy.operations,
+        "limits": policy.limits, "issued_at_unix_ms": policy.issued_at_unix_ms,
+        "expires_at_unix_ms": policy.expires_at_unix_ms,
+        "approval_audit_refs": policy.approval_audit_refs, "signature_hex": "",
+    });
+    let legacy_signing_bytes = encoded(&legacy_policy).unwrap();
+    assert_eq!(policy.signing_bytes().unwrap(), legacy_signing_bytes);
+    assert_eq!(
+        policy.signature_hex,
+        load_issuer(&f.issuer)
+            .unwrap()
+            .sign(&legacy_signing_bytes)
+            .to_hex()
+    );
+    assert!(
+        serde_json::to_value(policy)
+            .unwrap()
+            .get("search_api")
+            .is_none()
+    );
+    assert!(
+        serde_json::to_value(&config)
+            .unwrap()
+            .get("brave")
+            .is_none()
+    );
+    assert_eq!(
+        policy.capability_resource(),
+        PUBLIC_WEB_CAPABILITY_RESOURCE_V2
+    );
+    let request = serde_json::to_value(f.prepare_request("other")).unwrap();
+    assert!(request.get("search_api").is_none());
+    assert!(request.get("brave").is_none());
 }
 
 #[test]

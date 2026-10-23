@@ -29,11 +29,8 @@ pub(crate) fn research_web_request(action: &str) -> Result<Option<ResearchWebReq
     let canonical = crate::autonomous::canonicalize_next_action_text(action);
     let base = base_action(&canonical);
     if matches!(base.as_str(), "SEARCH" | "RESEARCH") {
-        let topic = if base == "RESEARCH" {
-            strip_action_arg(&canonical, "RESEARCH")
-        } else {
-            crate::autonomous::next_action::extract_search_topic(&canonical).unwrap_or_default()
-        };
+        let topic =
+            crate::autonomous::next_action::extract_search_topic(&canonical).unwrap_or_default();
         anyhow::ensure!(
             !topic.is_empty(),
             "bound search requires an exact authored query"

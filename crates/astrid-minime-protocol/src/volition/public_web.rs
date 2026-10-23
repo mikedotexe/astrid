@@ -3,7 +3,8 @@
 //! Signatures establish provenance, not bootstrap trust. Consumers must also
 //! validate the referenced capability, trusted issuer, current revocation state,
 //! expected owner/deployment, and a durable state-revision floor. These contracts
-//! grant neither authenticated API access nor model or live-substrate authority.
+//! V2 grants no authenticated API access. V3 explicitly adds the fixed Brave
+//! search endpoint and a shared account ceiling, never model/control authority.
 
 use serde::{Deserialize, Serialize};
 
@@ -13,8 +14,42 @@ mod operator;
 pub use operator::{PUBLIC_WEB_APPROVAL_SCHEMA_V2, PublicWebApprovalV2, PublicWebMutationV2};
 
 pub const PUBLIC_WEB_POLICY_SCHEMA_V2: &str = "volition.public_web_policy.v2";
+pub const PUBLIC_WEB_POLICY_SCHEMA_V3: &str = "volition.public_web_policy.v3";
 pub const PUBLIC_WEB_STATE_SCHEMA_V2: &str = "volition.public_web_policy_state.v2";
 pub const PUBLIC_WEB_CAPABILITY_RESOURCE_V2: &str = "network://public-web/v2";
+pub const PUBLIC_WEB_CAPABILITY_RESOURCE_V3: &str = "network://public-web/v3";
+pub const BRAVE_REQUEST_MICROUSD: u64 = 5_000;
+
+/// Operator-reported entitlement status, not a legal determination by the runtime.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SearchStorageRights {
+    Unverified,
+    OperatorConfirmed,
+}
+
+/// Explicit usage authorization; a key or signature does not establish storage rights.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BraveSearchPolicyV1 {
+    pub schema: String,
+    pub account_id: String,
+    pub monthly_limit_microusd: u64,
+    pub request_cost_microusd: u64,
+    pub storage_rights_status: SearchStorageRights,
+    pub retention_review_audit_ref: String,
+}
+
+impl BraveSearchPolicyV1 {
+    #[must_use]
+    pub fn is_well_formed(&self) -> bool {
+        self.schema == "volition.brave_search.v1"
+            && identifier(&self.account_id)
+            && self.request_cost_microusd == BRAVE_REQUEST_MICROUSD
+            && self.monthly_limit_microusd >= BRAVE_REQUEST_MICROUSD
+            && identifier(&self.retention_review_audit_ref)
+    }
+}
 pub const PUBLIC_WEB_MAX_BODY_BYTES: u64 = 4 * 1024 * 1024;
 pub const PUBLIC_WEB_MAX_DURATION_MS: u64 = 120_000;
 pub const PUBLIC_WEB_MIN_HEADROOM_BYTES: u64 = 64 * 1024 * 1024;
@@ -105,6 +140,8 @@ pub struct PublicWebPolicyV2 {
     pub issuer_public_key_hex: String,
     pub operations: Vec<PublicWebOperationV2>,
     pub limits: PublicWebLimitsV2,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub search_api: Option<BraveSearchPolicyV1>,
     pub issued_at_unix_ms: u64,
     pub expires_at_unix_ms: u64,
     pub approval_audit_refs: Vec<String>,
@@ -112,6 +149,15 @@ pub struct PublicWebPolicyV2 {
 }
 
 impl PublicWebPolicyV2 {
+    #[must_use]
+    pub fn capability_resource(&self) -> &'static str {
+        if self.schema == PUBLIC_WEB_POLICY_SCHEMA_V3 {
+            PUBLIC_WEB_CAPABILITY_RESOURCE_V3
+        } else {
+            PUBLIC_WEB_CAPABILITY_RESOURCE_V2
+        }
+    }
+
     #[must_use]
     pub fn signing_bytes(&self) -> Option<Vec<u8>> {
         let mut statement = self.clone();
@@ -126,7 +172,12 @@ impl PublicWebPolicyV2 {
 
     #[must_use]
     pub fn verifies(&self, now_unix_ms: u64) -> bool {
-        self.schema == PUBLIC_WEB_POLICY_SCHEMA_V2
+        ((self.schema == PUBLIC_WEB_POLICY_SCHEMA_V2 && self.search_api.is_none())
+            || (self.schema == PUBLIC_WEB_POLICY_SCHEMA_V3
+                && self
+                    .search_api
+                    .as_ref()
+                    .is_some_and(BraveSearchPolicyV1::is_well_formed)))
             && identifier(&self.policy_id)
             && self.revision > 0
             && self.owner.is_well_formed()
