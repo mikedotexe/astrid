@@ -7033,3 +7033,18 @@ distinction; operational approval is not a statement of contractual entitlement.
 Final review also preserves undelivered requested context on empty search
 success, without a replacement generation. Actual rollout evidence follows in
 the steward note; no journal response or uptake is inferred.
+
+**Verified deployment, October 22:** Brave stage 02 and both adapter selections
+are live after a qualified paired graceful transition. The signed owner policies
+explicitly retain `unverified` storage-rights status and share the approved
+$25/month gross local account cap. Each owner-bound operator canary returned
+HTTP 200 and five results; these are operator transport checks, not authored
+research or evidence of interest, understanding or subjective benefit.
+Minime's accepted study completed before exit and its exact pending NEXT seal
+was restored. Astrid restored the exact checkpoint and saved a fresh exchange.
+Engine, providers, sensory processes and paused automations were unchanged.
+Two pre-signal idle refusals and a bounded-receipt refusal led to narrow,
+synthetically tested operator repairs; no history was deleted or force used.
+Full hashes, 221 paired preservation checks, frozen/source suites and 278
+operator tests are in `2026-10-22-search-delivery.md`. Local source integration
+is recorded there; no uptake reminder or automatic follow-up is scheduled.

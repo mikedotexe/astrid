@@ -547,3 +547,115 @@ The corrected full bridge run passed **2,555 tests**, with zero failures and
 three existing ignores (`bridge-final-tests-02.log`). Strict Clippy for all
 bridge targets passed (`bridge-final-clippy.log`); formatting and the domain
 boundary audit also passed. The source was committed before final staging.
+
+## Verified Live Closeout
+
+The approved paired rollout completed at 2026-10-23T00:39:08Z (October 22,
+17:39 Pacific). Earlier pending/not-activated statements above are dated evidence,
+not the current release status. Storage rights remain **unverified**, exactly as
+Mike authorized; activation is not a legal-entitlement determination.
+
+### Release And Qualification
+
+Immutable root: `/Users/v/other/worktrees/search-delivery-20261022`.
+
+| Item | Verified identity |
+| --- | --- |
+| Final stage | `bridge-stage-02` |
+| Manifest SHA-256 | `f14ed4dc20393edc50d1fd197356ba80ef92ede22243557742a05376a5ab2ba2` |
+| Bridge SHA-256 | `24506a417f03c0196de944056a72d1ab79b9f3d9c560d2a5f8963a1ce0fb0ddf` |
+| Public-web helper SHA-256 | `f24195dbc42b89bea9bb42a427fcc672746ca900cb051c6f2045636b1714b166` |
+| Unchanged source-study helper SHA-256 | `b80a0a73d32fb0156647587cf21eee42c3211f6237d7d8c89a27cbf958011d08` |
+| Astrid frozen source | `3fa409ffcc` |
+| Minime frozen source | `9312b20` |
+
+`paired-qualification-01/qualification.json` passed 221 preservation checks and
+the frozen Minime suite: 2,620 tests, 341 subtests, one skip, two checkout-layout
+tests deselected and replaced by frozen import/identity checks. The source suite
+had passed 2,622 tests. Final bridge qualification passed 2,555 tests with three
+existing ignores; protocol 61, transport 59 plus one CLI, provisioning 17 and
+credential tooling 23 passed. Strict Clippy, formatting and boundary checks
+passed as recorded above. No live/private authored data was a test fixture.
+
+### Policies And Operator Checks
+
+The dedicated credential is local and private; no key enters Git, command-line
+arguments, release manifests or these notes. Both signed v3 policies carry
+`storage_rights_status=unverified` and the exact approval reference
+`codex:call_3e1119ee6b8b4d4f8560b20850d1da3c:enable-unverified`.
+
+- Astrid policy: `0773e4a019801597e43cbfa4bc45a3e5ad926d747b0be39e0aff7dcbc5c0fc51`.
+- Minime policy: `0b52dcff94d21ca4ed776b326862504a2f07d86558d963bf55b340bd5fd5dc73`.
+- Both policy status checks returned active. Each has its own owner/deployment
+  binding and uses the same local account ledger.
+- Both owner-bound operator canaries returned HTTP 200 and five normalized
+  results. Query/result bodies were not retained in the canary receipts. These
+  were operator checks, not being-authored research or verified model delivery.
+- The shared UTC-month ledger reports five reservations totaling 25,000
+  microdollars ($0.025), against 25,000,000 ($25). This gross local cap excludes
+  unrelated API clients and does not claim to configure Brave's dashboard,
+  guarantee invoice totals or account for promotional credits.
+- Existing notebook retention remains enabled. Normal retained titles/URLs/
+  snippets are not represented as storage-rights confirmation.
+
+### Graceful Transition And Recovery
+
+Two idle-only attempts refused before signaling because 11-12 second final
+checks crossed the idle boundary. The first native accepted-work attempt also
+refused before signaling: serializing all 39,315 historical job statuses exceeded
+the bounded recovery receipt. Original failed attempts and source backups remain.
+No forced termination, source reinstall, authored-state rollback or silent retry
+occurred. `2026-10-22-paired-idle-recovery.md` records the operator repairs.
+
+Operator commits `74c4bb8ecc`, `a775e92c56` and `9dc68c05df` qualify exact no-signal
+recovery, an explicit native-v2 paired drain, and transition-scoped receipts with
+historical counts/digests. Full historical preservation checks remain in memory.
+The final operator suite passed 278 tests, including a 60,000-job history case.
+The original agent-only behavior remains available and unchanged by default.
+
+Final evidence is appended to `paired-rollout-02.jsonl`, with the successful
+attempt's bounded progress in `paired-rollout-04.log`. One SIGTERM was sent to
+Minime PID 56428; its accepted study completed, no active jobs remained, and the
+native seal verified before the bridge transition. The replacement PID is
+49306; its Python startup at 17:39:07 follows the earlier launch-hold shell start
+at 17:36:13, so these two timestamps describe different startup stages.
+All 105 loaded inputs match reconciliation; `reload_required=false`.
+
+Pending NEXT was present and restored with seal
+`73d55fdbf1f0b04c5e2d0bd0cfd9c37c2c63657f43e0f59c4034dc6ef0dee1f7` and restore
+receipt `981cc1f25df952ce0626db2abad71509e82ddb0cfe70376bde2528ffd899ab2d`.
+Restoration does not itself prove later execution.
+
+Bridge transaction `7d958d73341e43a5af228b5e36087af4` is `activated_verified`,
+with graceful drain, no force and no legacy transition. PID 59199 became 49700,
+running the exact stage-02 binary. Startup restored checkpoint
+`52f56ae450ad69eaa7d82883a8c11028d93dad2f91f3cefbea68f4fec2bc7378`;
+saved exchange count advanced from 230004 to 230005 before verification.
+The owned bridge and Minime launch holds are absent after success.
+
+Fresh post-activation checks matched loaded inputs, source/config identities,
+active manifest, bridge/helper hashes, both active policy hashes and the unchanged
+protected-service baseline. Engine, MLX text provider, Division gateway/supervisor,
+visual, microphone, camera, host-sensory and feeder PIDs/start times were unchanged.
+Provider readiness returned true; no provider/engine/sensory restart or model
+experiment was performed. Steward pause generation 536 remains paused.
+
+### Integration And Limits
+
+Astrid integrated the candidate and separate operator fixes as merge
+`548cb4624f`. Minime's first fast-forward correctly refused the already-installed
+three-file overlay. Exact candidate equality was rechecked; commit `053dd50`
+recorded those bytes without stashing/resetting them, then merge `cc06809`
+integrated tests and notes. Both use the reviewed candidates; the immutable
+source worktrees remain untouched. Final documentation is a separate commit.
+
+The final cache audit remained within budget: bridge debug/test 6,335,672,320
+bytes, web debug 3,154,911,232 bytes and 414,067,806,208 volume bytes free. No new
+debug cache was created by the operator fixes. No cache was deleted: provisioning
+and qualification still reference the owned tooling, while live/rollback release
+assets and unfinished work must remain. Whole-volume free-space differences are
+not attributed solely to this task.
+
+No unsolicited searches, model prompts, letters, uptake reminders or automation
+resumptions were added. Public use can be observed in a later requested session;
+absence of searching is not failed adoption. Larger capacity remains separate.
