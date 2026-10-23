@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Qualified agent-only drain: finish accepted work without waiting for idle.
+"""Qualified native drain: finish accepted work without waiting for idle.
 
 Only for reviewed, exact-hash runtimes with agent_drain_v2 and native NEXT
 sealing. The legacy idle wrapper is unchanged. No cancellation, forced exit,
-queue replay, source installation, peer restart or automatic rollback.
+queue replay, source installation or automatic rollback. This CLI is agent-only;
+the paired wrapper can request its separately verified bridge transition.
 """
 from __future__ import annotations
 
@@ -16,7 +17,7 @@ from pathlib import Path
 import time
 
 from minime_next_handoff import process, read_owned, unique
-from paired_minime_handoff import AgentOnlyHandoff
+from paired_minime_handoff import AgentOnlyHandoff, verified_protected
 from restart_minime_agent import LaunchdAgent, TERMINAL, digest, qualified_inputs, read_json
 
 
@@ -136,7 +137,7 @@ def recover_unsignaled_hold(backend, handoff, receipts, expected_inputs):
 
 def finish_accepted_work(backend, expected_pid, *, running_inputs, expected_inputs,
                          handoff, timeout_s=900, now=time.monotonic, sleep=time.sleep,
-                         emit=lambda event: None):
+                         emit=lambda event: None, paired=False):
     require(type(expected_pid) is int and expected_pid > 0 and 30 <= timeout_s <= 1800,
             "invalid bounded drain request")
     require(running_inputs and expected_inputs and handoff is not None,
@@ -203,8 +204,17 @@ def finish_accepted_work(backend, expected_pid, *, running_inputs, expected_inpu
           "next_seal": sealed, "job_statuses": statuses,
           "active_jobs": 0, "forced_termination": False})
     # No replacement may inspect/modify the queue until this seal is verified.
-    require(handoff.transition(backend, protected, emit) == protected,
-            "agent-only transition changed protected identities")
+    transitioned = handoff.transition(backend, protected, emit)
+    if paired:
+        # The paired wrapper verifies the real activation before releasing its
+        # hold. Independently retain that exact receipt for readiness checks.
+        expected_protected = verified_protected(protected, backend.protected(),
+            getattr(handoff, "activation_receipt", {}), handoff.stage)
+        require(transitioned == expected_protected,
+                "paired transition returned different protected identities")
+        protected = expected_protected
+    else:
+        require(transitioned == protected, "agent-only transition changed protected identities")
     deadline = now() + timeout_s
     while now() < deadline:
         backend.maintenance()
@@ -220,7 +230,8 @@ def finish_accepted_work(backend, expected_pid, *, running_inputs, expected_inpu
                     "new_pid": pid, "new_started_at": backend.identity(pid),
                     "source_inputs": inputs, "config": config, "protected": protected,
                     "next_handoff": restored, "signal": "SIGTERM", "forced_termination": False,
-                    "job_statuses_at_drain": statuses, "execution_confirmed": False}
+                    "job_statuses_at_drain": statuses, "execution_confirmed": False,
+                    "transition_scope": "paired" if paired else "agent_only"}
         sleep(1)
     raise DrainRefusal("replacement readiness timed out; no forced fallback or queue replay")
 

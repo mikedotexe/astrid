@@ -31,3 +31,34 @@ The tests cover both pre-signal and timeout refusal, exact history preservation,
 and rejection of altered process/source/configuration/protected identities,
 uncertain signal state, lost holds, forced termination and unexpected events.
 Actual test and recovery outcomes are recorded in the search-delivery closeout.
+
+## Native Accepted-Work Follow-Through
+
+The second attempt also refused before signaling: status age advanced from
+42.838 to 55.186 seconds during a 12.348-second final check. Both services
+continued; no work was canceled. Repeating the idle strategy was not reliable.
+
+The paired operator CLI now offers `--finish-accepted-work` only with installed
+recovery and an explicit prior qualified launch-source packet. It uses the
+existing native-v2 finish protocol, not an inferred idle exemption. The loaded
+105-input identity matches `freer-exploration-20261021/minime-reconciliation-06`.
+The exact successor receipt and ownership checks still apply. After the one
+SIGTERM, accepted work must finish, its durable outcome must verify, the old
+process must acknowledge drained exit, and the native NEXT seal must verify.
+The bridge's existing sanctioned transition must then return a verified graceful
+activation receipt; only that bridge PID may change among protected services.
+Minime readiness must restore the same NEXT seal. No force, cancellation,
+unreviewed source installation, queue replay or backup restoration is added.
+
+The original agent-only CLI and invariants remain. Paired mode is explicit;
+unexpected transition scope, missing receipt, forced/undrained bridge transitions,
+wrong old PID, unrelated service drift and changed readiness boundaries refuse.
+Synthetic tests exercise both paths and exact CLI routing. An initial test
+invocation omitted `MINIME_SOURCE_ROOT` in this isolated worktree and failed on
+missing sibling fixtures, not a runtime failure; the corrected invocation binds
+the canonical Minime launcher explicitly. No model or live data fixture is used.
+
+Qualification: 277 tests passed across native finish, paired recovery, agent
+restart, NEXT handoff, deployment wrappers, bridge activation/staging/drain,
+source reconciliation and steward control. Receipt:
+`/Users/v/other/worktrees/search-delivery-20261022/paired-finish-tests-02.log`.

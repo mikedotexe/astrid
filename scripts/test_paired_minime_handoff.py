@@ -10,7 +10,7 @@ import subprocess
 import tempfile
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import paired_minime_handoff as paired
 from paired_minime_handoff import (
@@ -872,13 +872,28 @@ class InstalledRecoveryTests(unittest.TestCase):
         position = orphan_options.index("--resume-installed")
         del orphan_options[position:position + 2]
         commands = [self.cli() + ["--install-reviewed-overlay"], self.cli() + ["--agent-only"],
-                    self.cli()[:-2], orphan_options]
+                    self.cli()[:-2], orphan_options, self.cli() + ["--finish-accepted-work"],
+                    self.cli() + ["--qualified-running-inputs", str(self.packet)]]
         for command in commands:
             with self.subTest(command=command[-1]), patch("sys.argv", command), patch(
                     "sys.stderr", new_callable=io.StringIO), self.assertRaises(SystemExit):
                 paired.main()
         self.assertFalse(self.receipt.exists())
         self.assertEqual(self.hold.read_bytes(), self.original_hold_bytes)
+
+    def test_cli_native_drain_uses_exact_running_inputs_and_paired_scope(self):
+        self.backend.drain_identity = Mock(return_value={"boot_id": "synthetic"})
+        command = self.cli() + ["--finish-accepted-work", "--qualified-running-inputs", str(self.packet)]
+        with patch("sys.argv", command), patch("sys.stdout", new_callable=io.StringIO), patch(
+                "finish_minime_work.DrainAgent", return_value=self.backend), patch(
+                "paired_minime_handoff.reload_agent", side_effect=AssertionError("idle path")), patch(
+                "finish_minime_work.finish_accepted_work", return_value={"outcome": "success"}) as finish:
+            self.assertEqual(paired.main(), 0)
+        self.backend.drain_identity.assert_called_once_with(10, self.before_sources)
+        self.assertEqual(finish.call_args.kwargs["running_inputs"], self.before_sources)
+        self.assertTrue(finish.call_args.kwargs["paired"])
+        self.assertIsInstance(finish.call_args.kwargs["handoff"], InstalledHandoff)
+        self.assert_preserved()
 
 
 if __name__ == "__main__":

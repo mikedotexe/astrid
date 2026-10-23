@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import Mock
 
 from finish_minime_work import DrainAgent, finish_accepted_work, recover_unsignaled_hold
+from paired_minime_handoff import BRIDGE
 from restart_minime_agent import digest, job_receipt, reload_agent
 from test_restart_minime_agent import Backend
 
@@ -78,6 +79,20 @@ class Hold:
         return protected
 
 
+class PairedHold(Hold):
+    stage = Path("/synthetic/stage")
+
+    def transition(self, backend, protected, emit):
+        result = super().transition(backend, protected, emit)
+        backend.services[BRIDGE] = {"pid": 31, "started_at": "bridge-new"}
+        self.activation_receipt = {
+            "status": "activated_verified", "force_used": False, "legacy_transition": False,
+            "drain": {"phase": "drained"}, "old_pid": protected[BRIDGE]["pid"],
+            "stage": str(self.stage), "new_process": {
+                **backend.services[BRIDGE], "binary": str(self.stage / "spectral-bridge-server")}}
+        return {**result, BRIDGE: backend.services[BRIDGE]}
+
+
 def drain(backend, hold, **kwargs):
     return finish_accepted_work(backend, 10, running_inputs=backend.source,
         expected_inputs=backend.source, handoff=hold, timeout_s=30,
@@ -85,6 +100,46 @@ def drain(backend, hold, **kwargs):
 
 
 class DrainTests(unittest.TestCase):
+    def test_paired_busy_drain_requires_verified_bridge_and_preserves_peers(self):
+        backend, hold = BusyBackend(), PairedHold()
+        backend.services[BRIDGE] = {"pid": 30, "started_at": "bridge-old"}
+        result = drain(backend, hold, paired=True)
+        self.assertEqual(backend.signals, [10])
+        self.assertEqual(result["transition_scope"], "paired")
+        self.assertEqual(result["protected"], {"engine": 100, BRIDGE: {
+            "pid": 31, "started_at": "bridge-new"}})
+        self.assertEqual(result["next_handoff"]["seal_sha256"], "exact")
+
+    def test_agent_only_still_refuses_a_bridge_transition(self):
+        backend, hold = BusyBackend(), PairedHold()
+        backend.services[BRIDGE] = {"pid": 30, "started_at": "bridge-old"}
+        with self.assertRaisesRegex(RuntimeError, "agent-only transition"):
+            drain(backend, hold)
+
+    def test_paired_receipt_drift_and_unrelated_service_changes_refuse(self):
+        for failure in ("force", "undrained", "wrong_old", "peer", "returned"):
+            with self.subTest(failure=failure):
+                backend, hold = BusyBackend(), PairedHold()
+                backend.services[BRIDGE] = {"pid": 30, "started_at": "bridge-old"}
+                transition = hold.transition
+                def changed(*args):
+                    result = transition(*args)
+                    if failure == "force":
+                        hold.activation_receipt["force_used"] = True
+                    elif failure == "undrained":
+                        hold.activation_receipt["drain"]["phase"] = "requested"
+                    elif failure == "wrong_old":
+                        hold.activation_receipt["old_pid"] = 99
+                    elif failure == "peer":
+                        backend.services["engine"] = 101
+                    else:
+                        result["engine"] = 101
+                    return result
+                hold.transition = changed
+                with self.assertRaises(RuntimeError):
+                    drain(backend, hold, paired=True)
+                self.assertEqual(backend.signals, [10])
+
     def test_legacy_idle_bootstrap_also_verifies_seal_before_releasing(self):
         backend, events = Backend(), []
         observe = backend.observe

@@ -232,6 +232,7 @@ class PairedHandoff:
             raise RuntimeError("paired release selection changed")
         receipt = read_json(transaction / "receipt.json")
         protected = verified_protected(protected, backend.protected(), receipt, self.stage)
+        self.activation_receipt = receipt
         self.assert_hold()
         backend.maintenance()
         if backend.inputs() != self.inputs or backend.config() != self.config:
@@ -570,6 +571,10 @@ def main():
                         help="explicit operator approval of the qualified successor stage")
     parser.add_argument("--expected-started-at",
                         help="operator-reviewed ps lstart identity of the still-running old Minime PID")
+    parser.add_argument("--finish-accepted-work", action="store_true",
+                        help="use qualified native v2 drain rather than waiting for an idle gap")
+    parser.add_argument("--qualified-running-inputs", type=Path,
+                        help="exact prior launch-source reconciliation for native v2 drain")
     args = parser.parse_args()
     if not args.ack.strip():
         parser.error("nonempty acknowledgement required")
@@ -579,6 +584,11 @@ def main():
             parser.error("installed recovery requires qualification/start/stage approval and excludes install/agent-only")
     elif any(resume_options):
         parser.error("recovery options require --resume-installed")
+    if args.finish_accepted_work:
+        if not args.resume_installed or not args.qualified_running_inputs:
+            parser.error("paired native drain requires installed recovery and qualified running inputs")
+    elif args.qualified_running_inputs:
+        parser.error("qualified running inputs require --finish-accepted-work")
     handoff = None
     with ExitStack() as stack:
         emit = lambda event: print(json.dumps(event), flush=True)
@@ -586,7 +596,13 @@ def main():
             handoff_type = (InstalledHandoff if args.resume_installed else
                             AgentOnlyHandoff if args.agent_only else PairedHandoff)
             handoff = handoff_type(args.bridge_stage, args.receipt, args.ack)
-            backend = LaunchdAgent(args.pause_generation, args.ack)
+            if args.finish_accepted_work:
+                from finish_minime_work import DrainAgent, finish_accepted_work
+                backend = DrainAgent(args.pause_generation, args.ack)
+                running = qualified_inputs(args.qualified_running_inputs)
+                backend.drain_identity(args.expected_pid, running)
+            else:
+                backend = LaunchdAgent(args.pause_generation, args.ack)
             if args.resume_installed:
                 handle = handoff.open_resume(stack, backend, args.expected_inputs, args.resume_installed,
                     args.resume_qualification, args.expected_pid, args.expected_started_at, args.resume_stage_ack)
@@ -607,8 +623,13 @@ def main():
                 handoff.adopt(emit)
             if args.install_reviewed_overlay:
                 handoff.install(backend, args.expected_inputs, args.expected_pid, emit)
-            result = reload_agent(backend, args.expected_pid,
-                expected_inputs=qualified_inputs(args.expected_inputs), emit=emit, handoff=handoff)
+            if args.finish_accepted_work:
+                result = finish_accepted_work(backend, args.expected_pid,
+                    running_inputs=running, expected_inputs=qualified_inputs(args.expected_inputs),
+                    emit=emit, handoff=handoff, paired=True)
+            else:
+                result = reload_agent(backend, args.expected_pid,
+                    expected_inputs=qualified_inputs(args.expected_inputs), emit=emit, handoff=handoff)
             emit(result)
         except (OSError, ValueError, RuntimeError, KeyError, TypeError, subprocess.SubprocessError) as error:
             failure = {"outcome": "failed", "error": str(error),
