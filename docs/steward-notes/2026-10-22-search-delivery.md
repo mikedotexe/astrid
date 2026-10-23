@@ -513,3 +513,37 @@ The October 22 source tests above remain historical qualification evidence.
 The renewed shared protocol/transport tests pass after this adjustment (61
 protocol tests, 59 transport tests plus one CLI test). Final immutable release
 and actual activation evidence will be recorded separately below.
+
+## Final Review Follow-Through
+
+Stage 01 was built and verified but not activated. Review found that its new
+zero-result early return could consume an unrelated pending file listing before
+any model received it. The corrected path restores that exact context alongside
+any newly created operational receipt. It neither creates a replacement
+reflection nor retries a search. This uses the existing in-memory listing field;
+it does not add restart persistence for that field or change authored schemas.
+
+The initial regression attempted serialization of runtime state that is not
+serializable, then assumed `LIST_FILES ... AND SEARCH ...` was supported. Both
+failed attempts are retained in the session record. Inspection confirmed that
+the existing chain splitter intentionally excludes a bare SEARCH as its second
+verb. The final regression executes two independently selected actions through
+the real dispatcher and verifies exact pending text, newer receipt preservation
+and unchanged authored-history count. Both focused empty-search tests pass.
+The grammar was not broadened. Stage 02 will supersede the unactivated stage 01.
+
+Renewed tooling checks passed 369 deployment, handoff, credential, controller,
+projection and evidence tests. Shared protocol, transport and provisioning
+strict Clippy passed. Build-cache review remained within budget, with 420.46 GB
+free and 6.34/3.15 GB in the explicitly owned bridge/web debug/test caches.
+Release profiles and protected services were unchanged.
+
+The first renewed full bridge run passed 2,554 tests and failed one source-shape
+assertion that still expected the old completion helper (three existing ignores).
+The behavioral regression passed. The assertion now checks the new
+context-preserving helper; this failed run remains in `bridge-final-tests.log`.
+
+The corrected full bridge run passed **2,555 tests**, with zero failures and
+three existing ignores (`bridge-final-tests-02.log`). Strict Clippy for all
+bridge targets passed (`bridge-final-clippy.log`); formatting and the domain
+boundary audit also passed. The source was committed before final staging.

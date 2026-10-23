@@ -143,6 +143,21 @@ pub(in crate::autonomous) fn finish(
     }
 }
 
+/// No model received the assembled prompt. Keep other requested feedback pending.
+pub(in crate::autonomous) fn finish_empty_search(
+    conv: &mut ConversationState,
+    job: Option<BoundResearchJob>,
+    requested_context: Option<String>,
+) {
+    finish(conv, job, true);
+    if let Some(previous) = requested_context {
+        conv.pending_file_listing = Some(match conv.pending_file_listing.take() {
+            Some(current) => format!("{previous}\n\n{current}"),
+            None => previous,
+        });
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -256,7 +271,7 @@ mod tests {
         let reader_before = serde_json::to_value(&conv.activity).unwrap();
         let anchor_before = conv.last_research_anchor.clone();
         let history_before = conv.history.len();
-        finish(&mut conv, Some(empty_job), true);
+        finish_empty_search(&mut conv, Some(empty_job), None);
         assert_eq!(
             action_continuity::read_native_authority_records(&path)
                 .unwrap()

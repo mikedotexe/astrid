@@ -7025,3 +7025,11 @@ recorded. Notebook storage rights are still unconfirmed, so this is not live
 search restoration. No observed interests, emergence or reported experience
 are inferred from transport success. See the same steward note for the contract,
 credential-handling evidence and remaining paired-release work.
+
+**Informed retention decision:** Mike explicitly authorized enabling the existing
+notebook-retention behavior with storage rights recorded as unverified
+(`call_3e1119ee6b8b4d4f8560b20850d1da3c`). The signed v3 policy preserves that
+distinction; operational approval is not a statement of contractual entitlement.
+Final review also preserves undelivered requested context on empty search
+success, without a replacement generation. Actual rollout evidence follows in
+the steward note; no journal response or uptake is inferred.

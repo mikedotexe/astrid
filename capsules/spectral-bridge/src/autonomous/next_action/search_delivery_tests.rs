@@ -4,6 +4,60 @@ use std::io::Write;
 use std::sync::{Arc, Mutex};
 
 #[test]
+fn empty_search_preserves_listing_from_prior_selected_action() {
+    let _web = crate::public_web::fixture::Fixture::new();
+    let root = tempfile::tempdir().unwrap();
+    let _scope = action_continuity::scoped_test_action_continuity_root(root.path().join("threads"));
+    std::fs::write(root.path().join("synthetic.txt"), "Synthetic evidence.").unwrap();
+    let db = BridgeDb::open(":memory:").unwrap();
+    let (sensory_tx, _rx) = mpsc::channel(1);
+    let telemetry = serde_json::from_value(serde_json::json!({
+        "t_ms":0, "eigenvalues":[1.0], "fill_ratio":0.68,
+    }))
+    .unwrap();
+    let mut burst = 0;
+    let mut conv = ConversationState::new(Vec::new(), None);
+    for (operation_id, action) in [
+        (
+            "synthetic-listing",
+            format!("LIST_FILES {}", root.path().display()),
+        ),
+        ("synthetic-search", "SEARCH synthetic empty".to_string()),
+    ] {
+        handle_next_action(
+            &mut conv,
+            &action,
+            NextActionContext {
+                operation_id: Some(operation_id),
+                burst_count: &mut burst,
+                db: &db,
+                sensory_tx: &sensory_tx,
+                telemetry: &telemetry,
+                fill_pct: 68.0,
+                response_text: "",
+                workspace: None,
+            },
+        );
+    }
+    assert!(conv.wants_search);
+    let listing = conv.pending_file_listing.take().unwrap();
+    assert!(listing.contains("synthetic.txt"));
+    let history_len = conv.history.len();
+    conv.wants_search = false;
+    conv.search_topic = None;
+    research_jobs::finish_empty_search(&mut conv, None, Some(listing.clone()));
+    assert_eq!(conv.pending_file_listing.as_deref(), Some(listing.as_str()));
+    assert_eq!(conv.history.len(), history_len);
+    assert_eq!(conv.pending_file_listing.take(), Some(listing.clone()));
+    conv.pending_file_listing = Some("New operational receipt".into());
+    research_jobs::finish_empty_search(&mut conv, None, Some(listing.clone()));
+    assert_eq!(
+        conv.pending_file_listing,
+        Some(format!("{listing}\n\nNew operational receipt"))
+    );
+}
+
+#[test]
 fn search_delivery_query_is_literal_through_next_classification_and_dispatch() {
     let db = BridgeDb::open(":memory:").unwrap();
     let (sensory_tx, mut rx) = mpsc::channel(1);
@@ -151,7 +205,9 @@ fn search_delivery_empty_success_exits_before_generation_or_source_mutation() {
         .unwrap();
     let (empty, _) = search.split_once("if let Ok(ref results) = ctx").unwrap();
     assert!(empty.contains("ctx.as_ref().is_ok_and(|results| results.hits.is_empty())"));
-    assert!(empty.contains("research_jobs::finish(&mut conv, bound_research_job, true)"));
+    assert!(empty.contains(
+        "research_jobs::finish_empty_search(&mut conv, bound_research_job, requested_context)"
+    ));
     assert!(empty.contains("generation_requested = false"));
     assert!(empty.contains("save_state(&mut conv);"));
     assert!(empty.contains("continue;"));
